@@ -1,0 +1,1577 @@
+.colorpalette {
+	color: #99b9df; /*accent blue 30% lighter*/
+	color: #70a6e4; /*accent blue 20% lighter*/
+	color: #5498e7; /*accent blue 10% lighter*/
+	color: #478cdb; /*accent blue*/
+	color: #317ed6; /*accent blue 10% darker*/
+	color: #2972c5; /*accent blue 20% darker*/
+	color: #2661a4; /*accent blue 30% darker*/
+	color: white; /*nav panel*/
+	color: #eee; /*page color*/
+	color: lightgray; /*dark-theme main text color*/
+	color: #AAA; /*disabled text grey*/
+	color: #888; /*light and dark theme medium grey*/
+	color: rgba(120, 120, 120, 0.75); /*light and dark theme medium grey*/
+	color: #555; /*dark-theme link visited*/
+	color: #1f1f1f; /*dark-theme nav panel*/
+	color: black; /*dark-theme page color*/
+	color: black; /*main text color*/
+}
+
+* {
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+	*:before,
+	*:after {
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+html, .inAppBrowserWrap {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	-webkit-overflow-scrolling: touch;
+	-ms-content-zooming: none;
+	overflow: hidden;
+	-webkit-text-size-adjust: none;
+	-ms-text-size-adjust: none;
+	background-color: black;
+}
+
+body {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+body, input {
+	font-family: 'Segoe UI', 'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+	font-size: 15px;
+	line-height: 21px;
+}
+
+a {
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+
+a, button, .link, .navlink, .addressLink, .jumplink {
+	cursor: pointer;
+	background-color: transparent;
+	text-decoration: none;
+}
+
+	.addressLink.itemText {
+		cursor: default;
+	}
+
+	a:active,
+	a:hover,
+	a:focus,
+	button:active,
+	button:hover,
+	button:focus {
+		outline: 0;
+	}
+
+button {
+	font-size: 16px;
+	border: 1px solid transparent;
+	padding: 12px;
+	border-radius: 2px;
+}
+
+img {
+	vertical-align: top;
+}
+
+h1 {
+	font-size: 46px;
+	line-height: 56px;
+	font-weight: 500;
+}
+
+h2 {
+	font-size: 36px;
+	line-height: 40px;
+	font-weight: 500;
+}
+
+h3 {
+	font-size: 24px;
+	line-height: 28px;
+	font-weight: 200;
+}
+
+h4 {
+	font-size: 20px;
+	line-height: 24px;
+	font-weight: 300;
+}
+
+h5 {
+	font-size: 18px;
+	line-height: 22px;
+	font-weight: 300;
+}
+
+h6 {
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 400;
+}
+
+#loading {
+	color: #333;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	z-index: 50;
+	opacity: 1;
+	transition: opacity ease 1s, height 0s 1s;
+	will-change: opacity, height;
+}
+
+	#loading.done {
+		height: 0;
+		opacity: 0;
+	}
+
+#notification {
+	position: fixed;
+	z-index: 45;
+	min-height: 44px;
+}
+
+html.phon #notification {
+	width: 100%;
+	top: 54px;
+}
+
+html.tabl #notification,
+html.desk #notification {
+	left: 3%;
+	bottom: 2%;
+	border-radius: 2px;
+	max-width: 94%;
+}
+
+#notification_loader {
+	float: left;
+	min-height: 36px;
+	padding: 4px;
+}
+
+#notification_msg {
+	padding: 8px 42px 8px 12px;
+	font-size: 20px;
+	line-height: 30px;
+}
+
+#hideNotification {
+	position: absolute;
+	color: #ddd;
+	color: rgba(255,255,255,0.8);
+	top: 0;
+	right: 0;
+	padding: 10px 16px 14px 16px;
+}
+
+#spinner{
+	position: fixed;
+	top: 66px;
+	left: 12px;
+}
+#confirmContainer {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 20;
+	background-color: white;
+	background-color: rgba(255,255,255,0.5);
+}
+
+.dark-theme #confirmContainer {
+	background-color: black;
+	background-color: rgba(0,0,0,0.5);
+}
+
+#confirm {
+	position: absolute;
+	z-index: 20;
+	top: 55%;
+	left: 50%;
+	-moz-transform: translateY(-50%) translateX(-50%);
+	-ms-transform: translateY(-50%) translateX(-50%);
+	-o-transform: translateY(-50%) translateX(-50%);
+	-webkit-transform: translateY(-50%) translateX(-50%);
+	transform: translateY(-50%) translateX(-50%);
+	padding: 20px 16px;
+	text-align: center;
+	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.3);
+	border: 1px solid #478cdb; /*accent blue*/
+	border-radius: 3px;
+	width: 450px;
+	max-width: 90%;
+	background-color: white;
+}
+
+.dark-theme #confirm {
+	box-shadow: 1px 1px 12px #000;
+	border-color: #5498e7; /*accent blue 10% lighter*/
+	background-color: #1A1A1A;
+}
+
+#confirmMessage {
+	font-size: 19px;
+	padding: 16px;
+	margin-bottom: 8px;
+	max-height: 250px;
+	overflow-y: auto;
+}
+
+#confirm button {
+	padding: 16px;
+	margin: 8px;
+	min-width: 100px;
+	font-size: 16px;
+}
+
+#confirm.shake {
+	animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+	box-shadow: 0 0 10px #478cdb; /*accent blue*/
+}
+
+@keyframes shake {
+	10%, 90% {
+		transform: translateX(-49%) translateY(-50%);
+	}
+
+	20%, 80% {
+		transform: translateX(-52%) translateY(-50%);
+	}
+
+	30%, 50%, 70% {
+		transform: translateX(-46%) translateY(-50%);
+	}
+
+	40%, 60% {
+		transform: translateX(-54%) translateY(-50%);
+	}
+}
+
+.dark-theme #confirm button {
+	color: white;
+}
+
+#confirmOK {
+	color: white;
+	background-color: #478cdb; /*accent blue*/
+}
+
+.dark-theme #confirmOK {
+	color: white;
+	background-color: #5498e7; /*accent blue 10% lighter*/
+}
+
+.close {
+	opacity: 0.7; /*override bootstrap*/
+	font-size: 21px;
+}
+
+.dark-theme .close {
+	color: #000000;
+	text-shadow: 0 1px 0 #ffffff;
+	opacity: 0.2;
+}
+
+	.dark-theme .close:hover,
+	.dark-theme .close:focus,
+	.dark-theme .close:active,
+	.dark-theme .close.hover,
+	.dark-theme .close.focus,
+	.dark-theme .close.active {
+		color: #000000;
+		text-decoration: none;
+		opacity: 0.5;
+	}
+
+div,
+img {
+	padding: 0;
+	margin: 0;
+	border: 0;
+}
+
+	div:link,
+	div:hover,
+	div:active,
+	a:link,
+	a:hover,
+	a:active {
+		text-decoration: none;
+	}
+
+#app {
+	margin-top: 54px;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	overflow: hidden;
+	-webkit-overflow-scrolling: touch;
+}
+
+html.phon.land #app,
+html.tabl #app {
+	right: 54px;
+	width: auto;
+}
+
+#app .hidden,
+html.tabl .phon,
+html.tabl .desk,
+html.phon .tabl,
+html.phon .desk,
+html.land .port,
+html.port .land,
+html.desk .phon,
+html.desk .tabl {
+	display: none;
+}
+
+	html.tabl .tabl.phon,
+	html.phon .tabl.phon,
+	html.desk .tabl.desk,
+	html.tabl .tabl.desk,
+	html.phon .desk.phon,
+	html.desk .desk.phon {
+		display: block;
+	}
+
+html,
+#app,
+.view:after,
+html.phon #searchSuggestions-container {
+	background-color: #eee; /*page color*/
+}
+
+	#app.dark-theme,
+	.dark-theme #searchBar,
+	.dark-theme .view:after,
+	html.phon .dark-theme #searchSuggestions-container,
+	.dark-theme #stoKeyInput,
+	.dark-theme #stoKeyInputConfirm {
+		background-color: black; /*dark-theme page color*/
+	}
+
+#closeSidenav {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	background-color: transparent;
+	z-index: 8;
+	pointer-events: none;
+}
+
+html.tabl #closeSidenav,
+html.phon #closeSidenav {
+	top: 0;
+	right: 54px;
+}
+
+html.desk #closeSidenav {
+	top: 54px;
+	right: 0;
+}
+
+#notification {
+	background-color: #478cdb; /*accent blue*/
+	color: white;
+}
+
+	#notification:focus,
+	#notification:active {
+		background-color: #5498e7; /*accent blue 10% lighter*/
+	}
+
+:visited {
+	color: #AAA; /*disabled text grey*/
+}
+
+.dark-theme :visited {
+	color: #555; /*dark-theme link visited*/
+}
+
+.right {
+	float: right;
+}
+
+.clear {
+	clear: both;
+	padding-top: 12px;
+}
+
+#app,
+#confirm,
+#searchReset,
+#searchSuggestions,
+#searchResults,
+#currentView,
+#stoKeyInput,
+#stoKeyInputConfirm,
+.addressLink.itemText,
+.addressLink.itemText:hover,
+.addressLink.itemText:active,
+.addressLink.itemText:focus {
+	color: black; /*main text color*/
+}
+
+	#app.dark-theme,
+	.dark-theme #confirm,
+	.dark-theme #searchReset,
+	.dark-theme #searchSuggestions,
+	.dark-theme #searchResults,
+	.dark-theme #currentView,
+	.dark-theme #stoKeyInput,
+	.dark-theme #stoKeyInputConfirm,
+	.dark-theme #searchBox,
+	.dark-theme .textbox,
+	.dark-theme .addressLink.itemText,
+	.dark-theme .addressLink.itemText:hover,
+	.dark-theme .addressLink.itemText:focus,
+	.dark-theme .addressLink.itemText :active{
+		color: lightgray; /*dark-theme main text color*/
+	}
+
+#navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 54px;
+	border-top: 1px solid white;
+	border-bottom: 1px solid lightgray;
+	z-index: 1;
+}
+
+nav,
+nav .switch label,
+#searchSuggestions-container,
+#sidenav button,
+.dropdown {
+	background-color: white; /*nav panel*/
+}
+
+.dark-theme nav,
+.dark-theme nav .switch label,
+.dark-theme #searchSuggestions-container,
+.dark-theme #sidenav button,
+.dark-theme .dropdown {
+	background-color: #1f1f1f; /*dark-theme nav panel*/
+}
+
+.dark-theme #navbar,
+.dark-theme #sidenav {
+	border-bottom: 1px solid black;
+	border-top: 1px solid #222;
+}
+
+#navbar,
+html.tabl #searchSuggestions-container,
+html.desk #searchSuggestions-container,
+.dropdown {
+	box-shadow: 0 0 10px lightgray;
+}
+
+.dark-theme #navbar,
+html.tabl .dark-theme #searchSuggestions-container,
+html.desk .dark-theme #searchSuggestions-container,
+.dark-theme .dropdown {
+	box-shadow: 0 0 10px black;
+}
+
+#navbar .views .navlink {
+	float: left;
+}
+
+#back,
+#menu,
+#search,
+#cancelSearch,
+#navbar .views .navlink {
+	padding: 16px 20px;
+}
+
+.navlink {
+	border: 1px solid transparent;
+}
+
+#navbar .navlink {
+	position: relative;
+	top: -1px;
+	border-right: 1px solid white;
+	border-left: 1px solid #e1e1e1;
+	text-align: center;
+	height: 54px;
+}
+
+.dark-theme #navbar .navlink {
+	border-right: 1px solid #333;
+	border-left: 1px solid transparent;
+}
+
+.navlink {
+	color: #777;
+}
+
+.dark-theme .navlink {
+	color: #aaa;
+}
+
+#navbar .views {
+	border-left: 1px solid white;
+	height: 100%;
+}
+
+.dark-theme #navbar .views {
+	border-left: 1px solid #333;
+}
+
+.dark-theme .link:hover:active,
+html.desk .dark-theme .link:hover:active,
+.dark-theme button:hover:active,
+html.desk .dark-theme button:hover:active {
+	background-color: #070707;
+}
+
+#currentView {
+	padding: 16px;
+	border-left: 1px solid #e1e1e1;
+}
+
+.dark-theme #currentView {
+	border-left: 1px solid transparent;
+}
+
+#back, #currentView {
+	float: left;
+}
+
+#sidenav {
+	position: fixed;
+	margin: 0;
+	padding: 0;
+	width: 320px;
+	max-width: 90%;
+	top: 54px;
+	bottom: 0;
+	right: -320px;
+	transition: transform ease 0.2s;
+	-webkit-transform: translateX(0px);
+	-moz-transform: translateX(0px);
+	-ms-transform: translateX(0px);
+	-o-transform: translateX(0px);
+	transform: translateX(0px);
+	will-change: transform;
+	z-index: 9;
+}
+
+#sidenav-container {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+html.phon.land #sidenav,
+html.tabl #sidenav {
+	right: -264px;
+}
+
+#app.sidenav_open #sidenav {
+	-webkit-transform: translateX(-320px);
+	-moz-transform: translateX(-320px);
+	-ms-transform: translateX(-320px);
+	-o-transform: translateX(-320px);
+	transform: translateX(-320px);
+}
+
+html.phon.land #app.sidenav_open #sidenav,
+html.tabl #app.sidenav_open #sidenav {
+	-webkit-transform: translateX(-264px);
+	-moz-transform: translateX(-264px);
+	-ms-transform: translateX(-264px);
+	-o-transform: translateX(-264px);
+	transform: translateX(-264px);
+}
+
+#app.sidenav_open #closeSidenav {
+	pointer-events: auto;
+}
+
+#sidenav .views {
+	border-bottom: 1px solid white;
+}
+
+.dark-theme #sidenav .views {
+	border-bottom: 1px solid #333;
+}
+
+#sidenav .views .navlink,
+#sidenav .text {
+	width: 100%;
+	padding: 16px 20px;
+}
+
+#sidenav .views .navlink {
+	border-top: 1px solid white;
+	border-bottom: 1px solid #e1e1e1;
+}
+
+.dark-theme #sidenav .views .navlink {
+	border-top: 1px solid #333;
+	border-bottom: 1px solid transparent;
+}
+
+#sidenav .text {
+	background-color: lightgray;
+	background-color: rgba(0,0,0,0.03);
+}
+
+.dark-theme #sidenav .text {
+	background-color: #333;
+	background-color: rgba(255,255,255,0.04);
+}
+
+#stoKeyInput,
+#stoKeyInputConfirm {
+	background-color: white;
+	width: 100%;
+}
+
+.alert {
+	color: red;
+}
+
+#sidenav label {
+	font-size: 13px;
+	float: left;
+}
+
+#sidenav button {
+	height: 40px;
+	padding: 10px;
+	margin: 8px 0;
+	float: right;
+	border: 1px solid lightgray;
+	font-size: 15px;
+}
+
+#copy {
+	position: relative;
+	bottom: 0;
+	right: 0;
+	text-align: right;
+	color: #bbb;
+}
+
+.dark-theme #copy {
+	color: #555;
+}
+
+.view {
+	width: 100%;
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	will-change: width;
+	transition: width ease 0.2s;
+}
+
+.view-container {
+	width: 100%;
+	padding-top: 24px;
+	padding-right: 16px;
+	padding-left: 16px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.view:after {
+	content: "";
+	position: fixed;
+	top: 54px;
+	left: 0;
+	right: 16px;
+	bottom: 0;
+	transition: opacity ease 0.2s;
+	opacity: 0;
+	display: block;
+}
+
+.changeViewTransition .view:after {
+	opacity: 1;
+}
+
+.changeViewTransition .splitViewLeft.view:after {
+	display: none;
+}
+
+.splitViewRight.view:after {
+	left: auto;
+	width: 60%;
+}
+
+.changeViewDone .view:after,
+.splitViewLeft {
+	display: none;
+}
+
+html.desk .splitViewLeft {
+	display: block;
+	float: left;
+	width: 40%;
+	border-right: solid 2px lightgray;
+}
+
+html.desk .dark-theme .splitViewLeft {
+	border-right: 2px solid #333;
+}
+
+html.desk .splitViewRight {
+	float: left;
+	width: 60%;
+}
+
+html.phon .searchBar_open #back,
+html.phon .searchBar_open #currentView,
+.searchBar_open #menu,
+html.tabl .searchBar_open .views.tabl.desk {
+	display: none;
+}
+
+#searchBar {
+	position: relative;
+	margin: 8px 0;
+	min-height: 38px;
+	overflow: hidden;
+	width: 0;
+	will-change: width;
+	-webkit-transition: width 0.2s ease;
+	-moz-transition: width 0.2s ease;
+	-o-transition: width 0.2s ease;
+	transition: width 0.2s ease;
+	background-color: #fafafa;
+}
+
+.dark-theme .searchBar_open #searchBar {
+	border-right: 1px solid #333;
+}
+
+html.desk .dark-theme .searchBar_open #searchBar {
+	border-left: 1px solid transparent;
+}
+
+html.phon #searchBar {
+	position: absolute;
+	left: 400px;
+	right: 114px;
+	will-change: left;
+	-webkit-transition: left 0.2s ease;
+	-moz-transition: left 0.2s ease;
+	-o-transition: left 0.2s ease;
+	transition: left 0.2s ease;
+}
+
+.searchBar_open #searchBar,
+html.tabl #searchSuggestions-container,
+html.desk #searchSuggestions-container {
+	width: 300px;
+}
+
+html.phon .searchBar_open #searchBar {
+	width: auto;
+	left: 8px;
+}
+
+#searchBox {
+	width: 100%;
+	z-index: 35;
+	background-color: transparent;
+}
+
+#searchBox,
+#stoKeyInput,
+#stoKeyInputConfirm {
+	height: 38px;
+	border: 1px solid lightgray;
+}
+
+#searchBox,
+#searchAutoComplete {
+	text-transform: lowercase;
+	text-indent: 15px;
+}
+
+html.phon #searchBox,
+html.phon #searchAutoComplete {
+	text-indent: 7px;
+}
+
+html.desk #searchBox,
+html.desk #searchBar {
+	position: relative;
+	right: 0;
+}
+
+.dark-theme #searchBox,
+.dark-theme #stoKeyInput,
+.dark-theme #stoKeyInputConfirm,
+.dark-theme #sidenav button {
+	border-color: #444;
+}
+
+#searchAutoComplete {
+	position: absolute;
+	top: 8.5px;
+	left: 2px;
+	z-index: 30;
+}
+
+html.tabl .dark-theme #search:before,
+html.phon .dark-theme #search:before {
+	border-left: 1px solid #333;
+	width: 1px;
+	height: 52px;
+	content: "";
+	position: absolute;
+	right: 56px;
+	top: 0;
+}
+/*implimented own clear text x so remove default x*/
+input[type=text]::-ms-clear {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+input[type=text]::-ms-reveal {
+	display: none;
+	width: 0;
+	height: 0;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+	display: none;
+}
+
+#searchReset {
+	position: absolute;
+	right: 0;
+	top: 0;
+	height: 38px;
+	background: none;
+	border: none;
+	width: 40px;
+	z-index: 40;
+}
+
+html.desk .searchBar_open #searchReset {
+	display: block;
+}
+
+#searchSuggestions-container,
+#searchSuggestions,
+.dropdown {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	text-indent: 0;
+	text-align: left;
+	overflow: auto;
+}
+
+html.desk #searchSuggestions-container,
+html.tabl #searchSuggestions-container {
+	position: static;
+	max-height: 300px;
+	z-index: 30;
+}
+
+html.phon #searchSuggestions-container {
+	position: fixed;
+	top: 54px;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1;
+	box-shadow: none;
+}
+
+html.phon.land #searchSuggestions-container {
+	right: 54px;
+}
+
+/*debugmode classes*/
+
+#debug {
+	display: none;
+}
+
+#hideDebug {
+	padding: 6px 10px;
+	color: red;
+	position: fixed;
+}
+
+html.tabl #hideDebug,
+html.desk #hideDebug {
+	left: 25%;
+	right: auto;
+	right: initial;
+}
+
+html.tabl #debug.debugRight #hideDebug,
+html.desk #debug.debugRight #hideDebug {
+	left: auto;
+	left: initial;
+	right: 22px;
+}
+
+html.phon #hideDebug {
+	left: auto;
+	left: initial;
+	right: 12px;
+}
+
+html.debugmodeOn #debug {
+	color: #eee;
+	background-color: #111;
+	background-color: rgba(0, 0, 0, 0.7);
+	text-shadow: 0 0 2px #000;
+	font-family: Consolas, Courier New, Courier, monospace;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: auto;
+	right: initial;
+	width: 30%;
+	max-width: 400px;
+	height: 100%;
+	-ms-word-wrap: break-word;
+	word-wrap: break-word;
+	overflow: auto;
+	visibility: visible;
+	display: block;
+	z-index: 1099;
+}
+
+	html.debugmodeOn #debug.debugRight {
+		left: auto;
+		left: initial;
+		right: 0;
+	}
+
+html.phon #debug {
+	position: fixed;
+	width: 100%;
+	max-width: 100%;
+	height: 45%;
+	top: auto;
+	top: initial;
+	bottom: 0;
+}
+
+	html.phon #debug.debugRight {
+		top: 0;
+		bottom: auto;
+		bottom: initial;
+	}
+
+.debug-function {
+	color: purple;
+}
+
+.debug-error {
+	color: red;
+}
+
+.debug-string {
+	color: lightblue;
+}
+
+.debug-boolean {
+	color: lightgreen;
+}
+
+.debug-date {
+	color: pink;
+}
+
+.debug-number {
+	color: yellow;
+}
+
+.debug-text {
+	color: white;
+}
+
+.debug-array {
+	color: orange;
+}
+
+.debug-timestamp {
+	color: #CCC;
+	font-size: 0.75em;
+}
+
+/*Forms*/
+form:active,
+form:focus,
+input:focus,
+input:active {
+	outline: none;
+}
+
+input::-moz-focus-inner {
+	border: 0;
+}
+
+input[type=checkbox] {
+	top: 14px;
+	left: 28px;
+	display: none;
+}
+
+form.find,
+.checkbox label:before,
+.switch,
+.textbox,
+.textbox.valid,
+html.desk .textbox.valid:hover,
+.textbox.invalid:focus,
+textarea,
+textarea.valid,
+html.desk textarea.valid:hover,
+textarea.invalid:focus {
+	border-color: #e1e1e1 white white #e1e1e1;
+	border-color: rgba(128, 128, 128, 0.1) white white rgba(128, 128, 128, 0.1);
+	box-shadow: rgba(128, 128, 128, 0.5) 1px 1px 3px inset;
+}
+
+.dark-theme form.find,
+.dark-theme .checkbox label:before,
+.dark-theme .switch,
+.dark-theme .textbox,
+.dark-theme .textbox.valid,
+html.desk .dark-theme .textbox.valid:hover,
+.dark-theme .textbox.invalid:focus,
+.dark-theme textarea,
+.dark-theme textarea.valid,
+html.desk .dark-theme textarea.valid:hover,
+.dark-theme textarea.invalid:focus {
+	border-color: black #2c2c2c #2c2c2c black;
+	box-shadow: rgba(0, 0, 0, 0.15) 1px 1px 3px inset;
+}
+
+.checkbox label:before,
+.switch,
+.textbox,
+textarea{
+	background-color: #888;
+	background-color: rgba(255, 255, 255, 0.4);
+}
+
+.dark-theme .checkbox label:before,
+.dark-theme .switch,
+.dark-theme .textbox,
+.dark-theme textarea{
+	background-color: #333;
+	background-color: rgba(128, 128, 128, 0.25);
+}
+
+.textbox.invalid,
+textarea.invalid {
+	color: red;
+	box-shadow: rgba(255, 0, 0, 0.8) 0 0 4px inset;
+}
+
+.dark-theme .textbox.invalid,
+.dark-theme textarea.invalid{
+	color: #700000;
+	box-shadow: rgba(255, 0, 0, 0.5) 0 0 4px inset;
+}
+
+.textbox.valid,
+.textbox.invalid:focus,
+textarea.valid,
+textarea.invalid:focus {
+	color: #0f992d; /*text green*/
+}
+
+.dark-theme .textbox.valid,
+html.desk.dark-theme .textbox:hover,
+.dark-theme .textbox.invalid:focus,
+.dark-theme textarea.valid,
+html.desk.dark-theme textarea:hover,
+.dark-theme textarea.invalid:focus {
+	color: #238c3a; /*dark-theme text green*/
+}
+
+.switch label,
+html.desk button:hover,
+html.desk .link:hover,
+html.desk .jumplink:hover,
+button:active,
+.link:active,
+.jumplink:active {
+	background: #eee; /* Old browsers */
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+	border-right: 1px solid #f1f1f1;
+	border-top: 1px solid white;
+	border-left: 1px solid #f1f1f1;
+}
+
+.switch label,
+html.desk button:hover,
+html.desk .link:hover,
+button:active,
+.link:active {
+	border-bottom: 1px solid #e1e1e1;
+}
+
+.dark-theme .switch label,
+html.desk .dark-theme button:hover,
+html.desk .dark-theme .link:hover,
+html.desk .dark-theme .jumplink:hover,
+.dark-theme button:active,
+.dark-theme .link:active,
+.dark-theme .jumplink:active {
+	background: #222;
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+	border-right: 1px solid #1c1c1c;
+	border-top: 1px solid #2c2c2c;
+	border-left: 1px solid #1c1c1c;
+}
+
+.dark-theme .switch label,
+html.desk .dark-theme button:hover,
+html.desk .dark-theme .link:hover,
+.dark-theme button:active,
+.dark-theme .link:active {
+	border-bottom: 1px solid black;
+}
+
+.switch label {
+	background-color: #fafafa; /*button background*/
+	box-shadow: inset rgba(0, 0, 0, 0.04) -2px -3px 5px;
+}
+
+.dark-theme .switch label {
+	background-color: #090909; /*dark-theme button background*/
+	box-shadow: inset rgba(0, 0, 0, 0.4) -2px -4px 8px;
+}
+
+.switch label {
+	border: 1px solid #e1e1e1;
+}
+
+.dark-theme .switch label {
+	border: 1px solid #333;
+}
+
+.switch:before {
+	color: #5498e7; /*accent blue 10% lighter*/
+}
+
+.dark-theme .switch:before {
+	color: #70a6e4; /*accent blue 20% lighter*/
+}
+
+.switch {
+	text-shadow: 1px 1px 1px white, -1px -1px 1px #CCC;
+}
+
+.dark-theme .switch {
+	text-shadow: 1px 1px 1px #444, -1px -1px 1px #222;
+}
+
+.switch:after {
+	color: #AAA; /*disabled text grey*/
+}
+
+.dark-theme .switch:after {
+	color: #606060;
+}
+/* ON/OFF Switch */
+.switch {
+	width: 62px;
+	height: 32px;
+	margin: 3px 0;
+	border-radius: 16px;
+	border-width: 1px;
+	border-style: solid;
+	position: relative;
+	line-height: 32px;
+	text-indent: 0;
+	top: -8px;
+}
+
+	.switch:before {
+		content: 'ON';
+		position: absolute;
+		top: 0;
+		left: 7px;
+		height: 3px;
+		font-size: 12px;
+	}
+
+	.switch:after {
+		content: 'OFF';
+		position: absolute;
+		top: 0;
+		left: 32px;
+		height: 3px;
+		font-size: 12px;
+	}
+
+	.switch label {
+		display: block;
+		width: 31px;
+		height: 31px;
+		border-radius: 50%;
+		cursor: pointer;
+		position: absolute;
+		top: 0;
+		z-index: 10;
+		left: 0;
+	}
+
+		.switch label:focus {
+			outline: none;
+		}
+
+	.switch input[type=checkbox]:checked + label {
+		left: 30px;
+	}
+
+.itemLabel {
+	text-transform: uppercase;
+	float: left;
+	color: #888; /*light and dark theme medium grey*/
+	color: rgba(120, 120, 120, 0.85); /*light and dark theme medium grey*/
+	font-size: 14px;
+}
+
+html.phon .itemLabel {
+	height: 24px;
+	width: 100%;
+}
+
+html.tabl .itemLabel,
+html.desk .itemLabel {
+	padding-top: 8px;
+	width: 27%;
+}
+
+.itemText,
+.addressLink {
+	padding-bottom: 20px;
+	padding-top: 8px;
+	-ms-word-wrap: break-word;
+	word-wrap: break-word;
+}
+
+html.tabl .itemText,
+html.desk .itemText,
+html.tabl .addressLink,
+html.desk .addressLink {
+	padding-left: 27%;
+}
+
+.textbox, 
+textarea, 
+.editbox{
+	width: 100%;
+	padding: 3px 8px;
+	margin-bottom: 16px;
+}
+.textbox,
+textarea {
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+	line-height: 1.2;
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 2px;
+}
+
+.textbox {
+	height: 33px;
+}
+
+textarea {
+	resize: none;
+}
+
+html.tabl .textbox,
+html.desk .textbox,
+html.tabl .editbox,
+html.desk .editbox{
+	width: 73%;
+}
+
+.link,
+.jumplink {
+	display: block;
+	min-width: 244px;
+	max-width: 570px;
+	-ms-word-wrap: break-word;
+	word-wrap: break-word;
+}
+
+html.tabl .link,
+html.tabl .jumplink,
+html.tabl .view-container {
+	max-width: 800px;
+}
+
+html.desk .link,
+html.desk .jumplink,
+html.desk .view-container {
+	max-width: 1000px;
+}
+
+ul.links {
+	padding: 0;
+	margin: 0;
+	border-top: 1px solid #e1e1e1;
+	border-bottom: 1px solid white;
+}
+
+.dark-theme ul.links {
+	border-top: 1px solid black;
+	border-bottom: 1px solid #2c2c2c;
+}
+
+.link,
+.jumplink {
+	min-height: 42px;
+	padding: 13px 16px;
+	text-align: left;
+	overflow: hidden;
+	border-right: 1px solid transparent;
+	border-left: 1px solid transparent;
+	border-top: 1px solid white;
+}
+
+.jumplink {
+	font-weight: bold;
+}
+
+.link {
+	border-bottom: 1px solid #e1e1e1;
+}
+
+.dark-theme .link,
+.dark-theme .jumplink {
+	border-top: 1px solid #2c2c2c;
+}
+
+.jumplink-button,
+html.desk .jumplink-button:hover {
+	float: left;
+	min-width: 48px;
+	min-height: 48px;
+	padding: 13px 19px;
+	margin: 8px;
+}
+
+.dark-theme .link {
+	border-bottom: 1px solid black;
+}
+
+li.link {
+	list-style: none;
+}
+
+	li.link.icon {
+		display: block;
+	}
+
+	li.link.icon-unchecked:before,
+	li.link.icon-check:before {
+		padding-right: 16px;
+	}
+
+:link,
+html.desk .navlink:hover,
+a,
+button,
+#searchAutoComplete,
+html.desk .link:hover,
+.addressLink,
+.jumplink {
+	color: #478cdb; /*accent blue*/
+}
+
+	a:focus,
+	a:active,
+	html.desk a:hover,
+	.addressLink:focus,
+	.addressLink:active,
+	html.desk .addressLink:hover,
+	.jumplink:focus,
+	html.desk .jumplink:hover {
+		color: #5498e7; /*accent blue 10% lighter*/
+	}
+
+	.jumplink,
+	.jumplink:active,
+	html.desk .jumplink:hover,
+	.dark-theme .jumplink,
+	html.desk .dark-theme .jumplink:hover {
+		border-bottom: 1px solid #478cdb; /*accent blue*/
+	}
+
+html.desk #navbar .navlink:hover,
+html.desk #sidenav .views .navlink:hover,
+#searchBox:focus,
+#stoKeyInput:focus,
+#stoKeyInputConfirm:focus,
+.textbox:focus,
+.dark-theme #searchBox:focus,
+.dark-theme #stoKeyInput:focus,
+.dark-theme #stoKeyInputConfirm:focus,
+.dark-theme .textbox:focus {
+	border: 1px solid #478cdb; /*accent blue*/
+	background-color: none;
+}
+
+html.desk a:focus,
+html.desk button:focus,
+html.desk .addressLink:focus {
+	outline: 1px dotted #478cdb; /*accent blue*/
+}
+
+html.desk #navbar .navlink:focus,
+html.desk #sidenav .views .navlink:focus,
+html.desk .switch label:focus {
+	border: 1px dotted #478cdb; /*accent blue*/
+}
+
+.link:hover:active,
+html.desk .link:hover:active,
+button:hover:active,
+html.desk button:hover:active {
+	background-color: #f5f5f5;
+	color: #5498e7; /*accent blue 10% lighter*/
+}
+
+#searchSuggestions .link:active,
+.link.selected,
+html.desk .link.selected:hover {
+	background-color: #70a6e4; /*accent blue 20% lighter*/
+	color: white;
+}
+
+.navlink:active,
+html.desk .navlink:hover:active {
+	background-color: #99b9df; /*accent blue 30% lighter*/
+}
+
+.dark-theme #searchSuggestions .link:active,
+.dark-theme .link.selected,
+html.desk .dark-theme .link.selected:hover {
+	background-color: #2972c5; /*accent blue 20% darker*/
+}
+
+.dark-theme .navlink:active,
+html.desk .dark-theme .navlink:hover:active {
+	background-color: #2661a4; /*accent blue 30% darker*/
+}
+
+.jumplink-button {
+	border-radius: 24px;
+}
+
+.jumplink-button,
+html.desk .jumplink-button:hover,
+.jumplink.jumplink-button:active {
+	border: 1px solid #478cdb; /*accent blue*/
+}
+
+.dark-theme .jumplink-button,
+html.desk .dark-theme .jumplink-button:hover,
+.dark-theme .jumplink.jumplink-button:active {
+	border: 1px solid #317ed6; /*accent blue 10% darker*/
+}
+
+.dropdown-container {
+	position: relative;
+}
+
+.dropdown {
+	position: absolute;
+	z-index: 1;
+}
+
+.right .dropdown {
+	right: 0;
+}
+.editbox {
+	max-height: 500px;
+	overflow-y: auto;
+}
+.groupMember {
+	padding: 12px;
+	margin: 2px;
+	font-size: 16px;
+	border: 2px solid #478cdb; /*accent blue*/
+	float: left;
+	width: auto;
+	color: #478cdb; /*accent blue*/
+}
+
+button[disabled="disabled"],
+html.desk button[disabled="disabled"]:hover,
+button[disabled="disabled"]:active,
+button[disabled="disabled"]:focus {
+	background: none;
+	border: none;
+	color: #AAA;
+	cursor:not-allowed;
+}
+
+.dark-theme button[disabled="disabled"] {
+	color: #555;
+}

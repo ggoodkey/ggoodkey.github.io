@@ -1,0 +1,414 @@
+﻿<!DOCTYPE html>
+<html manifest="cache/offline.appcache">
+<!--offline.appcache for legacy browsers that don't support service workers-->
+<head>
+
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://www.dropbox.com https://api.dropbox.com https://api-content.dropbox.com https://api.dropboxapi.com https://content.dropboxapi.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+
+	<title>Nyckel</title>
+	<meta name="description" content="Nyckel Database Application" />
+
+	<!--Favicons-->
+	<link rel="icon" type="image/ico" href="favicon.ico" />
+	<link rel="icon" type="image/png" href="images/favicon-16x16.png" sizes="16x16" />
+	<link rel="icon" type="image/png" href="images/favicon-32x32.png" sizes="32x32" />
+	<link rel="icon" type="image/png" href="images/favicon-96x96.png" sizes="96x96" />
+	<link rel="shortcut icon" href="favicon.ico" />
+
+	<!--web app manifest-->
+	<link rel="manifest" href="manifest.json" />
+
+	<!-- Fallback application metadata for legacy browsers -->
+	<meta name="application-name" content="Nyckel" />
+
+	<!--microsoft-->
+	<link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico" />
+	<meta name="msapplication-tooltip" content="Nyckel Database Application" />
+	<meta name="msapplication-navbutton-color" content="#478cdb" />
+	<meta name="msapplication-tap-highlight" content="no" />
+	<meta name="msapplication-config" content="browserconfig.xml" />
+
+	<!--apple-->
+	<!-- Place 180x180px apple-touch-icon.png in the root directory -->
+	<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+	<!--ipad-->
+	<link rel="apple-touch-icon" sizes="152x152" href="images/apple-touch-icon-152x152.png" />
+	<!--ipad retina-->
+	<link rel="apple-touch-icon" sizes="167x167" href="images/apple-touch-icon-167x167.png" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="#478cdb" />
+	<meta name="apple-mobile-web-app-title" content="Nyckel" />
+
+	<!--chrome-->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<!-- Place 192x192px icon.png in the root directory -->
+	<link rel="icon" type="image/png" sizes="192x192" href="icon.png" />
+
+	<!-- Chrome, Firefox OS and Opera -->
+	<meta name="theme-color" content="#478cdb" />
+
+	<!--css-->
+	<link rel="stylesheet" type="text/css" href="css/index.css" />
+	<link rel="stylesheet" type="text/css" href="css/icons.css" />
+</head>
+<body>
+	<div id="loading"></div>
+	<div id="debug">
+		<button id="hideDebug" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		<h4>Click to move</h4>
+		<div id="debugMsg"></div>
+	</div>
+	<div id="app" v-bind:class="{'sidenav_open': showSideNav, 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme, changeViewTransition: viewTransition, changeViewDone: viewTransitionDone }">
+		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar}">
+			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
+			<div id="currentView"> {{ currentView }}</div>
+			<!--right buttons (reverse order)-->
+			<div id="cancelSearch" class="navlink right" v-show="showSearchBar" v-on:click="cancelSearch" tabindex="11" title="Cancel Search"><span class="icon icon-remove"></span></div>
+			<div id="menu" class="navlink right" v-on:click="showSettings = false; toggle('showSideNav');" tabindex="6" title="Menu"><span class="icon icon-menu-hamburger"></span></div>
+			<div id="search" class="navlink right" v-on:click="search" tabindex="10" title="Search"><span class="icon icon-search"></span></div>
+			<form id="searchBar" class="right">
+				<input id="searchBox" type="search" autocomplete="off" tabindex="7" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
+				<input id="searchReset" type="reset" value="&#10005;" tabindex="8" v-on:click="resetSearch" />
+				<div id="searchAutoComplete"> {{ searchAutoComplete }}</div>
+				<div id="searchSuggestions-container" tabindex="9" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
+					<ul id="searchSuggestions">
+						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
+					</ul>
+				</div>
+			</form>
+			<div class="views desk right">
+				<div class="navlink" v-show="viewRecent === false" v-on:click="navigate(views[0])" tabindex="2" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span><span class="desk"> &nbsp; {{ viewNames[0] }}</span></div>
+				<div class="navlink" v-show="view1 === false" v-on:click="navigate(views[4])" tabindex="3" v-bind:title="viewNames[4]"><span class="icon" v-bind:class="viewIcons[4]"></span><span class="desk"> &nbsp; {{ viewNames[4] }}</span></div>
+				<div class="navlink" v-show="view2 === false" v-on:click="navigate(views[5]); initializeGroups()" tabindex="4" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span><span class="desk"> &nbsp; {{ viewNames[5] }}</span></div>
+				<div class="navlink" v-show="view3 === false" v-on:click="navigate(views[6])" tabindex="5" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span><span class="desk"> &nbsp; {{ viewNames[6] }}</span></div>
+				<div class="navlink" v-show="view4 === false" v-on:click="navigate(views[7])" tabindex="6" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span><span class="desk"> &nbsp; {{ viewNames[7] }}</span></div>
+			</div>
+		</nav>
+
+		<nav id="sidenav">
+			<div id="sidenav-container">
+				<div class="views">
+					<div class="navlink phon tabl" v-show="viewRecent === false" v-on:click="navigate(views[0])" tabindex="12" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[0] }}</div>
+					<div class="navlink phon tabl" v-show="view1 === false" v-on:click="navigate(views[4])" tabindex="13" v-bind:title="viewNames[4]"><span class="icon" v-bind:class="viewIcons[4]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[4] }}</div>
+					<div class="navlink phon tabl" v-show="view2 === false" v-on:click="navigate(views[5]); initializeGroups();" tabindex="14" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[5] }}</div>
+					<div class="navlink phon tabl" v-show="view3 === false" v-on:click="navigate(views[6])" tabindex="15" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[6] }}</div>
+					<div class="navlink phon tabl" v-show="view4 === false" v-on:click="navigate(views[7])" tabindex="16" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[7] }}</div>
+					<div id="settings" class="navlink" v-on:click.stop="toggleSettings" tabindex="17" title="Settings">
+						<span class="icon icon-cog"></span> &nbsp;&nbsp;&nbsp; Settings
+						<span class="icon icon-menu-down right" v-show="showSettings === false">
+						</span><span class="icon icon-menu-up right" v-show="showSettings"></span>
+					</div>
+					<div class="text" v-show="showSettings">
+						<div v-if="windows">
+							Use Windows Theme
+							<div class="switch right">
+								<input type="checkbox" id="switch_useWindowsTheme" v-model="useWindowsTheme" />
+								<label for="switch_useWindowsTheme" v-on:click="toggleUseWindowsTheme" tabindex="17"></label>
+							</div>
+						</div>
+						<div v-show="useWindowsTheme === false" class="clear">
+							Dark Theme
+							<div class="switch right">
+								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" />
+								<label for="switch_darktheme" v-on:click="storeState" tabindex="17"></label>
+							</div>
+						</div>
+						<div class="clear">
+							Dropbox
+							<a class="right" tabindex="18" v-if="loggedIn === false" v-on:click="login">Connect to Dropbox</a>
+							<span class="right">{{ dropboxUsername }}</span>
+							<div v-if="loggedIn === true">
+								<a class="right" tabindex="19" v-on:click="logout">Disconnect Account</a>
+								<br /><br />
+								<a class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</a>
+								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
+									Your files have been secured <a class="right" v-on:click="toggle('showStoKeyInput')">Change Key</a>
+								</div>
+								<form v-if="showStoKeyInput" class="right">
+									Change your key<br /><br />
+									<label for="stoKeyInput" v-bind:class="{alert:stoKeyWarning !== ''}">Create a new password</label>
+									<input id="stoKeyInput" type="password" />
+									<br /><br />
+									<label for="stoKeyInputConfirm" v-bind:class="{alert:stoKeyWarning !== ''}">Type it in again</label>
+									<input id="stoKeyInputConfirm" type="password" />
+									<span class="alert">{{stoKeyWarning}}</span>
+									<button v-on:click.stop="newStoKey">Create Key</button>&nbsp;
+									<button v-on:click.stop="toggle('showStoKeyInput')">Cancel</button>
+								</form>
+								<br />
+								<a class="right" v-on:click="syncAll">Sync Now</a>
+							</div>
+						</div>
+						<div class="clear">
+							App Version
+							<div class="right">{{ version }}</div>
+						</div>
+						<a class="clear right" href="http://gapps.droppages.com/privacy.html" target="_blank">Privacy Policy</a>
+						<p id="copy" class="clear"><small>&copy; 2018 GG</small></p>
+					</div>
+				</div>
+			</div>
+		</nav>
+		<div id="notification" v-show="showNotify" v-on:click="showNotify = false">
+			<div id="notification_msg">{{ notifyMsg }}</div>
+			<a id="hideNotification" class="close" aria-label="Close" v-on:click="showNotify = false"><span aria-hidden="true">&times;</span></a>
+		</div>
+		<div id="spinner" v-show="spinner"><img width="20" height="20" src="images/spinner.gif" /> {{ spinnerMsg[spinIndex] }}</div>
+		<div id="confirmContainer" v-show="showConfirm" v-on:click="shakeConfirm"></div>
+		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
+			<div id="confirmMessage">{{ confirmMsg }}</div>
+			<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
+			<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);" tabindex="19">{{ confirmOK }}</button>
+			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);" tabindex="20">{{ confirmCancel }}</button>
+		</div>
+		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
+		<div id="recentView" class="view" v-if="viewRecent" v-bind:class="{splitViewLeft: splitView}">
+			<div class="view-container">
+				<h1>Recently Viewed</h1>
+				<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView"></jump-list>
+			</div>
+		</div>
+		<div class="view" v-show="view1">
+			<div class="view-container">
+				<h1>Contacts</h1>
+				<a class="button" v-on:click="loadFile('hiddenCSVInput', 'csv')">Select a CSV file from your device</a>
+				<input type="file" class="hidden" id="hiddenCSVInput" />
+				<button v-on:click="notify('hello')">Notify</button>
+			</div>
+		</div>
+		<div id="groupsView" class="view" v-show="view2">
+			<div class="view-container">
+				<div v-if="groups.length === 0 || showNewGroupUI">
+
+					<button v-show="groupName !== '' && groupPage > 1" v-on:click="groupPage = 1">Edit Group Name: {{groupName}}</button>
+					<button v-show="groupSearchBox !== '' && groupPage > 2" v-on:click="groupPage = 2">Edit Search Query: {{groupSearchBox}}</button>
+					<div v-show="groupPage === 1">
+						<h2>Create a new group</h2>
+						<label class="itemLabel">Give the Group a Name</label>
+						<input type="text" class="textbox" autocomplete="off" v-model="groupName" />
+						<button type=button :disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
+					</div>
+					<div v-show="groupPage === 2">
+						<h2>Make the Group Dynamic based on a Search Query</h2>
+						<p>The group can update itself dynamically as data changes in the database. <a v-on:click='toggle("groupHelp")'>Learn how to refine your search</a></p>
+						<div v-if="groupHelp">
+							<p>
+								You can refine your search by adding to, or subtracting from your search by prefixing additional search terms with the "+" or "-" charactors.
+								For example, searching for "Bob Johnston" would find Bob Johnston, as expected, but "Bob +Johnston" finds all the Bobs, as well as all the Johnstons
+								(Bob Smith, Bob Johnston, Bob Dunn, Jim Johnston...), whereas "Bob -Johnston" finds all the Bobs who are not Johnstons (Bob Smith, Bob Dunn).
+							</p>
+							<p>Note: Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
+						</div>
+						<label class="itemLabel">Input Search Terms</label>
+						<input type="search" class="textbox" autocomplete="off" v-model="groupSearchBox" v-on:keypress="groupKeyPress($event)" v-on:keyup="groupKeyUp($event)" v-on:keypdown="groupKeyDown($event)" v-on:input="groupInput($event)" />
+						<button v-if="groupSearchBox === ''" v-on:click="groupPage++">Skip</button>
+					</div>
+					<div v-show="groupPage === 3">
+						<h2>Select Members</h2>
+						<label class="itemLabel">Add Members by Selection</label>
+						<div id="selectGroupItems" class="editbox">
+							<button v-if="activeGroup.length === 0" v-on:click="showSelectGroupMembers">Select Group Members</button>
+							<jump-list v-else v-bind:links="activeGroup" scrolldiv="selectGroupItems" select></jump-list>
+						</div>
+					</div>
+					<div v-show="groupPage > 1 && activeGroup.length > 0">
+						<label class="itemLabel">Group Preview</label>
+						<div id="groupPreview" class="editbox">
+							<div v-if="activeGroup.length === 0">Nothing to show</div>
+							<div class="groupMember" v-for="item in activeGroup" v-if="item.selected">{{ item.text }}&nbsp;<a v-on:click="item.selected = false">&nbsp;&#10005;&nbsp;</a></div>
+						</div>
+						<button v-on:click="resetGroups">Cancel</button>
+						<button v-on:click="newGroup">Create Group</button>
+					</div>
+				</div>
+				<div v-else-if="showEditGroupUI">
+					<h2>Editing {{ groupName }} group</h2>
+				</div>
+				<div v-else>
+					<h1>Groups</h1>
+					<ul v-show="groups.length > 0" class="links">
+						<li v-for="(groupName, index) in groups" class="link" v-on:click="seeGroup(index)">{{ groupName }}</li>
+					</ul>
+					<button v-on:click="toggle('showNewGroupUI')">Create a New Group</button>
+				</div>
+			</div>
+		</div>
+		<div class="view" v-show="view3">
+			<div class="view-container">
+				<h1>Passwords</h1>
+			</div>
+		</div>
+		<div class="view" v-show="view4">
+			<div class="view-container">
+				<h1>Files</h1>
+				<h2>Add some content</h2>
+				<a class="button" v-on:click="loadFile('hiddenFileInput')">Select a file from your device</a>
+				<input type="file" class="hidden" id="hiddenFileInput" />
+				<button v-on:click="generateListView('files')">See all files</button>
+			</div>
+		</div>
+		<div id="searchResultsView" class="view" v-if="viewSearch" align="center" v-bind:class="{splitViewLeft: splitView}">
+			<div class="view-container">
+				<div v-if="searchResults.length > 0">
+					<h2>{{ searchResultsTitle }}</h2>
+					<div align="left">
+						<div class="dropdown-container right">
+							<button id="searchResultsGroupDropdown" v-on:click="toggleResultsGroupDropdown" v-bind:title="'Add ' + currentQuery + ' to Group'"><span class="icon icon-people"></span> Add Search to Group</button>
+							<ul v-show="addSearchToGroupDropdown" class="dropdown">
+								<li v-for="groupName in groups" v-on:click="addToGroup(groupName, null, currentQuery)" class="link">{{ groupName }}</li>
+								<li v-on:click="addToNewGroup(null, currentQuery)" class="link">Create new group</li>
+							</ul>
+						</div>
+						<a id="hiddenEmailLink" class="hidden" href=""></a>
+						<button class="right"><span class="icon icon-filter"></span> Filter</button>
+						<button class="right"><span class="icon icon-sort"></span> Sort</button>
+						<button v-show="selectSearchResults"><span class="icon icon-favorite-star"></span> Add Selected to Favorites</button>
+						<button v-show="selectSearchResults"><span class="icon icon-mail"></span> E-mail Selected</button>
+					</div>
+					<jump-list v-bind:links="searchResults" v-bind:select="selectSearchResults" scrolldiv="searchResultsView"></jump-list>
+				</div>
+				<h4>{{ searchResultsError }}</h4>
+			</div>
+		</div>
+		<div class="view" v-if="viewDetails" v-bind:class="{splitViewRight: splitView}">
+			<div class="view-container" v-if="details[0]">
+				<h1>{{ details[0].text }}</h1>
+				<div v-if="details[78] && details[78].text && details[78].column === 'Organization1_Name'">{{ details[78].text }}</div>
+				<button v-on:click="editDetails" class="right" v-bind:title="'Edit ' + details[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
+				<div class="dropdown-container right">
+					<button id="groupsDropdownButton" v-on:click="toggleGroupsDropdown" v-bind:title="'Add ' + details[0].text + ' to Group'"><span class="icon icon-people"></span>&nbsp;&nbsp;Add to Group</button>
+					<ul v-show="addItemToGroupDropdown" class="dropdown">
+						<li v-for="groupName in groups" v-on:click="addToGroup(groupName, details)" class="link">{{ groupName }}</li>
+						<li v-on:click="addToNewGroup(details)" class="link">Create new group</li>
+					</ul>
+				</div>
+				<template v-for="(item, index) in details" v-if="item.text">
+					<div class="hidden clear" v-if="index === 0 || /Type$/.test(item.column) || /GivenName|FamilyName|Notes|Organization1_Name|Address/.test(item.column)">
+					</div>
+					<div v-else class="clear">
+						<label class="itemLabel" v-if="/Value$/.test(item.column)">{{ details[index -1].text }}</label>
+						<label class="itemLabel" v-else>{{ item.column }}</label>
+						<div v-if="item.type === 'email'" class="itemText">
+							<a v-bind:href="externalLink(item, 'email')">
+								<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>
+						</div>
+						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(details[index -1].text)" class="itemText">
+							<a v-bind:href="externalLink(item, 'phone')">
+								<span class="icon icon-phone-alt">
+								</span>&nbsp;&nbsp;{{ item.text }}
+							</a>
+						</div>
+						<div v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(details[index -1].text)" class="itemText">
+							<a v-bind:href="externalLink(item, 'phone')">
+								<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							<a v-bind:href="externalLink(item, 'sms')">
+								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+							</a>
+						</div>
+						<div v-else-if="details[index -1].text === 'GPS'" class="itemText">
+							<a v-bind:href="externalLink(item, 'gps')">
+								<span class="icon icon-mappin"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>
+						</div>
+						<div v-else class="itemText">{{ item.text }}</div>
+					</div>
+				</template>
+				<template v-for="(item, index) in details" v-if="item.text && /Address1_Type|Address2_Type/.test(item.column) && (details[index + 2].text || details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text)">
+					<div class="clear">
+						<label class="itemLabel" v-if="/Address/i.test(item.text)">{{ item.text }}</label>
+						<label class="itemLabel" v-else>{{ item.text }} Address</label>
+						<div class="itemText">
+							<a v-bind:href="externalLink(item, 'address', details)">
+								<template v-if="details[index + 2] && details[index + 2].text">
+									{{ details[index + 2].text }}
+									<br v-if="details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text" />
+								</template>
+								<template v-if="details[index + 4] && details[index + 4].text">
+									{{ details[index + 4].text }}
+									<br v-if="details[index + 3].text || details[index + 5].text || details[index + 6].text || details[index + 7].text" />
+								</template>
+								<template v-if="details[index + 3] && details[index + 3].text">
+									<template v-if="details[index + 5] && details[index + 5].text">
+										{{ details[index + 3].text }}, {{ details[index + 5].text }}
+										<br v-if="details[index + 6].text || details[index + 7].text" />
+									</template>
+									<template v-else>
+										{{ details[index + 3].text }}
+										<br v-if="details[index + 6].text || details[index + 7].text" />
+									</template>
+								</template>
+								<template v-if="details[index + 6] && details[index + 6].text">
+									{{ details[index + 6].text }}
+									<br v-if="details[index + 7].text" />
+								</template>
+								<template v-if="details[index + 7] && details[index + 7].text">
+									{{ details[index + 7].text }}
+								</template>
+							</a>
+						</div>
+					</div>
+				</template>
+				<div v-if="details[25] && details[25].column === 'Notes'" class="clear">
+					<label class="itemLabel">Notes</label>
+					<div class="itemText">{{ details[25].text }}</div>
+				</div>
+			</div>
+		</div>
+		<div class="view" v-show="viewEdit">
+			<div class="view-container">
+				<h1>Edit</h1>
+				<div v-for="item in details">
+					<label class="itemLabel">{{ item.column.replace(/_/g," ") }}</label>
+					<input v-if="item.type === 'number'" type="number" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="item.text" class="textbox" />
+					<div v-else-if="item.type === 'boolean'" class="switch right">
+						<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text" />
+						<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item)"></label>
+					</div>
+					<input v-else-if="item.type === 'date'" type="date" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'email'" type="email" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="item.text" class="textbox" />
+					<div v-else-if="item.type === 'dropdown'">
+						<button v-on:click="item.showDropdown = true">{{ item.text }}</button>
+						<div v-show="item.showDropdown">
+							<ul v-for="option in item.options">
+								<li v-on:click="setItem(item, option)">{{ option }}</li>
+							</ul>
+						</div>
+					</div>
+					<input v-else type="text" v-bind:value="item.text" class="textbox" />
+					<div class="alert">{{ item.warning }}</div>
+				</div>
+				<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
+				<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="scripts/vue.min.js"></script>
+	<script type="text/javascript" src="scripts/debugmode.min.js"></script>
+	<script type="text/javascript" src="scripts/base64.min.js"></script>
+	<script type="text/javascript" src="scripts/dropbox.min.js"></script>
+	<script type="text/javascript" src="scripts/Lawnchair.js"></script>
+	<script type="text/javascript" src="scripts/adapters/memory.js"></script>
+	<script type="text/javascript" src="scripts/adapters/indexed-db.js"></script>
+	<script type="text/javascript" src="scripts/adapters/dom.js"></script>
+	<script type="text/javascript" src="scripts/storage.js"></script>
+	<script type="text/javascript" src="scripts/validate.min.js"></script>
+	<script type="text/javascript" src="scripts/tableDB.js"></script>
+	<script type="text/javascript" src="cordova.js"></script>
+	<script type="text/javascript" src="scripts/platformOverrides.js"></script>
+	<script type="text/javascript" src="scripts/common.min.js"></script>
+	<script type="text/javascript" src="scripts/winjs/base.min.js"></script>
+	<script type="text/javascript" src="scripts/lists.min.js"></script>
+	<script type="text/javascript" src="scripts/index.js"></script>
+	<script type="text/javascript" src="sw.js">	
+	</script>
+</body>
+</html>

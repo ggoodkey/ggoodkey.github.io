@@ -1,0 +1,56 @@
+CACHE MANIFEST
+
+#Change Log 
+#rev 0 2017 12 24 v1
+#rev 1 2018 10 13 v10
+#TODO remove # before file paths when files are created
+
+CACHE:
+#../favicon.ico
+../browserconfig.xml
+../cordova.js
+../index.html
+../manifest.json
+../pwabuilder-sw.js
+../css/icons.css
+../css/index.css
+../fonts/glyphicons-halflings-regular.eot
+../fonts/glyphicons-halflings-regular.svg
+../fonts/glyphicons-halflings-regular.ttf
+../fonts/glyphicons-halflings-regular.woff
+../fonts/glyphicons-halflings-regular.woff2
+#../images/favicon-16x16.png
+#../images/favicon-32x32.png
+#../images/favicon-96x96.png
+#../icon.png
+#../apple-touch-icon.png
+#../images/apple-touch-icon-152x152.png
+#../images/apple-touch-icon-167x167.png
+#../images/ms-touch-icon-144x144-precomposed.png
+../images/Square70x70Logo.scale-100.png
+../images/Square150x150Logo.scale-100.png
+../images/Square310x310Logo.scale-100.png
+../images/Wide310x150Logo.scale-100.png
+../images/spinner.gif
+../scripts/base64.min.js
+../scripts/common.min.js
+../scripts/debugmode.min.js
+../scripts/dropbox.min.js
+../scripts/index.js
+../scripts/Lawnchair.js
+../scripts/lists.min.js
+../scripts/platformOverrides.js
+../scripts/storage.js
+../scripts/tableDB.js
+../scripts/tableDB.min.js
+../scripts/validate.min.js
+../scripts/vue.min.js
+../scripts/webworker.js
+../scripts/adapters/memory.js
+../scripts/adapters/indexed-db.js
+../scripts/adapters/dom.js
+../scripts/winjs/base.min.js
+
+NETWORK:
+../cache/offline.appcache
+*
