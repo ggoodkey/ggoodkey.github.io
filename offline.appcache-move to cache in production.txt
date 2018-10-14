@@ -14,11 +14,11 @@ CACHE:
 ../pwabuilder-sw.js
 ../css/icons.css
 ../css/index.css
-../fonts/glyphicons-halflings-regular.eot
-../fonts/glyphicons-halflings-regular.svg
-../fonts/glyphicons-halflings-regular.ttf
-../fonts/glyphicons-halflings-regular.woff
-../fonts/glyphicons-halflings-regular.woff2
+../css/fonts/glyphicons-halflings-regular.eot
+../css/fonts/glyphicons-halflings-regular.svg
+../css/fonts/glyphicons-halflings-regular.ttf
+../css/fonts/glyphicons-halflings-regular.woff
+../css/fonts/glyphicons-halflings-regular.woff2
 #../images/favicon-16x16.png
 #../images/favicon-32x32.png
 #../images/favicon-96x96.png

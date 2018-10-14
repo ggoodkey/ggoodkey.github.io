@@ -2,7 +2,7 @@
 
 var CACHE = 'pwabuilder-precache';
 var precacheFiles = [
-	//"../favicon.ico",
+	//"favicon.ico",
 
 	"browserconfig.xml",
 	"cordova.js",
@@ -11,20 +11,20 @@ var precacheFiles = [
 	"pwabuilder-sw.js",
 	"css/icons.css",
 	"css/index.css",
-	"fonts/glyphicons-halflings-regular.eot",
-	"fonts/glyphicons-halflings-regular.svg",
-	"fonts/glyphicons-halflings-regular.ttf",
-	"fonts/glyphicons-halflings-regular.woff",
-	"fonts/glyphicons-halflings-regular.woff2",
+	"css/fonts/glyphicons-halflings-regular.eot",
+	"css/fonts/glyphicons-halflings-regular.svg",
+	"css/fonts/glyphicons-halflings-regular.ttf",
+	"css/fonts/glyphicons-halflings-regular.woff",
+	"css/fonts/glyphicons-halflings-regular.woff2",
 
-	//"../images/favicon-16x16.png",
-	//"../images/favicon-32x32.png",
-	//"../images/favicon-96x96.png",
-	//"../icon.png",
-	//"../apple-touch-icon.png",
-	//"../images/apple-touch-icon-152x152.png",
-	//"../images/apple-touch-icon-167x167.png",
-	//"../images/ms-touch-icon-144x144-precomposed.png",
+	//"images/favicon-16x16.png",
+	//"images/favicon-32x32.png",
+	//"images/favicon-96x96.png",
+	//"icon.png",
+	//"apple-touch-icon.png",
+	//"images/apple-touch-icon-152x152.png",
+	//"images/apple-touch-icon-167x167.png",
+	//"images/ms-touch-icon-144x144-precomposed.png",
 
 	"images/Square70x70Logo.scale-100.png",
 	"images/Square150x150Logo.scale-100.png",
