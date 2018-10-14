@@ -4,7 +4,7 @@ var CACHE = 'pwabuilder-precache';
 var precacheFiles = [
 	//"../favicon.ico",
 
-	"/browserconfig.xml"
+	"/nyckel/browserconfig.xml"
 	//"../cordova.js",
 	//"../index.html",
 	//"../manifest.json",
