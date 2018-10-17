@@ -370,6 +370,7 @@
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
 					}
+					checkDBLoaded();
 				}
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
@@ -410,15 +411,18 @@
 							app.notify("App version has changed from " + s.version + " to " + app.version + ". Resetting app settings to default values.");
 							// migrate older version state data here
 							APP.Sto.deleteItem("state");
+							checkDBLoaded();
 						}
 						
 					} else if (error) {
 						debug(error, "error getting app state");
+						checkDBLoaded();
 					} else {
 						debug(s, "state not found");
 						APP.Sto.deleteItem("state");
+						checkDBLoaded();
 					}
-				});
+				}, checkDBLoaded);
 			}
 			layout();
 			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
@@ -429,7 +433,6 @@
 				webWorker.addEventListener('error', wwOnError, false);
 			}
 			matchWindowsTheme();
-			checkDBLoaded();
 			updateWindowsLiveTile();
 		},
 		//Windows specific functions
@@ -587,7 +590,7 @@
 						if (!WorkingOffline) {
 							app.syncAll();
 						}
-						else app.spin(false);
+						app.spin(false);
 						loadDB = false;
 						loadDBQueueIndex--;	
 						if (loadDBQueueIndex < 0) return;
@@ -1541,8 +1544,9 @@
 				}
 				function done(success, errors, title, syncPending) {
 					if (success && !errors) {
-						if (syncPending) {//TODO
+						if (syncPending) {
 							_this.notify("Data imported successfully", true);
+							_this.syncAll();
 						}
 						else _this.notify("Data imported and synchronized successfully", true);
 					}
@@ -1717,10 +1721,8 @@
 							if (success) {
 								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
-								if (APP.Dbx && APP.Dbx.isAuthenticated) {
-									_this.spin(true, "Synchronising with Dropbox");
-									APP.Dbx.open("/sync/lastSync", null, readSyncfile);
-								}
+								_this.spin(true, "Synchronising with Dropbox");
+								APP.Dbx.open("/sync/lastSync", null, readSyncfile);
 							}
 							else {
 								console.log("cannot sync to Dropbox now");
