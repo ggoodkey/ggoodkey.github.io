@@ -11,12 +11,12 @@ Page 1
 Page 2
 * [Features](#features)
   * [Sort, Shuffle and Filter](#sort-shuffle-and-filter)
-  * [Search](#Search)
+  * [Search](#search)
   * [Sync and Share](#sync-and-share)
   * [Data Validation](#data-validation)
 
 Page3
-* [Types](#Types)
+* [Types](#types)
   * [String types](#string-types)
   * [Numeric types](#numeric-types)
   * [Boolean types](#boolean-types)
