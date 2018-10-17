@@ -6,33 +6,33 @@ NyckelDB is a database that is sortable, searchable, filterable, syncable and sh
 
 ## Table of Contents
 Page 1
-* [Dependancies](#Dependancies)
+* [Dependancies](#dependancies)
 
 Page 2
-* [Features](#Features)
-  * [Sort, Shuffle and Filter](#Sort-Shuffle-and-Filter)
+* [Features](#features)
+  * [Sort, Shuffle and Filter](#sort-shuffle-and-filter)
   * [Search](#Search)
-  * [Sync and Share](#Sync-and-Share)
-  * [Data Validation](#Data-Validation)
+  * [Sync and Share](#sync-and-share)
+  * [Data Validation](#data-validation)
 
 Page3
 * [Types](#Types)
-  * [String types](#String-types)
-  * [Numeric types](#Numeric-types)
-  * [Boolean types](#Boolean-types)
+  * [String types](#string-types)
+  * [Numeric types](#numeric-types)
+  * [Boolean types](#boolean-types)
 
 Page 4
-* [Setting up a new NyckelDB Object](#Setting-up-a-new-NyckelDB-Object)
-* [Custom Properties](#Custom-Properties)
+* [Setting up a new NyckelDB Object](#setting-up-a-new-nyckeldb-object)
+* [Custom Properties](#custom-properties)
 
 Page 5-6
-* [Functions](#Functions)
+* [Functions](#functions)
 
 Page 7
-* [Miscellaneous](#Miscellaneous)
-  * [Database Structure](#Database-Structure)
-  * [Null and Undefined](#Null-and-Undefined)
-  * [Time Stamps](#Time-Stamps)
+* [Miscellaneous](#miscellaneous)
+  * [Database Structure](#database-structure)
+  * [Null and Undefined](#null-and-undefined)
+  * [Time Stamps](#time-stamps)
 
 ## Dependancies
 * validate.js
@@ -72,7 +72,7 @@ The data type for each column in the table is specified on creation of the table
 Within these 3 general types of data are many more subtypes. 
 Additional data validation, and sometimes error correction can be done by specifying a subtype, i.e. streetAddress is a subtype of String. 
 Some subtypes fall into more than one category such as *postalZipCode* which can be a String or a Number. 
-[See Types below](#Types) for a complete list of all the different subtypes.
+[See Types below](#types) for a complete list of all the different subtypes.
 
 If you want the most flexibilty you can specify *any*, which will allow any type of data to be saved to that column in the table, as long as it is a String, Number or Boolean value.
 
@@ -97,20 +97,20 @@ If you want the most flexibilty you can specify *any*, which will allow any type
 * **geoLocation** for complete formatted GPS position in decimal coordinates
 
 ### Numeric types
-* **any** see [String types: any](#String-types)
+* **any** see [String types: any](#string-types)
 * **number** accepts any numeric value, whether positive, negitive, or decimal, up to the Javascript physical size limit
 * **integer** checks that it is a number, and rounds numbers to the nearest integer value
 * **posInteger** checks that is a positive number, including 0, and rounds to the nearest integer value
 * **negInteger** checks that it is a negitive number, including 0, and rounds to the nearest integer value
 * **date** for brevity, stores dates as the number of milliseconds since the database creation. Retreived values are returned in UNIX time - the number of milliseconds since 00:00:00 Jan 1, 1970 UTC
-* **phoneNumber** see [String types: phoneNumber](#String-types)
-* **password** see [String types: password](#String-types)
-* **postalZipCode** see [String types: postalZipCode](#String-types)
+* **phoneNumber** see [String types: phoneNumber](#string-types)
+* **password** see [String types: password](#string-types)
+* **postalZipCode** see [String types: postalZipCode](#string-types)
 * **longitude** checks that it is a valid longitudinal decimal coordinate
 * **latitude** checks that it is a valid latitudinal decimal coordinate
 
 ### Boolean types
-* **any** see [String types: any](#String-types)
+* **any** see [String types: any](#string-types)
 * **boolean** accepts only true or false
 
 <div style="page-break-before: always;" align="right"><small>Page 4</small><hr></div>
@@ -157,8 +157,8 @@ addRow | array, *id | | Add a new row to the table. The array must be complete a
 deleteRow | rowId | | Delete a row along with all the data that it contains
 setVal | rowId, colName, newValue | | Change the value of a cell
 getVal | rowId, colName	| table cell value | Get the value of a cell
-setProp | propName, value | | Change the value of a table [custom property](#Custom-Properties)
-getProp | propName | property value | Get the value of a table [custom property](#Custom-Properties)
+setProp | propName, value | | Change the value of a table [custom property](#custom-properties)
+getProp | propName | property value | Get the value of a table [custom property](#custom-properties)
 getTitle | | table title | Get the title of the table
 setTitle | newTitle, *callback | | Change the title of the table. (This actually deletes the table and creates a new one with the new name &ndash; something to be aware of if you try to access the table by it's old name and see that it has been deleted!)
 getType | colName | a column type | Get the 'type' that has been set on a particular column
@@ -175,7 +175,7 @@ search | searchQuery, *options | an Array of row ids which contain the searchQue
 getSearchSuggestions | searchQuery | an Array of search queries that would return a match | Get search suggestions from partial words, for example, as you type in a search box
 getIndexOf | *id, *value, *colName | zero based index of a row's current position in the table, -1 if not found | Get a row's current position in the table. You can supply either a row id, or else both a value and colName to find the first row that contains that value in the given column.
 getLength | | a Number | Get the number of (unhidden, unfiltered) rows in the table
-getLastModified | | a Number, see [Time stamps](#Time-stamps) | Get the timestamp of when the table was most recently changed
+getLastModified | | a Number, see [Time stamps](#time-stamps) | Get the timestamp of when the table was most recently changed
 isDeleted | | true or false | Check if the table has been deleted or not
 importJSON | json, callback | | Merge two copys of the same NyckelDB table (same title, column headers and column types) into one
 toCSV | | | Not implemented yet
