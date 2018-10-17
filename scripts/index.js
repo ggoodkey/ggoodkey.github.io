@@ -12,7 +12,7 @@
 		backIndex = 1,
 		debug = APP.debug,//shortform access to APP.debug
 		fileReaderInitiated = [],
-		dataTemplates = {//add, remove or edit TableDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups TableDB databases
+		dataTemplates = {//add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups NyckelDB databases
 			contacts: {
 				headers: ["Name", "GivenName", "AdditionalName", "FamilyName", "YomiName", "GivenNameYomi", "AdditionalNameYomi",
 					"FamilyNameYomi", "NamePrefix", "NameSuffix", "Initials", "Nickname", "ShortName", "MaidenName", "Birthday", "Gender",
@@ -211,7 +211,7 @@
 			if (height < width && width > 360) orientation = " land ";
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
 		},
-		//web worker manager (wwManager) handles access to TableDB and Base64 web worker queue
+		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
 		webWorker,
 		wwCallbackQueue = [],
@@ -219,7 +219,7 @@
 		/*obj{
 		 * "cmd": "read" "parseCSV" "merge" etc,
 		 * "args": [Array of arguments accepted by the cmd]
-		 * "title": if accessing a tableDB database
+		 * "title": if accessing a NyckelDB database
 		 * }
 		 */
 		wwManager = function (obj, callback, finalCallback) {
@@ -257,7 +257,7 @@
 				if (obj.args && callback) obj.args.push(callback);
 				if (obj.title && obj.cmd) {
 					var title = VAL.toPropName(obj.title);
-					if (obj.cmd === "initNewTableDB") appData[title] = new APP.tableDB(obj.args[0], obj.args[1], obj.args[2], obj.args[3], callback);
+					if (obj.cmd === "initNewNyckelDB") appData[title] = new APP.nyckelDB(obj.args[0], obj.args[1], obj.args[2], obj.args[3], callback);
 					else if (!appData[title]) {
 						debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
 						return null;
@@ -559,7 +559,7 @@
 				notifications.ToastNotificationManager.createToastNotifier().show(notification);
 			}
 		},
-		//load TableDB databases
+		//load NyckelDB databases
 		loadDB = true,
 		loadDBQueue = [],
 		loadDBQueueIndex = 0,
@@ -578,11 +578,11 @@
 					else debug(errors, "loading " + title);
 				}
 				template.options.syncKey = app.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : app.stoKey;
-				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising tableDB
+				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising NyckelDB
 					if (errors) handleErrors(errors);
 				};
 				if (numOfTables === dbNum + 1) {
-					cb = function (success, errors, title, requiresSync) {//final callback function for last tableDB to initialise
+					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
 						if (errors) handleErrors(errors);
 						if (!WorkingOffline) {
 							app.syncAll();
@@ -594,7 +594,7 @@
 						else return loadDBQueueIndex > 0 ? loadDBQueue[loadDBQueueIndex](cb) : loadDBQueue[loadDBQueueIndex]();
 					};
 				}
-				wwManager({ "cmd": "initNewTableDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
+				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
 			}
 			function getTables() {
 				var numOfTables = 0,

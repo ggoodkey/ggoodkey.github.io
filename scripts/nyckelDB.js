@@ -1,8 +1,8 @@
 ﻿/**
  * Dependancies: base64, dropbox, lawnchair, storage, validate, app
- */
+ */ 
 var APP = APP || {}, Base64, Windows, cordova;
-APP.tableDB = (function () {
+APP.nyckelDB = (function () {
 	"use strict";
 	function isNumeric(n) {
 		return !isNaN(parseFloat(n)) && isFinite(n);
@@ -466,7 +466,7 @@ APP.tableDB = (function () {
 				return finish.call(this);
 			}
 			else {
-				if (callback instanceof Function) return callback(false, "incompatible table headers: csv file headers don't match tableDB file headers", db[this.id] && db[this.id].title, false), this;
+				if (callback instanceof Function) return callback(false, "incompatible table headers: csv file headers don't match NyckelDB file headers", db[this.id] && db[this.id].title, false), this;
 				else return this;
 			}
 		}
@@ -960,7 +960,7 @@ APP.tableDB = (function () {
 	function applyTitle(title, callback) {
 		function newDBS() {
 			dbs[uid] = this.title;
-			//declare private db object and unique this.id for every new instance of APP.TableBDObj()
+			//declare private db object and unique this.id for every new instance of APP.NyckelBDObj()
 			this.id = Base64.number_hash(this.title + Base64.hash(uid++), 12);
 			searchIndex[this.id] = {};
 			searchSuggestions[this.id] = [];
@@ -1084,7 +1084,7 @@ APP.tableDB = (function () {
 	* @param {function} callback the callback function
 	* @returns {parameters} to callback function: success (boolean), errors (array), tableTitle (string), and syncPending (boolean)
 	*/
-	function TableDBObj(tableTitle, tableHeaders, headerTypes, options, callback) {
+	function NyckelDBObj(tableTitle, tableHeaders, headerTypes, options, callback) {
 		function validateType(type, options) {
 			type = type ? String(type).toLowerCase().replace(/[^a-z]/g, "") : "null";
 			if (!options) {
@@ -1347,7 +1347,7 @@ APP.tableDB = (function () {
 		"colNames": Array,
 		"fuzzyMatch": Boolean 
 	 }*/
-	TableDBObj.prototype.search = function (searchQuery, options, callback) {
+	NyckelDBObj.prototype.search = function (searchQuery, options, callback) {
 		function findMatches(arr, min) {
 			min = min || 2;
 			if (min === 1) return arr;
@@ -1374,10 +1374,10 @@ APP.tableDB = (function () {
 		function querySearchIndex(searchQuery, lastRoundBool, callback) {
 			var aLen = searchQuery.length,
 				tempIds = [];
-			for (let a = 0, b, bLen = cols.length, i; a < aLen; a++) {
+			for (let a = 0, b, bLen = colNamesIndexed[this.id].length, i; a < aLen; a++) {
 				for (b = 0, i = []; b < bLen; b++) {
-					if (searchIndex[this.id][searchQuery[a]] && searchIndex[this.id][searchQuery[a]][cols[b]]) {
-						i = i.concat(searchIndex[this.id][searchQuery[a]][cols[b]]);
+					if (searchIndex[this.id][searchQuery[a]] && searchIndex[this.id][searchQuery[a]][colNamesIndexed[this.id][b]]) {
+						i = i.concat(searchIndex[this.id][searchQuery[a]][colNamesIndexed[this.id][b]]);
 					}
 				}
 				tempIds = tempIds.concat(deleteDuplicates(i));
@@ -1444,7 +1444,7 @@ APP.tableDB = (function () {
 		}
 		else return callback instanceof Function ? callback([], "no data", db[this.id].title, this.requiresSync) : [];
 	};
-	TableDBObj.prototype.advancedSearch = function (searchQuery, options, callback) {
+	NyckelDBObj.prototype.advancedSearch = function (searchQuery, options, callback) {
 		function filter(ids, filterOutQueries, callback) {
 			if (filterOutQueries.length > 0) {
 				for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
@@ -1505,7 +1505,7 @@ APP.tableDB = (function () {
 		}
 		else return callback instanceof Function ? callback([], "no query supplied", db[this.id].title, this.requiresSync) : [];
 	};
-	TableDBObj.prototype.getSearchSuggestions = function (searchQuery, options, callback) {
+	NyckelDBObj.prototype.getSearchSuggestions = function (searchQuery, options, callback) {
 		function buildSuggestionsList() {
 			searchQuery = searchQuery.split(" ");
 			var last = searchQuery.pop(),
@@ -1552,7 +1552,7 @@ APP.tableDB = (function () {
 			return [];
 		}
 	};
-	TableDBObj.prototype.forEachRow = function (funct, callback) {
+	NyckelDBObj.prototype.forEachRow = function (funct, callback) {
 		if (funct instanceof Function) {
 			for (var a = 0, len = this.getLength(); a < len; a++) {
 				funct(db[this.id].table[a][0], a, len);
@@ -1561,7 +1561,7 @@ APP.tableDB = (function () {
 			return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, this.syncPending), this) : this;
 		}
 	};
-	TableDBObj.prototype.forEachCol = function (funct, callback) {
+	NyckelDBObj.prototype.forEachCol = function (funct, callback) {
 		if (funct instanceof Function) {
 			for (var a = 1, len = db[this.id].headers.length; a < len; a++) {
 				funct(db[this.id].headers[a], a - 1, len - 1);
@@ -1570,8 +1570,8 @@ APP.tableDB = (function () {
 			return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, this.syncPending), this) : this;
 		}
 	};
-	TableDBObj.prototype.getTitle = function () { return db[this.id] ? db[this.id].title : undefined; };
-	TableDBObj.prototype.setTitle = function (newTitle, callback) {
+	NyckelDBObj.prototype.getTitle = function () { return db[this.id] ? db[this.id].title : undefined; };
+	NyckelDBObj.prototype.setTitle = function (newTitle, callback) {
 		var oldId = this.id,
 			oldTitle = db[this.id].title,
 			y = dbs.indexOf(oldTitle);
@@ -1608,7 +1608,7 @@ APP.tableDB = (function () {
 		"reverse": sort Z-A, (true or false)
 		"fromEndOfStr": sort xA-xZ, (true or false)
 	*/
-	TableDBObj.prototype.sortByCol = function (colName, options) {
+	NyckelDBObj.prototype.sortByCol = function (colName, options) {
 		function reverseStr(str) {
 			str = String(str);
 			var ret = [];
@@ -1644,7 +1644,7 @@ APP.tableDB = (function () {
 	/* rowId can be the index of the row, or it's 3 digit identifier,
 	 * colName is the column name from the table header
 	 */
-	TableDBObj.prototype.getVal = function (rowId, colName) {
+	NyckelDBObj.prototype.getVal = function (rowId, colName) {
 		var rowIndex = getIndexOfRow.call(this, rowId),
 			colIndex = getIndexOfCol.call(this, colName);
 		if (rowIndex > -1 && colIndex > 0) return db[this.id].table[rowIndex][colIndex];
@@ -1652,7 +1652,7 @@ APP.tableDB = (function () {
 	/* rowIds can be an Array of the index of the row, or it's 3 digit identifier,
 	 * colNames is an Array the column names from the table header
 	 */
-	TableDBObj.prototype.getVals = function (rowIds, colNames, callback) {
+	NyckelDBObj.prototype.getVals = function (rowIds, colNames, callback) {
 		if (rowIds instanceof Array && colNames instanceof Array) {
 			var rowIndex,
 				colIndex,
@@ -1679,30 +1679,30 @@ APP.tableDB = (function () {
 		}
 		else return callback instanceof Function ? callback(false, "invalid inputs", db[this.id].title, this.syncPending) : false;
 	};
-	TableDBObj.prototype.toCSV = function () {
+	NyckelDBObj.prototype.toCSV = function () {
 		//TODO
 		return "function not complete";
 	};
 	/*exports table as JSON 2d array*/
-	TableDBObj.prototype.toJSON_Array = function () {
+	NyckelDBObj.prototype.toJSON_Array = function () {
 		return saveFile.call(this, JSON.stringify(db[this.id]), db[this.id].title + "_" + readableTimestamp() + ".json");
 	};
 	/*exports table as JSON key value pairs*/
-	TableDBObj.prototype.toJSON_KeyValuePairs = function () {
+	NyckelDBObj.prototype.toJSON_KeyValuePairs = function () {
 		//TODO
 		return "function not complete";
 	};
-	TableDBObj.prototype.getProp = function (propName) {
+	NyckelDBObj.prototype.getProp = function (propName) {
 		propName = VAL.toPropName(propName);
 		return db[this.id].properties && db[this.id].properties[propName] ? db[this.id].properties[propName][0] : undefined;
 	};
-	TableDBObj.prototype.getLength = function () {
+	NyckelDBObj.prototype.getLength = function () {
 		return !db[this.id] || this.isDeleted() ? 0 : db[this.id].table.length;
 	};
-	TableDBObj.prototype.isDeleted = function () {
+	NyckelDBObj.prototype.isDeleted = function () {
 		return db[this.id] && db[this.id].deleted !== undefined ? true : false;
 	};
-	TableDBObj.prototype.shuffle = function () {
+	NyckelDBObj.prototype.shuffle = function () {
 		function shuffle(array) {
 			var len = array.length,
 				halfLen = Math.ceil(len / 2),
@@ -1748,7 +1748,7 @@ APP.tableDB = (function () {
 	 * find current index of row by 'id'
 	 * or else by value and column name ('orValue' and 'colName')
 	 */
-	TableDBObj.prototype.getIndexOf = function (id, orValue, colName) {
+	NyckelDBObj.prototype.getIndexOf = function (id, orValue, colName) {
 		if (this.isDeleted()) return -1;
 		else if (id) {
 			return getIndexOfRow.call(this, id);
@@ -1766,7 +1766,7 @@ APP.tableDB = (function () {
 		}
 		else return -1;
 	};
-	TableDBObj.prototype.hideRow = function (rowId) {
+	NyckelDBObj.prototype.hideRow = function (rowId) {
 		if (!this.isDeleted()) {
 			var index = getIndexOfRow.call(this, rowId);
 			if (index > -1) {
@@ -1782,7 +1782,7 @@ APP.tableDB = (function () {
 		}
 		return this;
 	};
-	TableDBObj.prototype.unhideRows = function () {
+	NyckelDBObj.prototype.unhideRows = function () {
 		if (db[this.id].hidden !== undefined) {
 			var row;
 			while (db[this.id].hidden.length > 0) {
@@ -1798,7 +1798,7 @@ APP.tableDB = (function () {
 		}
 		return this;
 	};
-	TableDBObj.prototype.filter = function (colName, regExp) {
+	NyckelDBObj.prototype.filter = function (colName, regExp) {
 		if (this.getLength() > 0) {
 			var colIndex = getIndexOfCol.call(this, colName),
 				val;
@@ -1817,31 +1817,31 @@ APP.tableDB = (function () {
 		}
 		return this;
 	};
-	TableDBObj.prototype.unfilter = function () {
+	NyckelDBObj.prototype.unfilter = function () {
 		return this.unhideRows();
 	};
-	TableDBObj.prototype.setProp = function (propName, value) {
+	NyckelDBObj.prototype.setProp = function (propName, value) {
 		return setProp.call(this, propName, value);
 	};
-	TableDBObj.prototype.addRow = function (array, id) {
+	NyckelDBObj.prototype.addRow = function (array, id) {
 		return addRow.call(this, array, id);
 	};
-	TableDBObj.prototype.setVal = function (rowId, colName, newValue, callback) {
+	NyckelDBObj.prototype.setVal = function (rowId, colName, newValue, callback) {
 		return setVal.call(this, rowId, colName, newValue, null, null, callback);
 	};
-	TableDBObj.prototype.deleteRow = function (rowId) {
+	NyckelDBObj.prototype.deleteRow = function (rowId) {
 		return deleteRow.call(this, rowId);
 	};
-	TableDBObj.prototype.importJSON = function (json, syncKey, syncToken, callback) {
+	NyckelDBObj.prototype.importJSON = function (json, syncKey, syncToken, callback) {
 		return importJSON.call(this, json, function (syncChanges, errors) {
 			if (syncChanges && !errors) return createBase64File.call(this, syncKey, syncToken, callback), this;
 			else return callback instanceof Function ? (callback(true, errors, db[this.id] && db[this.id].title, false), this) : this;
 		}.bind(this), syncKey);
 	};
-	TableDBObj.prototype.deleteTable = function (callback) {
+	NyckelDBObj.prototype.deleteTable = function (callback) {
 		return deleteTable.call(this, callback);
 	};
-	TableDBObj.prototype.NUKEALL = function (msg, callback) {
+	NyckelDBObj.prototype.NUKEALL = function (msg, callback) {
 		function nuke() {
 			for (var a = 0; a < uid; a++) {
 				db[this.id] = { "title": db[this.id].title, "deleted": timestamp() };
@@ -1865,7 +1865,7 @@ APP.tableDB = (function () {
 		});
 		else if (window && window.confirm(msg)) nuke.call(this);
 	};
-	TableDBObj.prototype.isSyncPending = function (cloudSyncFile, callback) {
+	NyckelDBObj.prototype.isSyncPending = function (cloudSyncFile, callback) {
 		if (cloudSyncFile) {
 			if (typeof cloudSyncFile === "string") cloudSyncFile = JSON.parse(cloudSyncFile);
 			var title = VAL.toPropName(db[this.id].title);
@@ -1885,7 +1885,7 @@ APP.tableDB = (function () {
 	* }
 	*/
 
-	TableDBObj.prototype.sync = function (json, options, callback) {
+	NyckelDBObj.prototype.sync = function (json, options, callback) {
 		options = options || {};
 		var forceSync = options.forceSync || false,
 			readKey = options.key || false,
@@ -1932,13 +1932,13 @@ APP.tableDB = (function () {
 		}
 		else return createBase64File.call(this, writeKey, options.token, callback);
 	};
-	TableDBObj.prototype.getLastModified = function () {
+	NyckelDBObj.prototype.getLastModified = function () {
 		return db[this.id].lastModified;
 	};
-	TableDBObj.prototype.getType = function (colName) {
+	NyckelDBObj.prototype.getType = function (colName) {
 		if (colNameIsValid.call(this, colName)) return db[this.id].types[colName];
 	};
-	TableDBObj.prototype.setSyncCompleted = function (syncfile, callback) {
+	NyckelDBObj.prototype.setSyncCompleted = function (syncfile, callback) {
 		if (syncfile && this.isSyncPending(syncfile)) {
 			return callback instanceof Function ? callback(false, "syncfile supplied doesn't match lastModified time of the database: " + db[this.id].lastModified + JSON.stringify(syncfile), db[this.id].title, true) : false;
 		}
@@ -1947,5 +1947,5 @@ APP.tableDB = (function () {
 			return callback instanceof Function ? callback(true, false, db[this.id].title, false) : true;
 		}
 	};
-	return TableDBObj;
+	return NyckelDBObj;
 }());

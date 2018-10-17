@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>NyckelDB tests</title>
+	<style>
+		body {
+			font-family: 'Arial Unicode MS';
+			background-color: #222;
+			color: lightblue;
+		}
+
+		.output {
+			padding: 10px;
+			margin: 0;
+			border: 1px solid #333;
+			background-color: black;
+			color: white;
+			overflow-wrap: break-word;
+		}
+	</style>
+</head>
+<body>
+	<h1>NyckelDB tests</h1>
+	<button onclick="javascript: APP.Sto.nuke(); if (window.location && window.location.reload) window.location.reload(true);">Clear localStorage Cache</button>
+	<table id="testTable">
+		<thead>
+			<tr>
+				<td>Test</td>
+				<td>obj</td>
+				<td>returned</td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>1</td>
+				<td id=output1 class="output"></td>
+				<td id=output2 class="output"></td>
+			</tr>
+			<tr>
+				<td>2</td>
+				<td id=output3 class="output"></td>
+				<td id=output4 class="output"></td>
+			</tr>
+			<tr>
+				<td>3</td>
+				<td id=output5 class="output"></td>
+				<td id=output6 class="output"></td>
+			</tr>
+			<tr>
+				<td>4</td>
+				<td id=output7 class="output"></td>
+				<td id=output8 class="output"></td>
+			</tr>
+			<tr>
+				<td>5</td>
+				<td id=output9 class="output"></td>
+				<td id=output10 class="output"></td>
+			</tr>
+			<tr>
+				<td>6</td>
+				<td id=output11 class="output"></td>
+				<td id=output12 class="output"></td>
+			</tr>
+			<tr>
+				<td>7</td>
+				<td id=output13 class="output"></td>
+				<td id=output14 class="output"></td>
+			</tr>
+			<tr>
+				<td>8</td>
+				<td id=output15 class="output"></td>
+				<td id=output16 class="output"></td>
+			</tr>
+			<tr>
+				<td>9</td>
+				<td id=output17 class="output"></td>
+				<td id=output18 class="output"></td>
+			</tr>
+			<tr>
+				<td>10</td>
+				<td id=output19 class="output"></td>
+				<td id=output20 class="output"></td>
+			</tr>
+		</tbody>
+	</table>
+	<div class="hidden" id="comboBoxDiv">
+		<input type="file" accept=".json" name="json[]" id="json" size="10" />
+		<a id="hiddenDownloadLink" download="" href="" style="display:none"></a>
+	</div>
+
+	<script src="../scripts/dropbox.js"></script>
+	<script src="../scripts/Lawnchair.js"></script>
+	<script src="../scripts/adapters/memory.js"></script>
+	<script src="../scripts/adapters/indexed-db.js"></script>
+	<script src="../scripts/adapters/dom.js"></script>
+	<script src="../scripts/base64.min.js"></script>
+	<script src="../scripts/storage.js"></script>
+	<script src="../scripts/validate.min.js"></script>
+	<script src="../scripts/nyckelDB.js"></script>
+
+	<script>
+		function test(n) {
+			testNum++;
+			tableTitle = "Test " + n;
+			if (options && options.importData) options.importData.title = tableTitle;
+			callback = function (ret, err) { document.getElementById('output' + n * 2).innerHTML = "returned: " + ret + ", errors: " + err; };
+			db[n] = new APP.nyckelDB(tableTitle, tableHeaders, headerTypes, options, callback);
+			document.getElementById('output' + (n * 2 - 1)).innerHTML = JSON.stringify(db[n]);
+		}
+
+		var tableTitle = "Test 1",
+			tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool", "id": "string" },
+			headerTypes,
+			options = { customProperties: ["prop1", "prop_2", "prop_3"] },
+			callback,
+			db = [],
+			a = 1,
+			len,
+			table = document.getElementById("testTable"),
+			results = [],
+			runTime = Math.floor((new Date().getTime() - 15e11) / 6e4),
+			testNum = 0;
+
+		test(1);
+
+		tableHeaders = { "id": { "type": "id" }, "column_1": { "type": "string" }, "column 2": { "type": "num" }, "column_3": { "type": "boolean" } };
+		test(2);
+
+		tableHeaders = ["column 1", "column 2", "column_3"];
+		headerTypes = ["Str", "Number", "B oolean"];
+		test(3);
+
+		tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool", "id": "string" };
+		test(4);
+
+		options = {
+			customProperties: {
+				prop1: "str",
+				"prop 2": { type: "Num" },
+				"prop_3": {
+					type: "bool",
+					initialValue: false
+				}
+			}
+		};
+		test(5);
+
+		options = {
+			customProperties: ["prop1", "prop 2", "prop_3"]
+		};
+		test(6);
+
+		options = {
+			importData: {
+				created: runTime,
+				lastModified: runTime,
+				deleted: runTime
+			}
+		};
+		test(7);
+
+		options = {
+			importData: {
+				created: runTime,
+				lastModified: runTime,
+				title: "Test_8",
+				version: "0.1",
+				ids: { "aaa": [0, 0, 0, 0], "aab": [0, 0, 0, 0] },
+				headers: ["id", "column_1", "column_2", "column_3"],
+				types: { id: "uniqueString", column_1: "string", column_2: "number", column_3: "boolean" },
+				table: [["aaa", "hello", 1, true], ["aab", "world", 2, false]],
+				properties: { "prop1": ["hello", 0, "string"], "prop 2": [10, 0, "number"], "prop_3": [true, 0, "bool"] }
+			}
+		};
+		test(8);
+
+		options.importData.properties = ["prop1", "prop 2", "prop_3"];
+		test(9);
+
+		options.importData.properties = { "prop1": "string", "prop 2": "number", "prop_3": "bool" };
+		test(10);
+
+		function testMethods(testName, method, showLastModBool, callbackBool) {
+			testNum++;
+			var cell;
+			table.insertRow();
+			table.rows[0].insertCell(table.rows[0].cells.length).innerHTML = testName;
+			results[testNum] = [];
+			for (a = 1, len = 11; a < len; a++) {
+				cell = table.rows[a].insertCell(table.rows[a].cells.length);
+				cell.setAttribute("class", "output");
+				callbackBool ? method(a, function (result, error) {
+					if (error) results[testNum][a] = "Error: " + error;
+					else results[testNum][a] = result;
+				}) : results[testNum][a] = method(a);
+				if (typeof results[testNum][a] === "object" && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
+				cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + db[a].getLastModified() : results[testNum][a];
+				var handler = (function (a, testNum) {
+					return function () {
+						results[testNum][a] = method(a);
+						if (typeof results[testNum][a] === "object" && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
+						cell = table.rows[a].cells[testNum - 8];
+						cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + db[a].getLastModified() : results[testNum][a];
+					};
+				}(a, testNum));
+				cell.addEventListener("click", handler);
+			}
+		}
+		//getTitle()	DONE
+		testMethods("title", function (a) { return db[a].getTitle(); });
+		//getLastModified()
+		testMethods("lastMod", function (a) { return db[a].getLastModified(); });
+		//isDeleted()	DONE
+		testMethods("isDel", function (a) { return db[a].isDeleted(); });
+		//addRow(array, id)	DONE
+		testMethods("addRow", function (a) { return db[a].addRow(["hello", 2, false], "aaa"); }, true);
+		//getLength()	DONE
+		testMethods("length", function (a) { return db[a].getLength(); });
+		//setVal(rowId, colName, newValue)
+		testMethods("setVal", function (a) { return db[a].setVal(results[14][a], "column_1", "yes"); }, true);
+		//getVal(rowId, colName)
+		testMethods("getVal", function (a) { return db[a].getVal(results[14][a], "column_1"); });
+		//getIndexOf(id, orValue, colName)
+		testMethods("indexOf", function (a) { return db[a].getIndexOf("aaa"); });
+		testMethods("indexOf2", function (a) { return db[a].getIndexOf(null, "yes", "column_1"); });
+		//setProp(propName, value)
+		testMethods("setProp", function (a) { return db[a].setProp("prop1", "hello"); }, true);
+		//getProp(propName)
+		testMethods("getProp", function (a) { return db[a].getProp("prop1"); });
+		//sortByCol(colName, options)
+		options = null;
+		testMethods("sort1", function (a) { return db[a].sortByCol("column_1", null); });
+		//search(searchTerms, options)
+		testMethods("search", function (a, callback) { return db[a].search("hello", null, callback); }, false, true);
+		//advancedSearch(searchTerms, options)
+		testMethods("advancedSearch", function (a, callback) { return db[a].advancedSearch("hello", null, callback); }, false, true);
+		//forEach(funct, callback)
+		testMethods("forEachRow", function (a) { return db[a].forEachRow(function (id) { return db[a].getVal(id, "column_2"); }, function (a, b) { console.log(a); console.log(b); }); });
+		//shuffle()
+		testMethods("shuffle", function (a) { return db[a].shuffle(); });
+		//hideRow(rowId)
+		testMethods("hide", function (a) { return db[a].hideRow("aaa"); });
+		//unhideRows()
+		testMethods("unhide", function (a) { return db[a].unhideRows(); });
+		//filter(colName, regExp)
+		testMethods("filter", function (a) { return db[a].filter("column_3", /true/i); });
+		//unfilter()
+		testMethods("unfilter", function (a) { return db[a].unfilter(); });
+		//deleteRow(rowId)
+		testMethods("delRow", function (a) { return db[a].deleteRow(results[14][a]); }, true);
+		testMethods("length", function (a) { return db[a].getLength(); });
+		//toCSV()
+		testMethods("toCSV", function (a) { return db[a].toCSV(); });
+		//toJSON_Array()
+		testMethods("toJSON1", function (a) { return db[a].toJSON_Array(); });
+		//toJSON_KeyValuePairs()
+		testMethods("toJSON2", function (a) { return db[a].toJSON_KeyValuePairs(); });
+		//sync(forceSyncBool, callback)
+		testMethods("sync", function (a) { return db[a].sync(true, callback); }, true);
+		//setTitle(newTitle, callback)
+		testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
+		//deleteTable(callback)
+		testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
+	</script>
+</body>
+</html>

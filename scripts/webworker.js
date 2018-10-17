@@ -1,7 +1,7 @@
 ﻿importScripts('base64.min.js');
 importScripts('validate.min.js');
 importScripts('lists.min.js');
-importScripts('tableDB.min.js');
+importScripts('nyckelDB.min.js');
 
 function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),
@@ -79,16 +79,16 @@ self.addEventListener('message', function (e) {
 			self.postMessage(arrBuffer, [arrBuffer]);
 		}
 	};
-	function initNewTableDB(title, args, callback) {
-		appData[title] = new APP.tableDB(args[0], args[1], args[2], args[3], callback);
+	function initNewNyckelDB(title, args, callback) {
+		appData[title] = new APP.nyckelDB(args[0], args[1], args[2], args[3], callback);
 	}
 	var data = ab2str(e.data);
 	data = JSON.parse(data);
 	if (data) {
 		if (data.title) data.title = VAL.toPropName(data.title);
 		switch (data.cmd) {
-			case "initNewTableDB":
-				initNewTableDB(data.title, data.args, function (success, errors, title, syncPending) {
+			case "initNewNyckelDB":
+				initNewNyckelDB(data.title, data.args, function (success, errors, title, syncPending) {
 					post(success, [success, errors, title, syncPending], data.callbackIndex);
 				});
 				break;
