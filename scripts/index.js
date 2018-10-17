@@ -622,7 +622,7 @@
 						if (!WorkingOffline) {
 							app.syncAll();
 						}
-						else app.spin(false);
+						app.spin(false);
 						loadDB = false;
 						loadDBQueueIndex--;	
 						if (loadDBQueueIndex < 0) return;
@@ -1585,8 +1585,9 @@
 			importFile: function (toTable) {
 				function done(success, errors, title, syncPending) {
 					if (success && !errors) {
-						if (syncPending) {//TODO
+						if (syncPending) {
 							_this.notify("Data imported successfully", true);
+							_this.syncAll();
 						}
 						else _this.notify("Data imported and synchronized successfully", true);
 					}
