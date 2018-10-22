@@ -4,16 +4,16 @@
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.0.1";//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
-	var views = ["viewRecent", "viewSearch", "viewDetails", "viewEdit", "view1", "view2", "view3", "view4"], //don't change these
-		viewNames = ["Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
-		viewIcons = ["icon-time", null, null, null, "icon-user", "icon-people", "icon-lock", "icon-file"], //change icons, see index.css for all possible icon classes
-		startView = 0,//change this to show different view on load, see views above
+	var views = ["viewNew", "viewRecent", "viewSearch", "viewDetails", "viewEdit", "view1", "view2", "view3", "view4"], //don't change these
+		viewNames = ["New Table", "Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
+		viewIcons = ["icon-plus", "icon-time", null, null, null, "icon-user", "icon-people", "icon-lock", "icon-folder-open"], //change icons, see index.css for all possible icon classes
+		startView = 1,//change this to show different view on load, see views above
 		backstack = [views[startView]],
 		backIndex = 1,
 		debug = APP.debug,//shortform access to APP.debug
 		fileReaderInitiated = [],
 		dataTemplates = {//add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups NyckelDB databases
-			contacts: {
+			Contacts: {
 				headers: ["Name", "GivenName", "AdditionalName", "FamilyName", "YomiName", "GivenNameYomi", "AdditionalNameYomi",
 					"FamilyNameYomi", "NamePrefix", "NameSuffix", "Initials", "Nickname", "ShortName", "MaidenName", "Birthday", "Gender",
 					"Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity", "Priority", "Subject",
@@ -58,7 +58,7 @@
 					editView: {}
 				}
 			},
-			passwords: {
+			Passwords: {
 				headers: ["Site", "Username", "Password", "Alias", "DateCreated"],
 				types: ["string", "string", "string", "string", "date"],
 				options: {
@@ -75,7 +75,7 @@
 					editView: {}
 				}
 			},
-			files: {
+			Files: {
 				headers: ["Display Name", "Name", "Extension", "Type", "Original Size", "Compressed Size", "Compression", "Created", "Modified", "Owner", "Hash", "Compressed Contents"],
 				types: ["string", "string", "string", "string", "posInteger", "posInteger", "string", "date", "date", "string", "string", "string"],
 				options: {
@@ -90,7 +90,7 @@
 					editView: {}
 				}
 			},
-			groups: {
+			Groups: {
 				headers: ["groupName", "groupIds", "searchTerms"],
 				types: ["string", "string", "string"],
 				options: {
@@ -122,6 +122,7 @@
 			spinner: false,
 			spinnerMsg: ["Working..."],
 			spinIndex: 0,
+			viewNew: views.indexOf("viewNew") === startView,
 			viewRecent: views.indexOf("viewRecent") === startView,
 			view1: views.indexOf("view1") === startView,
 			view2: views.indexOf("view2") === startView,
@@ -175,7 +176,28 @@
 			addItemToGroupDropdown: false,
 			addSearchToGroupDropdown: false,
 			groupPage: 1,
-			groupHelp: false
+			groupHelp: false,
+			newTable: {
+				title: "",
+				headers: ["","","",""],
+				types: ["string","string","string", "string"],
+				options: {
+					customProperties: {},
+					doNotIndex: [],
+					initialIndex: []
+				},		
+				display: {
+					searchResultsText: [],
+					searchResultsJoiner: " ",
+					sortBy: "",
+					detailsView: {},
+					editView: {}
+				},
+				validTypes: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+				typeDropdown: -1,
+				optionsDropdown: -1,
+				fullscreen: false
+			}
 		},
 		WorkingOffline = function () {
 			var loc = window.location;
@@ -206,7 +228,7 @@
 				type = "tabl",
 				orientation = " port ",
 				htmlTag = document.getElementsByTagName("html")[0];
-			if (width > 1100) type = "desk";
+			if (width > 1200) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 360) orientation = " land ";
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
@@ -358,8 +380,18 @@
 		wwOnError = function (e) {
 			debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
 		},
-		defaultErrorHandler = function (success, error, title, syncPending) {
-			if (error) debug(error);
+		defaultErrorHandler = function (success, errors, title, syncPending) {
+			if (errors === "wrong key used") {
+				_this.notify("Wrong key used", true);
+				_this.updateStoKey();
+			}
+			else if (/unsupported version/.test(errors)) {
+				_this.notify("File found is from a newer version of the app. Please update your app to the latest version.");
+			}
+			else {
+				_this.notify("Unknown error", true);
+				debug(errors, "errors");
+			}
 		},
 		//initialise the application
 		init = function (resumeBool) {
@@ -877,7 +909,7 @@
 				}
 				function getEmails(ids) {
 					var emailAddresses = [];
-					wwManager({ cmd: "getVals", title: "contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
+					wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
 						if (vals && !errors) {
 							var type, email, name;
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
@@ -1115,7 +1147,7 @@
 											_this.searchResultsError = "";
 										}
 										else {
-											wwManager({ cmd: "getLength", title: "contacts" }, function (l) {
+											wwManager({ cmd: "getLength", title: "Contacts" }, function (l) {
 												if (l > 0) _this.searchResultsError = 'No results found for "' + _this.currentQuery + '". Try searching for something else.';
 												else _this.searchResultsError = 'No contact data found';
 											});
@@ -1473,7 +1505,6 @@
 						}
 						else _this.notify('Failed to initiate the File Reader.', true);
 					}
-					else notify();
 				}
 				function init(cb) {
 					if (fileExtension && /csv/i.test(fileExtension)) initFileReader('text', parseCSV);
@@ -1497,7 +1528,9 @@
 					name.pop();
 					name = name.join(".");
 					modified = typeof modified === "number" ? modified : new Date(modified).getTime();
-					wwManager({ "cmd": "addRow", "title": "files", "args": [[displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents]] }, finish);
+					var ret = [displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents];
+					if (callback instanceof Function) return callback(ret);
+					else return ret;
 				}
 				function parseCSV(source) {
 					_this.notify("Importing data...", false, function () {
@@ -1528,20 +1561,28 @@
 						}
 						source.replaceAll = true;
 						source.identifierCol = "Name";
-						wwManager({ "cmd": "importJSON", "title": "contacts", "args": [source, _this.stoKey, null] }, done);
+						if (callback instanceof Function) return callback(source);
+						else return source;
 					});
 				}
 				function parseVCF(input) {
 					//var importedVCF = new importvCard().initialize(input);
-					return finish();
+					debug("parseVCF not done");
 				}
 				function parseJSON(input) {
 					//APP.ADDRESSBOOK.mergeBooks(input, replaceExisting, finish);
+					debug("parseJSON not done");
 				}
-				function finish() {
-					var key = _this.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : _this.stoKey;
-					wwManager({ "cmd": "sync", "title": "files", "args": [null, { key: key }] }, done);
+				function click() {
+					document.getElementById(fileInputId).click();
 				}
+				var _this = this;
+				checkDBLoaded(function (callback) {
+					init(click);
+					if (callback instanceof Function) return callback();
+				});
+			},
+			importFile: function (toTable) {
 				function done(success, errors, title, syncPending) {
 					if (success && !errors) {
 						if (syncPending) {
@@ -1551,28 +1592,22 @@
 						else _this.notify("Data imported and synchronized successfully", true);
 					}
 					else if (errors) {
-						if (errors === "wrong key used") {
-							_this.notify("Wrong key used", true);
-							_this.updateStoKey();
-						}
-						else if (/unsupported version/.test(errors)) {
-							_this.notify("File found is from a newer version of the app. Please update your app to the latest version.");
-						}
-						else {
-							_this.notify("Unknown error", true);
-							debug(errors, "errors");
-						}
+						defaultErrorHandler(success, errors, title, syncPending);
 					}
 					else _this.notify("Done", true);
-					if (callback instanceof Function) return callback();
-				}
-				function click() {
-					document.getElementById(fileInputId).click();
 				}
 				var _this = this;
-				checkDBLoaded(function (callback) {
-					init(click);
-					if (callback instanceof Function) return callback();
+				if(toTable === "Files") this.loadFile('hiddenFileInput', null, function (data) {
+					wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
+				});
+				else if (toTable === "Contacts") this.loadFile('hiddenCSVInput', 'csv', function (data) {
+					wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, _this.stoKey, null] }, done);
+				});
+			},
+			importNewTable: function () {
+				var _this = this;
+				this.loadFile('hiddenCSVInput', 'csv', function (data) {
+					debug(data);
 				});
 			},
 			editDetails: function () {
@@ -1811,10 +1846,10 @@
 			initializeGroups: function (callback) {
 				if (this.groups.length === 0) {
 					var _this = this;
-					wwManager({ "cmd": "getLength", "title": "groups" }, function (length) {
+					wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
 						var ids = [];
 						for (var a = 0; a < length; a++) ids[a] = a;
-						wwManager({ "cmd": "getVals", "title": "groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
+						wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
 							for (var a = 0, len = vals.length; a < len; a++) {
 								_this.groups[a] = vals[a][1];
 							}
@@ -1856,7 +1891,7 @@
 							groupName = groupName + " " + i;
 						}
 						//Save new group
-						wwManager({ "cmd": "addRow", "title": "groups", "args": [[groupName, "", ""]] }, function () {
+						wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
 							_this.updateGroup(groupName, ids, _this.groupSearchBox);
 							_this.groups.push(groupName);
 							_this.activeGroup = [];
@@ -1871,15 +1906,15 @@
 			updateGroup: function (groupName, ids, searchTerms) {
 				var _this = this;
 				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if (ids) wwManager({ "cmd": "setVal", "title": "groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-					if (searchTerms) wwManager({ "cmd": "setVal", "title": "groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+					if (searchTerms) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
 				});
 			},
 			deleteGroup: function (groupName) {
 				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "groups", "args": [null, groupName, "groupName"] }, function (index) {
-					wwManager({ "cmd": "deleteRow", "title": "groups", "args": [index] });
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] });
 				});
 				this.groups.splice(this.groups.indexOf(groupName), 1);
 			},
@@ -1995,7 +2030,7 @@
 				}
 				var _this = this,
 					list = [];
-				wwManager({ "cmd": "getVals", "title": "groups", "args": [[index], dataTemplates.groups.headers] }, function (group) {
+				wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
 					if (group[0][3] !== "") {
 						var lenTables = 0,
 							n = 0;
@@ -2030,8 +2065,8 @@
 				this.addItemToGroupDropdown = false;
 				this.addSearchToGroupDropdown = false;
 				var _this = this;
-				wwManager({ "cmd": "getIndexOf", "title": "groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if(detailsObj) wwManager({ "cmd": "getVal", "title": "groups", "args": [index, "groupIds"] }, function (ids) {
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					if(detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
 						ids = JSON.parse(ids);
 						if (ids instanceof Array) {//convert old array data to object
 							var obj = {};
@@ -2047,12 +2082,12 @@
 								ids[detailsObj[b].table].push(detailsObj[b].id);
 							}
 						}
-						wwManager({ "cmd": "setVal", "title": "groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
 						_this.notify("Added 1 item to " + groupName, true);
 					});
-					if (searchQuery) wwManager({ "cmd": "getVal", "title": "groups", "args": [index, "searchTerms"] }, function (query) {
+					if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
 						query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
-						wwManager({ "cmd": "setVal", "title": "groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
+						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
 						_this.notify("Added '" + searchQuery + "' to " + groupName, true);
 					});
 				});
@@ -2099,6 +2134,46 @@
 				this.activeGroup = [];
 				if (this.groups.length === 0) this.goBack();
 				else this.toggle('showNewGroupUI');
+			},
+			template: function (templateName) {
+				if (dataTemplates[templateName]) {
+					this.newTable.title = templateName;
+					this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+					if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
+					this.newTable.types = dataTemplates[templateName].types;
+					this.newTable.options = dataTemplates[templateName].options;
+					this.newTable.display = dataTemplates[templateName].display;
+				}
+				else {
+					this.newTable.title = "";
+					this.newTable.headers = ["", "", "", ""];
+					this.newTable.types = ["string", "string", "string", "string"];
+					this.newTable.options = {
+						customProperties: {},
+						doNotIndex: [],
+						initialIndex: []
+					};
+					this.newTable.display = {
+						searchResultsText: [],
+						searchResultsJoiner: " ",
+						sortBy: "",
+						detailsView: {},
+						editView: {}
+					};
+				}
+			},
+			sortbyColumn: function (index) {
+
+			},
+			deleteColumn: function (index) {
+				this.newTable.headers.splice(index, 1);
+				this.newTable.types.splice(index, 1);
+				this.newTable.optionsDropdown = -1;
+			},
+			insertColumn: function (index) {
+				this.newTable.headers.splice(index, 0, "");
+				this.newTable.types.splice(index, 0, "string");
+				this.newTable.optionsDropdown = -1;
 			}
 		}
 	});
@@ -2106,6 +2181,7 @@
 	APP.goBack = app.goBack;
 	APP.notify = app.notify;
 	APP.confirm = app.confirm;
+	APP.WorkingOffline = WorkingOffline;
 
 	window.onresize = layout;//recalc layout on resize for a responsive experience
 
