@@ -122,6 +122,7 @@
 			spinner: false,
 			spinnerMsg: ["Working..."],
 			spinIndex: 0,
+			viewNew: views.indexOf("viewNew") === startView,
 			viewRecent: views.indexOf("viewRecent") === startView,
 			view1: views.indexOf("view1") === startView,
 			view2: views.indexOf("view2") === startView,
@@ -175,7 +176,28 @@
 			addItemToGroupDropdown: false,
 			addSearchToGroupDropdown: false,
 			groupPage: 1,
-			groupHelp: false
+			groupHelp: false,
+			newTable: {
+				title: "",
+				headers: ["","","",""],
+				types: ["string","string","string", "string"],
+				options: {
+					customProperties: {},
+					doNotIndex: [],
+					initialIndex: []
+				},		
+				display: {
+					searchResultsText: [],
+					searchResultsJoiner: " ",
+					sortBy: "",
+					detailsView: {},
+					editView: {}
+				},
+				validTypes: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+				typeDropdown: -1,
+				optionsDropdown: -1,
+				fullscreen: false
+			}
 		},
 		WorkingOffline = function () {
 			var loc = window.location;
@@ -359,7 +381,17 @@
 			debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
 		},
 		defaultErrorHandler = function (success, error, title, syncPending) {
-			if (error) debug(error);
+			if (errors === "wrong key used") {
+				_this.notify("Wrong key used", true);
+				_this.updateStoKey();
+			}
+			else if (/unsupported version/.test(errors)) {
+				_this.notify("File found is from a newer version of the app. Please update your app to the latest version.");
+			}
+			else {
+				_this.notify("Unknown error", true);
+				debug(errors, "errors");
+			}
 		},
 		//initialise the application
 		init = function (resumeBool) {
@@ -1473,7 +1505,6 @@
 						}
 						else _this.notify('Failed to initiate the File Reader.', true);
 					}
-					else notify();
 				}
 				function init(cb) {
 					if (fileExtension && /csv/i.test(fileExtension)) initFileReader('text', parseCSV);
@@ -1497,7 +1528,9 @@
 					name.pop();
 					name = name.join(".");
 					modified = typeof modified === "number" ? modified : new Date(modified).getTime();
-					wwManager({ "cmd": "addRow", "title": "files", "args": [[displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents]] }, finish);
+					var ret = [displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents];
+					if (callback instanceof Function) return callback(ret);
+					else return ret;
 				}
 				function parseCSV(source) {
 					_this.notify("Importing data...", false, function () {
@@ -1528,43 +1561,17 @@
 						}
 						source.replaceAll = true;
 						source.identifierCol = "Name";
-						wwManager({ "cmd": "importJSON", "title": "contacts", "args": [source, _this.stoKey, null] }, done);
+						if (callback instanceof Function) return callback(source);
+						else return source;
 					});
 				}
 				function parseVCF(input) {
 					//var importedVCF = new importvCard().initialize(input);
-					return finish();
+					debug("parseVCF not done");
 				}
 				function parseJSON(input) {
 					//APP.ADDRESSBOOK.mergeBooks(input, replaceExisting, finish);
-				}
-				function finish() {
-					var key = _this.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : _this.stoKey;
-					wwManager({ "cmd": "sync", "title": "files", "args": [null, { key: key }] }, done);
-				}
-				function done(success, errors, title, syncPending) {
-					if (success && !errors) {
-						if (syncPending) {
-							_this.notify("Data imported successfully", true);
-							_this.syncAll();
-						}
-						else _this.notify("Data imported and synchronized successfully", true);
-					}
-					else if (errors) {
-						if (errors === "wrong key used") {
-							_this.notify("Wrong key used", true);
-							_this.updateStoKey();
-						}
-						else if (/unsupported version/.test(errors)) {
-							_this.notify("File found is from a newer version of the app. Please update your app to the latest version.");
-						}
-						else {
-							_this.notify("Unknown error", true);
-							debug(errors, "errors");
-						}
-					}
-					else _this.notify("Done", true);
-					if (callback instanceof Function) return callback();
+					debug("parseJSON not done");
 				}
 				function click() {
 					document.getElementById(fileInputId).click();
@@ -1573,6 +1580,33 @@
 				checkDBLoaded(function (callback) {
 					init(click);
 					if (callback instanceof Function) return callback();
+				});
+			},
+			importFile: function (toTable) {
+				function done(success, errors, title, syncPending) {
+					if (success && !errors) {
+						if (syncPending) {//TODO
+							_this.notify("Data imported successfully", true);
+						}
+						else _this.notify("Data imported and synchronized successfully", true);
+					}
+					else if (errors) {
+						defaultErrorHandler(success, errors, title, syncPending);
+					}
+					else _this.notify("Done", true);
+				}
+				var _this = this;
+				if(toTable === "Files") this.loadFile('hiddenFileInput', null, function (data) {
+					wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
+				});
+				else if (toTable === "Contacts") this.loadFile('hiddenCSVInput', 'csv', function (data) {
+					wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, _this.stoKey, null] }, done);
+				});
+			},
+			importNewTable: function () {
+				var _this = this;
+				this.loadFile('hiddenCSVInput', 'csv', function (data) {
+					debug(data);
 				});
 			},
 			editDetails: function () {
@@ -2099,6 +2133,46 @@
 				this.activeGroup = [];
 				if (this.groups.length === 0) this.goBack();
 				else this.toggle('showNewGroupUI');
+			},
+			template: function (templateName) {
+				if (dataTemplates[templateName]) {
+					this.newTable.title = templateName;
+					this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+					if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
+					this.newTable.types = dataTemplates[templateName].types;
+					this.newTable.options = dataTemplates[templateName].options;
+					this.newTable.display = dataTemplates[templateName].display;
+				}
+				else {
+					this.newTable.title = "";
+					this.newTable.headers = ["", "", "", ""];
+					this.newTable.types = ["string", "string", "string", "string"];
+					this.newTable.options = {
+						customProperties: {},
+						doNotIndex: [],
+						initialIndex: []
+					};
+					this.newTable.display = {
+						searchResultsText: [],
+						searchResultsJoiner: " ",
+						sortBy: "",
+						detailsView: {},
+						editView: {}
+					};
+				}
+			},
+			sortbyColumn: function (index) {
+
+			},
+			deleteColumn: function (index) {
+				this.newTable.headers.splice(index, 1);
+				this.newTable.types.splice(index, 1);
+				this.newTable.optionsDropdown = -1;
+			},
+			insertColumn: function (index) {
+				this.newTable.headers.splice(index, 0, "");
+				this.newTable.types.splice(index, 0, "string");
+				this.newTable.optionsDropdown = -1;
 			}
 		}
 	});
@@ -2106,6 +2180,7 @@
 	APP.goBack = app.goBack;
 	APP.notify = app.notify;
 	APP.confirm = app.confirm;
+	APP.WorkingOffline = WorkingOffline;
 
 	window.onresize = layout;//recalc layout on resize for a responsive experience
 
