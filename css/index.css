@@ -135,6 +135,66 @@ h6 {
 	font-weight: 400;
 }
 
+table {
+	border-collapse: collapse;
+	background-color: white;
+}
+.table-container{
+	width: 73%;
+	overflow-x: auto;
+}
+
+.phon .table-container{
+	width: 100%;
+}
+
+table, th, td {
+	border: 1px solid lightgray;
+}
+
+th, td, table li {
+	height: 32px;
+	text-indent: 4px;
+	vertical-align: middle;
+	padding-right: 8px;
+}
+
+table input{
+	border: none;
+}
+
+	table a {
+		display: block;
+		width: 100%;
+		height: 29px;
+		padding-top: 4px;
+	}
+
+	table .dropdown {
+		padding: 0;
+		margin: 0;
+		margin-right: 8px;
+		min-width: 160px;
+		max-height: 150px;
+		overflow: auto;
+		font-weight: normal;
+	}
+
+table li{
+	border-bottom: 1px solid lightgray;
+	padding-top: 4px;
+}
+
+.table-container.fullscreen{
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	width: 100%;
+	overflow: scroll;
+	background-color: white;
+}
+
 #loading {
 	color: #333;
 	position: absolute;
@@ -1300,8 +1360,11 @@ html.phon .itemLabel {
 
 html.tabl .itemLabel,
 html.desk .itemLabel {
+	text-align: right;
+	padding-right: 12px;
 	padding-top: 8px;
 	width: 27%;
+	clear: both;
 }
 
 .itemText,
