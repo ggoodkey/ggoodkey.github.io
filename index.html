@@ -274,7 +274,7 @@
 						<h2>Create a new group</h2>
 						<label class="itemLabel">Give the Group a Name</label>
 						<input type="text" class="textbox" autocomplete="off" v-model="groupName" />
-						<button type=button :disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
+						<button type=button v-bind:disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
 					</div>
 					<div v-show="groupPage === 2">
 						<h2>Make the Group Dynamic based on a Search Query</h2>
