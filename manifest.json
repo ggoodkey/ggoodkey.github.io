@@ -5,9 +5,9 @@
 	"scope": "/",
 	"display": "standalone",
 	"start_url": "https://ggoodkey.github.io/",
-	"short_name": "Nyckel (Beta)",
+	"short_name": "Nyckel Beta",
 	"theme_color": "#478cdb",
-	"description": "Store, search, view, share and sync data across devices using the cloud. This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA. You can reset the app by uninstalling it, clearing your browser data, deleting all files saved to Dropbox (in Dropbox/Apps/Nyckel/) and/or searching for 'nukeapp' in the searchbar.",
+	"description": "Store, search, view, share and sync data across devices using the cloud.",
 	"orientation": "any",
 	"background_color": "black",
 	"related_applications": [],
@@ -15,28 +15,19 @@
 	"icons": [
 		{
 			"src": "images/icon-128x128.png",
-			"sizes": "128x128",
-			"type": "image/png"
+			"sizes": "128x128"
 		},
 		{
 			"src": "images/apple-touch-icon.png",
-			"sizes": "152x152",
-			"type": "image/png"
+			"sizes": "152x152"
 		},
 		{
 			"src": "images/ms-touch-icon-144x144-precomposed.png",
-			"sizes": "144x144",
-			"type": "image/png"
+			"sizes": "144x144"
 		},
 		{
 			"src": "images/chrome-touch-icon-192x192.png",
-			"sizes": "192x192",
-			"type": "image/png"
+			"sizes": "192x192"
 		}
 	]
 }
-
-
-
-
-
