@@ -199,7 +199,7 @@
 								For example, searching for "Bob Johnston" would find Bob Johnston, as expected, but "Bob +Johnston" finds all the Bobs, as well as all the Johnstons
 								(Bob Smith, Bob Johnston, Bob Dunn, Jim Johnston...), whereas "Bob -Johnston" finds all the Bobs who are not Johnstons (Bob Smith, Bob Dunn).
 							</p>
-							<p>Note: Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
+							<p>Note:  Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
 						</div>
 						<label class="itemLabel">Input Search Terms</label>
 						<input type="search" class="textbox" autocomplete="off" v-model="groupSearchBox" v-on:keypress="groupKeyPress($event)" v-on:keyup="groupKeyUp($event)" v-on:keypdown="groupKeyDown($event)" v-on:input="groupInput($event)" />
