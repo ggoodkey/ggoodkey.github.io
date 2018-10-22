@@ -402,6 +402,7 @@
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
 					}
+					checkDBLoaded();
 				}
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
@@ -442,15 +443,18 @@
 							app.notify("App version has changed from " + s.version + " to " + app.version + ". Resetting app settings to default values.");
 							// migrate older version state data here
 							APP.Sto.deleteItem("state");
+							checkDBLoaded();
 						}
 						
 					} else if (error) {
 						debug(error, "error getting app state");
+						checkDBLoaded();
 					} else {
 						debug(s, "state not found");
 						APP.Sto.deleteItem("state");
+						checkDBLoaded();
 					}
-				});
+				}, checkDBLoaded);
 			}
 			layout();
 			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
@@ -461,7 +465,6 @@
 				webWorker.addEventListener('error', wwOnError, false);
 			}
 			matchWindowsTheme();
-			checkDBLoaded();
 			updateWindowsLiveTile();
 		},
 		//Windows specific functions
@@ -1645,7 +1648,7 @@
 						else if (success && obj && obj.file) {
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								//TODO Set syncPending to false
+								//
 								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title, syncPending) {
 									if (!success) debug(error, title + " setSyncComplete error");
 								});
@@ -1752,10 +1755,8 @@
 							if (success) {
 								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
-								if (APP.Dbx && APP.Dbx.isAuthenticated) {
-									_this.spin(true, "Synchronising with Dropbox");
-									APP.Dbx.open("/sync/lastSync", null, readSyncfile);
-								}
+								_this.spin(true, "Synchronising with Dropbox");
+								APP.Dbx.open("/sync/lastSync", null, readSyncfile);
 							}
 							else {
 								console.log("cannot sync to Dropbox now");

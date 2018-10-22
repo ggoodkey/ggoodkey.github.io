@@ -63,7 +63,7 @@ var APP = APP || {}, Base64;
 	var DropboxSessionObj = function (client_id, password, callback) {
 		function dropboxError(error) {
 			if (error instanceof XMLHttpRequest) error = error.statusText;
-			if (console) console.log(error);
+			if (console && console.log) console.log(error);
 		}
 		function updateFileList() {
 			function gotFolder(obj) {
