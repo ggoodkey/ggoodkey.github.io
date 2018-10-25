@@ -937,7 +937,6 @@
 					wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
 						if (vals && !errors) {
 							var type, email, name, primary = false;
-							debug(vals, "vals");
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
 								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
 								if (vals[a][6]) {	
