@@ -635,7 +635,7 @@
 						if (!WorkingOffline) {
 							app.syncAll();
 						}
-						else app.spin(false);
+						app.spin(false);
 						loadDB = false;
 						loadDBQueueIndex--;	
 						if (loadDBQueueIndex < 0) return;
@@ -1975,11 +1975,13 @@
 							if (dataTemplates.hasOwnProperty(table)) {
 								(function (table) {
 									wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
-										generateList(table, searchResults, null, null, null, true, function (list) {
-											_this.activeGroup = _this.activeGroup.concat(list);
-											n++;
-											if (n === numOfTables && callback instanceof Function) return callback();
-										});
+										if (!errors && searchResults && searchResults.length > 0) {
+											generateList(table, searchResults, null, null, null, true, function (list) {
+												_this.activeGroup = _this.activeGroup.concat(list);
+												n++;
+												if (n === numOfTables && callback instanceof Function) return callback();
+											});
+										}
 									});
 								})(table);
 							}

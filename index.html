@@ -289,13 +289,13 @@
 		<div id="groupsView" class="view" v-show="view2">
 			<div class="view-container">
 				<div v-if="groups.length === 0 || showNewGroupUI">
-					<button v-show="groupName !== '' && groupPage > 1" v-on:click="groupPage = 1">Edit Group Name: {{groupName}}</button>
-					<button v-show="groupSearchBox !== '' && groupPage > 2" v-on:click="groupPage = 2">Edit Search Query: {{groupSearchBox}}</button>
+					<button v-show="groupName !== '' && groupPage > 1" v-on:click="groupPage = 1"><span class="icon icon-arrow-left"></span> Edit Group Name: {{groupName}}</button>
+					<button v-show="groupSearchBox !== '' && groupPage > 2" v-on:click="groupPage = 2"><span class="icon icon-arrow-left"></span> Edit Search Query: {{groupSearchBox}}</button>
 					<div v-show="groupPage === 1">
 						<h2>Create a new group</h2>
 						<label class="itemLabel">Give the Group a Name</label>
 						<input type="text" class="textbox" autocomplete="off" v-model="groupName" />
-						<button type=button v-bind:disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
+						<button type=button v-bind:disabled="groupName === ''" v-on:click="groupPage++">Next <span class="icon icon-arrow-right"></span></button>
 					</div>
 					<div v-show="groupPage === 2">
 						<h2>Make the Group Dynamic based on a Search Query</h2>
@@ -310,7 +310,7 @@
 						</div>
 						<label class="itemLabel">Input Search Terms</label>
 						<input type="search" class="textbox" autocomplete="off" v-model="groupSearchBox" v-on:keypress="groupKeyPress($event)" v-on:keyup="groupKeyUp($event)" v-on:keypdown="groupKeyDown($event)" v-on:input="groupInput($event)" />
-						<button v-if="groupSearchBox === ''" v-on:click="groupPage++">Skip</button>
+						<button v-if="groupSearchBox === ''" v-on:click="groupPage++">Skip <span class="icon icon-arrow-right"></span></button>
 					</div>
 					<div v-show="groupPage === 3">
 						<h2>Select Members</h2>
