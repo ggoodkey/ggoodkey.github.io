@@ -7,7 +7,7 @@
 	<meta name="format-detection" content="telephone=no" />
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
 
-	<title>Nyckel</title>
+	<title>Nyckel (Beta)</title>
 	<meta name="description" content="Nyckel Database Application" />
 
 	<!--Favicons-->
@@ -200,7 +200,7 @@
 
 			</div>
 		</div>
-		<!--<div class="view" v-show="viewNew">
+		<div class="view" v-show="viewNew">
 			<div class="view-container">
 				<h1>Create a New Table</h1>
 				<label class="itemLabel">Table Name</label>
@@ -217,7 +217,7 @@
 							</td>
 							<th v-for="(column, index) in newTable.headers">
 								<div class="dropdown-container">
-									<a v-on:click="newTable.optionsDropdown = newTable.optionsDropdown === index ? -1 : index">Column {{ index + 1 }}</a>
+									<a v-on:click="toggleDropdown('optionsDropdown', index)">Column {{ index + 1 }}</a>
 									<ul v-show="newTable.optionsDropdown === index" class="dropdown">
 										<li v-on:click="sortbyColumn(index)">Sort By Column</li>
 										<li v-on:click="deleteColumn(index)">Delete Column</li>
@@ -233,7 +233,7 @@
 							<th>Column&nbsp;Data&nbsp;Type</th>
 							<td v-for="(type, index) in newTable.types">
 								<div class="dropdown-container">
-									<a v-on:click="newTable.typeDropdown = newTable.typeDropdown === index ? -1 : index">{{ type }}</a>
+									<a v-on:click="toggleDropdown('typeDropdown', index)">{{ type }}</a>
 									<ul v-show="newTable.typeDropdown === index" class="dropdown">
 										<li v-for="validType in newTable.validTypes" v-on:click="newTable.types[index] = validType; newTable.typeDropdown = -1;">{{ validType }}</li>
 									</ul>
@@ -241,7 +241,28 @@
 							</td>
 							<td></td>
 						</tr>
-						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+						<tr><th>Is Label for</th><td v-for="(type, index) in newTable.types">none</td><td></td></tr>
+						<tr><th>Accepted Values</th><td v-for="(type, index) in newTable.types">any</td><td></td></tr>
+						<tr><th>Searchable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr><th>Viewable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr><th>Editable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr>
+							<th>Password Protect</th>
+							<td v-for="(protected, index) in newTable.protect">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('protectDropdown', index)">{{ protected }}</a>
+									<ul v-show="newTable.protectDropdown === index" class="dropdown">
+										<li v-for="option in newTable.protectOptions" v-on:click="newTable.protect[index] = option; newTable.protectDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Sort Search Results by</th>
+							<td></td>
+							<td v-for="(type, index) in newTable.types"></td>
+						</tr>
 						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
 						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
 						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
@@ -254,7 +275,7 @@
 
 				<button>Save Table</button>
 			</div>
-		</div>-->
+		</div>
 		<div class="view" v-show="view1">
 			<div class="view-container">
 				<h1>Contacts</h1>
@@ -380,6 +401,9 @@
 						<div v-if="item.type === 'email'" class="itemText">
 							<a v-bind:href="externalLink(item, 'email')">
 								<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							<a v-bind:href="externalLink(item, 'bcc')">
+								<span class="icon icon-envelope"></span>&nbsp;&nbsp;BCC
 							</a>
 						</div>
 						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(details[index -1].text)" class="itemText">
@@ -397,8 +421,13 @@
 							</a>
 						</div>
 						<div v-else-if="details[index -1].text === 'GPS'" class="itemText">
+							<a v-bind:href="externalLink(item, 'www')" target="_blank">
+								<span class="icon icon-world"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>
+							<br />
+							<br />
 							<a v-bind:href="externalLink(item, 'gps')">
-								<span class="icon icon-mappin"></span>&nbsp;&nbsp;{{ item.text }}
+								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
 							</a>
 						</div>
 						<div v-else class="itemText">{{ item.text }}</div>
