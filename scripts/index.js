@@ -5,7 +5,7 @@
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.0.1";//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
 	var views = ["viewNew", "viewRecent", "viewSearch", "viewDetails", "viewEdit", "view1", "view2", "view3", "view4"], //don't change these
-		viewNames = ["New Table", "Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
+		viewNames = ["Tables", "Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
 		viewIcons = ["icon-plus", "icon-time", null, null, null, "icon-user", "icon-people", "icon-lock", "icon-folder-open"], //change icons, see index.css for all possible icon classes
 		startView = 1,//change this to show different view on load, see views above
 		backstack = [views[startView]],
@@ -179,13 +179,13 @@
 			groupHelp: false,
 			newTable: {
 				title: "",
-				headers: ["","","",""],
-				types: ["string","string","string", "string"],
+				headers: ["", "", "", ""],
+				types: ["string", "string", "string", "string"],
 				options: {
 					customProperties: {},
 					doNotIndex: [],
 					initialIndex: []
-				},		
+				},
 				display: {
 					searchResultsText: [],
 					searchResultsJoiner: " ",
@@ -196,6 +196,19 @@
 				validTypes: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
 				typeDropdown: -1,
 				optionsDropdown: -1,
+				protectDropdown: -1,
+				protect: [false, false, false, false],
+				protectOptions: [false, true, "to view", "to edit"],
+				acceptedValuesDropdown: -1,
+				acceptedValues: ["any", "any", "any", "any"],
+				hiddenDropdown: -1,
+				hidden: [false, false, false, false],
+				editableDropdown: -1,
+				editable: [true, true, true, true],
+				searchableDropdown: -1,
+				searchable: [true, true, true, true],
+				labelDropdown: -1,
+				labelFor: ["", "", "", ""],
 				fullscreen: false
 			}
 		},
@@ -829,7 +842,19 @@
 			else list = alphabetHeaders.concat(list);
 			list = deleteDuplicates(list);
 			return diff > 0 ? list.sort(sortFunction).reverse() : list.sort(sortFunction);
-		};
+		},
+		buildMailtoUri = function (to, bcc, subject, message, callback) {
+		var query = bcc || subject || message ? "?" : "",
+			joiner1 = bcc && (subject || message) ? "&" : "",
+			joiner2 = (bcc || subject) && message ? "&" : "",
+			bccBool = bcc ? true : false;
+		to = to ? encodeURIComponent(to) : "";
+		bcc = bcc ? "bcc=" + encodeURIComponent(bcc) : "";
+		subject = subject ? "subject=" + encodeURIComponent(subject) : "";
+		message = message ? "body=" + encodeURIComponent(message) : "";
+		if (callback instanceof Function) callback("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
+		else return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
+	};
 	//Components
 	Vue.component('jump-list', {
 		props: {
@@ -911,21 +936,33 @@
 					var emailAddresses = [];
 					wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
 						if (vals && !errors) {
-							var type, email, name;
+							var type, email, name, primary = false;
+							debug(vals, "vals");
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
 								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
+								if (vals[a][6]) {	
+									for (let b = 4; b < 17; b = b + 2) {//find primary email
+										if (/\*/.test(vals[a][b])) primary = b;
+									}
+								}
 								for (let b = 4; b < 17; b = b + 2) {
-									type = vals[a][b] || "";
 									email = vals[a][b + 1];
-									if (vals[a][6]) name = type.replace(/\'s Email/, " ") + vals[a][3];
-									if (email) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
+									if (email) {
+										type = vals[a][b] || "";
+										if (vals[a][6]) {
+											if (/\'s Email/.test(type)) name = type.replace(/\'s Email/, " ") + vals[a][3];
+											name = name.replace(/\*/, "");
+											name = trim(name);
+										}
+										if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
+									}
 								}
 							}
 							_this.emailLinks = [];
 							if (emailAddresses.length > 0) {
 								emailAddresses = emailAddresses.join(",");
-								buildMailtoUri(emailAddresses);
-								buildMailtoUri(APP.User && APP.User.email || "", emailAddresses);
+								buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu);
+								buildMailtoUri(APP.User && APP.User.email || "", emailAddresses, null, null, updateDropdownMenu);
 							}
 							else {
 								var link = {};
@@ -936,17 +973,6 @@
 						}
 						else debug(errors, "get email errors");
 					});
-				}
-				function buildMailtoUri(to, bcc, subject, message) {
-					var query = bcc || subject || message ? "?" : "",
-						joiner1 = bcc && (subject || message) ? "&" : "",
-						joiner2 = (bcc || subject) && message ? "&" : "",
-						bccBool = bcc ? true : false;
-					to = to ? encodeURIComponent(to) : "";
-					bcc = bcc ? "bcc=" + encodeURIComponent(bcc) : "";
-					subject = subject ? "subject=" + encodeURIComponent(subject) : "";
-					message = message ? "body=" + encodeURIComponent(message) : "";
-					updateDropdownMenu("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
 				}
 				function updateDropdownMenu(mailtoUri, bccBool) {
 					var link = {};
@@ -1091,7 +1117,7 @@
 			search: function (event, optionalQuery) {
 				if (!this.showSearchBar) {
 					this.searchSuggestions = [];
-					setTimeout(function () { document.getElementById("searchBox").focus(); }, 210);
+					document.getElementById("searchBox").focus();
 				}
 				else this.showSearchSuggestions = true;
 				this.showSearchBar = true;
@@ -1796,6 +1822,8 @@
 				if (type === "phone") link = "tel:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
 				else if (type === "sms") link = "sms:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
 				else if (type === "email") link = "mailto:" + encodeURIComponent(String(item.text));
+				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(item.text));
+				else if (type === "www") link = item.text;
 				if (link) return link;
 				else if (type === "gps" || type === "address" && !/mail/i.test(item.text)) {
 					var a = item.column.replace(/Type/, ""),
@@ -1807,7 +1835,7 @@
 						userAgent = navigator.userAgent,
 						result = [];
 					if (type === "gps") {
-						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace("%2C"," ");
+						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace("%2C+",",");
 					}
 					else {
 						for (var i = 0, length = details.length; i < length; i++) {
@@ -2160,6 +2188,12 @@
 						editView: {}
 					};
 				}
+			},
+			toggleDropdown: function (rowName, colIndex) {
+				if (this.newTable[rowName] !== undefined) {
+					this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
+				}
+				else debug(rowName, "no such row in table");
 			},
 			sortbyColumn: function (index) {
 
