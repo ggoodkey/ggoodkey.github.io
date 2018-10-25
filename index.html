@@ -7,7 +7,7 @@
 	<meta name="format-detection" content="telephone=no" />
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
 
-	<title>Nyckel</title>
+	<title>Nyckel (Beta)</title>
 	<meta name="description" content="Nyckel Database Application" />
 
 	<!--Favicons-->
@@ -65,37 +65,38 @@
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
 			<div id="currentView"> {{ currentView }}</div>
 			<!--right buttons (reverse order)-->
-			<div id="cancelSearch" class="navlink right" v-show="showSearchBar" v-on:click="cancelSearch" tabindex="11" title="Cancel Search"><span class="icon icon-remove"></span></div>
+			<div id="cancelSearch" class="navlink right" v-show="showSearchBar" v-on:click="cancelSearch" tabindex="12" title="Cancel Search"><span class="icon icon-remove"></span></div>
 			<div id="menu" class="navlink right" v-on:click="showSettings = false; toggle('showSideNav');" tabindex="6" title="Menu"><span class="icon icon-menu-hamburger"></span></div>
-			<div id="search" class="navlink right" v-on:click="search" tabindex="10" title="Search"><span class="icon icon-search"></span></div>
+			<div id="search" class="navlink right" v-on:click="search" tabindex="11" title="Search"><span class="icon icon-search"></span></div>
 			<form id="searchBar" class="right">
-				<input id="searchBox" type="search" autocomplete="off" tabindex="7" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
-				<input id="searchReset" type="reset" value="&#10005;" tabindex="8" v-on:click="resetSearch" />
+				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
+				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
 				<div id="searchAutoComplete"> {{ searchAutoComplete }}</div>
-				<div id="searchSuggestions-container" tabindex="9" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
+				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
 					<ul id="searchSuggestions">
 						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
 					</ul>
 				</div>
 			</form>
 			<div class="views desk right">
-				<div class="navlink" v-show="viewRecent === false" v-on:click="navigate(views[0])" tabindex="2" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span><span class="desk"> &nbsp; {{ viewNames[0] }}</span></div>
-				<div class="navlink" v-show="view1 === false" v-on:click="navigate(views[4])" tabindex="3" v-bind:title="viewNames[4]"><span class="icon" v-bind:class="viewIcons[4]"></span><span class="desk"> &nbsp; {{ viewNames[4] }}</span></div>
-				<div class="navlink" v-show="view2 === false" v-on:click="navigate(views[5]); initializeGroups()" tabindex="4" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span><span class="desk"> &nbsp; {{ viewNames[5] }}</span></div>
-				<div class="navlink" v-show="view3 === false" v-on:click="navigate(views[6])" tabindex="5" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span><span class="desk"> &nbsp; {{ viewNames[6] }}</span></div>
-				<div class="navlink" v-show="view4 === false" v-on:click="navigate(views[7])" tabindex="6" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span><span class="desk"> &nbsp; {{ viewNames[7] }}</span></div>
+				<div class="navlink" v-show="viewNew === false" v-on:click="navigate(views[0])" tabindex="2" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span><span class="desk"> &nbsp; {{ viewNames[0] }}</span></div>
+				<div class="navlink" v-show="viewRecent === false" v-on:click="navigate(views[1])" tabindex="3" v-bind:title="viewNames[1]"><span class="icon" v-bind:class="viewIcons[1]"></span><span class="desk"> &nbsp; {{ viewNames[1] }}</span></div>
+				<div class="navlink" v-show="view1 === false" v-on:click="navigate(views[5]);" tabindex="4" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span><span class="desk"> &nbsp; {{ viewNames[5] }}</span></div>
+				<div class="navlink" v-show="view2 === false" v-on:click="navigate(views[6]); initializeGroups()" tabindex="5" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span><span class="desk"> &nbsp; {{ viewNames[6] }}</span></div>
+				<div class="navlink" v-show="view3 === false" v-on:click="navigate(views[7])" tabindex="6" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span><span class="desk"> &nbsp; {{ viewNames[7] }}</span></div>
+				<div class="navlink" v-show="view4 === false" v-on:click="navigate(views[8])" tabindex="7" v-bind:title="viewNames[8]"><span class="icon" v-bind:class="viewIcons[8]"></span><span class="desk"> &nbsp; {{ viewNames[8] }}</span></div>
 			</div>
 		</nav>
-
 		<nav id="sidenav">
 			<div id="sidenav-container">
 				<div class="views">
-					<div class="navlink phon tabl" v-show="viewRecent === false" v-on:click="navigate(views[0])" tabindex="12" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[0] }}</div>
-					<div class="navlink phon tabl" v-show="view1 === false" v-on:click="navigate(views[4])" tabindex="13" v-bind:title="viewNames[4]"><span class="icon" v-bind:class="viewIcons[4]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[4] }}</div>
-					<div class="navlink phon tabl" v-show="view2 === false" v-on:click="navigate(views[5]); initializeGroups();" tabindex="14" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[5] }}</div>
-					<div class="navlink phon tabl" v-show="view3 === false" v-on:click="navigate(views[6])" tabindex="15" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[6] }}</div>
-					<div class="navlink phon tabl" v-show="view4 === false" v-on:click="navigate(views[7])" tabindex="16" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[7] }}</div>
-					<div id="settings" class="navlink" v-on:click.stop="toggleSettings" tabindex="17" title="Settings">
+					<div class="navlink phon tabl" v-show="viewNew === false" v-on:click="navigate(views[0])" tabindex="13" v-bind:title="viewNames[0]"><span class="icon" v-bind:class="viewIcons[0]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[0] }}</div>
+					<div class="navlink phon tabl" v-show="viewRecent === false" v-on:click="navigate(views[1])" tabindex="14" v-bind:title="viewNames[1]"><span class="icon" v-bind:class="viewIcons[1]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[1] }}</div>
+					<div class="navlink phon tabl" v-show="view1 === false" v-on:click="navigate(views[5])" tabindex="15" v-bind:title="viewNames[5]"><span class="icon" v-bind:class="viewIcons[5]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[5] }}</div>
+					<div class="navlink phon tabl" v-show="view2 === false" v-on:click="navigate(views[6]); initializeGroups();" tabindex="16" v-bind:title="viewNames[6]"><span class="icon" v-bind:class="viewIcons[6]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[6] }}</div>
+					<div class="navlink phon tabl" v-show="view3 === false" v-on:click="navigate(views[7])" tabindex="17" v-bind:title="viewNames[7]"><span class="icon" v-bind:class="viewIcons[7]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[7] }}</div>
+					<div class="navlink phon tabl" v-show="view4 === false" v-on:click="navigate(views[8])" tabindex="18" v-bind:title="viewNames[8]"><span class="icon" v-bind:class="viewIcons[8]"></span> &nbsp;&nbsp;&nbsp; {{ viewNames[8] }}</div>
+					<div id="settings" class="navlink" v-on:click.stop="toggleSettings" tabindex="19" title="Settings">
 						<span class="icon icon-cog"></span> &nbsp;&nbsp;&nbsp; Settings
 						<span class="icon icon-menu-down right" v-show="showSettings === false">
 						</span><span class="icon icon-menu-up right" v-show="showSettings"></span>
@@ -105,22 +106,22 @@
 							Use Windows Theme
 							<div class="switch right">
 								<input type="checkbox" id="switch_useWindowsTheme" v-model="useWindowsTheme" />
-								<label for="switch_useWindowsTheme" v-on:click="toggleUseWindowsTheme" tabindex="17"></label>
+								<label for="switch_useWindowsTheme" v-on:click="toggleUseWindowsTheme" tabindex="20"></label>
 							</div>
 						</div>
 						<div v-show="useWindowsTheme === false" class="clear">
 							Dark Theme
 							<div class="switch right">
 								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" />
-								<label for="switch_darktheme" v-on:click="storeState" tabindex="17"></label>
+								<label for="switch_darktheme" v-on:click="storeState" tabindex="21"></label>
 							</div>
 						</div>
 						<div class="clear">
 							Dropbox
-							<a class="right" tabindex="18" v-if="loggedIn === false" v-on:click="login">Connect to Dropbox</a>
+							<a class="right" tabindex="22" v-if="loggedIn === false" v-on:click="login">Connect to Dropbox</a>
 							<span class="right">{{ dropboxUsername }}</span>
 							<div v-if="loggedIn === true">
-								<a class="right" tabindex="19" v-on:click="logout">Disconnect Account</a>
+								<a class="right" tabindex="23" v-on:click="logout">Disconnect Account</a>
 								<br /><br />
 								<a class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</a>
 								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
@@ -160,35 +161,141 @@
 		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
 			<div id="confirmMessage">{{ confirmMsg }}</div>
 			<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
-			<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);" tabindex="19">{{ confirmOK }}</button>
-			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);" tabindex="20">{{ confirmCancel }}</button>
+			<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>
+			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
 		</div>
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
 		<div id="recentView" class="view" v-if="viewRecent" v-bind:class="{splitViewLeft: splitView}">
-			<div class="view-container">
+			<div v-if="recentlyViewed.length > 0" class="view-container">
 				<h1>Recently Viewed</h1>
 				<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView"></jump-list>
+			</div>
+			<div v-else class="view-container">
+				<h1>Nyckel <sup><small><small>(beta)</small></small></sup></h1>
+
+				<h3>Store, search, view, share and sync data across devices using the cloud.</h3>
+
+				<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>
+
+				<p>
+					NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
+					stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
+					in the form of a table, NyckelDB can handle it.
+				</p>
+
+				<p>
+					Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,
+					sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
+					<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
+				</p>
+
+				<p class="alert">
+					<span class="icon icon-alert"></span>
+					<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
+					Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser
+					data, deleting all files saved to Dropbox (in Dropbox\Apps\Nyckel\) and typing the command 'nukeapp' into the search bar and pressing RETURN.
+				</p>
+
+				<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>
+
+			</div>
+		</div>
+		<div class="view" v-show="viewNew">
+			<div class="view-container">
+				<h1>Create a New Table</h1>
+				<label class="itemLabel">Table Name</label>
+				<input type="text" class="textbox" autocomplete="off" v-model="newTable.title" />
+				<label class="itemLabel">Templates</label>
+				<div class="itemText"><button v-on:click="template('Blank')"><span class="icon icon-page"></span>&nbsp;&nbsp;Blank Template</button><button v-on:click="template('Contacts')"><span class="icon icon-user"></span>&nbsp;&nbsp;Contacts Template</button><button v-on:click="template('Passwords')"><span class="icon icon-lock"></span>&nbsp;&nbsp;Passwords Template</button><button v-on:click="template('Files')"><span class="icon icon-folder-open"></span>&nbsp;&nbsp;Files Template</button></div>
+				<label class="itemLabel">Table Setup</label>
+				<div class="table-container" v-bind:class="{ 'fullscreen': newTable.fullscreen }">
+					<table>
+						<tr>
+							<td>
+								<a v-show="newTable.fullscreen" v-on:click="newTable.fullscreen = false"><span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen</a>
+								<a v-show="newTable.fullscreen === false" v-on:click="newTable.fullscreen = true"><span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen</a>
+							</td>
+							<th v-for="(column, index) in newTable.headers">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('optionsDropdown', index)">Column {{ index + 1 }}</a>
+									<ul v-show="newTable.optionsDropdown === index" class="dropdown">
+										<li v-on:click="sortbyColumn(index)">Sort By Column</li>
+										<li v-on:click="deleteColumn(index)">Delete Column</li>
+										<li v-on:click="insertColumn(index)">Insert Column Left</li>
+										<li v-on:click="insertColumn(index + 1)">Insert Column Right</li>
+									</ul>
+								</div>
+							</th>
+							<th><a v-on:click="newTable.headers.push('');newTable.types.push('string');"><span class="icon icon-plus" title="Add New Column"></span></a></th>
+						</tr>
+						<tr><th>Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-bind:placeholder="'<column ' + (index + 1) + ' name>'" v-model="newTable.headers[index]" /></td><td></td></tr>
+						<tr>
+							<th>Column&nbsp;Data&nbsp;Type</th>
+							<td v-for="(type, index) in newTable.types">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('typeDropdown', index)">{{ type }}</a>
+									<ul v-show="newTable.typeDropdown === index" class="dropdown">
+										<li v-for="validType in newTable.validTypes" v-on:click="newTable.types[index] = validType; newTable.typeDropdown = -1;">{{ validType }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr><th>Is Label for</th><td v-for="(type, index) in newTable.types">none</td><td></td></tr>
+						<tr><th>Accepted Values</th><td v-for="(type, index) in newTable.types">any</td><td></td></tr>
+						<tr><th>Searchable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr><th>Viewable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr><th>Editable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr>
+							<th>Password Protect</th>
+							<td v-for="(protected, index) in newTable.protect">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('protectDropdown', index)">{{ protected }}</a>
+									<ul v-show="newTable.protectDropdown === index" class="dropdown">
+										<li v-for="option in newTable.protectOptions" v-on:click="newTable.protect[index] = option; newTable.protectDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Sort Search Results by</th>
+							<td></td>
+							<td v-for="(type, index) in newTable.types"></td>
+						</tr>
+						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+
+					</table>
+				</div>
+				<label class="itemLabel">Import Data</label>
+				<div class="itemText"><button v-on:click="importNewTable('csv')"><span class="icon icon-import"></span>&nbsp;&nbsp;From CSV</button></div>
+
+				<button>Save Table</button>
 			</div>
 		</div>
 		<div class="view" v-show="view1">
 			<div class="view-container">
 				<h1>Contacts</h1>
-				<a class="button" v-on:click="loadFile('hiddenCSVInput', 'csv')">Select a CSV file from your device</a>
+				<a class="button" v-on:click="importFile('Contacts')">Select a CSV file from your device</a>
 				<input type="file" class="hidden" id="hiddenCSVInput" />
-				<button v-on:click="notify('hello')">Notify</button>
+				<br />
+				<br />
+				<a class="button" v-on:click="generateListView('Contacts')">See all contacts</a>
 			</div>
 		</div>
 		<div id="groupsView" class="view" v-show="view2">
 			<div class="view-container">
 				<div v-if="groups.length === 0 || showNewGroupUI">
-
 					<button v-show="groupName !== '' && groupPage > 1" v-on:click="groupPage = 1">Edit Group Name: {{groupName}}</button>
 					<button v-show="groupSearchBox !== '' && groupPage > 2" v-on:click="groupPage = 2">Edit Search Query: {{groupSearchBox}}</button>
 					<div v-show="groupPage === 1">
 						<h2>Create a new group</h2>
 						<label class="itemLabel">Give the Group a Name</label>
 						<input type="text" class="textbox" autocomplete="off" v-model="groupName" />
-						<button type=button :disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
+						<button type=button v-bind:disabled="groupName === ''" v-on:click="groupPage++"><span class="icon-add"></span> Create Group</button>
 					</div>
 					<div v-show="groupPage === 2">
 						<h2>Make the Group Dynamic based on a Search Query</h2>
@@ -199,7 +306,7 @@
 								For example, searching for "Bob Johnston" would find Bob Johnston, as expected, but "Bob +Johnston" finds all the Bobs, as well as all the Johnstons
 								(Bob Smith, Bob Johnston, Bob Dunn, Jim Johnston...), whereas "Bob -Johnston" finds all the Bobs who are not Johnstons (Bob Smith, Bob Dunn).
 							</p>
-							<p>Note:  Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
+							<p>Note: Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
 						</div>
 						<label class="itemLabel">Input Search Terms</label>
 						<input type="search" class="textbox" autocomplete="off" v-model="groupSearchBox" v-on:keypress="groupKeyPress($event)" v-on:keyup="groupKeyUp($event)" v-on:keypdown="groupKeyDown($event)" v-on:input="groupInput($event)" />
@@ -243,10 +350,11 @@
 		<div class="view" v-show="view4">
 			<div class="view-container">
 				<h1>Files</h1>
-				<h2>Add some content</h2>
-				<a class="button" v-on:click="loadFile('hiddenFileInput')">Select a file from your device</a>
+				<a class="button" v-on:click="importFile('Files')">Select a file from your device</a>
 				<input type="file" class="hidden" id="hiddenFileInput" />
-				<button v-on:click="generateListView('files')">See all files</button>
+				<br />
+				<br />
+				<a class="button" v-on:click="generateListView('Files')">See all files</a>
 			</div>
 		</div>
 		<div id="searchResultsView" class="view" v-if="viewSearch" align="center" v-bind:class="{splitViewLeft: splitView}">
@@ -293,6 +401,9 @@
 						<div v-if="item.type === 'email'" class="itemText">
 							<a v-bind:href="externalLink(item, 'email')">
 								<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+							<a v-bind:href="externalLink(item, 'bcc')">
+								<span class="icon icon-envelope"></span>&nbsp;&nbsp;BCC
 							</a>
 						</div>
 						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(details[index -1].text)" class="itemText">
@@ -310,8 +421,13 @@
 							</a>
 						</div>
 						<div v-else-if="details[index -1].text === 'GPS'" class="itemText">
+							<a v-bind:href="externalLink(item, 'www')" target="_blank">
+								<span class="icon icon-world"></span>&nbsp;&nbsp;{{ item.text }}
+							</a>
+							<br />
+							<br />
 							<a v-bind:href="externalLink(item, 'gps')">
-								<span class="icon icon-mappin"></span>&nbsp;&nbsp;{{ item.text }}
+								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
 							</a>
 						</div>
 						<div v-else class="itemText">{{ item.text }}</div>
