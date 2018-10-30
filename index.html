@@ -211,10 +211,10 @@
 				<div class="table-container" v-bind:class="{ 'fullscreen': newTable.fullscreen }">
 					<table>
 						<tr>
-							<td>
+							<th>
 								<a v-show="newTable.fullscreen" v-on:click="newTable.fullscreen = false"><span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen</a>
 								<a v-show="newTable.fullscreen === false" v-on:click="newTable.fullscreen = true"><span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen</a>
-							</td>
+							</th>
 							<th v-for="(column, index) in newTable.headers">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('optionsDropdown', index)">Column {{ index + 1 }}</a>
@@ -226,9 +226,9 @@
 									</ul>
 								</div>
 							</th>
-							<th><a v-on:click="newTable.headers.push('');newTable.types.push('string');"><span class="icon icon-plus" title="Add New Column"></span></a></th>
+							<th><a v-on:click="insertColumn(false)"><span class="icon icon-plus" title="Add New Column"></span></a></th>
 						</tr>
-						<tr><th>Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-bind:placeholder="'<column ' + (index + 1) + ' name>'" v-model="newTable.headers[index]" /></td><td></td></tr>
+						<tr><th>Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-model="newTable.headers[index]" /></td><td></td></tr>
 						<tr>
 							<th>Column&nbsp;Data&nbsp;Type</th>
 							<td v-for="(type, index) in newTable.types">
@@ -241,11 +241,11 @@
 							</td>
 							<td></td>
 						</tr>
-						<tr><th>Is Label for</th><td v-for="(type, index) in newTable.types">none</td><td></td></tr>
-						<tr><th>Accepted Values</th><td v-for="(type, index) in newTable.types">any</td><td></td></tr>
-						<tr><th>Searchable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
-						<tr><th>Viewable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
-						<tr><th>Editable</th><td v-for="(type, index) in newTable.types">true</td><td></td></tr>
+						<tr><th>Is Label for</th><td v-for="(colName, index) in newTable.labelFor">none</td><td></td></tr>
+						<tr><th>Accepted Values</th><td v-for="(value, index) in newTable.acceptedValues">any</td><td></td></tr>
+						<tr><th>Searchable</th><td v-for="(bool, index) in newTable.searchable">true</td><td></td></tr>
+						<tr><th>Viewable</th><td v-for="(bool, index) in newTable.hidden">true</td><td></td></tr>
+						<tr><th>Editable</th><td v-for="(bool, index) in newTable.editable">true</td><td></td></tr>
 						<tr>
 							<th>Password Protect</th>
 							<td v-for="(protected, index) in newTable.protect">

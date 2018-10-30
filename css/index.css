@@ -137,7 +137,11 @@ h6 {
 
 table {
 	border-collapse: collapse;
-	background-color: white;
+}
+
+th{
+	background-color: #f5f5f5;
+	font-weight: normal;
 }
 
 .table-container {
@@ -162,6 +166,11 @@ table, th, td {
 
 	table input {
 		border: none;
+	}
+
+	table,
+	table input {
+		background-color: white;
 	}
 
 	table a {
@@ -193,9 +202,32 @@ table, th, td {
 	right: 0;
 	width: 100%;
 	overflow: scroll;
-	background-color: white;
+	background-color: #eee;
+	z-index: 1;
+	padding: 12px;
 }
 
+.dark-theme table,
+.dark-theme table input {
+	background-color: #202020;
+	color: lightgray;
+}
+
+.dark-theme table,
+.dark-theme th,
+.dark-theme td {
+	border: 1px solid #444;
+}
+
+	.dark-theme table li {
+		border-bottom: 1px solid #444;
+	}
+	.dark-theme th{
+		background-color: #161616;
+	}
+	.dark-theme .table-container.fullscreen {
+		background-color: black;
+	}
 #loading {
 	color: #333;
 	position: absolute;
@@ -1638,4 +1670,22 @@ button[disabled="disabled"]:focus {
 
 .dark-theme button[disabled="disabled"] {
 	color: #555;
+}
+
+::-webkit-scrollbar {
+	width: 4px;
+	height: 4px;
+	position: absolute;
+}
+::-webkit-scrollbar-track {
+	background: rgba(128,128,128,0.1);
+}
+
+::-webkit-scrollbar-track-piece {
+	background: none;
+}
+
+::-webkit-scrollbar-thumb {
+	background: rgba(128, 128, 128, 0.25);
+	border-radius: 2px;
 }

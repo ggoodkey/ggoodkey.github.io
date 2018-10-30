@@ -2202,11 +2202,36 @@
 			deleteColumn: function (index) {
 				this.newTable.headers.splice(index, 1);
 				this.newTable.types.splice(index, 1);
+				this.newTable.protect.splice(index, 1);
+				this.newTable.acceptedValues.splice(index, 1);
+				this.newTable.hidden.splice(index, 1);
+				this.newTable.editable.splice(index, 1);
+				this.newTable.searchable.splice(index, 1);
+				this.newTable.labelFor.splice(index, 1);
 				this.newTable.optionsDropdown = -1;
 			},
 			insertColumn: function (index) {
-				this.newTable.headers.splice(index, 0, "");
-				this.newTable.types.splice(index, 0, "string");
+				if (!index) {
+					this.newTable.headers.push("");
+					this.newTable.types.push("string");
+					this.newTable.protect.push(false);
+					this.newTable.acceptedValues.push("any");
+					this.newTable.hidden.push(false);
+					this.newTable.editable.push(true);
+					this.newTable.searchable.push(true);
+					this.newTable.labelFor.push("");
+					this.newTable.optionsDropdown = -1;
+				}
+				else {
+					this.newTable.headers.splice(index, 0, "");
+					this.newTable.types.splice(index, 0, "string");
+					this.newTable.protect.splice(index, 0, false);
+					this.newTable.acceptedValues.splice(index, 0, "any");
+					this.newTable.hidden.splice(index, 0, false);
+					this.newTable.editable.splice(index, 0, true);
+					this.newTable.searchable.splice(index, 0, true);
+					this.newTable.labelFor.splice(index, 0, "");
+				}
 				this.newTable.optionsDropdown = -1;
 			}
 		}
