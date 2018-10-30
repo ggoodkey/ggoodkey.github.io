@@ -120,7 +120,7 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', function (evt) {
-	console.log('[PWA Builder] The service worker is serving the asset.' + evt.request.url);
+	console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
 	evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
 	evt.waitUntil(update(evt.request));
 });
@@ -156,7 +156,7 @@ function update(request) {
 
 function fromServer(request) {
 	//this is the fallback if it is not in the cache to go to the server and get it
-	return fetch(request).then(function (response) {
+	return fetch(request, { mode: 'no-cors' }).then(function (response) {
 		console.log("[PWA Builder] fromServer", response);
 		return response;
 	});
