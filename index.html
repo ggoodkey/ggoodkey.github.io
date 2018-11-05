@@ -433,7 +433,7 @@
 			</div>
 		</div>
 		<div class="view" v-if="viewDetails" v-bind:class="{splitViewRight: splitView}">
-			<div class="view-container" v-if="details[0]">
+			<template class="view-container" v-if="details[0]">
 				<h1>{{ details[0].text }}</h1>
 				<div v-if="details[78] && details[78].text && details[78].column === 'Organization1_Name'">{{ details[78].text }}</div>
 				<button v-on:click="editDetails" class="right" v-bind:title="'Edit ' + details[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
@@ -481,6 +481,9 @@
 								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
 							</a>
 						</div>
+						<div v-else-if="item.type === 'multilineString'" class="itemText">
+							<template v-for="line in item.text">{{ line }}</template>
+						</div>
 						<div v-else class="itemText">{{ item.text }}</div>
 					</div>
 				</template>
@@ -521,10 +524,9 @@
 				</template>
 				<div v-if="details[25] && details[25].column === 'Notes'" class="clear">
 					<label class="itemLabel">Notes</label>
-					<div class="itemText" v-if="details[25].fullText">{{ details[25].text }} <a v-on:click="details[25].text = details[25].fullText">more</a></div>
-					<div class="itemText" v-else>{{ details[25].text }}</div>
+					<div class="itemText"><template v-for="line in details[25].text">{{ line }}<br /></template></div>
 				</div>
-			</div>
+			</template>
 		</div>
 		<div class="view" v-show="viewEdit">
 			<div class="view-container">

@@ -27,15 +27,19 @@
 					"Address2_POBox", "Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress",
 					"Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
 					"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription", "Website1_Type", "Website1_Value"],
-				types: ["string", "givenName", "givenName", "familyName", "string", "givenName", "givenName", "familyName", "string",
-					"string", "string", "string", "string", "familyName", "date", "string", "geoLocation", "string", "string", "string",
-					"string", "string", "string", "string", "string", "string", "string", "string", "string", "string", "email", "string", "email", "string",
-					"email", "string", "email", "string", "email", "string", "email", "string", "email", "string", "phoneNumber", "string", "phoneNumber",
-					"string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string",
-					"phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string", "string",
-					"streetAddress", "cityCounty", "mailAddress", "provinceStateRegion", "postalZipCode", "country", "string",
-					"string", "string", "streetAddress", "cityCounty", "mailAddress", "provinceStateRegion", "postalZipCode",
-					"country", "string", "string", "string", "string", "string", "string", "string", "geoLocation", "string", "string", "string"],
+				types: ["string", "givenName", "givenName", "familyName", "string", "givenName", "givenName",
+					"familyName", "string", "string", "string", "string", "string", "familyName", "date", "string",
+					"geoLocation", "string", "string", "string", "string", "string", "string", "string", "string",
+					"multilineString", "string", "string", "string", "string", "email", "string", "email", "string",
+					"email", "string", "email", "string", "email", "string", "email",
+					"string", "email", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string",
+					"phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber",
+					"string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string",
+					"multilineString", "streetAddress", "cityCounty", "mailAddress", "provinceStateRegion", "postalZipCode",
+					"country", "string", "string", "multilineString", "streetAddress", "cityCounty",
+					"mailAddress", "provinceStateRegion", "postalZipCode", "country", "string",
+					"string", "string", "string", "string", "string",
+					"string", "geoLocation", "string", "string", "string"],
 				options: {
 					customProperties: {
 						"localization": {
@@ -58,13 +62,13 @@
 						viewable: [true, false, false, false, false, false, false,
 							false, false, false, false, false, false, false, true, true,
 							true, true, true, true, true, true, true, true, true,
-							true, true, true, false, false, true, false, true, false,
+							false, true, true, false, false, true, false, true, false,
 							true, false, true, false, true, false, true,
 							false, true, false, true, false, true, false, true, false,
 							true, false, true, false, true, false, true,
 							false, true, false, true, false, true, false,
-							true, false, false, false, false, false,
-							false, false, false, true, false, false,
+							false, false, false, false, false, false,
+							false, false, false, false, false, false,
 							false, false, false, false, false,
 							false, true, true, true, true,
 							true, true, true, false, true],
@@ -230,7 +234,7 @@
 				editableDropdownOptions: [true, false],
 				protectDropdownOptions: [false, true, "to view", "to edit"],
 				searchableDropdownOptions: [true, false, 'optional'],
-				typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+				typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
 				viewableDropdownOptions: [true, false],
 
 				options: {
@@ -725,16 +729,13 @@
 				function applyVal(val) {
 					if (app.details[a]) {
 						app.details[a].text = val;
-						if (app.details[a].text && app.details[a].text.length > 1000) {
-							app.details[a].fullText = app.details[a].text;
-							app.details[a].text = app.details[a].text.slice(0, 500) + "...";
-						}
 						app.details[a].label = app.details[a].column;
 						if (dataTemplates[app.details[a].table].display.detailsView.labelCol[a] !== false) {
 							wwManager({ "cmd": "getVal", "title": title, "args": [id, dataTemplates[obj.table].display.detailsView.labelCol[a]] }, function (label) {
 								app.details[a].label = label;
 							});
 						}
+						if (app.details[a].type === 'multilineString' && val !== "") app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
 					}
 				}
 				wwManager({ "cmd": "getVal", "title": title, "args": [id, col] }, applyVal);
@@ -1227,7 +1228,7 @@
 										else {
 											wwManager({ cmd: "getLength", title: "Contacts" }, function (l) {
 												if (l > 0) _this.searchResultsError = 'No results found for "' + _this.currentQuery + '". Try searching for something else.';
-												else _this.searchResultsError = 'No contact data found';
+												else _this.searchResultsError = 'No data found';
 											});
 										}
 										_this.navigate("viewSearch");

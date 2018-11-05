@@ -96,7 +96,7 @@ APP.nyckelDB = (function () {
 			return false;
 		}
 		else if (type === "any") return true;
-		else if (typeof value === "string" && type.match(/string|uniqueString|date|email|phoneNumber|password|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation/)) {
+		else if (typeof value === "string" && type.match(/string|uniqueString|multilineString|date|email|phoneNumber|password|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation/)) {
 			return true;
 		}
 		else if (typeof value === "number" && type.match(/number|integer|posInteger|negInteger|date|phoneNumber|password|postalZipCode|longitude|latitude/)) {
@@ -1093,6 +1093,7 @@ APP.nyckelDB = (function () {
 				type = type.replace(/^(posinteger|posintegers|positiveint|positiveinteger|pos)$/, "posInteger");
 				type = type.replace(/^(neginteger|negintegers|negativeint|negativeinteger|neg)$/, "negInteger");
 				type = type.replace(/^(uniquestring|uniquestrings|unique|id|uniqueid)$/, "uniqueString");
+				type = type.replace(/^(multiline|mulitlinestring|multilinestring|multilinestrings)$/, "multilineString");
 				type = type.replace(/^(phonenumber|phonenumbers|phone|phones|mobile|mobilephone|homephone|workphone|personalphone|cellphone|cell)$/, "phoneNumber");
 				type = type.replace(/^(streetaddress|streetaddresses|street|address)$/, "streetAddress");
 				type = type.replace(/^(mailaddress|mailaddresses|mail|pobox)$/, "mailAddress");
@@ -1365,7 +1366,7 @@ APP.nyckelDB = (function () {
 		syncFrequency = 3e5, //5 minutes
 		syncError = false,
 		syncErrorTime,
-		validTypes = /^(any|number|integer|posInteger|negInteger|boolean|string|uniqueString|date|email|phoneNumber|password|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation|longitude|latitude)$/;
+		validTypes = /^(any|number|integer|posInteger|negInteger|boolean|string|uniqueString|multilineString|date|email|phoneNumber|password|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation|longitude|latitude)$/;
 
 	/*options = {
 		"colNames": Array,
