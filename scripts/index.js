@@ -514,7 +514,6 @@
 						debug(error, "error getting app state");
 						checkDBLoaded();
 					} else {
-						debug(s, "state not found");
 						APP.Sto.deleteItem("state");
 						checkDBLoaded();
 					}
@@ -735,7 +734,9 @@
 								app.details[a].label = label;
 							});
 						}
-						if (app.details[a].type === 'multilineString' && val !== "") app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						if (app.details[a].type === 'multilineString' && val && val !== "") {
+							app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						}
 					}
 				}
 				wwManager({ "cmd": "getVal", "title": title, "args": [id, col] }, applyVal);
@@ -771,7 +772,16 @@
 				app.recentlyViewed = sortList(app.recentlyViewed);
 				app.storeState();
 				wwManager({ "cmd": "forEachCol", "title": obj.table }, getVal, function () {
-					app.navigate("viewDetails");
+					var show = false;
+					for (let a = 0, len = app.details.length; a < len; a++) {
+						if (app.details[a].text !== undefined) show = true;
+					}
+					if (show) app.navigate("viewDetails");
+					else app.confirm(obj.text + " not found. Would you like to remove this listing?", function () {
+						app.recentlyViewed.splice(1, 1);
+						app.recentlyViewed = sortList(app.recentlyViewed);
+						app.storeState();
+					});
 					app.spin(false);
 					if (callback instanceof Function) return callback();
 				});
@@ -818,14 +828,14 @@
 		},
 		sortList = function (list) {
 			function sortFunction(a, b) {
-				a = a.sortBy;
-				b = b.sortBy;
 				//try to compare items as numbers
-				if (!isNaN(a * 1) && !isNaN(b * 1)) {
-					a = a * 1;
-					b = b * 1;
+				if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
+					a.sortBy = a.sortBy * 1;
+					b.sortBy = b.sortBy * 1;
 				}
-				return a === b ? 0 : a < b ? -1 : 1;
+				if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
+				if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
+				return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
 			}
 			function deleteDuplicates(arr) {
 				for (var x = 0, len = arr.length; x < len - 1; x++) {
@@ -847,7 +857,7 @@
 				c = 0,
 				date = new Date(),
 				now = date.getTime(),
-				time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000,
+				time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
 				diff = 0,
 				recentHeaders = {
 					"Older": 2592e6,
@@ -868,7 +878,7 @@
 				else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
 					diff = now - list[a].sortBy;
 					for (var header in recentHeaders) {
-						if (diff > recentHeaders[header]) {
+						if (diff >= recentHeaders[header]) {
 							name = header;
 							break;
 						}
@@ -895,7 +905,7 @@
 			if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
 			else list = alphabetHeaders.concat(list);
 			list = deleteDuplicates(list);
-			return diff > 0 ? list.sort(sortFunction).reverse() : list.sort(sortFunction);
+			return diff >= 0 ? list.sort(sortFunction).reverse() : list.sort(sortFunction);
 		},
 		buildMailtoUri = function (to, bcc, subject, message, callback) {
 		var query = bcc || subject || message ? "?" : "",

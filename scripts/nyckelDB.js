@@ -1334,14 +1334,14 @@ APP.nyckelDB = (function () {
 		tableTitle = options.importData && options.importData.title ? options.importData.title : tableTitle;
 		var a, b, len, properties = {};
 		this.syncPending = true;
-		this.Version = 0.2;
+		this.Version = 0.3;
 		var _this = this;
 		if (tableTitle == null) {//checks for null or undefined
 			return callback instanceof Function ? callback(false, "title not defined", null, false) : "title not defined";
 		}
 		else {
 			if (options.importData && options.importData.data) {
-				if (options.importData.version !== this.Version + "_" + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
+				if (options.importData.version !== this.Version + "_" + Base64.Version && options.importData.version !== this.Version + "." + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
 				else if (Base64.hmac(options.importData.data, options.key) === options.importData.signature) {
 					options.importData = JSON.parse(Base64.read(options.importData.data, options.key));
 					applyTitle.call(this, tableTitle, done.bind(this));
