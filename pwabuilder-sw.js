@@ -156,7 +156,7 @@ function update(request) {
 
 function fromServer(request) {
 	//this is the fallback if it is not in the cache to go to the server and get it
-	return fetch(request, { mode: 'cors' }).then(function (response) {
+	return fetch(request).then(function (response) {
 		console.log("[PWA Builder] fromServer", response);
 		return response;
 	});

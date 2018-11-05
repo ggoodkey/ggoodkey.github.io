@@ -233,35 +233,87 @@
 							<th>Column&nbsp;Data&nbsp;Type</th>
 							<td v-for="(type, index) in newTable.types">
 								<div class="dropdown-container">
-									<a v-on:click="toggleDropdown('typeDropdown', index)">{{ type }}</a>
-									<ul v-show="newTable.typeDropdown === index" class="dropdown">
-										<li v-for="validType in newTable.validTypes" v-on:click="newTable.types[index] = validType; newTable.typeDropdown = -1;">{{ validType }}</li>
+									<a v-on:click="toggleDropdown('typesDropdown', index)">{{ type }}</a>
+									<ul v-show="newTable.typesDropdown === index" class="dropdown">
+										<li v-for="validType in newTable.typesDropdownOptions" v-on:click="newTable.types[index] = validType; newTable.typesDropdown = -1;">{{ validType }}</li>
 									</ul>
 								</div>
 							</td>
 							<td></td>
 						</tr>
-						<tr><th>Is Label for</th><td v-for="(colName, index) in newTable.labelFor">none</td><td></td></tr>
-						<tr><th>Accepted Values</th><td v-for="(value, index) in newTable.acceptedValues">any</td><td></td></tr>
-						<tr><th>Searchable</th><td v-for="(bool, index) in newTable.searchable">true</td><td></td></tr>
-						<tr><th>Viewable</th><td v-for="(bool, index) in newTable.hidden">true</td><td></td></tr>
-						<tr><th>Editable</th><td v-for="(bool, index) in newTable.editable">true</td><td></td></tr>
 						<tr>
-							<th>Password Protect</th>
-							<td v-for="(protected, index) in newTable.protect">
+							<th>Label&nbsp;Column</th>
+							<td v-for="(colName, index) in newTable.display.detailsView.labelCol">
+								<div class="dropdown-container">
+									<a v-if="colName" v-on:click="toggleDropdown('labelColDropdown', index)">{{ colName }}</a>
+									<a v-else v-on:click="toggleDropdown('labelColDropdown', index)">&lt;none&gt;</a>
+									<ul v-show="newTable.labelColDropdown === index" class="dropdown">
+										<li v-on:click="newTable.display.detailsView.labelCol[index] = false; newTable.labelColDropdown = -1;">&lt;none&gt;</li>
+										<li v-for="header in newTable.headers" v-if="header !== newTable.headers[index]" v-on:click="newTable.display.detailsView.labelCol[index] = header; newTable.labelColDropdown = -1;">{{ header }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Accepted&nbsp;Values</th>
+							<td v-for="(value, index) in newTable.display.editView.acceptedValues">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('acceptedValuesDropdown', index)">{{ value }}</a>
+									<ul v-show="newTable.acceptedValuesDropdown === index" class="dropdown">
+										<li v-for="option in newTable.acceptedValuesDropdownOptions" v-on:click="newTable.display.editView.acceptedValues[index] = option; newTable.acceptedValuesDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Searchable</th>
+							<td v-for="(value, index) in newTable.options.searchable">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('searchableDropdown', index)">{{ value }}</a>
+									<ul v-show="newTable.searchableDropdown === index" class="dropdown">
+										<li v-for="option in newTable.searchableDropdownOptions" v-on:click="newTable.options.searchable[index] = option; newTable.searchableDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Viewable</th>
+							<td v-for="(bool, index) in newTable.display.detailsView.viewable">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('viewableDropdown', index)">{{ bool }}</a>
+									<ul v-show="newTable.viewableDropdown === index" class="dropdown">
+										<li v-for="option in newTable.viewableDropdownOptions" v-on:click="newTable.display.detailsView.viewable[index] = option; newTable.viewableDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Editable</th>
+							<td v-for="(bool, index) in newTable.display.editView.editable">
+								<div class="dropdown-container">
+									<a v-on:click="toggleDropdown('editableDropdown', index)">{{ bool }}</a>
+									<ul v-show="newTable.editableDropdown === index" class="dropdown">
+										<li v-for="option in newTable.editableDropdownOptions" v-on:click="newTable.display.editView.editable[index] = option; newTable.editableDropdown = -1;">{{ option }}</li>
+									</ul>
+								</div>
+							</td>
+							<td></td>
+						</tr>
+						<tr>
+							<th>Password&nbsp;Protect</th>
+							<td v-for="(protected, index) in newTable.display.editView.protect">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('protectDropdown', index)">{{ protected }}</a>
 									<ul v-show="newTable.protectDropdown === index" class="dropdown">
-										<li v-for="option in newTable.protectOptions" v-on:click="newTable.protect[index] = option; newTable.protectDropdown = -1;">{{ option }}</li>
+										<li v-for="option in newTable.protectDropdownOptions" v-on:click="newTable.display.editView.protect[index] = option; newTable.protectDropdown = -1;">{{ option }}</li>
 									</ul>
 								</div>
 							</td>
 							<td></td>
-						</tr>
-						<tr>
-							<th>Sort Search Results by</th>
-							<td></td>
-							<td v-for="(type, index) in newTable.types"></td>
 						</tr>
 						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
 						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
@@ -393,11 +445,10 @@
 					</ul>
 				</div>
 				<template v-for="(item, index) in details" v-if="item.text">
-					<div class="hidden clear" v-if="index === 0 || /Type$/.test(item.column) || /GivenName|FamilyName|Notes|Organization1_Name|Address/.test(item.column)">
+					<div class="clear hidden" v-if="index === 0 || item.hidden">
 					</div>
 					<div v-else class="clear">
-						<label class="itemLabel" v-if="/Value$/.test(item.column)">{{ details[index -1].text }}</label>
-						<label class="itemLabel" v-else>{{ item.column }}</label>
+						<label class="itemLabel">{{ item.label }}</label>
 						<div v-if="item.type === 'email'" class="itemText">
 							<a v-bind:href="externalLink(item, 'email')">
 								<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ item.text }}
@@ -406,13 +457,13 @@
 								<span class="icon icon-envelope"></span>&nbsp;&nbsp;BCC
 							</a>
 						</div>
-						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(details[index -1].text)" class="itemText">
+						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(item.label)" class="itemText">
 							<a v-bind:href="externalLink(item, 'phone')">
 								<span class="icon icon-phone-alt">
 								</span>&nbsp;&nbsp;{{ item.text }}
 							</a>
 						</div>
-						<div v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(details[index -1].text)" class="itemText">
+						<div v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)" class="itemText">
 							<a v-bind:href="externalLink(item, 'phone')">
 								<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ item.text }}
 							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -470,7 +521,8 @@
 				</template>
 				<div v-if="details[25] && details[25].column === 'Notes'" class="clear">
 					<label class="itemLabel">Notes</label>
-					<div class="itemText">{{ details[25].text }}</div>
+					<div class="itemText" v-if="details[25].fullText">{{ details[25].text }} <a v-on:click="details[25].text = details[25].fullText">more</a></div>
+					<div class="itemText" v-else>{{ details[25].text }}</div>
 				</div>
 			</div>
 		</div>

@@ -163,7 +163,7 @@ APP.nyckelDB = (function () {
 	function importJSON(json, callback, key, fromLocalStorageBool) {
 		if (typeof json === "string") json = JSON.parse(json);
 		var syncChanges = false;
-		if (json && json.data && json.version === this.Version + "." + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
+		if (json && json.data && json.version === this.Version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
 			json = Base64.read(json.data, key);
 		}
 		if (json && json.title) {
@@ -198,7 +198,7 @@ APP.nyckelDB = (function () {
 							db[this.id].properties = json.properties;
 							db[this.id].table = json.table;
 							db[this.id].types = json.types;
-							db[this.id].version = this.Version;
+							db[this.id].version = this.Version + "_" + Base64.Version;
 							if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
 							else return this;
 						}
@@ -434,8 +434,8 @@ APP.nyckelDB = (function () {
 							//delete remaining rows
 							for (var h = 0, hLen = remainingIds.length; h < hLen; h++) {
 								deleteRow.call(this, remainingIds[h], false, json.lastModified);
-								syncChanges = true;
 							}
+							syncChanges = true;
 						}
 						toLocalStorage.call(this, syncChanges);
 						if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, syncChanges), this;
@@ -692,7 +692,7 @@ APP.nyckelDB = (function () {
 				colNamesIndexed[this.id] = colNamesToIndex ? colNamesToIndex.join("|").split("|") : db[this.id].indexable ? db[this.id].indexable.join("|").split("|") : db[this.id].headers.join("|").split("|");
 				APP.Sto.getItem("searchIndex_" + db[this.id].title, null, function (obj) {
 					if (typeof obj === "string") obj = JSON.parse(obj);
-					if (obj.version === this.Version && obj.length === this.getLength() && obj.lastModified === db[this.id].lastModified && obj.colNamesIndexed.join("") === colNamesIndexed[this.id].join("")) {
+					if (obj.version === this.Version + "_" + Base64.Version && obj.length === this.getLength() && obj.lastModified === db[this.id].lastModified && obj.colNamesIndexed.join("") === colNamesIndexed[this.id].join("")) {
 						searchIndex[this.id] = obj.searchIndex;
 						searchSuggestions[this.id] = obj.searchSuggestions;
 						recentlySearched[this.id] = obj.recentlySearched;
@@ -715,7 +715,7 @@ APP.nyckelDB = (function () {
 			"searchSuggestions": searchSuggestions[this.id],
 			"recentlySearched": recentlySearched[this.id],
 			"length": this.getLength(),
-			"version": this.Version
+			"version": this.Version + "_" + Base64.Version
 		});
 	}
 	function setProp(propName, value, editTime, storeBool) {
@@ -1020,7 +1020,7 @@ APP.nyckelDB = (function () {
 			return JSON.stringify({
 				"data": str,
 				"signature": Base64.hmac(str, key),
-				"version": this.Version + "." + Base64.Version
+				"version": this.Version + "_" + Base64.Version
 			});
 		}
 		function syncFile() {
@@ -1031,7 +1031,7 @@ APP.nyckelDB = (function () {
 		function syncToken(token) {
 			if (token) {
 				token = typeof token === "string" ? JSON.parse(token) : token;
-				if (token.version === this.Version + "." + Base64.Version) {
+				if (token.version === this.Version + "_" + Base64.Version) {
 					if (token.signature && token.token && token.signature === Base64.hmac(token.token, key)) {
 						token = JSON.parse(Base64.read(token.token, key));
 						for (var i in token) {
@@ -1052,7 +1052,7 @@ APP.nyckelDB = (function () {
 			return JSON.stringify({
 				"token": token,
 				"signature": Base64.hmac(token, key),
-				"version": this.Version + "." + Base64.Version
+				"version": this.Version + "_" + Base64.Version
 			});
 		}
 		if (syncError && new Date().getTime() - syncErrorTime < 6e4) return callback instanceof Function ? (callback(false, "try again later", db[this.id].title, false), this) : this;
@@ -1075,7 +1075,9 @@ APP.nyckelDB = (function () {
 	*	  },
 	*	  <property2Name>...
 	*	},
-	*	importData: <json>,
+	*	importData: <json>, table data that is ready to drop in to the database without parsing
+	*	importJSON: <json>, json data that needs to be parsed
+	*	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
 	*	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
 	*	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
 	*	key: <string>,
@@ -1233,28 +1235,45 @@ APP.nyckelDB = (function () {
 		function gotCachedTable(json) {
 			if (json) {
 				if (typeof json === "string") json = JSON.parse(json);
-				if (json.lastModified < json.created && json.lastModified !== 0 || json.lastModified > timestamp()) {
-					console.log("database lastModified dates are corrupted: " + json.lastModified);
-				}
-				db[_this.id] = json;
-				if (options.importData) {
-					if (json.data && json.version === this.Version + "." + Base64.Version && Base64.hmac(json.data, options.key) === json.signature) {
-						json = Base64.read(json.data, options.key);
+				if (json.version !== undefined && json.title && json.title === tableTitle && json.created !== undefined && json.lastModified !== undefined) {
+					console.log(json.version);
+					var version = String(json.version).split("_");
+					if (json.lastModified < json.created && json.lastModified !== 0 || json.lastModified > timestamp()) {
+						console.log("database lastModified dates are corrupted: " + json.lastModified);
+						didntGetCachedTable();
 					}
-					return importJSON.call(_this, json, function (syncChanges, errors) {
-						if (syncChanges && !errors) return createBase64File.call(_this, options.key, options.token, callback);
-						else if (callback instanceof Function) return callback(true, errors, db[_this.id].title, false);
-						else return errors;
-					}, false, true);
+					else if (String(version[0]) === String(this.Version)) {
+						if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
+							json = Base64.read(json.data, options.key);
+							return importJSON.call(_this, json, function (syncChanges, errors) {
+								if (syncChanges && !errors) return createBase64File.call(_this, options.key, options.token, callback);
+								else if (callback instanceof Function) return callback(true, errors, db[_this.id].title, false);
+								else return errors;
+							}, false, true);
+						}
+						else {
+							db[_this.id] = json;
+							buildSearchIndex.call(_this, options.initialIndex || null);
+							return createBase64File.call(_this, options.key, options.token, callback);
+						}
+					}
+					else {
+						console.log("versions do not match", String(version[0]), String(this.Version));
+						didntGetCachedTable();
+					}
 				}
 				else {
-					buildSearchIndex.call(_this, options.initialIndex || null);
-					return createBase64File.call(_this, options.key, options.token, callback);
+					console.log("properties don't match");
+					didntGetCachedTable();
 				}
 			}
-			else didntGetCachedTable();
+			else {
+				console.log('json not found');
+				didntGetCachedTable();
+			}
 		}
 		function didntGetCachedTable() {
+			console.log("didnt get cached table");
 			//creating a brand new table
 			db[_this.id] = options.importData && typeof options.importData.deleted !== "undefined" ? {
 				"title": tableTitle,
@@ -1265,7 +1284,7 @@ APP.nyckelDB = (function () {
 					"title": tableTitle,
 					"created": options.importData && options.importData.created !== undefined ? options.importData.created : timestamp(),
 					"lastModified": options.importData && options.importData.lastModified !== undefined ? options.importData.lastModified : 0,
-					"version": _this.Version,
+					"version": _this.Version + "_" + Base64.Version,
 					"ids": options.importData && options.importData.ids ? options.importData.ids : {},
 					"headers": options.importData && options.importData.headers ? applyHeaders.call(_this, options.importData.headers) : tableHeaders || ["id"],
 					"types": options.importData && options.importData.types ? applyHeaderTypes.call(_this, options.importData.types) : headerTypes,
@@ -1286,9 +1305,14 @@ APP.nyckelDB = (function () {
 				}
 			}
 			setIndexableColumns.call(_this);
-			toLocalStorage.call(_this, true);
 			properties = null;
-			return createBase64File.call(_this, options.key, options.token, callback);
+			if (options.importJSON) importJSON.call(_this, options.importJSON, function () {
+				return createBase64File.call(_this, options.key, options.token, callback);
+			}, );
+			else {
+				toLocalStorage.call(_this, true);
+				return createBase64File.call(_this, options.key, options.token, callback);
+			}
 		}
 		function done(title) {
 			tableTitle = title;
@@ -1316,7 +1340,7 @@ APP.nyckelDB = (function () {
 		}
 		else {
 			if (options.importData && options.importData.data) {
-				if (options.importData.version !== this.Version + "." + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
+				if (options.importData.version !== this.Version + "_" + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
 				else if (Base64.hmac(options.importData.data, options.key) === options.importData.signature) {
 					options.importData = JSON.parse(Base64.read(options.importData.data, options.key));
 					applyTitle.call(this, tableTitle, done.bind(this));
@@ -1900,7 +1924,7 @@ APP.nyckelDB = (function () {
 		if (syncError && new Date().getTime() - syncErrorTime < 6e4) return callback instanceof Function ? (callback(false, "try again later", db[this.id].title, false), this) : this;
 		if (json) {
 			if (typeof json === "string") json = JSON.parse(json);
-			if (json.data && json.version === this.Version + "." + Base64.Version) {
+			if (json.data && json.version === this.Version + "_" + Base64.Version) {
 				switch (json.signature) {
 					case Base64.hmac(json.data, readKey):
 						json = Base64.read(json.data, readKey);

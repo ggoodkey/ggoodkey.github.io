@@ -1570,7 +1570,7 @@ html.desk #sidenav .views .navlink:hover,
 .dark-theme #stoKeyInputConfirm:focus,
 .dark-theme .textbox:focus {
 	border: 1px solid #478cdb; /*accent blue*/
-	background-color: none;
+	background-color: transparent;
 }
 
 html.desk a:focus,

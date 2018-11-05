@@ -54,7 +54,34 @@
 					searchResultsText: ["FamilyName", "GivenName"],
 					searchResultsJoiner: ", ",
 					sortBy: "FamilyName",
-					detailsView: {},
+					detailsView: {
+						viewable: [true, false, false, false, false, false, false,
+							false, false, false, false, false, false, false, true, true,
+							true, true, true, true, true, true, true, true, true,
+							true, true, true, false, false, true, false, true, false,
+							true, false, true, false, true, false, true,
+							false, true, false, true, false, true, false, true, false,
+							true, false, true, false, true, false, true,
+							false, true, false, true, false, true, false,
+							true, false, false, false, false, false,
+							false, false, false, true, false, false,
+							false, false, false, false, false,
+							false, true, true, true, true,
+							true, true, true, false, true],
+						labelCol: [false,false, false, false, false, false, false,
+							false, false, false, false, false, false, false, false, false,
+							false, false, false, false, false, false, false, false, false,
+							false, false, false, false, false, "E_mail1_Type", false, "E_mail2_Type", false, "E_mail3_Type",
+							false, "E_mail4_Type", false, "E_mail5_Type", false, "E_mail6_Type", false,
+							"E_mail7_Type", false, "Phone1_Type", false, "Phone2_Type", false, "Phone3_Type", false, "Phone4_Type",
+							false, "Phone5_Type", false, "Phone6_Type", false, "Phone7_Type", false,
+							"Phone8_Type", false, "Phone9_Type", false, "Phone10_Type", false, "Address1_Type",
+							false, false, false, false, false,
+							false, false, false, "Address2_Type", false, false,
+							false, false,false, false, false,
+							false, "Organization1_Type", false, false, false,
+							false, false, false, false, "Website1_Type"]
+					},
 					editView: {}
 				}
 			},
@@ -179,36 +206,54 @@
 			groupHelp: false,
 			newTable: {
 				title: "",
-				headers: ["", "", "", ""],
-				types: ["string", "string", "string", "string"],
+
+				headers: ["Column 1", "Column 2", "Column 3"],
+				types: ["string", "string", "string"],
+
+				acceptedValuesDropdown: -1,
+				editableDropdown: -1,
+				labelColDropdown: -1,
+				protectDropdown: -1,
+				searchableDropdown: -1,
+				typesDropdown: -1,
+				viewableDropdown: -1,
+
+				acceptedValuesDefault: 'any',
+				editableDefault: true,
+				labelColDefault: false,
+				protectDefault: false,
+				searchableDefault: true,
+				typesDefault: 'string',
+				viewableDefault: true,
+
+				acceptedValuesDropdownOptions: ['any'],
+				editableDropdownOptions: [true, false],
+				protectDropdownOptions: [false, true, "to view", "to edit"],
+				searchableDropdownOptions: [true, false, 'optional'],
+				typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+				viewableDropdownOptions: [true, false],
+
 				options: {
 					customProperties: {},
 					doNotIndex: [],
-					initialIndex: []
+					initialIndex: [],
+					searchable: [true, true, true]
 				},
 				display: {
 					searchResultsText: [],
 					searchResultsJoiner: " ",
 					sortBy: "",
-					detailsView: {},
-					editView: {}
+					detailsView: {
+						viewable: [true, true, true],
+						labelCol: [false, false, false]
+					},
+					editView: {
+						protect: [false, false, false],
+						editable: [true, true, true],
+						acceptedValues: ["any", "any", "any"]
+					}
 				},
-				validTypes: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
-				typeDropdown: -1,
 				optionsDropdown: -1,
-				protectDropdown: -1,
-				protect: [false, false, false, false],
-				protectOptions: [false, true, "to view", "to edit"],
-				acceptedValuesDropdown: -1,
-				acceptedValues: ["any", "any", "any", "any"],
-				hiddenDropdown: -1,
-				hidden: [false, false, false, false],
-				editableDropdown: -1,
-				editable: [true, true, true, true],
-				searchableDropdown: -1,
-				searchable: [true, true, true, true],
-				labelDropdown: -1,
-				labelFor: ["", "", "", ""],
 				fullscreen: false
 			}
 		},
@@ -394,16 +439,18 @@
 			debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
 		},
 		defaultErrorHandler = function (success, errors, title, syncPending) {
-			if (errors === "wrong key used") {
-				_this.notify("Wrong key used", true);
-				_this.updateStoKey();
-			}
-			else if (/unsupported version/.test(errors)) {
-				_this.notify("File found is from a newer version of the app. Please update your app to the latest version.");
-			}
-			else {
-				_this.notify("Unknown error", true);
-				debug(errors, "errors");
+			if (errors) {
+				if (errors === "wrong key used") {
+					app.notify("Wrong key used", true);
+					app.updateStoKey();
+				}
+				else if (/unsupported version/.test(errors)) {
+					app.notify("File found is from a newer version of the app. Please update your app to the latest version.");
+				}
+				else {
+					app.notify("Unknown error", true);
+					debug(errors, "errors");
+				}
 			}
 		},
 		//initialise the application
@@ -682,6 +729,12 @@
 							app.details[a].fullText = app.details[a].text;
 							app.details[a].text = app.details[a].text.slice(0, 500) + "...";
 						}
+						app.details[a].label = app.details[a].column;
+						if (dataTemplates[app.details[a].table].display.detailsView.labelCol[a] !== false) {
+							wwManager({ "cmd": "getVal", "title": title, "args": [id, dataTemplates[obj.table].display.detailsView.labelCol[a]] }, function (label) {
+								app.details[a].label = label;
+							});
+						}
 					}
 				}
 				wwManager({ "cmd": "getVal", "title": title, "args": [id, col] }, applyVal);
@@ -692,7 +745,7 @@
 				});
 			}
 			function getVal(col, a, len) {
-				app.details[a] = { table: obj.table, id: obj.id, column: col, warning: "" };
+				app.details[a] = { table: obj.table, id: obj.id, column: col, warning: "", hidden: !dataTemplates[obj.table].display.detailsView.viewable[a]};
 				getType(a, obj.table, col);
 				getText(a, obj.table, obj.id, col);
 			}
@@ -1629,9 +1682,45 @@
 				});
 			},
 			importNewTable: function () {
+				function matches(subsetArr, ofArr) {
+					var matches = true;
+					for (let a = 0, len = subsetArr.length; a< len; a++) {
+						if (ofArr.indexOf(subsetArr[a]) === -1) matches = false;
+					}
+					return matches;
+				}
+				function createTempTable(JSON, template) {		
+					template.options.importJSON = JSON;
+					_this.notify("Building new table");
+					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] }, function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+						if (errors) defaultErrorHandler(success, errors, title, requiresSync);
+						else _this.notify("Done", true);
+					});
+				}
 				var _this = this;
 				this.loadFile('hiddenCSVInput', 'csv', function (data) {
-					debug(data);
+					if (matches(data.Headers, _this.newTable.headers)) {
+						createTempTable(data, _this.newTable);
+					}
+					else {
+						_this.notify("CSV Headers don't match");
+						for (var template in dataTemplates) {
+							var tryHeaders = dataTemplates[template].headers;
+							if (dataTemplates[template].headers[0] === "id") {
+								tryHeaders = dataTemplates[template].headers.join("||").split("||");
+								tryHeaders.shift();
+							}
+							if (matches(data.Headers, tryHeaders)) {
+								(function (template) {
+									_this.confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
+										_this.template(template);
+										_this.notify("");
+										createTempTable(data, dataTemplates[template]);
+									});
+								})(template);
+							}
+						}
+					}
 				});
 			},
 			editDetails: function () {
@@ -2171,23 +2260,45 @@
 					this.newTable.types = dataTemplates[templateName].types;
 					this.newTable.options = dataTemplates[templateName].options;
 					this.newTable.display = dataTemplates[templateName].display;
+					this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
+					this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
+					this.newTable.display.detailsView.viewable = dataTemplates[templateName].display.detailsView.viewable || [];
+					this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
+					this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
+					this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
 				}
 				else {
 					this.newTable.title = "";
-					this.newTable.headers = ["", "", "", ""];
-					this.newTable.types = ["string", "string", "string", "string"];
+					this.newTable.headers = ["", "", ""];
+					this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
 					this.newTable.options = {
 						customProperties: {},
 						doNotIndex: [],
-						initialIndex: []
+						initialIndex: [],
+						searchable: []
 					};
 					this.newTable.display = {
 						searchResultsText: [],
 						searchResultsJoiner: " ",
 						sortBy: "",
-						detailsView: {},
-						editView: {}
-					};
+						detailsView: {
+							labelCol: [],
+							viewable: []
+						},
+						editView: {
+							acceptedValues: [],
+							editable: [],
+							protect: []
+						}
+					};					
+				}
+				for (let a = 0, len = this.newTable.types.length; a < len; a++) {
+					this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
+					this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
+					this.newTable.display.detailsView.viewable[a] = this.newTable.display.detailsView.viewable[a] !== undefined ? this.newTable.display.detailsView.viewable[a] : this.newTable.viewableDefault;
+					this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
+					this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
+					this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
 				}
 			},
 			toggleDropdown: function (rowName, colIndex) {
@@ -2202,35 +2313,34 @@
 			deleteColumn: function (index) {
 				this.newTable.headers.splice(index, 1);
 				this.newTable.types.splice(index, 1);
-				this.newTable.protect.splice(index, 1);
-				this.newTable.acceptedValues.splice(index, 1);
-				this.newTable.hidden.splice(index, 1);
-				this.newTable.editable.splice(index, 1);
-				this.newTable.searchable.splice(index, 1);
-				this.newTable.labelFor.splice(index, 1);
+				this.newTable.display.editView.protect.splice(index, 1);
+				this.newTable.display.editView.acceptedValues.splice(index, 1);
+				this.newTable.display.detailsView.viewable.splice(index, 1);
+				this.newTable.display.editView.editable.splice(index, 1);
+				this.newTable.options.searchable.splice(index, 1);
+				this.newTable.display.detailsView.labelCol.splice(index, 1);
 				this.newTable.optionsDropdown = -1;
 			},
 			insertColumn: function (index) {
 				if (!index) {
 					this.newTable.headers.push("");
-					this.newTable.types.push("string");
-					this.newTable.protect.push(false);
-					this.newTable.acceptedValues.push("any");
-					this.newTable.hidden.push(false);
-					this.newTable.editable.push(true);
-					this.newTable.searchable.push(true);
-					this.newTable.labelFor.push("");
-					this.newTable.optionsDropdown = -1;
+					this.newTable.types.push(this.newTable.typesDefault);
+					this.newTable.display.editView.protect.push(this.newTable.protectDefault);
+					this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
+					this.newTable.display.detailsView.viewable.push(this.newTable.viewableDefault);
+					this.newTable.display.editView.editable.push(this.newTable.editableDefault);
+					this.newTable.options.searchable.push(this.newTable.searchableDefault);
+					this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
 				}
 				else {
 					this.newTable.headers.splice(index, 0, "");
-					this.newTable.types.splice(index, 0, "string");
-					this.newTable.protect.splice(index, 0, false);
-					this.newTable.acceptedValues.splice(index, 0, "any");
-					this.newTable.hidden.splice(index, 0, false);
-					this.newTable.editable.splice(index, 0, true);
-					this.newTable.searchable.splice(index, 0, true);
-					this.newTable.labelFor.splice(index, 0, "");
+					this.newTable.types.splice(index, 0, this.newTable.typesDefault);
+					this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
+					this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
+					this.newTable.display.detailsView.viewable.splice(index, 0, this.newTable.viewableDefault);
+					this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
+					this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
+					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
 				}
 				this.newTable.optionsDropdown = -1;
 			}
