@@ -1925,7 +1925,7 @@ APP.nyckelDB = (function () {
 		if (syncError && new Date().getTime() - syncErrorTime < 6e4) return callback instanceof Function ? (callback(false, "try again later", db[this.id].title, false), this) : this;
 		if (json) {
 			if (typeof json === "string") json = JSON.parse(json);
-			if (json.data && json.version === this.Version + "_" + Base64.Version) {
+			if (json.data && (json.version === this.Version + "_" + Base64.Version || json.version === this.Version + "." + Base64.Version)) {
 				switch (json.signature) {
 					case Base64.hmac(json.data, readKey):
 						json = Base64.read(json.data, readKey);
