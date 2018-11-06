@@ -433,17 +433,19 @@
 			</div>
 		</div>
 		<div class="view" v-if="viewDetails" v-bind:class="{splitViewRight: splitView}">
-			<template class="view-container" v-if="details[0]">
-				<h1>{{ details[0].text }}</h1>
-				<div v-if="details[78] && details[78].text && details[78].column === 'Organization1_Name'">{{ details[78].text }}</div>
-				<button v-on:click="editDetails" class="right" v-bind:title="'Edit ' + details[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
-				<div class="dropdown-container right">
+			<div class="view-container" v-if="details[0] && details[0].text">
+				<h1>{{ detailsTitleH1 }}</h1>
+				<h3 v-if="detailsSubtitleH2">{{ detailsSubtitleH2 }}</h3>
+				<div class="dropdown-container">
+					<button v-on:click="editDetails" v-bind:title="'Edit ' + details[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
 					<button id="groupsDropdownButton" v-on:click="toggleGroupsDropdown" v-bind:title="'Add ' + details[0].text + ' to Group'"><span class="icon icon-people"></span>&nbsp;&nbsp;Add to Group</button>
 					<ul v-show="addItemToGroupDropdown" class="dropdown">
 						<li v-for="groupName in groups" v-on:click="addToGroup(groupName, details)" class="link">{{ groupName }}</li>
 						<li v-on:click="addToNewGroup(details)" class="link">Create new group</li>
 					</ul>
 				</div>
+				<br />
+				<br />
 				<template v-for="(item, index) in details" v-if="item.text">
 					<div class="clear hidden" v-if="index === 0 || item.hidden">
 					</div>
@@ -454,7 +456,7 @@
 								<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ item.text }}
 							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							<a v-bind:href="externalLink(item, 'bcc')">
-								<span class="icon icon-envelope"></span>&nbsp;&nbsp;BCC
+								<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
 							</a>
 						</div>
 						<div v-else-if="item.type === 'phoneNumber' && /home/i.test(item.label)" class="itemText">
@@ -471,7 +473,7 @@
 								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
 							</a>
 						</div>
-						<div v-else-if="details[index -1].text === 'GPS'" class="itemText">
+						<div v-else-if="details[index].label === 'GPS'" class="itemText">
 							<a v-bind:href="externalLink(item, 'www')" target="_blank">
 								<span class="icon icon-world"></span>&nbsp;&nbsp;{{ item.text }}
 							</a>
@@ -522,11 +524,12 @@
 						</div>
 					</div>
 				</template>
-				<div v-if="details[25] && details[25].column === 'Notes'" class="clear">
+				<div v-if="details[25] && details[25].text && details[25].column === 'Notes'" class="clear">
 					<label class="itemLabel">Notes</label>
 					<div class="itemText"><template v-for="line in details[25].text">{{ line }}<br /></template></div>
 				</div>
-			</template>
+			</div>
+			<div class="view-container" v-else>Nothing here<br /><a v-on:click="detailsViewHelp">Help</a></div>
 		</div>
 		<div class="view" v-show="viewEdit">
 			<div class="view-container">

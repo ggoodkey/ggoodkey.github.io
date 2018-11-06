@@ -59,6 +59,9 @@
 					searchResultsJoiner: ", ",
 					sortBy: "FamilyName",
 					detailsView: {
+						titleH1: ["Name"],
+						subtitleH2: ["Organization1_Name", "Organization1_Title", "Organization1_Department"],
+						subtitleH2Joiner: ", ",
 						viewable: [true, false, false, false, false, false, false,
 							false, false, false, false, false, false, false, true, true,
 							true, true, true, true, true, true, true, true, true,
@@ -70,7 +73,7 @@
 							false, false, false, false, false, false,
 							false, false, false, false, false, false,
 							false, false, false, false, false,
-							false, true, true, true, true,
+							false, false, false, true, false,
 							true, true, true, false, true],
 						labelCol: [false,false, false, false, false, false, false,
 							false, false, false, false, false, false, false, false, false,
@@ -196,6 +199,8 @@
 			showStoKeyInput: false,
 			stoKeyWarning: "",
 			details: [],
+			detailsTitleH1: null,
+			detailsSubtitleH2: null,
 			recentlyViewed: [],
 			showUpdateKey: false,
 			groups: [],
@@ -771,20 +776,43 @@
 				//add this item to top of list
 				app.recentlyViewed = sortList(app.recentlyViewed);
 				app.storeState();
-				wwManager({ "cmd": "forEachCol", "title": obj.table }, getVal, function () {
-					var show = false;
-					for (let a = 0, len = app.details.length; a < len; a++) {
-						if (app.details[a].text !== undefined) show = true;
-					}
-					if (show) app.navigate("viewDetails");
-					else app.confirm(obj.text + " not found. Would you like to remove this listing?", function () {
-						app.recentlyViewed.splice(1, 1);
-						app.recentlyViewed = sortList(app.recentlyViewed);
-						app.storeState();
+				if (dataTemplates[obj.table].display.detailsView.titleH1) {
+					var title = dataTemplates[obj.table].display.detailsView.titleH1;
+					title = title.concat(dataTemplates[obj.table].display.detailsView.subtitleH2);
+					wwManager({ "cmd": "getVals", "title": obj.table, "args": [[obj.id], title] }, function (vals) {
+						vals[0].shift();
+						var h1 = [], h2 = [];
+						for (let a = 0, len = dataTemplates[obj.table].display.detailsView.titleH1.length; a < len; a++) {
+							if (vals[0][0] !== "") h1 = h1.concat(vals[0].shift());
+							else vals[0].shift();
+						}
+						app.detailsTitleH1 = h1.join(dataTemplates[obj.table].display.detailsView.titleH1Joiner || "");
+						if (dataTemplates[obj.table].display.detailsView.subtitleH2) {
+							for (let a = 0, len = dataTemplates[obj.table].display.detailsView.subtitleH2.length; a < len; a++) {
+								if (vals[0][0] !== "") h2 = h2.concat(vals[0].shift());
+								else vals[0].shift();
+							}
+							app.detailsSubtitleH2 = h2.join(dataTemplates[obj.table].display.detailsView.subtitleH2Joiner || "");
+						}
+						else app.detailsSubtitleH2 = null;
 					});
+				}
+				else {
+					app.detailsTitleH1 = null;
+					app.detailsSubtitleH2 = null;
+				}
+				wwManager({ "cmd": "forEachCol", "title": obj.table }, getVal, function () {
+					app.navigate("viewDetails");
 					app.spin(false);
 					if (callback instanceof Function) return callback();
 				});
+			});
+		},
+		detailsViewHelp = function () {
+			app.confirm("Item not found. Would you like to remove this listing?", function () {
+				app.recentlyViewed.splice(1, 1);
+				app.recentlyViewed = sortList(app.recentlyViewed);
+				app.storeState();
 			});
 		},
 		generateListItems = function (tableName, ids, sortByCol, selected, callback) {
@@ -905,7 +933,7 @@
 			if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
 			else list = alphabetHeaders.concat(list);
 			list = deleteDuplicates(list);
-			return diff >= 0 ? list.sort(sortFunction).reverse() : list.sort(sortFunction);
+			return letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
 		},
 		buildMailtoUri = function (to, bcc, subject, message, callback) {
 		var query = bcc || subject || message ? "?" : "",

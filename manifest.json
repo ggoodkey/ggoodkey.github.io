@@ -1,7 +1,7 @@
 {
 	"dir": "ltr",
 	"lang": "en",
-	"name": "Nyckel Database Application (Beta)",
+	"name": "Nyckel Database Application Beta",
 	"scope": "/",
 	"display": "standalone",
 	"start_url": "https://ggoodkey.github.io/",
