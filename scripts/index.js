@@ -1962,7 +1962,7 @@
 						userAgent = navigator.userAgent,
 						result = [];
 					if (type === "gps") {
-						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace("%2C",",");
+						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g,",").replace(/%2B|\+/g,"");
 					}
 					else {
 						for (var i = 0, length = details.length; i < length; i++) {
