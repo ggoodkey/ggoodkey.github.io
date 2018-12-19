@@ -228,7 +228,7 @@
 							</th>
 							<th><a v-on:click="insertColumn(false)"><span class="icon icon-plus" title="Add New Column"></span></a></th>
 						</tr>
-						<tr><th>Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-model="newTable.headers[index]" /></td><td></td></tr>
+						<tr><th title="These are the headers of the columns in your table">Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-model="newTable.headers[index]" /></td><td></td></tr>
 						<tr>
 							<th>Column&nbsp;Data&nbsp;Type</th>
 							<td v-for="(type, index) in newTable.types">
@@ -242,7 +242,7 @@
 							<td></td>
 						</tr>
 						<tr>
-							<th>Label&nbsp;Column</th>
+							<th title="Select a label column if the data in this column has metadata about it specified in another column, ie label for 999-123-4567 might be 'Mobile Phone'">Label&nbsp;Column</th>
 							<td v-for="(colName, index) in newTable.display.detailsView.labelCol">
 								<div class="dropdown-container">
 									<a v-if="colName" v-on:click="toggleDropdown('labelColDropdown', index)">{{ colName }}</a>
@@ -256,7 +256,7 @@
 							<td></td>
 						</tr>
 						<tr>
-							<th>Accepted&nbsp;Values</th>
+							<th title="When editing data you might want to have a dropdown list with only certain values available to be selected. Input those values here">Accepted&nbsp;Values</th>
 							<td v-for="(value, index) in newTable.display.editView.acceptedValues">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('acceptedValuesDropdown', index)">{{ value }}</a>
@@ -268,7 +268,7 @@
 							<td></td>
 						</tr>
 						<tr>
-							<th>Searchable</th>
+							<th title="Do you want data from this column to show up in search results?">Searchable</th>
 							<td v-for="(value, index) in newTable.options.searchable">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('searchableDropdown', index)">{{ value }}</a>
@@ -280,7 +280,7 @@
 							<td></td>
 						</tr>
 						<tr>
-							<th>Viewable</th>
+							<th title="Do you want to hide this column from displaying when the item is viewed?">Viewable</th>
 							<td v-for="(bool, index) in newTable.display.detailsView.viewable">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('viewableDropdown', index)">{{ bool }}</a>
@@ -292,7 +292,7 @@
 							<td></td>
 						</tr>
 						<tr>
-							<th>Editable</th>
+							<th title="Do you want to hide this column from view when the item is being edited?">Editable</th>
 							<td v-for="(bool, index) in newTable.display.editView.editable">
 								<div class="dropdown-container">
 									<a v-on:click="toggleDropdown('editableDropdown', index)">{{ bool }}</a>
