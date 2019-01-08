@@ -1,4 +1,4 @@
-﻿var APP, VAL, Base64, appData = {}, Windows, cordova;//dependancies
+﻿var APP, VAL, Base64, appData = {}, Windows, cordova; //dependancies
 (function () {
 	"use strict";
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
