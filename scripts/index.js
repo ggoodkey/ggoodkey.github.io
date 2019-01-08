@@ -808,13 +808,6 @@
 				});
 			});
 		},
-		detailsViewHelp = function () {
-			app.confirm("Item not found. Would you like to remove this listing?", function () {
-				app.recentlyViewed.splice(1, 1);
-				app.recentlyViewed = sortList(app.recentlyViewed);
-				app.storeState();
-			});
-		},
 		generateListItems = function (tableName, ids, sortByCol, selected, callback) {
 			function buildList(result, errors, title, requiresSync) {
 				var ret = [];
@@ -2382,7 +2375,14 @@
 					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
 				}
 				this.newTable.optionsDropdown = -1;
-			}
+			},
+			detailsViewHelp: function () {
+				app.confirm("Item not found. Would you like to remove this listing?", function () {
+					app.recentlyViewed.splice(1, 1);
+					app.recentlyViewed = sortList(app.recentlyViewed);
+					app.storeState();
+				});
+			},
 		}
 	});
 	//make some functions global
