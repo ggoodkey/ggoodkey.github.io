@@ -166,10 +166,6 @@
       "sizes": "50x50"
     },
     {
-      "src": "images/windows/StoreLogo.png",
-      "sizes": "50x50"
-    },
-    {
       "src": "images/windows/SplashScreen.scale-400.png",
       "sizes": "2480x1200"
     },
