@@ -3,7 +3,7 @@
 	"lang": "en",
 	"name": "Nyckel Database Application Beta",
 	"scope": "/",
-	"display": "standalone",
+	"display": "fullscreen",
 	"start_url": "https://ggoodkey.github.io/",
 	"short_name": "Nyckel Beta",
 	"theme_color": "#478cdb",
