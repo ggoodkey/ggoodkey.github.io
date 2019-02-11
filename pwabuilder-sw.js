@@ -59,7 +59,7 @@ var precacheFiles = [
 	"cordova.js",
 	"index.html",
 	"manifest.json",
-	"pwabuilder-sw.js",
+	//"pwabuilder-sw.js",
 	"css/icons.css",
 	"css/index.css",
 	"css/fonts/glyphicons-halflings-regular.eot",
