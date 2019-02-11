@@ -214,20 +214,12 @@
       "sizes": "868x420"
     },
     {
-      "src": "images/windows/windows-splashscreen-620-300.png",
-      "sizes": "620x300"
-    },
-    {
       "src": "images/windows/windows-squarelogo-270-270.png",
       "sizes": "270x270"
     },
     {
       "src": "images/windows/windows-squarelogo-210-210.png",
       "sizes": "210x210"
-    },
-    {
-      "src": "images/windows/windows-squarelogo-150-150.png",
-      "sizes": "150x150"
     },
     {
       "src": "images/windows/windows-squarelogo-120-120.png",
@@ -242,10 +234,6 @@
       "sizes": "70x70"
     },
     {
-      "src": "images/windows/windows-storelogo-50-50.png",
-      "sizes": "50x50"
-    },
-    {
       "src": "images/windows/windowsphone-appicon-106-106.png",
       "sizes": "106x106"
     },
@@ -254,20 +242,8 @@
       "sizes": "62x62"
     },
     {
-      "src": "images/windows/windowsphone-appicon-44-44.png",
-      "sizes": "44x44"
-    },
-    {
       "src": "images/windows/windowsphone-mediumtile-360-360.png",
       "sizes": "360x360"
-    },
-    {
-      "src": "images/windows/windowsphone-mediumtile-210-210.png",
-      "sizes": "210x210"
-    },
-    {
-      "src": "images/windows/windowsphone-mediumtile-150-150.png",
-      "sizes": "150x150"
     },
     {
       "src": "images/windows/windowsphone-smalltile-170-170.png",
@@ -276,22 +252,6 @@
     {
       "src": "images/windows/windowsphone-smalltile-99-99.png",
       "sizes": "99x99"
-    },
-    {
-      "src": "images/windows/windowsphone-smalltile-71-71.png",
-      "sizes": "71x71"
-    },
-    {
-      "src": "images/windows/windowsphone-storelogo-120-120.png",
-      "sizes": "120x120"
-    },
-    {
-      "src": "images/windows/windowsphone-storelogo-70-70.png",
-      "sizes": "70x70"
-    },
-    {
-      "src": "images/windows/windowsphone-storelogo-50-50.png",
-      "sizes": "50x50"
     },
     {
       "src": "images/android/android-launchericon-512-512.png",
