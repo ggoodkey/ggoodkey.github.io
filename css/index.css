@@ -565,7 +565,7 @@ html.desk #closeSidenav {
 	height: 54px;
 	border-top: 1px solid white;
 	border-bottom: 1px solid lightgray;
-	z-index: 1;
+	z-index: 5;
 }
 
 nav,
@@ -1572,7 +1572,12 @@ html.desk #sidenav .views .navlink:hover,
 	border: 1px solid #478cdb; /*accent blue*/
 	background-color: transparent;
 }
-
+.textbox:focus{
+	background-color: white;
+}
+.dark-theme .textbox:focus{
+	background-color:black;
+}
 html.desk a:focus,
 html.desk button:focus,
 html.desk .addressLink:focus {
@@ -1676,6 +1681,7 @@ button[disabled="disabled"]:focus {
 	width: 4px;
 	height: 4px;
 	position: absolute;
+	z-index: 0;
 }
 ::-webkit-scrollbar-track {
 	background: rgba(128,128,128,0.1);
