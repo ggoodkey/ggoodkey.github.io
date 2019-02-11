@@ -69,10 +69,8 @@ var precacheFiles = [
 	"css/fonts/glyphicons-halflings-regular.woff2",
 	"icon.png",
 	"apple-touch-icon.png",
-	"images/apple-touch-icon-152x152.png",
-	//"images/apple-touch-icon-167x167.png",
-	//"images/ms-touch-icon-144x144-precomposed.png",
-
+	"apple-touch-icon-152x152.png",
+	//"apple-touch-icon-167x167.png",
 
 	//"images/android/android-launchericon-48-48.png",
 	//"images/android/android-launchericon-72-72.png",
