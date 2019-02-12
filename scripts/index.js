@@ -1819,6 +1819,7 @@
 							app.notify("Sync did not complete successfully");
 						}
 					}
+					debug("syncing with dropbox");
 					syncfile = syncfile || {};
 					//add templates to syncfile
 					for (let table in dataTemplates) {
@@ -1826,6 +1827,9 @@
 							syncfile[table] = syncfile[table] || 0;
 							count++;
 						}
+					}
+					if (count === 0) {
+						return cb(syncfile);
 					}
 					var a = 1,
 						b = 1;
@@ -1846,7 +1850,7 @@
 								}
 								else {
 									_this.spin(false);
-									debug(errors, "problem syncing");
+									debug(errors, "problem syncing " + title);
 									app.notify("Sync did not complete successfully");
 								}
 							});
@@ -1867,9 +1871,11 @@
 					else return success();
 				}
 				function readSyncfile(syncfile, error) {
+					debug("reading sync file");
 					if (error === undefined || error === "data not found" || error.match(/^path\/not_found/)) {
 						if (syncfile) {
 							syncfile = JSON && JSON.parse(syncfile) || $.parseJSON(syncfile);
+							debug(syncfile,"syncfile");
 						}
 						else console.log("no syncfile found " + error);
 						sync(syncfile, saveSyncfile);
@@ -1899,12 +1905,14 @@
 					else if (window.location.hash.match(/^#access_token=/)) {
 						_this.login(function (success) {
 							if (success) {
+								debug("login success");
 								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
 								_this.spin(true, "Synchronising with Dropbox");
 								APP.Dbx.open("/sync/lastSync", null, readSyncfile);
 							}
 							else {
+								debug("login fail");
 								console.log("cannot sync to Dropbox now");
 								_this.spin(false);
 								if (callback instanceof Function) return callback();
