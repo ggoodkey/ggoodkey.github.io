@@ -216,8 +216,10 @@ function precache() {
 }
 
 function fromCache(request) {
+	console.log("[PWA Builder] fromCache", request);
 	//we pull files from the cache first thing so we can show them fast
 	return caches.open(CACHE).then(function (cache) {
+		console.log("[PWA Builder] match this", cache);
 		return cache.match(request).then(function (matching) {
 			console.log("[PWA Builder] fromCache", matching);
 			return matching || Promise.reject('no-match');
