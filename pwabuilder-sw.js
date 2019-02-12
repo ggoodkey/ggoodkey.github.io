@@ -202,14 +202,15 @@ self.addEventListener('activate', function (event) {
 	return self.clients.claim();
 });
 
-self.addEventListener('fetch', function (evt) {
-	console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
-	
+self.addEventListener('fetch', function (evt) {	
 	if (evt.request.url.match(corsRequests)) {
-		console.log('[PWA Builder] cors asset');
+		console.log('[PWA Builder] cors asset: ' + evt.request.url);
 		evt.respondWith(fromServer(evt.request));
 	}
-	else evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
+	else {
+		console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
+		evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
+	}
 	evt.waitUntil(update(evt.request));
 });
 
@@ -222,10 +223,8 @@ function precache() {
 }
 
 function fromCache(request) {
-	console.log("[PWA Builder] fromCache", request);
 	//we pull files from the cache first thing so we can show them fast
 	return caches.open(CACHE).then(function (cache) {
-		console.log("[PWA Builder] match this", cache);
 		return cache.match(request).then(function (matching) {
 			console.log("[PWA Builder] fromCache", matching);
 			return matching || Promise.reject('no-match');
@@ -247,7 +246,6 @@ function update(request) {
 function fromServer(request) {
 	//this is the fallback if it is not in the cache to go to the server and get it
 	return fetch(request).then(function (response) {
-		console.log("[PWA Builder] fromServer", response);
 		return response;
 	});
 }

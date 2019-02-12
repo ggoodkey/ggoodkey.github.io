@@ -1819,7 +1819,6 @@
 							app.notify("Sync did not complete successfully");
 						}
 					}
-					debug("syncing with dropbox");
 					syncfile = syncfile || {};
 					//add templates to syncfile
 					for (let table in dataTemplates) {
@@ -1871,11 +1870,9 @@
 					else return success();
 				}
 				function readSyncfile(syncfile, error) {
-					debug("reading sync file");
 					if (error === undefined || error === "data not found" || error.match(/^path\/not_found/)) {
 						if (syncfile) {
 							syncfile = JSON && JSON.parse(syncfile) || $.parseJSON(syncfile);
-							debug(syncfile,"syncfile");
 						}
 						else console.log("no syncfile found " + error);
 						sync(syncfile, saveSyncfile);
