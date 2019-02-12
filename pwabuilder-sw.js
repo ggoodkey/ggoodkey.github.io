@@ -183,7 +183,8 @@ var precacheFiles = [
 	"scripts/adapters/indexed-db.js",
 	"scripts/adapters/dom.js",
 	"scripts/winjs/base.min.js"
-];
+],
+	corsRequests = /^https\:\/\/www\.dropbox\.com\/|^https\:\/\/api\.dropbox\.com\/|^https\:\/\/api\-content\.dropbox\.com\/|^https\:\/\/api\.dropboxapi\.com\/|^https\:\/\/content\.dropboxapi\.com\//;
 
 //Install stage sets up the cache-array to configure pre-cache content
 self.addEventListener('install', function (evt) {
@@ -203,7 +204,12 @@ self.addEventListener('activate', function (event) {
 
 self.addEventListener('fetch', function (evt) {
 	console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
-	evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
+	
+	if (evt.request.url.match(corsRequests)) {
+		console.log('[PWA Builder] cors asset');
+		evt.respondWith(fromServer(evt.request));
+	}
+	else evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
 	evt.waitUntil(update(evt.request));
 });
 
