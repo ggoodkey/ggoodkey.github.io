@@ -692,6 +692,7 @@
 					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
 						if (errors) handleErrors(errors);
 						if (!WorkingOffline) {
+							debug("syncing app");
 							app.syncAll();
 						}
 						app.spin(false);
@@ -709,6 +710,7 @@
 				for (var template in dataTemplates) {
 					numOfTables++;
 				}
+				debug("initialising " + numOfTables + " tables");
 				for (var templateName in dataTemplates) {
 					if (dataTemplates.hasOwnProperty(templateName)) {
 						initDB(templateName, dataTemplates[templateName], b, numOfTables);
@@ -724,6 +726,7 @@
 				if (!loadingDB) {
 					loadingDB = true;
 					app.spin(true, "Loading data...");
+					debug("loading db");
 					getTables();
 				}
 			}
@@ -1768,6 +1771,10 @@
 			cancelChanges: function () {
 				debug("cancelChanges not done");
 			},
+			/*options = {
+				see NyckelDBObj.prototype.sync options
+
+			}*/
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
 					function done(success, errors, title, obj) {
