@@ -1695,8 +1695,14 @@ APP.nyckelDB = (function () {
 							ret[x][y] = db[this.id].table[rowIndex][colIndex];
 							y++;
 						}
+						else if (!colNameIsValid.call(this, colNames[b])) {
+							return callback instanceof Function ? callback(false, colNames[b] + " is not a invalid colName", db[this.id].title, this.syncPending) : false;
+						}
 					}
 					x++;
+				}
+				else if (!rowIdIsValid.call(this, rowIds[a])) {
+					return callback instanceof Function ? callback(false, rowIds[a] + " is not a invalid rowId", db[this.id].title, this.syncPending) : false;
 				}
 			}
 			rowIndex = null; colIndex = null; x = null; y = null; a = null; b = null; len = null; lenB = null;

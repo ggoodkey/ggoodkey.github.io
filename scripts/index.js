@@ -806,7 +806,7 @@
 							}
 							else app.detailsSubtitleH2 = null;
 						}
-						else debug(errors, "values not found in " + title);
+						else debug(errors, "values not found in " + obj.table);
 					});
 				}
 				else {
