@@ -44,7 +44,7 @@ Page 7
 <div style="page-break-before: always;" align="right"><small>Page 2</small><hr></div>
 
 ## Features
-NyckelDB can be visualised as having a table-like stucture, with table headers, and table rows, although the actual structure is a combination or 2D Array's and JSON Objects, linked together with auto-generated unique ids.
+NyckelDB can be visualised as having a table-like stucture, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
 This enables a no compromise combination of features, including the sortability of Arrays, as well as the lightning quick lookup of JSON Objects for search.
 
 ### Sort, Shuffle and Filter
@@ -66,7 +66,7 @@ Conflict resolution follows the assumption that the most recent data in each cel
 
 ### Data Validation
 Data that you input into a NyckelDB object is validated before it is saved, at a minimum, by verifying that it is either a String, Number, or Boolean value. 
-All data *must* fall into one of the three categories. Other types of data, such as Objects and Arrays are not allowed in a NyckelDB and will throw an error.
+All data *must* fall into one of these three categories. Other types of data, such as Objects and Arrays are not allowed in a NyckelDB and will throw an error.
 The data type for each column in the table is specified on creation of the table.
 
 Within these 3 general types of data are many more subtypes. 
@@ -211,4 +211,4 @@ The NyckelDB JSON Object may contain some, but not all, of the following propert
 Values of null or undefined cannot be added to the table. Attempting to do so will fail and throw an error.
 
 ### Time Stamps
-The timestamps used for "created", "lastModified" and "deleted" may look strange. Rather than the typical 13 digit UNIX time, which is the number of milliseconds since 1970, the NyckelDB uses the number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000. To the millisecond accuracy is not nessisary, as synchronization to Dropbox is only permitted by NyckelDB, at maximum, every 5 minutes, so the entire database is made much smaller (and possibly slightly faster) by only recording changes to the nearest minute.
+The timestamps used for "created", "lastModified" and "deleted" may look strange. Rather than the typical 13 digit UNIX time, which is the number of milliseconds since 1970, the NyckelDB uses the number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000. To the millisecond accuracy is not nessisary, as synchronization is only permitted by NyckelDB, at maximum, every 5 minutes, so the entire database is made much smaller (and possibly slightly faster) by only recording changes to the nearest minute.
