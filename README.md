@@ -66,7 +66,7 @@ Conflict resolution follows the assumption that the most recent data in each cel
 
 ### Data Validation
 Data that you input into a NyckelDB object is validated before it is saved, at a minimum, by verifying that it is either a String, Number, or Boolean value. 
-All data *must* fall into one of the three categories. Other types of data, such as Objects and Arrays are not allowed in a NyckelDB and will throw an error.
+All data *must* fall into one of these three categories. Other types of data, such as Objects and Arrays are not allowed in a NyckelDB and will throw an error.
 The data type for each column in the table is specified on creation of the table.
 
 Within these 3 general types of data are many more subtypes. 
