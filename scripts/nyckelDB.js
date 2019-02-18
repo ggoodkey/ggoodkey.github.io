@@ -1678,7 +1678,7 @@ APP.nyckelDB = (function () {
 	 * colNames is an Array the column names from the table header
 	 */
 	NyckelDBObj.prototype.getVals = function (rowIds, colNames, callback) {
-		if (rowIds instanceof Array && colNames instanceof Array) {
+		if (rowIds instanceof Array && colNames instanceof Array && rowIds.length > 0 && colNames.length > 0) {
 			var rowIndex,
 				colIndex,
 				ret = [],
