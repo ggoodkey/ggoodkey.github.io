@@ -957,7 +957,7 @@ APP.nyckelDB = (function () {
 			"lastModified": editTime > db[id].lastModified ? editTime : db[id].lastModified
 		};
 	}
-	function applyTitle(title, callback) {
+	function initiateNewDB(title, callback) {
 		function newDBS() {
 			dbs[uid] = this.title;
 			//declare private db object and unique this.id for every new instance of APP.NyckelBDObj()
@@ -1344,11 +1344,11 @@ APP.nyckelDB = (function () {
 				if (options.importData.version !== this.Version + "_" + Base64.Version && options.importData.version !== this.Version + "." + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
 				else if (Base64.hmac(options.importData.data, options.key) === options.importData.signature) {
 					options.importData = JSON.parse(Base64.read(options.importData.data, options.key));
-					applyTitle.call(this, tableTitle, done.bind(this));
+					initiateNewDB.call(this, tableTitle, done.bind(this));
 				}
 				else return callback instanceof Function ? callback(false, "imported databse corrupted", null, false) : "imported database corrupted";
 			}
-			else applyTitle.call(this, tableTitle, done.bind(this));
+			else initiateNewDB.call(this, tableTitle, done.bind(this));
 		}
 	}
 	var db = db || {},
@@ -1602,7 +1602,7 @@ APP.nyckelDB = (function () {
 			y = dbs.indexOf(oldTitle);
 
 		//applyTitle creates a new id from title
-		return applyTitle.call(this, newTitle, function (newTitle) {
+		return initiateNewDB.call(this, newTitle, function (newTitle) {
 			//copy table and newTitle to new id
 			db[this.id] = JSON.parse(JSON.stringify(db[oldId]));
 			db[this.id].title = newTitle;

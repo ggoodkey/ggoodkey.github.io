@@ -465,8 +465,11 @@
 		//initialise the application
 		init = function (resumeBool) {
 			function tryDropbox(cachedStoKey) {
+				debug("trying dropbox");
 				function applyUser(user) {
+					debug(user, "tried dropbox");
 					if (user) {
+						debug("got user from dropbox");
 						app.dropboxUsername = user.alias;
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
@@ -681,6 +684,7 @@
 					else debug(errors, "loading " + title);
 				}
 				template.options.syncKey = app.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : app.stoKey;
+				debug(template.options.syncKey, "template.options.syncKey");
 				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising NyckelDB
 					if (errors) handleErrors(errors);
 				};
