@@ -788,7 +788,10 @@
 				if (dataTemplates[obj.table].display.detailsView.titleH1) {
 					var title = dataTemplates[obj.table].display.detailsView.titleH1;
 					title = title.concat(dataTemplates[obj.table].display.detailsView.subtitleH2);
+					debug(title, "title");
+					debug(obj.id, "obj.id");
 					wwManager({ "cmd": "getVals", "title": obj.table, "args": [[obj.id], title] }, function (vals, errors) {
+						debug(vals, "vals");
 						if (vals) {
 							vals[0].shift();
 							var h1 = [], h2 = [];
