@@ -44,7 +44,7 @@ Page 7
 <div style="page-break-before: always;" align="right"><small>Page 2</small><hr></div>
 
 ## Features
-NyckelDB can be visualised as having a table-like stucture, with table headers, and table rows, although the actual structure is a combination or 2D Array's and JSON Objects, linked together with auto-generated unique ids.
+NyckelDB can be visualised as having a table-like stucture, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
 This enables a no compromise combination of features, including the sortability of Arrays, as well as the lightning quick lookup of JSON Objects for search.
 
 ### Sort, Shuffle and Filter
