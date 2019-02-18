@@ -788,22 +788,25 @@
 				if (dataTemplates[obj.table].display.detailsView.titleH1) {
 					var title = dataTemplates[obj.table].display.detailsView.titleH1;
 					title = title.concat(dataTemplates[obj.table].display.detailsView.subtitleH2);
-					wwManager({ "cmd": "getVals", "title": obj.table, "args": [[obj.id], title] }, function (vals) {
-						vals[0].shift();
-						var h1 = [], h2 = [];
-						for (let a = 0, len = dataTemplates[obj.table].display.detailsView.titleH1.length; a < len; a++) {
-							if (vals[0][0] !== "") h1 = h1.concat(vals[0].shift());
-							else vals[0].shift();
-						}
-						app.detailsTitleH1 = h1.join(dataTemplates[obj.table].display.detailsView.titleH1Joiner || "");
-						if (dataTemplates[obj.table].display.detailsView.subtitleH2) {
-							for (let a = 0, len = dataTemplates[obj.table].display.detailsView.subtitleH2.length; a < len; a++) {
-								if (vals[0][0] !== "") h2 = h2.concat(vals[0].shift());
+					wwManager({ "cmd": "getVals", "title": obj.table, "args": [[obj.id], title] }, function (vals, errors) {
+						if (vals) {
+							vals[0].shift();
+							var h1 = [], h2 = [];
+							for (let a = 0, len = dataTemplates[obj.table].display.detailsView.titleH1.length; a < len; a++) {
+								if (vals[0][0] !== "") h1 = h1.concat(vals[0].shift());
 								else vals[0].shift();
 							}
-							app.detailsSubtitleH2 = h2.join(dataTemplates[obj.table].display.detailsView.subtitleH2Joiner || "");
+							app.detailsTitleH1 = h1.join(dataTemplates[obj.table].display.detailsView.titleH1Joiner || "");
+							if (dataTemplates[obj.table].display.detailsView.subtitleH2) {
+								for (let a = 0, len = dataTemplates[obj.table].display.detailsView.subtitleH2.length; a < len; a++) {
+									if (vals[0][0] !== "") h2 = h2.concat(vals[0].shift());
+									else vals[0].shift();
+								}
+								app.detailsSubtitleH2 = h2.join(dataTemplates[obj.table].display.detailsView.subtitleH2Joiner || "");
+							}
+							else app.detailsSubtitleH2 = null;
 						}
-						else app.detailsSubtitleH2 = null;
+						else debug(errors, "values not found in " + title);
 					});
 				}
 				else {
