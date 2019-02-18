@@ -687,9 +687,11 @@
 				debug(template.options.syncKey, "template.options.syncKey");
 				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising NyckelDB
 					if (errors) handleErrors(errors);
+					debug(title, "database initialized");
 				};
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+						debug(title, "last database initialized");
 						if (errors) handleErrors(errors);
 						if (!WorkingOffline) {
 							debug("syncing app");
