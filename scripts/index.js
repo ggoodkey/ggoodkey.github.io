@@ -536,7 +536,7 @@
 				webWorker.addEventListener('error', wwOnError, false);
 			}
 			matchWindowsTheme();
-			updateWindowsLiveTile();
+//			updateWindowsLiveTile();
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
@@ -704,6 +704,7 @@
 						else return loadDBQueueIndex > 0 ? loadDBQueue[loadDBQueueIndex](cb) : loadDBQueue[loadDBQueueIndex]();
 					};
 				}
+				debug(template.options, "loading db");
 				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
 			}
 			function getTables() {
@@ -1912,7 +1913,7 @@
 					syncFile,
 					syncfileNeedsUpdated = false;
 				checkDBLoaded(function (callback) {
-					debug("db loaded");
+					debug(callback, "db loaded");
 					options = options || {};
 					options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 					options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
