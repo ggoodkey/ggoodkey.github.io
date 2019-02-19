@@ -204,7 +204,7 @@ APP.nyckelDB = (function () {
 							db[this.id].table = json.table;
 							db[this.id].types = json.types;
 							db[this.id].version = this.Version + "_" + Base64.Version;
-							
+							if (!fromLocalStorageBool) toLocalStorage.call(this);
 							if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
 							else return this;
 						}
@@ -1964,8 +1964,6 @@ APP.nyckelDB = (function () {
 				}
 				return importJSON.call(this, json, function (changes) {
 					if (changes || this.syncPending === true || forceSync === true) {
-						console.log("caching changes made");
-						toLocalStorage.call(_this);
 						return createBase64File.call(this, writeKey, options.token, callback);
 					}
 					else return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, false), this) : this;
