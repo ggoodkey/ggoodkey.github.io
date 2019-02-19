@@ -1259,6 +1259,7 @@ APP.nyckelDB = (function () {
 							console.log("applying json");
 							db[_this.id] = json;
 							buildSearchIndex.call(_this, options.initialIndex || null);
+							toLocalStorage.call(_this);
 							return createBase64File.call(_this, options.key, options.token, callback);
 						}
 					}
