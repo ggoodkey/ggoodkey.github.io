@@ -969,13 +969,7 @@ APP.nyckelDB = (function () {
 			searchSuggestions[this.id] = [];
 			recentlySearched[this.id] = [];
 			rowIndex[this.id] = {};
-			return stoTables.call(this);
-		}
-		function stoTables() {
-			if (APP.Sto) {
-				APP.Sto.setItem("tables", JSON.stringify(dbs));
-			}
-			else console.log("no APP.Sto");
+			APP.Sto.setItem("tables", JSON.stringify(dbs));
 			return callback(title);
 		}
 		title = String(title).replace(/[^A-z\s_0-9]/g, "");
@@ -990,7 +984,7 @@ APP.nyckelDB = (function () {
 					recentlySearched[this.id] = [];
 					rowIndex[this.id] = {};
 					uid++;
-					return stoTables.call(this);
+					return callback(title);
 				}
 				else newDBS.call(this);
 			}
