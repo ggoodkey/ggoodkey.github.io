@@ -1246,6 +1246,8 @@ APP.nyckelDB = (function () {
 					}
 					else if (String(version[0]) === String(this.Version)) {
 						console.log("versions match");
+						console.log(json);
+						console.log(db[_this.id]);
 						if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
 							console.log("signature matches");
 							json = Base64.read(json.data, options.key);
@@ -1258,7 +1260,6 @@ APP.nyckelDB = (function () {
 						}
 						else {
 							console.log("applying json");
-							console.log(json);
 							db[_this.id] = json;
 							buildSearchIndex.call(_this, options.initialIndex || null);
 							return createBase64File.call(_this, options.key, options.token, callback);
