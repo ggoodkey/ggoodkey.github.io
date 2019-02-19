@@ -1245,15 +1245,20 @@ APP.nyckelDB = (function () {
 						didntGetCachedTable();
 					}
 					else if (String(version[0]) === String(this.Version)) {
+						console.log("versions match");
 						if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
+							console.log("signature matches");
 							json = Base64.read(json.data, options.key);
 							return importJSON.call(_this, json, function (syncChanges, errors) {
+								console.log("json imported");
 								if (syncChanges && !errors) return createBase64File.call(_this, options.key, options.token, callback);
 								else if (callback instanceof Function) return callback(true, errors, db[_this.id].title, false);
 								else return errors;
 							}, false, true);
 						}
 						else {
+							console.log("applying json");
+							console.log(json);
 							db[_this.id] = json;
 							buildSearchIndex.call(_this, options.initialIndex || null);
 							return createBase64File.call(_this, options.key, options.token, callback);
