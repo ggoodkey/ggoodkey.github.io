@@ -1811,9 +1811,10 @@
 							debug("sync success, saving files to dropbox");
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								//
+								debug("files saved");
 								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title, syncPending) {
 									if (!success) debug(error, title + " setSyncComplete error");
+									else debug("sync complete");
 								});
 							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
