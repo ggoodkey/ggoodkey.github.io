@@ -192,14 +192,21 @@ var APP = APP || {}, Base64;
 		if (!WorkingOffline) {
 			//check if token is already cached
 			if (localStorage.__dbat && localStorage.__dbat !== "") {
+				console.log("got cached dropbox token");
 				this.isAuthenticated = true;
-				updateFileList();
+				//updateFileList();
 				password = password || "";
 				this.getUserInfo(password, callback);/*TODO password*/
 			}
 			//else check if returning oauth call with token
-			else if (window.location.hash.match(/^#access_token=/)) this.login(password, callback);
-			else if (callback instanceof Function) return callback(false);
+			else if (window.location.hash.match(/^#access_token=/)) {
+				console.log("returning from oath call with dropbox login token");
+				this.login(password, callback);
+			}
+			else if (callback instanceof Function) {
+				console.log("no dropbox token");
+				return callback(false);
+			}
 		}
 		else if (callback instanceof Function) return callback(false);
 	};
