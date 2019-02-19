@@ -143,7 +143,10 @@ APP.nyckelDB = (function () {
 	}
 	function toLocalStorage(changes) {
 		function save() {
-			if (typeof changes === "undefined" || changes === true) APP.Sto.setItem(db[this.id].title, JSON.stringify(db[this.id]));
+			if (typeof changes === "undefined" || changes === true) {
+				console.log("toLocalStorage", db[this.id].title, db[this.id].table);
+				APP.Sto.setItem(db[this.id].title, JSON.stringify(db[this.id]));
+			}
 			errors[this.id] = null;
 		}
 		if (APP.Sto) {

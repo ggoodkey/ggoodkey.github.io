@@ -15,6 +15,7 @@ var APP = APP || {}, Base64;
 			var _this = this;
 			LocalStorageObj.prototype.setItem = function (refName, value, key) {
 				function ret() {
+					console.log("setItem", refName, value, key);
 					LOCAL[refName].save({ key: refName, data: value });
 				}
 				if (typeof value === "object") value = JSON.stringify(value);
@@ -29,6 +30,7 @@ var APP = APP || {}, Base64;
 				function got(obj) {
 					if (obj && obj.data) {
 						var value = key ? Base64.read(obj.data, key) : Base64.read(obj.data);
+						console.log("getItem", refName, value, key);
 						if (key && !value) return callback instanceof Function ? callback(null, "wrong key") : null;
 						else return callback instanceof Function ? callback(value) : value;
 					}
