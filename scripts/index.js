@@ -1808,13 +1808,14 @@
 							}
 						}
 						else if (success && obj && obj.file) {
+							debug("sync success, saving files to dropbox");
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
 								//
 								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title, syncPending) {
 									if (!success) debug(error, title + " setSyncComplete error");
 								});
-							});
+							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
 						else debug(title, "no json returned to upload to dropbox");
 						syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
@@ -1823,9 +1824,11 @@
 					}
 					function readFile(title, json, error) {
 						if (json && !error) {
+							debug(json, "syncing");
 							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, done);
 						}
 						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
+							debug(error, "offline syncing err");
 							options.forceSync = true;
 							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, done);
 						}

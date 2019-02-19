@@ -82,7 +82,7 @@ var APP = APP || {}, Base64;
 			if (onErrorCallback) {
 				var _onErrorCallback = function (error) {
 					dropboxError(error);
-					onErrorCallback();
+					onErrorCallback(error);
 				};
 				callback = { onComplete: callback, onError: _onErrorCallback };
 			}

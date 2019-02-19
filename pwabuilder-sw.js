@@ -83,7 +83,7 @@ var precacheFiles = [
 self.addEventListener('install', function (evt) {
 	console.log('[PWA Builder] The service worker is being installed.');
 	evt.waitUntil(precache().then(function () {
-		console.log('[PWA Builder] Skip waiting on install');
+		//console.log('[PWA Builder] Skip waiting on install');
 		return self.skipWaiting();
 	}));
 });
@@ -91,17 +91,17 @@ self.addEventListener('install', function (evt) {
 
 //allow sw to control of current page
 self.addEventListener('activate', function (event) {
-	console.log('[PWA Builder] Claiming clients for current page');
+	//console.log('[PWA Builder] Claiming clients for current page');
 	return self.clients.claim();
 });
 
 self.addEventListener('fetch', function (evt) {	
 	if (evt.request.url.match(corsRequests)) {
-		console.log('[PWA Builder] cors asset: ' + evt.request.url);
+		//console.log('[PWA Builder] cors asset: ' + evt.request.url);
 		evt.respondWith(fromServer(evt.request));
 	}
 	else {
-		console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
+		//console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
 		evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
 	}
 	evt.waitUntil(update(evt.request));
@@ -110,7 +110,7 @@ self.addEventListener('fetch', function (evt) {
 
 function precache() {
 	return caches.open(CACHE).then(function (cache) {
-		console.log("[PWA Builder] precache", cache);
+		//console.log("[PWA Builder] precache", cache);
 		return cache.addAll(precacheFiles);
 	});
 }
@@ -119,7 +119,7 @@ function fromCache(request) {
 	//we pull files from the cache first thing so we can show them fast
 	return caches.open(CACHE).then(function (cache) {
 		return cache.match(request).then(function (matching) {
-			console.log("[PWA Builder] fromCache", matching);
+			//console.log("[PWA Builder] fromCache", matching);
 			return matching || Promise.reject('no-match');
 		});
 	});
