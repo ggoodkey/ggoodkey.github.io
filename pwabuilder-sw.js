@@ -46,7 +46,6 @@
 
 var CACHE = 'pwabuilder-precache';
 var precacheFiles = [
-	"browserconfig.xml",
 	"cordova.js",
 	"index.html",
 	"manifest.json",
