@@ -467,7 +467,6 @@
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
 					if (user) {
-						debug("got user from dropbox");
 						app.dropboxUsername = user.alias;
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
