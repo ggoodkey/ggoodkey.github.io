@@ -144,7 +144,6 @@ APP.nyckelDB = (function () {
 	function toLocalStorage(changes) {
 		function save() {
 			if (typeof changes === "undefined" || changes === true) {
-				console.log("toLocalStorage", db[this.id].title, db[this.id].table);
 				APP.Sto.setItem(db[this.id].title, JSON.stringify(db[this.id]));
 			}
 			errors[this.id] = null;
@@ -164,7 +163,6 @@ APP.nyckelDB = (function () {
 		buildSearchIndex.call(this);
 	}
 	function importJSON(json, callback, key, fromLocalStorageBool) {
-		console.log("importing JSON");
 		if (typeof json === "string") json = JSON.parse(json);
 		var syncChanges = false;
 		if (json && json.data && json.version === this.Version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
@@ -194,7 +192,6 @@ APP.nyckelDB = (function () {
 					if (db[this.id].lastModified === 0 && db[this.id].table.length === 0 && db[this.id].created !== json.created || this.isDeleted()) {
 						if (db[this.id].lastModified < json.lastModified) {
 							//recreate existing/deleted table
-							console.log("recreate existing/deleted table");
 							delete db[this.id].deleted;
 							db[this.id].created = json.created;
 							db[this.id].headers = json.headers;
@@ -213,7 +210,6 @@ APP.nyckelDB = (function () {
 					}
 					var createdDiff = db[this.id].created - json.created;//the difference in time between when the two tables were created
 					//update rows
-					console.log("created diff", createdDiff);
 					for (var b = 0, len = json.table.length, c, lenC, e, eLen, match, nRow, xRow, xId, nId; b < len; b++) {
 						match = false;
 						nRow = json.table[b];//new row
@@ -305,7 +301,6 @@ APP.nyckelDB = (function () {
 							}
 						}
 					}
-					console.log("saving to localStorage cache", syncChanges);
 					if (!fromLocalStorageBool) toLocalStorage.call(this, syncChanges);
 					else buildSearchIndex.call(this);
 					createdDiff = null;
@@ -1236,32 +1231,24 @@ APP.nyckelDB = (function () {
 			}
 		}
 		function gotCachedTable(json) {
-			console.log("got cached table");
 			if (json) {
 				if (typeof json === "string") json = JSON.parse(json);
 				if (json.version !== undefined && json.title && json.title === tableTitle && json.created !== undefined && json.lastModified !== undefined) {
-					console.log(json.version);
 					var version = String(json.version).split("_");
 					if (json.lastModified < json.created && json.lastModified !== 0 || json.lastModified > timestamp()) {
 						console.log("database lastModified dates are corrupted: " + json.lastModified);
 						didntGetCachedTable();
 					}
 					else if (String(version[0]) === String(this.Version)) {
-						console.log("versions match");
-						console.log(json);
-						console.log(db[_this.id]);
 						if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
-							console.log("signature matches");
 							json = Base64.read(json.data, options.key);
 							return importJSON.call(_this, json, function (syncChanges, errors) {
-								console.log("json imported");
 								if (syncChanges && !errors) return createBase64File.call(_this, options.key, options.token, callback);
 								else if (callback instanceof Function) return callback(true, errors, db[_this.id].title, false);
 								else return errors;
 							}, false, true);
 						}
 						else {//loading directly from local storage
-							console.log("applying json");
 							db[_this.id] = json;
 							buildSearchIndex.call(_this, options.initialIndex || null);
 							return createBase64File.call(_this, options.key, options.token, callback);
@@ -1926,7 +1913,6 @@ APP.nyckelDB = (function () {
 	*/
 
 	NyckelDBObj.prototype.sync = function (json, options, callback) {
-		console.log("sync", json, options);
 		options = options || {};
 		var forceSync = options.forceSync || false,
 			readKey = options.key || false,

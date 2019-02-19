@@ -18,7 +18,7 @@ var APP = APP || {}, Base64;
 					LOCAL[refName].save({ key: refName, data: value });
 				}
 				if (typeof value === "object") value = JSON.stringify(value);
-				if (console && console.log) console.log("setItem", refName, value, key);
+				//if (console && console.log) console.log("setItem", refName, value, key);
 				value = key ? Base64.write(value, key) : Base64.write(value);
 				if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair)) {
 					LOCAL[refName] = new Lawnchair();
@@ -30,7 +30,7 @@ var APP = APP || {}, Base64;
 				function got(obj) {
 					if (obj && obj.data) {
 						var value = key ? Base64.read(obj.data, key) : Base64.read(obj.data);
-						if (console && console.log) console.log("getItem", refName, value, key);
+						//if (console && console.log) console.log("getItem", refName, value, key);
 						if (key && !value) return callback instanceof Function ? callback(null, "wrong key") : null;
 						else return callback instanceof Function ? callback(value) : value;
 					}
@@ -183,7 +183,6 @@ var APP = APP || {}, Base64;
 			}
 			dropbox("auth/token/revoke", null, resetApp);
 		};
-		if (console && console.log) console.log("setting up dropbox");
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
 		var _this = this,

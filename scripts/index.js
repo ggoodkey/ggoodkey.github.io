@@ -465,9 +465,7 @@
 		//initialise the application
 		init = function (resumeBool) {
 			function tryDropbox(cachedStoKey) {
-				debug("trying dropbox");
 				function applyUser(user) {
-					debug(user, "tried dropbox");
 					if (user) {
 						debug("got user from dropbox");
 						app.dropboxUsername = user.alias;
@@ -684,17 +682,13 @@
 					else debug(errors, "loading " + title);
 				}
 				template.options.syncKey = app.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : app.stoKey;
-				debug(template.options.syncKey, "template.options.syncKey");
 				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising NyckelDB
 					if (errors) handleErrors(errors);
-					debug(title, "database initialized");
 				};
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
-						debug(title, "last database initialized");
 						if (errors) handleErrors(errors);
 						if (!WorkingOffline) {
-							debug("syncing app");
 							app.syncAll();
 						}
 						app.spin(false);
@@ -704,7 +698,6 @@
 						else return loadDBQueueIndex > 0 ? loadDBQueue[loadDBQueueIndex](cb) : loadDBQueue[loadDBQueueIndex]();
 					};
 				}
-				debug(template.options, "loading db");
 				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
 			}
 			function getTables() {
@@ -713,7 +706,6 @@
 				for (var template in dataTemplates) {
 					numOfTables++;
 				}
-				debug("initialising " + numOfTables + " tables");
 				for (var templateName in dataTemplates) {
 					if (dataTemplates.hasOwnProperty(templateName)) {
 						initDB(templateName, dataTemplates[templateName], b, numOfTables);
@@ -729,7 +721,6 @@
 				if (!loadingDB) {
 					loadingDB = true;
 					app.spin(true, "Loading data...");
-					debug("loading db");
 					getTables();
 				}
 			}
@@ -1809,13 +1800,11 @@
 							}
 						}
 						else if (success && obj && obj.file) {
-							debug("sync success, saving files to dropbox");
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								debug("files saved");
 								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title, syncPending) {
 									if (!success) debug(error, title + " setSyncComplete error");
-									else debug("sync complete");
+									else console.log("sync complete");
 								});
 							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
@@ -1826,11 +1815,10 @@
 					}
 					function readFile(title, json, error) {
 						if (json && !error) {
-							debug(json, "syncing");
 							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, done);
 						}
 						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
-							debug(error, "offline syncing err");
+							console.log(error, "offline");
 							options.forceSync = true;
 							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, done);
 						}
@@ -1899,7 +1887,7 @@
 						sync(syncfile, saveSyncfile);
 					}
 					else if (error === "") {
-						debug("Sync failed, you are offline");
+						console.log("Sync failed, you are offline");
 						_this.spin(false);
 					}
 					else {
@@ -1913,7 +1901,6 @@
 					syncFile,
 					syncfileNeedsUpdated = false;
 				checkDBLoaded(function (callback) {
-					debug(callback, "db loaded");
 					options = options || {};
 					options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 					options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
@@ -1939,7 +1926,7 @@
 						});	
 					}
 					else {
-						debug("cannot sync to Dropbox now");
+						console.log("cannot sync to Dropbox now");
 						_this.spin(false);
 						if (callback instanceof Function) return callback();
 					}
