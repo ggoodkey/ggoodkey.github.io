@@ -164,6 +164,7 @@ APP.nyckelDB = (function () {
 		buildSearchIndex.call(this);
 	}
 	function importJSON(json, callback, key, fromLocalStorageBool) {
+		console.log("importing JSON");
 		if (typeof json === "string") json = JSON.parse(json);
 		var syncChanges = false;
 		if (json && json.data && json.version === this.Version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
@@ -193,6 +194,7 @@ APP.nyckelDB = (function () {
 					if (db[this.id].lastModified === 0 && db[this.id].table.length === 0 && db[this.id].created !== json.created || this.isDeleted()) {
 						if (db[this.id].lastModified < json.lastModified) {
 							//recreate existing/deleted table
+							console.log("recreate existing/deleted table");
 							delete db[this.id].deleted;
 							db[this.id].created = json.created;
 							db[this.id].headers = json.headers;
@@ -202,6 +204,7 @@ APP.nyckelDB = (function () {
 							db[this.id].table = json.table;
 							db[this.id].types = json.types;
 							db[this.id].version = this.Version + "_" + Base64.Version;
+							
 							if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
 							else return this;
 						}
@@ -210,6 +213,7 @@ APP.nyckelDB = (function () {
 					}
 					var createdDiff = db[this.id].created - json.created;//the difference in time between when the two tables were created
 					//update rows
+					console.log("created diff", createdDiff);
 					for (var b = 0, len = json.table.length, c, lenC, e, eLen, match, nRow, xRow, xId, nId; b < len; b++) {
 						match = false;
 						nRow = json.table[b];//new row
@@ -301,6 +305,7 @@ APP.nyckelDB = (function () {
 							}
 						}
 					}
+					console.log("saving to localStorage cache", syncChanges);
 					if (!fromLocalStorageBool) toLocalStorage.call(this, syncChanges);
 					else buildSearchIndex.call(this);
 					createdDiff = null;
@@ -1921,6 +1926,7 @@ APP.nyckelDB = (function () {
 	*/
 
 	NyckelDBObj.prototype.sync = function (json, options, callback) {
+		console.log("sync", json, options);
 		options = options || {};
 		var forceSync = options.forceSync || false,
 			readKey = options.key || false,
@@ -1958,6 +1964,8 @@ APP.nyckelDB = (function () {
 				}
 				return importJSON.call(this, json, function (changes) {
 					if (changes || this.syncPending === true || forceSync === true) {
+						console.log("caching changes made");
+						toLocalStorage.call(_this);
 						return createBase64File.call(this, writeKey, options.token, callback);
 					}
 					else return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, false), this) : this;
