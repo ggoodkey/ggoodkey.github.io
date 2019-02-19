@@ -1898,7 +1898,7 @@
 						sync(syncfile, saveSyncfile);
 					}
 					else if (error === "") {
-						console.log("Sync failed, you are offline");
+						debug("Sync failed, you are offline");
 						_this.spin(false);
 					}
 					else {
@@ -1912,6 +1912,7 @@
 					syncFile,
 					syncfileNeedsUpdated = false;
 				checkDBLoaded(function (callback) {
+					debug("db loaded");
 					options = options || {};
 					options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 					options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
@@ -1937,7 +1938,7 @@
 						});	
 					}
 					else {
-						console.log("cannot sync to Dropbox now");
+						debug("cannot sync to Dropbox now");
 						_this.spin(false);
 						if (callback instanceof Function) return callback();
 					}
