@@ -64,6 +64,7 @@ var APP = APP || {}, Base64;
 	APP.Sto = new LocalStorageObj();
 	var DropboxSessionObj = function (client_id, password, callback) {
 		function dropboxError(error) {
+			console.log(error);
 			if (error instanceof XMLHttpRequest) error = error.statusText;
 			if (console && console.log) console.log("dropbox error:", error);
 		}

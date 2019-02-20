@@ -2396,7 +2396,7 @@
 					app.recentlyViewed = sortList(app.recentlyViewed);
 					app.storeState();
 				});
-			},
+			}
 		}
 	});
 	//make some functions global
