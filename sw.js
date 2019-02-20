@@ -1,17 +1,17 @@
 if (!APP.WorkingOffline && navigator.serviceWorker) {
 	//Service workers
 	if (navigator.serviceWorker.controller) {
-		console.log('[PWA Builder] active service worker found, no need to register');
+		//console.log('[PWA Builder] active service worker found, no need to register');
 	} else {
 		//Register the ServiceWorker
 		navigator.serviceWorker.register('pwabuilder-sw.js', {
 			scope: "/"
 		}).then(function (reg) {
-			console.log('Service worker has been registered for scope:' + reg.scope);
+			//console.log('Service worker has been registered for scope:' + reg.scope);
 		}, function (err) {
 			// registration failed :(
-			console.log('ServiceWorker registration failed: ', err);
+			//console.log('ServiceWorker registration failed: ', err);
 		});
 	}
 }
-else console.log("no serviceWorkers");
+//else console.log("no serviceWorkers");

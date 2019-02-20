@@ -80,7 +80,7 @@ var precacheFiles = [
 
 //Install stage sets up the cache-array to configure pre-cache content
 self.addEventListener('install', function (evt) {
-	console.log('[PWA Builder] The service worker is being installed.');
+	//console.log('[PWA Builder] The service worker is being installed.');
 	evt.waitUntil(precache().then(function () {
 		//console.log('[PWA Builder] Skip waiting on install');
 		return self.skipWaiting();
