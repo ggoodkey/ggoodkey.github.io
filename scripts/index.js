@@ -1501,6 +1501,7 @@
 				this.storeState();
 			},
 			login: function (callback) {
+
 				function login() {
 					function welcome(user) {
 						_this.notify("Successfully linked to " + APP.User.alias + "'s Dropbox account", true);

@@ -65,7 +65,7 @@ var APP = APP || {}, Base64;
 	var DropboxSessionObj = function (client_id, password, callback) {
 		function dropboxError(error) {
 			if (error instanceof XMLHttpRequest) error = error.statusText;
-			if (console && console.log) console.log(error);
+			if (console && console.log) console.log("dropbox error:", error);
 		}
 		function updateFileList() {
 			function gotFolder(obj) {
@@ -111,14 +111,18 @@ var APP = APP || {}, Base64;
 		DropboxSessionObj.prototype.getUserInfo = function (password, callback) {
 			function ret(alias, email, id, account_id) {
 				APP.User = { "alias": alias, "email": email, "id": id, "dbid": account_id };
+				console.log("returning user", APP.User);
 				return callback instanceof Function ? callback(APP.User) : APP.User;
 			}
 			function gotCachedUser(user) {
+				console.log("found cached user", user);
 				user = JSON.parse(user);
 				return ret(user.alias, user.email, user.id, user.dbid);
 			}
 			function tryDropbox() {
+				console.log("getting user from dropbox");
 				function newUser(obj) {
+					console.log("got user", obj);
 					if (obj && obj.email && obj.name) {
 						obj.id = Base64.hash(obj.email); //TODO depricate id
 						APP.Sto.setItem(APP.Sto.LocalUserRef, JSON.stringify({ "alias": obj.name.display_name, "email": obj.email, "id": obj.id, "dbid": obj.account_id }));
@@ -131,6 +135,7 @@ var APP = APP || {}, Base64;
 				dropbox("users/get_account", null, newUser);
 			}
 			function gotOldUser(user) {
+				console.log("found old cached version user, deleting, get new one from dropbox", user);
 				user = JSON.parse(user);
 				//migrate user version
 
@@ -138,13 +143,16 @@ var APP = APP || {}, Base64;
 				tryDropbox();
 			}
 			function noCachedUser() {
+				console.log("didn't find cached user, try old cache version");
 				APP.Sto.getItem(APP.Sto.LocalUserRef_old, null, gotOldUser, tryDropbox);
 			}
 			password = password || "";
 			if (WorkingOffline) return callback instanceof Function ? callback(false) : false;
 			else {
+				console.log("getting user");
 				if (APP.User && APP.User.alias && APP.User.email && APP.User.id && APP.User.dbid) {	//Found cached User
 					//sync cached user with localStorage user
+					console.log("found active user", APP.User);
 					APP.Sto.setItem(APP.Sto.LocalUserRef, JSON.stringify(APP.User));
 					return ret(APP.User.alias, APP.User.email, APP.User.id, APP.User.dbid);
 				}
@@ -192,7 +200,7 @@ var APP = APP || {}, Base64;
 		if (!WorkingOffline) {
 			//check if token is already cached
 			if (localStorage.__dbat && localStorage.__dbat !== "") {
-				console.log("got cached dropbox token");
+				console.log("got cached dropbox token", localStorage.__dbat);
 				this.isAuthenticated = true;
 				//updateFileList();
 				password = password || "";
