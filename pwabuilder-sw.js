@@ -104,8 +104,8 @@ self.addEventListener('fetch', function (evt) {
 	else {
 		//console.log('[PWA Builder] The service worker is serving the asset: ' + evt.request.url);
 		evt.respondWith(fromCache(evt.request).catch(fromServer(evt.request)));
+		evt.waitUntil(update(evt.request));
 	}
-	evt.waitUntil(update(evt.request));
 });
 
 
