@@ -1908,18 +1908,18 @@
 						_this.spin(true, "Synchronising with Dropbox");
 						APP.Dbx.open("/sync/lastSync", null, readSyncfile);
 					} else if (window.location.hash.match(/^#access_token=/)) {
-						app.login(function (success) {
+						_this.login(function (success) {
 							if (success) {
 								debug("login success");
 								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
-								app.spin(true, "Synchronising with Dropbox");
+								_this.spin(true, "Synchronising with Dropbox");
 								APP.Dbx.open("/sync/lastSync", null, readSyncfile);
 							}
 							else {
 								debug("login fail");
 								console.log("cannot sync to Dropbox now");
-								app.spin(false);
+								_this.spin(false);
 								if (callback instanceof Function) return callback();
 							}
 						});
