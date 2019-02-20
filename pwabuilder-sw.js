@@ -76,8 +76,7 @@ var precacheFiles = [
 	"scripts/adapters/indexed-db.js",
 	"scripts/adapters/dom.js",
 	"scripts/winjs/base.min.js"
-],
-	corsRequests = /^https\:\/\/www\.dropbox\.com\/|^https\:\/\/api\.dropbox\.com\/|^https\:\/\/api\-content\.dropbox\.com\/|^https\:\/\/api\.dropboxapi\.com\/|^https\:\/\/content\.dropboxapi\.com\//;
+];
 
 //Install stage sets up the cache-array to configure pre-cache content
 self.addEventListener('install', function (evt) {
@@ -96,6 +95,8 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', function (evt) {	
+	var corsRequests = /^https\:\/\/www\.dropbox\.com\/|^https\:\/\/api\.dropbox\.com\/|^https\:\/\/api\-content\.dropbox\.com\/|^https\:\/\/api\.dropboxapi\.com\/|^https\:\/\/content\.dropboxapi\.com\//;
+
 	if (evt.request.url.match(corsRequests)) {
 		//console.log('[PWA Builder] cors asset: ' + evt.request.url);
 		evt.respondWith(fromServer(evt.request));
@@ -130,7 +131,7 @@ function update(request) {
 	//file to use the next time we show view
 	return caches.open(CACHE).then(function (cache) {
 		return fetch(request).then(function (response) {
-			console.log("[PWA Builder] update", response);
+			//console.log("[PWA Builder] update", response);
 			return cache.put(request, response);
 		});
 	});
