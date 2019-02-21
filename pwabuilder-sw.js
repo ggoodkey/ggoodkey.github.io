@@ -95,7 +95,7 @@ self.addEventListener('activate', function (event) {
 });
 
 self.addEventListener('fetch', function (evt) {	
-	var corsRequests = /^https\:\/\/www\.dropbox\.com\/|^https\:\/\/api\.dropbox\.com\/|^https\:\/\/api\-content\.dropbox\.com\/|^https\:\/\/api\.dropboxapi\.com\/|^https\:\/\/content\.dropboxapi\.com\//;
+	var corsRequests = /^https\:\/\/www\.dropbox\.com\/|^https\:\/\/api\.dropbox\.com\/|^https\:\/\/dropbox\-api\.arkoselabs\.com\/|^https\:\/\/cfl\.dropboxstatic\.com\/|^https\:\/\/api\-content\.dropbox\.com\/|^https\:\/\/api\.dropboxapi\.com\/|^https\:\/\/content\.dropboxapi\.com\//;
 
 	if (evt.request.url.match(corsRequests)) {
 		//console.log('[PWA Builder] cors asset: ' + evt.request.url);

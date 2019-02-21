@@ -162,6 +162,9 @@
 			view2: views.indexOf("view2") === startView,
 			view3: views.indexOf("view3") === startView,
 			view4: views.indexOf("view4") === startView,
+			indicatorRight: -110,
+			indicatorWidth: 113,
+			indicatorTop: 54,
 			viewSearch: false,
 			viewDetails: false,
 			viewEdit: false,
@@ -295,10 +298,20 @@
 				type = "tabl",
 				orientation = " port ",
 				htmlTag = document.getElementsByTagName("html")[0];
-			if (width > 1200) type = "desk";
+			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 360) orientation = " land ";
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
+			setNavLinkIndicatorPosition();
+		},
+		setNavLinkIndicatorPosition = function (location) {
+			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView),
+				sidenavlink = document.getElementById("sidenavlink_" + i).getBoundingClientRect(),
+				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
+				extra = app.showSearchBar ? 1118 : 818;
+			app.indicatorTop = sidenavlink.top - 54;
+			app.indicatorWidth = topnavlink.right - topnavlink.left;
+			app.indicatorRight = getWidth() - topnavlink.left - extra;
 		},
 		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
@@ -1138,6 +1151,8 @@
 						this.splitView = true;
 					}
 					else {
+						//get index of location
+						setNavLinkIndicatorPosition(location);
 						this.viewTransitionDone = false;
 						this.viewTransition = true;
 						this.splitView = false;
