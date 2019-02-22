@@ -553,6 +553,7 @@
 			}
 			matchWindowsTheme();
 //			updateWindowsLiveTile();
+			setNavLinkIndicatorPosition();
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
