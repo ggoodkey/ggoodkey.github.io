@@ -305,9 +305,9 @@
 			setNavLinkIndicatorPosition();
 		},
 		setNavLinkIndicatorPosition = function (location) {
-			if (location === "viewSearch" || location === "viewDetails" || location === "viewEdit") return; //no existing navlinks to these views
-			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView),
-				sidenavlink = document.getElementById("sidenavlink_" + i).getBoundingClientRect(),
+			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView);
+			if (i > 1 && i < 4) return; //no existing navlinks to these views
+			var	sidenavlink = document.getElementById("sidenavlink_" + i).getBoundingClientRect(),
 				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
 				extra = app.showSearchBar ? 1107 : 807;
 			app.indicatorTop = sidenavlink.top - 54;
@@ -1290,23 +1290,25 @@
 							}
 							var find = optionalQuery ? optionalQuery : _this.searchAutoComplete === "" ? _this.searchBox : _this.searchAutoComplete;
 							find = trim(find);
-							_this.currentQuery = find;
-							_this.resetSearch();
-							_this.showSearchBar = false;
-							_this.showSearchSuggestions = false;
-							_this.searchResults = [];
-							document.getElementById("app").focus();
-							var numOfSearches = 0,
-								n = 0;
-							_this.spin(true, "Searching...");
-							for (var t in dataTemplates) {
-								numOfSearches++;
-							}	
-							for (let table in dataTemplates) {
-								(function (table) {
-									wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, displayResults);
-								})(table);
-							}
+							if (find) {
+								_this.currentQuery = find;
+								_this.resetSearch();
+								_this.showSearchBar = false;
+								_this.showSearchSuggestions = false;
+								_this.searchResults = [];
+								document.getElementById("app").focus();
+								var numOfSearches = 0,
+									n = 0;
+								_this.spin(true, "Searching...");
+								for (var t in dataTemplates) {
+									numOfSearches++;
+								}
+								for (let table in dataTemplates) {
+									(function (table) {
+										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, displayResults);
+									})(table);
+								}
+							} else console.log("empty query field");
 						});
 					}
 				}
