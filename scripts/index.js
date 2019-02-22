@@ -311,8 +311,13 @@
 				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
 				extra = app.showSearchBar ? 1107 : 807;
 			app.indicatorTop = sidenavlink.top - 54;
+			console.log(app.indicatorTop);
+			console.log(topnavlink);
 			app.indicatorWidth = topnavlink.right - topnavlink.left;
+			console.log(app.indicatorWidth);
+			console.log(getWidth());
 			app.indicatorRight = getWidth() - topnavlink.left - extra;
+			console.log(app.indicatorRight);
 		},
 		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
