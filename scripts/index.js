@@ -162,9 +162,9 @@
 			view2: views.indexOf("view2") === startView,
 			view3: views.indexOf("view3") === startView,
 			view4: views.indexOf("view4") === startView,
-			indicatorRight: -110,
-			indicatorWidth: 113,
-			indicatorTop: 54,
+			indicatorRight: -108,
+			indicatorWidth: 112,
+			indicatorTop: 53,
 			viewSearch: false,
 			viewDetails: false,
 			viewEdit: false,
@@ -305,10 +305,11 @@
 			setNavLinkIndicatorPosition();
 		},
 		setNavLinkIndicatorPosition = function (location) {
+			if (location === "viewSearch" || location === "viewDetails" || location === "viewEdit") return; //no existing navlinks to these views
 			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView),
 				sidenavlink = document.getElementById("sidenavlink_" + i).getBoundingClientRect(),
 				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
-				extra = app.showSearchBar ? 1118 : 818;
+				extra = app.showSearchBar ? 1107 : 807;
 			app.indicatorTop = sidenavlink.top - 54;
 			app.indicatorWidth = topnavlink.right - topnavlink.left;
 			app.indicatorRight = getWidth() - topnavlink.left - extra;
@@ -1156,6 +1157,7 @@
 						this.viewTransitionDone = false;
 						this.viewTransition = true;
 						this.splitView = false;
+						this.currentView = viewNames[this.views.indexOf(location)];
 					}
 					setTimeout(function () {
 						//show hide back arrow
@@ -1167,8 +1169,6 @@
 						backIndex++;
 						location = location || backstack[backIndex];
 						backstack[backIndex - 1] = location;
-						//get the name of the current view
-						_this.currentView = viewNames[_this.views.indexOf(backstack[backIndex - 1])];
 						//don't save backstack if navigation did not occur
 						if (backstack[backIndex - 1] === backstack[backIndex - 2]) backIndex--;
 						//iterate through all views and turn them on or off

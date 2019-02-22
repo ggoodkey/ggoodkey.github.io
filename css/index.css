@@ -617,21 +617,21 @@ html.desk .dark-theme #searchSuggestions-container,
 }
 
 .navlink {
-	border: 1px solid transparent;
+	/*border: 1px solid transparent;*/
 }
 
 #navbar .navlink {
 	position: relative;
 	top: -1px;
-	border-right: 1px solid white;
-	border-left: 1px solid #e1e1e1;
+	/*border-right: 1px solid white;
+	border-left: 1px solid #e1e1e1;*/
 	text-align: center;
 	height: 54px;
 }
 
 .dark-theme #navbar .navlink {
-	border-right: 1px solid #333;
-	border-left: 1px solid transparent;
+	/*border-right: 1px solid #333;
+	border-left: 1px solid transparent;*/
 }
 
 .navlink {
@@ -643,12 +643,12 @@ html.desk .dark-theme #searchSuggestions-container,
 }
 
 #navbar .views {
-	border-left: 1px solid white;
+	/*border-left: 1px solid white;*/
 	height: 100%;
 }
 
 .dark-theme #navbar .views {
-	border-left: 1px solid #333;
+	/*border-left: 1px solid #333;*/
 }
 
 .dark-theme .link:hover:active,
@@ -660,11 +660,11 @@ html.desk .dark-theme button:hover:active {
 
 #currentView {
 	padding: 16px;
-	border-left: 1px solid #e1e1e1;
+	/*border-left: 1px solid #e1e1e1;*/
 }
 
 .dark-theme #currentView {
-	border-left: 1px solid transparent;
+	/*border-left: 1px solid transparent;*/
 }
 
 #back, #currentView {
@@ -730,11 +730,11 @@ html.tabl #app.sidenav_open #sidenav {
 }
 
 #sidenav .views {
-	border-bottom: 1px solid white;
+	/*border-bottom: 1px solid white;*/
 }
 
 .dark-theme #sidenav .views {
-	border-bottom: 1px solid #333;
+	/*border-bottom: 1px solid #333;*/
 }
 
 #sidenav .views .navlink,
@@ -744,13 +744,13 @@ html.tabl #app.sidenav_open #sidenav {
 }
 
 #sidenav .views .navlink {
-	border-top: 1px solid white;
-	border-bottom: 1px solid #e1e1e1;
+	/*border-top: 1px solid white;
+	border-bottom: 1px solid #e1e1e1;*/
 }
 
 .dark-theme #sidenav .views .navlink {
-	border-top: 1px solid #333;
-	border-bottom: 1px solid transparent;
+	/*border-top: 1px solid #333;
+	border-bottom: 1px solid transparent;*/
 }
 
 #sidenav .text {
@@ -904,11 +904,11 @@ html.tabl .searchBar_open .views.tabl.desk {
 }
 
 .dark-theme .searchBar_open #searchBar {
-	border-right: 1px solid #333;
+	/*border-right: 1px solid #333;*/
 }
 
 html.desk .dark-theme .searchBar_open #searchBar {
-	border-left: 1px solid transparent;
+	/*border-left: 1px solid transparent;*/
 }
 
 html.phon #searchBar {
@@ -979,7 +979,7 @@ html.desk #searchBar {
 
 html.tabl .dark-theme #search:before,
 html.phon .dark-theme #search:before {
-	border-left: 1px solid #333;
+	/*border-left: 1px solid #333;*/
 	width: 1px;
 	height: 52px;
 	content: "";
@@ -1554,6 +1554,7 @@ li.link {
 
 :link,
 html.desk .navlink:hover,
+.navlink:active,
 a,
 button,
 #searchAutoComplete,
@@ -1582,8 +1583,8 @@ html.desk .link:hover,
 		border-bottom: 1px solid #478cdb; /*accent blue*/
 	}
 
-html.desk #navbar .navlink:hover,
-html.desk #sidenav .views .navlink:hover,
+/*html.desk #navbar .navlink:hover,*/
+/*html.desk #sidenav .views .navlink:hover,*/
 #searchBox:focus,
 #stoKeyInput:focus,
 #stoKeyInputConfirm:focus,
@@ -1607,8 +1608,8 @@ html.desk .addressLink:focus {
 	outline: 1px dotted #478cdb; /*accent blue*/
 }
 
-html.desk #navbar .navlink:focus,
-html.desk #sidenav .views .navlink:focus,
+/*html.desk #navbar .navlink:focus,*/
+/*html.desk #sidenav .views .navlink:focus,*/
 html.desk .switch label:focus {
 	border: 1px dotted #478cdb; /*accent blue*/
 }
