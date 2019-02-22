@@ -17,30 +17,66 @@ var APP = APP || {}, Base64;
 				function ret() {
 					LOCAL[refName].save({ key: refName, data: value });
 				}
+				function write(file) {
+					Windows.Storage.FileIO.writeTextAsync(file, value).done(function () {
+					}, function (error) {
+						//file couldn't be written - handle the error
+						console.log(error, "not written");
+					});
+				}
 				if (typeof value === "object") value = JSON.stringify(value);
 				//if (console && console.log) console.log("setItem", refName, value, key);
 				value = key ? Base64.write(value, key) : Base64.write(value);
-				if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair)) {
+				if (Windows) {					
+					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+					storageFolder.getFileAsync(refName).done(write, function (error) {
+						//file not found, handle the error
+						storageFolder.createFileAsync(refName).done(write, function (error) {
+							//file not created, handle the error
+							console.log(error, "not created");
+						});
+					});
+				}
+				else if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair)) {
 					LOCAL[refName] = new Lawnchair();
 					return ret();
 				}
 				else return ret();
 			};
 			LocalStorageObj.prototype.getItem = function (refName, key, callback, doesntExistCallback) {
+				function read(str) {
+					var value = key ? Base64.read(str, key) : Base64.read(str);
+					//if (console && console.log) console.log("getItem", refName, value, key);
+					if (key && !value) return callback instanceof Function ? callback(null, "wrong key") : null;
+					else return callback instanceof Function ? callback(value) : value;
+				}
 				function got(obj) {
 					if (obj && obj.data) {
-						var value = key ? Base64.read(obj.data, key) : Base64.read(obj.data);
-						//if (console && console.log) console.log("getItem", refName, value, key);
-						if (key && !value) return callback instanceof Function ? callback(null, "wrong key") : null;
-						else return callback instanceof Function ? callback(value) : value;
+						read(obj.data);
 					}
 					else {
 						if (doesntExistCallback instanceof Function) return doesntExistCallback();
 						else return null;
 					}
 				}
+				if (Windows) {
+					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+					storageFolder.getFileAsync(refName).done(function (file) {
+						Windows.Storage.FileIO.readTextAsync(file).done(function (fileContent) {
+							read(fileContent);
+							//'fileContent' contains your JSON data as a string
+						}, function (error) {
+							//file couldn't be read - handle the error
+							return callback instanceof Function ? callback(null, error) : null;
+						});
+					}, function (error) {
+						//file not found, handle the error
+						if (doesntExistCallback instanceof Function) return doesntExistCallback(error);
+						else return null;
+					});
+				}
 				//try get cached value from the LOCAL object
-				if (LOCAL[refName] && LOCAL[refName] instanceof Lawnchair) {
+				else if (LOCAL[refName] && LOCAL[refName] instanceof Lawnchair) {
 					return LOCAL[refName].get(refName, got);
 				}
 				// or from Lawnchair object and cache it to to LOCAL object for quick retrieval later
@@ -57,8 +93,19 @@ var APP = APP || {}, Base64;
 			};
 			LocalStorageObj.prototype.deleteItem = function (refName) {
 				function deleteRef() { this.remove(refName); }
-				Lawnchair(deleteRef);
-				if (LOCAL && LOCAL[refName]) LOCAL[refName] = {};
+				if (Windows) {
+					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+					storageFolder.getFileAsync(refName).done(function (file) {
+						console.log(file);
+						file.deleteAsync();
+					}, function (error) {
+						console.log(error);
+					});
+				}
+				else {
+					Lawnchair(deleteRef);
+					if (LOCAL && LOCAL[refName]) LOCAL[refName] = {};
+				}
 			};
 		};
 	APP.Sto = new LocalStorageObj();

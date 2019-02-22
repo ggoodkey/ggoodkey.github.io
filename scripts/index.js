@@ -7,9 +7,9 @@
 	var views = ["viewNew", "viewRecent", "viewSearch", "viewDetails", "viewEdit", "view1", "view2", "view3", "view4"], //don't change these
 		viewNames = ["Tables", "Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
 		viewIcons = ["icon-plus", "icon-time", null, null, null, "icon-user", "icon-people", "icon-lock", "icon-folder-open"], //change icons, see index.css for all possible icon classes
-		startView = 1,//change this to show different view on load, see views above
-		backstack = [views[startView]],
-		backIndex = 1,
+		startView = 1, //set to the number of the view to start at by default
+		backstack = [],
+		backIndex = 0,
 		debug = APP.debug,//shortform access to APP.debug
 		fileReaderInitiated = [],
 		dataTemplates = {//add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups NyckelDB databases
@@ -151,19 +151,19 @@
 			viewIcons: viewIcons,
 			viewTransition: false,
 			viewTransitionDone: true,
-			currentView: viewNames[startView],
+			currentView: null,
 			backArrow: false,
 			spinner: false,
 			spinnerMsg: ["Working..."],
 			spinIndex: 0,
-			viewNew: views.indexOf("viewNew") === startView,
-			viewRecent: views.indexOf("viewRecent") === startView,
-			view1: views.indexOf("view1") === startView,
-			view2: views.indexOf("view2") === startView,
-			view3: views.indexOf("view3") === startView,
-			view4: views.indexOf("view4") === startView,
-			indicatorRight: -108,
-			indicatorWidth: 112,
+			viewNew: false,
+			viewRecent: false,
+			view1: false,
+			view2: false,
+			view3: false,
+			view4: false,
+			indicatorRight: -164,
+			indicatorWidth: 0,
 			indicatorTop: 53,
 			viewSearch: false,
 			viewDetails: false,
@@ -302,7 +302,6 @@
 			if (width <= 640) type = "phon";
 			if (height < width && width > 360) orientation = " land ";
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
-			setNavLinkIndicatorPosition();
 		},
 		setNavLinkIndicatorPosition = function (location) {
 			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView);
@@ -311,13 +310,8 @@
 				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
 				extra = app.showSearchBar ? 1107 : 807;
 			app.indicatorTop = sidenavlink.top - 54;
-			console.log(app.indicatorTop);
-			console.log(topnavlink);
 			app.indicatorWidth = topnavlink.right - topnavlink.left;
-			console.log(app.indicatorWidth);
-			console.log(getWidth());
 			app.indicatorRight = getWidth() - topnavlink.left - extra;
-			console.log(app.indicatorRight);
 		},
 		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
@@ -483,6 +477,9 @@
 		},
 		//initialise the application
 		init = function (resumeBool) {
+			function doneInit() {
+				checkDBLoaded(app.navigate(app.views[startView]));
+			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
 					if (user) {
@@ -490,7 +487,7 @@
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
 					}
-					checkDBLoaded();
+					doneInit();
 				}
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
@@ -513,7 +510,7 @@
 								for (var a = 0, len = app.views.length; a < len; a++) {
 									app[app.views[a]] = backstack[backIndex - 1] === app.views[a];
 								}
-								//TODO resume view content
+								app.navigate();
 							}
 							if (!s.stoKey) {
 								APP.Sto.getItem("stoKey", null, function (k) {
@@ -531,29 +528,29 @@
 							app.notify("App version has changed from " + s.version + " to " + app.version + ". Resetting app settings to default values.");
 							// migrate older version state data here
 							APP.Sto.deleteItem("state");
-							checkDBLoaded();
+							doneInit();
 						}
 						
 					} else if (error) {
 						debug(error, "error getting app state");
-						checkDBLoaded();
+						doneInit();
 					} else {
 						APP.Sto.deleteItem("state");
-						checkDBLoaded();
+						doneInit();
 					}
-				}, checkDBLoaded);
-			}
+				}, doneInit);
+			}								
+			getLocal();
+			matchWindowsTheme();
 			layout();
 			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-			getLocal();
+			//setNavLinkIndicatorPosition();
 			if (typeof Worker !== "undefined" && !WorkingOffline && typeof webWorker === "undefined") {
 				webWorker = new Worker("scripts/webworker.js");
 				webWorker.addEventListener('message', wwReadMessage, false);
 				webWorker.addEventListener('error', wwOnError, false);
 			}
-			matchWindowsTheme();
-//			updateWindowsLiveTile();
-			setNavLinkIndicatorPosition();
+			
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
@@ -1152,6 +1149,7 @@
 				}
 			},
 			navigate: function (location) {
+				console.log(location);
 				if (location || backstack.length > backIndex) {
 					var _this = this;
 					if (location === "viewDetails") {
