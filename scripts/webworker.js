@@ -7,7 +7,7 @@ function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),
 		length = bufView.length,
 		result = '',
-		addition = Math.pow(2, 15);//(or 39936+?) max value in Edge before throwing error
+		addition = Math.pow(2, 14) - 1;//(or 16383) max value in Edge before throwing error
 
 	for (var i = 0; i < length; i += addition) {
 		if (i + addition > length) {
