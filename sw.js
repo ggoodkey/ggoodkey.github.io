@@ -1,4 +1,4 @@
-if (!APP.WorkingOffline && navigator.serviceWorker) {
+if (!APP.localTestingMode && navigator.serviceWorker) {
 	//Service workers
 	if (navigator.serviceWorker.controller) {
 		//console.log('[PWA Builder] active service worker found, no need to register');

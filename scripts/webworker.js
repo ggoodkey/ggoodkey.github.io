@@ -205,10 +205,10 @@ self.addEventListener('message', function (e) {
 				break;
 			//webworker functions
 			case "exists":
-				post(typeof appData[data.title] !== "undefined");
+				post(typeof appData[data.title] !== "undefined", null, data.callbackIndex);
 				break;
 			case "stop":
-				post("worker stopped");
+				post("worker stopped", null, data.callbackIndex);
 				self.close();
 				break;
 			default:

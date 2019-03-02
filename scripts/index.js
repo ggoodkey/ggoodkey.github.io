@@ -4,10 +4,70 @@
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.0.1";//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
-	var views = ["viewNew", "viewRecent", "viewSearch", "viewDetails", "viewEdit", "view1", "view2", "view3", "view4"], //don't change these
-		viewNames = ["Tables", "Recent", "Search Results", "Details", "Edit", "Contacts", "Groups", "Passwords", "Files"], //change these to rename views
-		viewIcons = ["icon-plus", "icon-time", null, null, null, "icon-user", "icon-people", "icon-lock", "icon-folder-open"], //change icons, see index.css for all possible icon classes
-		startView = 1, //set to the number of the view to start at by default
+	var views = {
+		new: {
+			name: "Tables",
+			icon: "icon-plus",
+			level: 1,
+			path: "/new"
+		},
+		recent: {
+			name: "Recent",
+			icon: "icon-time",
+			level: 1,
+			path: "/recent"
+		},
+		groups: {
+			name: "Groups",
+			icon: "icon-people",
+			level: 1,
+			path: "/groups"
+		},
+		view1: {
+			name: "Contacts",
+			icon: "icon-user",
+			level: 1,
+			path: "/view1"
+		},
+		view2: {
+			name: "Passwords",
+			icon: "icon-lock",
+			level: 1,
+			path: "/view2"
+		},
+		view3: {
+			name: "Files",
+			icon: "icon-folder-open",
+			level: 1,
+			path: "/view3"
+		},
+		search: {
+			name: "Search Results",
+			level: 2,
+			path: "/search"
+		},
+		details: {
+			name: "Details",
+			level: 2,
+			path: "/details"
+		},
+		edit: {
+			name: "Edit",
+			level: 3,
+			path: "/edit"
+		},
+		recentdetails: {
+			name: "Details",
+			level: 2,
+			path: "/recentdetails"
+		},
+		searchdetails: {
+			name: "Details",
+			level: 2,
+			path: "/searchdetails"
+		}
+	},
+		startView = "recent", //set to the view to start at by default
 		backstack = [],
 		backIndex = 0,
 		debug = APP.debug,//shortform access to APP.debug
@@ -75,7 +135,7 @@
 							false, false, false, false, false,
 							false, false, false, true, false,
 							true, true, true, false, true],
-						labelCol: [false,false, false, false, false, false, false,
+						labelCol: [false, false, false, false, false, false, false,
 							false, false, false, false, false, false, false, false, false,
 							false, false, false, false, false, false, false, false, false,
 							false, false, false, false, false, "E_mail1_Type", false, "E_mail2_Type", false, "E_mail3_Type",
@@ -85,7 +145,7 @@
 							"Phone8_Type", false, "Phone9_Type", false, "Phone10_Type", false, "Address1_Type",
 							false, false, false, false, false,
 							false, false, false, "Address2_Type", false, false,
-							false, false,false, false, false,
+							false, false, false, false, false,
 							false, "Organization1_Type", false, false, false,
 							false, false, false, false, "Website1_Type"]
 					},
@@ -144,134 +204,69 @@
 		searchableColumns = ["Name", "Owner", "Site", "Username", "Alias", "GivenName", "AdditionalName", "FamilyName", "Nickname", "ShortName", "MaidenName",
 			"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value", "E_mail6_Value", "E_mail7_Value", "Address1_City", "Address2_City",
 			"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department", "groupName"],
-		state = {//vue.js variables
-			version: APP_VERSION,
-			views: views,
-			viewNames: viewNames,
-			viewIcons: viewIcons,
-			viewTransition: false,
-			viewTransitionDone: true,
-			currentView: null,
-			backArrow: false,
-			spinner: false,
-			spinnerMsg: ["Working..."],
-			spinIndex: 0,
-			viewNew: false,
-			viewRecent: false,
-			view1: false,
-			view2: false,
-			view3: false,
-			view4: false,
-			indicatorRight: -164,
-			indicatorWidth: 0,
-			indicatorTop: 53,
-			viewSearch: false,
-			viewDetails: false,
-			viewEdit: false,
-			splitView: false,
-			showSearchBar: false,
-			showSearchSuggestions: false,
-			showSideNav: false,
-			showSettings: false,
-			windows: false,
-			darkTheme: false,
-			useWindowsTheme: false,
-			windowsDarkTheme: false,
-			showConfirm: false,
-			confirmMsg: "Are you sure?",
-			confirmOK: "OK",
-			confirmCancel: "Cancel",
-			confirmFunction: function () { },
-			confirmShake: false,
-			showNotify: false,
-			notifyActivated: 0,
-			notifyMsg: "Notification",
-			dropboxUsername: "",
-			dropboxEmail: "",
-			loggedIn: false,
-			searchBox: "",
-			searchAutoComplete: "",
-			searchSuggestions: [],
-			searchPointer: -1,
-			searchResults: [],
-			selectSearchResults: false,
-			searchResultsTitle: "Search Results",
-			searchResultsError: "Nothing here yet... try searching for something.",
-			currentQuery: "",
-			stoKey: "unknown",
-			showStoKeyInput: false,
-			stoKeyWarning: "",
-			details: [],
-			detailsTitleH1: null,
-			detailsSubtitleH2: null,
-			recentlyViewed: [],
-			showUpdateKey: false,
-			groups: [],
-			groupName: "",
-			groupSearchBox: "",
-			showNewGroupUI: false,
-			showEditGroupUI: false,
-			activeGroup: [],
-			addItemToGroupDropdown: false,
-			addSearchToGroupDropdown: false,
-			groupPage: 1,
-			groupHelp: false,
-			newTable: {
-				title: "",
-
-				headers: ["Column 1", "Column 2", "Column 3"],
-				types: ["string", "string", "string"],
-
-				acceptedValuesDropdown: -1,
-				editableDropdown: -1,
-				labelColDropdown: -1,
-				protectDropdown: -1,
-				searchableDropdown: -1,
-				typesDropdown: -1,
-				viewableDropdown: -1,
-
-				acceptedValuesDefault: 'any',
-				editableDefault: true,
-				labelColDefault: false,
-				protectDefault: false,
-				searchableDefault: true,
-				typesDefault: 'string',
-				viewableDefault: true,
-
-				acceptedValuesDropdownOptions: ['any'],
-				editableDropdownOptions: [true, false],
-				protectDropdownOptions: [false, true, "to view", "to edit"],
-				searchableDropdownOptions: [true, false, 'optional'],
-				typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
-				viewableDropdownOptions: [true, false],
-
-				options: {
-					customProperties: {},
-					doNotIndex: [],
-					initialIndex: [],
-					searchable: [true, true, true]
-				},
-				display: {
-					searchResultsText: [],
-					searchResultsJoiner: " ",
-					sortBy: "",
-					detailsView: {
-						viewable: [true, true, true],
-						labelCol: [false, false, false]
-					},
-					editView: {
-						protect: [false, false, false],
-						editable: [true, true, true],
-						acceptedValues: ["any", "any", "any"]
-					}
-				},
-				optionsDropdown: -1,
-				fullscreen: false
-			}
+		freshStateObj = function () {
+			return {//vue.js variables
+				version: APP_VERSION,
+				views: views,
+				viewTransition: false,
+				viewTransitionDone: true,
+				backArrow: false,
+				currentView: views[startView],
+				spinner: false,
+				spinnerMsg: ["Working..."],
+				spinIndex: 0,
+				indicatorRight: -164,
+				indicatorWidth: 0,
+				indicatorTop: 53,
+				splitView: false,
+				showSearchBar: false,
+				showSearchSuggestions: false,
+				showSideNav: false,
+				showSettings: false,
+				windows: false,
+				darkTheme: false,
+				useWindowsTheme: false,
+				windowsDarkTheme: false,
+				showConfirm: false,
+				confirmMsg: "Are you sure?",
+				confirmOK: "OK",
+				confirmCancel: "Cancel",
+				confirmFunction: function () { },
+				confirmShake: false,
+				showNotify: false,
+				notifyActivated: 0,
+				notifyMsg: "Notification",
+				dropboxUsername: "",
+				dropboxEmail: "",
+				loggedIn: false,
+				searchBox: "",
+				searchAutoComplete: "",
+				searchSuggestions: [],
+				searchPointer: -1,
+				searchResults: [],
+				searchResultsTitle: "Search Results",
+				searchResultsError: "Nothing here yet... try searching for something.",
+				currentQuery: "",
+				stoKey: "unknown",
+				showStoKeyInput: false,
+				stoKeyWarning: "",
+				details: [],
+				detailsTitleH1: null,
+				detailsSubtitleH2: null,
+				currentDetailsId: null,
+				currentDetailsTable: null,
+				recentlyViewed: [],
+				showUpdateKey: false,
+				addItemToGroupDropdown: false,
+				addSearchToGroupDropdown: false,
+				groupSearchBox: "",
+				groups: []
+			};
 		},
-		WorkingOffline = function () {
+		state = freshStateObj(),
+		localTestingMode = function () {
 			var loc = window.location;
-			if (/^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://") return true;
+			if (!loc || /^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://") return true;
 			else return false;
 		}(),
 		trim = function (str) {
@@ -279,18 +274,6 @@
 			while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
 			if (str === " ") return "";
 			return str.replace(/^\s+|\s+$/gm, "");
-		},
-		deleteDuplicates = function (arr) {
-			for (var x = 0, len = arr.length; x < len - 1; x++) {
-				for (var y = x + 1; y < len; y++) {
-					if (String(arr[x]) === String(arr[y])) {
-						arr.splice(y, 1);
-						len--;
-						y--;
-					}
-				}
-			}
-			return arr;
 		},
 		layout = function () {
 			var width = getWidth(),
@@ -304,14 +287,16 @@
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
-			var i = location ? app.views.indexOf(location) : app.viewNames.indexOf(app.currentView);
-			if (i > 1 && i < 4) return; //no existing navlinks to these views
-			var	sidenavlink = document.getElementById("sidenavlink_" + i).getBoundingClientRect(),
-				topnavlink = document.getElementById("topnavlink_" + i).getBoundingClientRect(),
-				extra = app.showSearchBar ? 1107 : 807;
-			app.indicatorTop = sidenavlink.top - 54;
-			app.indicatorWidth = topnavlink.right - topnavlink.left;
-			app.indicatorRight = getWidth() - topnavlink.left - extra;
+			location = location ? location.replace(/\//,"") : startView;
+			if (app.views[location] && app.views[location].level === 1) {
+				var sidenavlink = document.getElementById("sidenavlink_" + location).getBoundingClientRect(),
+					topnavlink = document.getElementById("topnavlink_" + location).getBoundingClientRect(),
+					extra = app.showSearchBar ? 1107 : 807;
+				app.indicatorTop = sidenavlink.top - 54;
+				app.indicatorWidth = topnavlink.right - topnavlink.left;
+				app.indicatorRight = getWidth() - topnavlink.left - extra;
+			}
+			//else debug(location, "not top level nav");
 		},
 		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
@@ -351,7 +336,7 @@
 				webWorker.postMessage(arrBuffer, [arrBuffer]);
 				obj = null;
 			}
-			if (typeof Worker !== "undefined" && !WorkingOffline) {
+			if (typeof Worker !== "undefined" && !localTestingMode) {
 				startWorker();
 			}
 			//no web workers available
@@ -420,7 +405,7 @@
 					break;
 				case "forEach":
 					if (data.callbackIndex) wwCallbackQueue[data.callbackIndex](data.message, data.progress, data.total);
-					
+
 					else debug(data.message, "no forEach callback found");
 					break;
 				case "result":
@@ -476,9 +461,11 @@
 			}
 		},
 		//initialise the application
-		init = function (resumeBool) {
+		startApp = function (resumeBool) {
 			function doneInit() {
-				checkDBLoaded(app.navigate(app.views[startView]));
+				checkDBLoaded(function () {
+					app.updateCurrentView();
+				});
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
@@ -502,14 +489,10 @@
 									else app[prop] = s[prop];
 								}
 							}
-							if (resumeBool && s.time && new Date().getTime() - s.time < 864e5) {
+							if (resumeBool && s.time && new Date().getTime() - s.time < 864e5) {								
 								//resume view and back history
 								backstack = s.backstack;
 								backIndex = s.backIndex;
-								app.currentView = app.viewNames[app.views.indexOf(backstack[backIndex - 1])];
-								for (var a = 0, len = app.views.length; a < len; a++) {
-									app[app.views[a]] = backstack[backIndex - 1] === app.views[a];
-								}
 								app.navigate();
 							}
 							if (!s.stoKey) {
@@ -530,7 +513,7 @@
 							APP.Sto.deleteItem("state");
 							doneInit();
 						}
-						
+
 					} else if (error) {
 						debug(error, "error getting app state");
 						doneInit();
@@ -539,26 +522,25 @@
 						doneInit();
 					}
 				}, doneInit);
-			}								
+			}
 			getLocal();
 			matchWindowsTheme();
 			layout();
 			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-			//setNavLinkIndicatorPosition();
-			if (typeof Worker !== "undefined" && !WorkingOffline && typeof webWorker === "undefined") {
+			if (typeof Worker !== "undefined" && !localTestingMode && typeof webWorker === "undefined") {
 				webWorker = new Worker("scripts/webworker.js");
 				webWorker.addEventListener('message', wwReadMessage, false);
 				webWorker.addEventListener('error', wwOnError, false);
 			}
-			
+
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
 		matchWindowsTheme = function () {
 			function updateUI() {
-				if (state.useWindowsTheme) {
-					if (backgroundColor.r === 0 && backgroundColor.g === 0 && backgroundColor.b === 0) state.windowsDarkTheme = true;
-					else state.windowsDarkTheme = false;
+				if (app.useWindowsTheme) {
+					if (backgroundColor.r === 0 && backgroundColor.g === 0 && backgroundColor.b === 0) app.windowsDarkTheme = true;
+					else app.windowsDarkTheme = false;
 				}
 				for (var d = 0; d < windowsAccentColor.length; d++) {
 					for (var a = 0; a < styleSheets.length; a++) {
@@ -684,7 +666,6 @@
 		loadDBQueue = [],
 		loadDBQueueIndex = 0,
 		loadingDB = false,
-		loadingDBRequiresSync = false,
 		checkDBLoaded = function (callback) {
 			function initDB(title, template, dbNum, numOfTables) {
 				function handleErrors(errors) {
@@ -704,12 +685,12 @@
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
 						if (errors) handleErrors(errors);
-						if (!WorkingOffline) {
+						if (window.navigator.onLine) {
 							app.syncAll();
 						}
 						app.spin(false);
 						loadDB = false;
-						loadDBQueueIndex--;	
+						loadDBQueueIndex--;
 						if (loadDBQueueIndex < 0) return;
 						else return loadDBQueueIndex > 0 ? loadDBQueue[loadDBQueueIndex](cb) : loadDBQueue[loadDBQueueIndex]();
 					};
@@ -769,7 +750,7 @@
 				});
 			}
 			function getVal(col, a, len) {
-				app.details[a] = { table: obj.table, id: obj.id, column: col, warning: "", hidden: !dataTemplates[obj.table].display.detailsView.viewable[a]};
+				app.details[a] = { table: obj.table, id: obj.id, column: col, warning: "", hidden: !dataTemplates[obj.table].display.detailsView.viewable[a] };
 				getType(a, obj.table, col);
 				getText(a, obj.table, obj.id, col);
 			}
@@ -793,6 +774,7 @@
 				//add this item to top of list
 				app.recentlyViewed = sortList(app.recentlyViewed);
 				app.storeState();
+				//set details title and subtitle
 				if (dataTemplates[obj.table].display.detailsView.titleH1) {
 					var title = dataTemplates[obj.table].display.detailsView.titleH1;
 					title = title.concat(dataTemplates[obj.table].display.detailsView.subtitleH2);
@@ -822,7 +804,9 @@
 					app.detailsSubtitleH2 = null;
 				}
 				wwManager({ "cmd": "forEachCol", "title": obj.table }, getVal, function () {
-					app.navigate("viewDetails");
+					app.currentDetailsId = obj.id;
+					app.currentDetailsTable = obj.table;
+					app.navigate("details", null, obj);
 					app.spin(false);
 					if (callback instanceof Function) return callback();
 				});
@@ -925,7 +909,7 @@
 						}
 					}
 					if (a === 0 || name !== nameHeaders[c - 1].text) {
-						nameHeaders.push({ id: "jumplink_" + name, sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
+						nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
 						c++;
 					}
 				}
@@ -949,33 +933,116 @@
 			return letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
 		},
 		buildMailtoUri = function (to, bcc, subject, message, callback) {
-		var query = bcc || subject || message ? "?" : "",
-			joiner1 = bcc && (subject || message) ? "&" : "",
-			joiner2 = (bcc || subject) && message ? "&" : "",
-			bccBool = bcc ? true : false;
-		to = to ? encodeURIComponent(to) : "";
-		bcc = bcc ? "bcc=" + encodeURIComponent(bcc) : "";
-		subject = subject ? "subject=" + encodeURIComponent(subject) : "";
-		message = message ? "body=" + encodeURIComponent(message) : "";
-		if (callback instanceof Function) callback("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
-		else return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
-	};
+			var query = bcc || subject || message ? "?" : "",
+				joiner1 = bcc && (subject || message) ? "&" : "",
+				joiner2 = (bcc || subject) && message ? "&" : "",
+				bccBool = bcc ? true : false;
+			to = to ? encodeURIComponent(to) : "";
+			bcc = bcc ? "bcc=" + encodeURIComponent(bcc) : "";
+			subject = subject ? "subject=" + encodeURIComponent(subject) : "";
+			message = message ? "body=" + encodeURIComponent(message) : "";
+			if (callback instanceof Function) callback("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
+			else return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
+		},
+		addToNewGroup = function (detailsObj, searchQuery) {
+			app.addItemToGroupDropdown = false;
+			app.addSearchToGroupDropdown = false;
+			if (detailsObj) generateListItems(detailsObj[0].table, detailsObj[0].id, null, true, function (list) {
+				list[0].selected = true;
+				app.activeGroup = list;
+			});
+			if (searchQuery) {
+				app.groupSearchBox = searchQuery;
+				app.groupInput();
+			}
+			app.navigate("groups");
+			app.showNewGroupUI = true;
+		},
+		initializeGroups = function (callback) {
+			if (app.groups.length === 0) {
+				wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
+					var ids = [];
+					for (var a = 0; a < length; a++) ids[a] = a;
+					wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
+						for (var a = 0, len = vals.length; a < len; a++) {
+							app.groups[a] = vals[a][1];
+						}
+						if (callback instanceof Function) return callback();
+					});
+				});
+			}
+			else if (callback instanceof Function) return callback();
+		},
+		generateListView = function (tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected) {
+			checkDBLoaded(function (callback) {
+				pageNumber = pageNumber || 1;
+				numberPerPage = numberPerPage || 100;
+				tableTitle = VAL.toPropName(tableTitle);
+				if (dataTemplates[tableTitle]) {
+					app.searchResults = [];
+					generateList(tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected, function (list) {
+						app.searchResults = list;
+						wwManager({ "cmd": "getTitle", "title": tableTitle }, function (title) { app.searchResultsTitle = title; });
+						app.searchResultsError = list.length === 0 ? "Nothing to display" : "";
+						app.navigate("search", app.currentQuery);
+						if (callback instanceof Function) return callback();
+					});
+				}
+				else debug(tableTitle, "error generating list view");
+			});
+		},
+		importFile = function (toTable) {
+			function done(success, errors, title, syncPending) {
+				if (success && !errors) {
+					if (syncPending) {//TODO
+						app.notify("Data imported successfully", true);
+					}
+					else app.notify("Data imported and synchronized successfully", true);
+				}
+				else if (errors) {
+					defaultErrorHandler(success, errors, title, syncPending);
+				}
+				else app.notify("Done", true);
+			}
+			if (toTable === "Files") app.loadFile('hiddenFileInput', null, function (data) {
+				wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
+			});
+			else if (toTable === "Contacts") app.loadFile('hiddenCSVInput', 'csv', function (data) {
+				wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey, null] }, done);
+			});
+		},
+		confirm = function (msg, callback, options) {
+			app.confirmMsg = msg || "Are you sure?";
+			app.confirmOK = options && options.ok ? options.ok : "OK";
+			app.confirmCancel = options && options.cancel ? options.cancel : "Cancel";
+			app.showConfirm = true;
+			app.confirmFunction = callback;
+		};
 	//Components
 	Vue.component('jump-list', {
 		props: {
 			links: Array,
-			select: Boolean,
-			selectall: Boolean,
+			select: {
+				type: Boolean,
+				default: false
+			},
+			selectall: {
+				type: Boolean,
+				default: false
+			},
 			scrolldiv: String,
-			collapse: Boolean
+			collapse: {
+				type: Boolean,
+				default: false
+			}
 		},
 		data: function () {
 			return {
-				collapse: false,
-				select: true,
-				selectall: false,
 				emailDropdown: false,
-				emailLinks: []
+				emailLinks: [],
+				selectAll: this.selectall,
+				selected: this.select,
+				collapsed: this.collapse
 			};
 		},
 		methods: {
@@ -989,26 +1056,26 @@
 				for (var a = 0, len = this.links.length; a < len; a++) {
 					if (this.links[a].type === "link") this.links[a].selected = false;
 				}
-				this.selectall = false;
-				this.collapse = false;
-				this.toggle('select');
+				this.selectAll = false;
+				this.collapsed = false;
+				this.toggle('selected');
 				if (link) link.selected = true;
 			},
 			toggleSelectAll: function () {
 				this.emailDropdown = false;
-				this.toggle('selectall');
+				this.toggle('selectAll');
 				for (var a = 0, len = this.links.length; a < len; a++) {
-					if (this.links[a].type === "link") this.links[a].selected = this.selectall ? true : false;
+					if (this.links[a].type === "link") this.links[a].selected = this.selectAll ? true : false;
 				}
 			},
 			showIf: function (link, collapse) {
 				return link.type === "jumplink" || collapse === false;
 			},
-			action: function (link, select, div, collapse) {
+			action: function (link, div, collapse) {
 				this.emailDropdown = false;
 				if (link.type === "jumplink") {
 					var el = document.getElementById(div);
-					this.collapse = collapse ? false : true;
+					this.collapsed = collapse ? false : true;
 					if (collapse) {
 						Vue.nextTick(function () {
 							var pos = document.getElementById(link.id).offsetTop;
@@ -1017,13 +1084,15 @@
 					}
 					else el.scrollTop = 0;
 				}
-				else if (select) {
+				else if (this.selected) {
 					link.selected = link.selected ? false : true;
-					this.selectall = false;
+					this.selectAll = false;
 				}
-				else this.seeDetails(link);
+				else {
+					this.seeDetails(link);
+				}
 			},
-			updateEmailLinks: function (links, select) {
+			updateEmailLinks: function (links) {
 				function newEmailLink() {
 					_this.emailDropdown = true;
 					var link = {};
@@ -1033,13 +1102,13 @@
 					_this.emailDropdown = true;
 					var bccIds = [];
 					for (let a = 0, len = links.length; a < len; a++) {
-						if (links[a].type === "link" && (select === false || links[a].selected === true)) bccIds.push(links[a].id);
+						if (links[a].type === "link" && (_this.selected === false || links[a].selected === true)) bccIds.push(links[a].id);
 					}
 					getEmails(bccIds);
 				}
 				function getEmails(ids) {
 					var emailAddresses = [];
-					wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
+					if(ids.length > 0) wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
 						if (vals && !errors) {
 							var type, email, name, primary = false;
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
@@ -1071,17 +1140,20 @@
 							else {
 								var link = {};
 								link.href = null;
-								link.text = "<Nothing selected>";
+								link.text = "Selection contains no e-mail addresses";
 								_this.emailLinks.push(link);
 							}
 						}
 						else debug(errors, "get email errors");
 					});
+					else {
+						_this.emailLinks = [{ text: "<Nothing selected>", href: null, disabled: true }];
+					}
 				}
 				function updateDropdownMenu(mailtoUri, bccBool) {
 					var link = {};
 					link.href = mailtoUri;
-					link.text = select ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
+					link.text = _this.selected ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
 					_this.emailLinks.push(link);	
 				}
 				var _this = this;
@@ -1090,40 +1162,1253 @@
 				else newEmailLink();
 			}
 		},
-		template:
-		"<div v-if=\"links.length > 0\">\
+		template: "<div v-if=\"links.length > 0\">\
 			<div align=\"left\">\
-				<button v-show=\"select === false\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-check\"></span> Select</button>\
-				<button v-show=\"select && selectall === false\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-unchecked\"></span> Select All</button>\
-				<button v-show=\"select && selectall\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-check\"></span> Deselect All</button>\
-				<button v-show=\"select\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-cancel\"></span> Cancel Select</button>\
-				<button v-on:click=\"toggle('collapse')\" v-show=\"collapse === false\"><span class=\"icon icon-th\"></span> Button View</button>\
-				<button v-on:click=\"toggle('collapse')\" v-show=\"collapse\"><span class=\"icon icon-th-list\"></span> List View</button>\
+				<button v-show=\"selected === false\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-check\"></span> Select</button>\
+				<button v-show=\"selected && selectAll === false\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-unchecked\"></span> Select All</button>\
+				<button v-show=\"selected && selectAll\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-check\"></span> Deselect All</button>\
+				<button v-show=\"selected\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-cancel\"></span> Cancel Select</button>\
+				<button v-on:click=\"toggle('collapsed')\" v-show=\"collapsed === false\"><span class=\"icon icon-th\"></span> Button View</button>\
+				<button v-on:click=\"toggle('collapsed')\" v-show=\"collapsed\"><span class=\"icon icon-th-list\"></span> List View</button>\
 				<div class=\"dropdown-container right\">\
-					<button v-on:click=\"updateEmailLinks(links, select)\"> <span class=\"icon icon-mail\"></span> E-mail</button>\
+					<button v-on:click=\"updateEmailLinks(links)\"> <span class=\"icon icon-mail\"></span> E-mail</button>\
 					<div v-show=\"emailDropdown\" class=\"dropdown\">\
 						<a v-for=\"item in emailLinks\" class=\"link\" v-on:click=\"toggle('emailDropdown')\" v-bind:href=\"item.href\">{{ item.text }}</a>\
 					</div>\
 				</div>\
 			</div>\
-			<ul class=\"links\" v-bind:collapse=\"collapse\">\
-				<li v-for=\"link in links\" v-bind:id=\"link.id\" v-show=\"showIf(link, collapse)\" v-on:click=\"action(link, select, scrolldiv, collapse)\" v-bind:class=\"{\
+			<ul class=\"links\" v-bind:collapsed=\"collapsed\">\
+				<li v-for=\"link in links\" v-bind:id=\"link.id\" v-show=\"showIf(link, collapsed)\" v-on:click=\"action(link, scrolldiv, collapsed)\" v-bind:class=\"{\
 					'link':link.type === 'link',\
 					'jumplink':link.type === 'jumplink',\
-					'jumplink-button':link.type === 'jumplink' && collapse === true,\
-					'icon':select && link.type === 'link',\
-					'icon-unchecked':select && link.selected === false,\
-					'icon-check selected':select && link.selected\
+					'jumplink-button':link.type === 'jumplink' && collapsed === true,\
+					'icon':selected && link.type === 'link',\
+					'icon-unchecked':selected && link.selected === false,\
+					'icon-check selected':selected && link.selected\
 				}\">\
 					{{ link.text }}\
 				</li>\
 			</ul>\
 		</div>"
 	});
-	var app = new Vue({
+
+	// 1. Define route components.
+	// These can be imported from other files
+	const New = {
+		data: function() {
+			return {
+				newTable: {
+					title: "",
+
+					headers: ["Column 1", "Column 2", "Column 3"],
+					types: ["string", "string", "string"],
+
+					acceptedValuesDropdown: -1,
+					editableDropdown: -1,
+					labelColDropdown: -1,
+					protectDropdown: -1,
+					searchableDropdown: -1,
+					typesDropdown: -1,
+					viewableDropdown: -1,
+
+					acceptedValuesDefault: 'any',
+					editableDefault: true,
+					labelColDefault: false,
+					protectDefault: false,
+					searchableDefault: true,
+					typesDefault: 'string',
+					viewableDefault: true,
+
+					acceptedValuesDropdownOptions: ['any'],
+					editableDropdownOptions: [true, false],
+					protectDropdownOptions: [false, true, "to view", "to edit"],
+					searchableDropdownOptions: [true, false, 'optional'],
+					typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+					viewableDropdownOptions: [true, false],
+
+					options: {
+						customProperties: {},
+						doNotIndex: [],
+						initialIndex: [],
+						searchable: [true, true, true]
+					},
+					display: {
+						searchResultsText: [],
+						searchResultsJoiner: " ",
+						sortBy: "",
+						detailsView: {
+							viewable: [true, true, true],
+							labelCol: [false, false, false]
+						},
+						editView: {
+							protect: [false, false, false],
+							editable: [true, true, true],
+							acceptedValues: ["any", "any", "any"]
+						}
+					},
+					optionsDropdown: -1,
+					fullscreen: false
+				}
+			};
+		},
+		methods: {
+			importNewTable: function () {
+				function matches(subsetArr, ofArr) {
+					var matches = true;
+					for (let a = 0, len = subsetArr.length; a < len; a++) {
+						if (ofArr.indexOf(subsetArr[a]) === -1) matches = false;
+					}
+					return matches;
+				}
+				function createTempTable(JSON, template) {
+					template.options.importJSON = JSON;
+					app.notify("Building new table");
+					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] }, function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+						if (errors) defaultErrorHandler(success, errors, title, requiresSync);
+						else app.notify("Done", true);
+					});
+				}
+				var _this = this;
+				app.loadFile('hiddenCSVInput', 'csv', function (data) {
+					if (matches(data.Headers, _this.newTable.headers)) {
+						createTempTable(data, _this.newTable);
+					}
+					else {
+						app.notify("CSV Headers don't match");
+						for (var template in dataTemplates) {
+							var tryHeaders = dataTemplates[template].headers;
+							if (dataTemplates[template].headers[0] === "id") {
+								tryHeaders = dataTemplates[template].headers.join("||").split("||");
+								tryHeaders.shift();
+							}
+							if (matches(data.Headers, tryHeaders)) {
+								(function (template) {
+									confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
+										_this.template(template);
+										app.notify("");
+										createTempTable(data, dataTemplates[template]);
+									});
+								})(template);
+							}
+						}
+					}
+				});
+			},
+			template: function (templateName) {
+				if (dataTemplates[templateName]) {
+					this.newTable.title = templateName;
+					this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+					if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
+					this.newTable.types = dataTemplates[templateName].types;
+					this.newTable.options = dataTemplates[templateName].options;
+					this.newTable.display = dataTemplates[templateName].display;
+					this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
+					this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
+					this.newTable.display.detailsView.viewable = dataTemplates[templateName].display.detailsView.viewable || [];
+					this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
+					this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
+					this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
+				}
+				else {
+					this.newTable.title = "";
+					this.newTable.headers = ["", "", ""];
+					this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
+					this.newTable.options = {
+						customProperties: {},
+						doNotIndex: [],
+						initialIndex: [],
+						searchable: []
+					};
+					this.newTable.display = {
+						searchResultsText: [],
+						searchResultsJoiner: " ",
+						sortBy: "",
+						detailsView: {
+							labelCol: [],
+							viewable: []
+						},
+						editView: {
+							acceptedValues: [],
+							editable: [],
+							protect: []
+						}
+					};
+				}
+				for (let a = 0, len = this.newTable.types.length; a < len; a++) {
+					this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
+					this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
+					this.newTable.display.detailsView.viewable[a] = this.newTable.display.detailsView.viewable[a] !== undefined ? this.newTable.display.detailsView.viewable[a] : this.newTable.viewableDefault;
+					this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
+					this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
+					this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
+				}
+			},
+			toggleDropdown: function (rowName, colIndex) {
+				if (this.newTable[rowName] !== undefined) {
+					this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
+				}
+				else debug(rowName, "no such row in table");
+			},
+			sortbyColumn: function (index) {
+
+			},
+			deleteColumn: function (index) {
+				this.newTable.headers.splice(index, 1);
+				this.newTable.types.splice(index, 1);
+				this.newTable.display.editView.protect.splice(index, 1);
+				this.newTable.display.editView.acceptedValues.splice(index, 1);
+				this.newTable.display.detailsView.viewable.splice(index, 1);
+				this.newTable.display.editView.editable.splice(index, 1);
+				this.newTable.options.searchable.splice(index, 1);
+				this.newTable.display.detailsView.labelCol.splice(index, 1);
+				this.newTable.optionsDropdown = -1;
+			},
+			insertColumn: function (index) {
+				if (!index) {
+					this.newTable.headers.push("");
+					this.newTable.types.push(this.newTable.typesDefault);
+					this.newTable.display.editView.protect.push(this.newTable.protectDefault);
+					this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
+					this.newTable.display.detailsView.viewable.push(this.newTable.viewableDefault);
+					this.newTable.display.editView.editable.push(this.newTable.editableDefault);
+					this.newTable.options.searchable.push(this.newTable.searchableDefault);
+					this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
+				}
+				else {
+					this.newTable.headers.splice(index, 0, "");
+					this.newTable.types.splice(index, 0, this.newTable.typesDefault);
+					this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
+					this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
+					this.newTable.display.detailsView.viewable.splice(index, 0, this.newTable.viewableDefault);
+					this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
+					this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
+					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
+				}
+				this.newTable.optionsDropdown = -1;
+			}
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<h1>Create a New Table</h1>\
+				<label class=\"itemLabel\">Table Name</label>\
+				<input type=\"text\" class=\"textbox\" autocomplete=\"off\" v-model=\"newTable.title\" />\
+				<label class=\"itemLabel\">Templates</label>\
+				<div class=\"itemText\"><button v-on:click=\"template('Blank')\"><span class=\"icon icon-page\"></span>&nbsp;&nbsp;Blank Template</button><button v-on:click=\"template('Contacts')\"><span class=\"icon icon-user\"></span>&nbsp;&nbsp;Contacts Template</button> <button v-on:click=\"template('Passwords')\"><span class=\"icon icon-lock\"></span>&nbsp;&nbsp;Passwords Template</button> <button v-on:click=\"template('Files')\"><span class=\"icon icon-folder-open\"></span>&nbsp;&nbsp;Files Template</button></div>\
+				<label class=\"itemLabel\">Table Setup</label>\
+				<div class=\"table-container\" v-bind:class=\"{ 'fullscreen': newTable.fullscreen }\">\
+					<table>\
+						<tr>\
+							<th>\
+								<a v-show=\"newTable.fullscreen\" v-on:click=\"newTable.fullscreen = false\"><span class=\"icon icon-resize-small\"></span>&nbsp;&nbsp;Exit Fullscreen</a>\
+								<a v-show=\"newTable.fullscreen === false\" v-on:click=\"newTable.fullscreen = true\"><span class=\"icon icon-fullscreen\"></span>&nbsp;&nbsp;Fullscreen</a>\
+							</th>\
+							<th v-for=\"(column, index) in newTable.headers\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('optionsDropdown', index)\">Column {{ index + 1 }}</a>\
+									<ul v-show=\"newTable.optionsDropdown === index\" class=\"dropdown\">\
+										<li v-on:click=\"sortbyColumn(index)\">Sort By Column</li>\
+										<li v-on:click=\"deleteColumn(index)\">Delete Column</li>\
+										<li v-on:click=\"insertColumn(index)\">Insert Column Left</li>\
+										<li v-on:click=\"insertColumn(index + 1)\">Insert Column Right</li>\
+									</ul >\
+								</div >\
+							</th >\
+							<th><a v-on:click=\"insertColumn(false)\"><span class=\"icon icon-plus\" title=\"Add New Column\"></span></a></th >\
+						</tr >\
+						<tr><th title=\"These are the headers of the columns in your table\">Column&nbsp;Name</th><td v-for=\"(column, index) in newTable.headers\"><input type=\"text\" size=\"12\" v-model=\"newTable.headers[index]\" /></td><td></td></tr>\
+						<tr>\
+							<th>Column&nbsp;Data&nbsp;Type</th>\
+							<td v-for=\"(type, index) in newTable.types\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('typesDropdown', index)\">{{ type }}</a>\
+									<ul v-show=\"newTable.typesDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"validType in newTable.typesDropdownOptions\" v-on:click=\"newTable.types[index] = validType; newTable.typesDropdown = -1;\">{{ validType }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr >\
+						<tr>\
+							<th title=\"Select a label column if the data in this column has metadata about it specified in another column, ie label for 999-123-4567 might be 'Mobile Phone'\">Label&nbsp;Column</th>\
+							<td v-for=\"(colName, index) in newTable.display.detailsView.labelCol\">\
+								<div class=\"dropdown-container\">\
+									<a v-if=\"colName\" v-on:click=\"toggleDropdown('labelColDropdown', index)\">{{ colName }}</a>\
+									<a v-else v-on:click=\"toggleDropdown('labelColDropdown', index)\">&lt;none&gt;</a>\
+									<ul v-show=\"newTable.labelColDropdown === index\" class=\"dropdown\">\
+										<li v-on:click=\"newTable.display.detailsView.labelCol[index] = false; newTable.labelColDropdown = -1;\">&lt;none&gt;</li>\
+										<li v-for=\"header in newTable.headers\" v-if=\"header !== newTable.headers[index]\" v-on:click=\"newTable.display.detailsView.labelCol[index] = header; newTable.labelColDropdown = -1;\">{{ header }}</li>\
+									</ul >\
+								</div >\
+							</td >\
+							<td></td>\
+						</tr >\
+						<tr>\
+							<th title=\"When editing data you might want to have a dropdown list with only certain values available to be selected. Input those values here\">Accepted&nbsp;Values</th>\
+							<td v-for=\"(value, index) in newTable.display.editView.acceptedValues\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('acceptedValuesDropdown', index)\">{{ value }}</a>\
+									<ul v-show=\"newTable.acceptedValuesDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"option in newTable.acceptedValuesDropdownOptions\" v-on:click=\"newTable.display.editView.acceptedValues[index] = option; newTable.acceptedValuesDropdown = -1;\">{{ option }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr >\
+						<tr>\
+							<th title=\"Do you want data from this column to show up in search results?\">Searchable</th>\
+							<td v-for=\"(value, index) in newTable.options.searchable\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('searchableDropdown', index)\">{{ value }}</a>\
+									<ul v-show=\"newTable.searchableDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"option in newTable.searchableDropdownOptions\" v-on:click=\"newTable.options.searchable[index] = option; newTable.searchableDropdown = -1;\">{{ option }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr >\
+						<tr>\
+							<th title=\"Do you want to hide this column from displaying when the item is viewed?\">Viewable</th>\
+							<td v-for=\"(bool, index) in newTable.display.detailsView.viewable\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('viewableDropdown', index)\">{{ bool }}</a>\
+									<ul v-show=\"newTable.viewableDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"option in newTable.viewableDropdownOptions\" v-on:click=\"newTable.display.detailsView.viewable[index] = option; newTable.viewableDropdown = -1;\">{{ option }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr >\
+						<tr>\
+							<th title=\"Do you want to hide this column from view when the item is being edited?\">Editable</th>\
+							<td v-for=\"(bool, index) in newTable.display.editView.editable\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('editableDropdown', index)\">{{ bool }}</a>\
+									<ul v-show=\"newTable.editableDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"option in newTable.editableDropdownOptions\" v-on:click=\"newTable.display.editView.editable[index] = option; newTable.editableDropdown = -1;\">{{ option }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr>\
+						<tr>\
+							<th>Password&nbsp;Protect</th>\
+							<td v-for=\"(protected, index) in newTable.display.editView.protect\">\
+								<div class=\"dropdown-container\">\
+									<a v-on:click=\"toggleDropdown('protectDropdown', index)\">{{ protected }}</a>\
+									<ul v-show=\"newTable.protectDropdown === index\" class=\"dropdown\">\
+										<li v-for=\"option in newTable.protectDropdownOptions\" v-on:click=\"newTable.display.editView.protect[index] = option; newTable.protectDropdown = -1;\">{{ option }}</li>\
+									</ul>\
+								</div>\
+							</td >\
+							<td></td>\
+						</tr>\
+						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
+						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
+						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
+						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
+					</table>\
+				</div >\
+				<label class=\"itemLabel\">Import Data</label>\
+				<div class=\"itemText\"><button v-on:click=\"importNewTable('csv')\"><span class=\"icon icon-import\"></span>&nbsp;&nbsp;From CSV</button></div >\
+				<button>Save Table</button>\
+			</div>\
+		</div>"};
+	const Recent = {
+		data: function () {
+			return {
+				recentlyViewed: state.recentlyViewed
+			};
+		},
+		template: "\
+			<div id=\"recentView\" class=\"view\">\
+				<div v-if=\"recentlyViewed && recentlyViewed.length > 0\" class=\"view-container\" >\
+					<h1>Recently Viewed</h1>\
+					<jump-list v-bind:links=\"recentlyViewed\" scrolldiv=\"recentView\"></jump-list>\
+				</div>\
+				<div v-else class=\"view-container\">\
+					<h1>Nyckel <sup><small><small>(beta)</small></small></sup></h1>\
+					<h3>Store, search, view, share and sync data across devices using the cloud.</h3>\
+					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>\
+				<!--<p>\
+						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be\
+						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data\
+						in the form of a table, NyckelDB can handle it.\
+					</p>\
+					<p>\
+						Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,\
+						sorting, filtering, and synchronisation. For more information on NyckelDB, visit the\
+						<a href=\"https://github.com/ggoodkey/ggoodkey.github.io\" target=\"_blank\">NyckelDB Github Repository</a>.\
+					</p>-->\
+					<p class=\"alert\">\
+						<span class=\"icon icon-alert\"></span>\
+						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>\
+						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser\
+						data, deleting all files saved to Dropbox (in Dropbox\\Apps\\Nyckel\\) and typing the command 'nukeapp' into the search bar and pressing RETURN.\
+					</p>\
+					<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>\
+				</div>\
+			</div>"
+	};
+	const Groups = {
+		data: function () {
+			return {
+				groups: state.groups,
+				groupName: "",
+				showNewGroupUI: false,
+				showEditGroupUI: false,
+				activeGroup: [],
+				groupPage: 1,
+				groupHelp: false,
+				groupSearchBox: state.groupSearchBox
+			};
+		},
+		methods: {
+			newGroup: function (event, groupName, callback) {
+				//Validate groupName
+				groupName = groupName || this.groupName;
+				groupName = VAL.toEnglishAlphabet(groupName);
+				groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
+				groupName = trim(groupName);
+				if (groupName && groupName !== "") {
+					groupName = groupName.split(" ");
+					for (let b = 0, lenB = groupName.length; b < lenB; b++) {
+						groupName[b] = groupName[b][0].toUpperCase() + groupName[b].slice(1);
+					}
+					groupName = groupName.join(" ");
+					var i = 2,
+						existingNames = [],
+						_this = this,
+						title,
+						ids = {};
+					//get group ids
+					for (let c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
+						if (this.activeGroup[c].selected === true) {
+							title = VAL.toPropName(this.activeGroup[c].table);
+							if (!ids[title]) ids[title] = [];
+							ids[title].push(this.activeGroup[c].id);
+						}
+					}
+					initializeGroups(function () {
+						//check for duplicate groupNames
+						if (_this.groups.indexOf(groupName) > -1) {
+							while (_this.groups.indexOf(groupName + " " + i) > -1) i++;
+							groupName = groupName + " " + i;
+						}
+						//Save new group
+						wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
+							_this.updateGroup(groupName, ids, app.groupSearchBox);
+							_this.groups.push(groupName);
+							_this.activeGroup = [];
+							_this.showNewGroupUI = false;
+							app.groupSearchBox = "";
+							app.groupName = "";
+						});
+					});
+				}
+				else app.notify("Group requires a name");
+			},
+			updateGroup: function (groupName, ids, searchTerms) {
+				var _this = this;
+				groupName = String(groupName);
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+					if (searchTerms) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
+				});
+			},
+			deleteGroup: function (groupName) {
+				groupName = String(groupName);
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] });
+				});
+				this.groups.splice(this.groups.indexOf(groupName), 1);
+			},
+			groupKeyPress: function (e) {
+				var keyCode = e.which || e.keyCode || 0;
+				if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
+					e.preventDefault();
+				} else {
+					var key = e.char || e.key;
+					if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) app.groupSearchBox = trim(app.groupSearchBox + key);
+				}
+			},
+			groupInput: function (e) {
+				var value = e ? e.target.value : app.groupSearchBox,
+					_this = this,
+					n = 0,
+					numOfTables = 0;
+				checkDBLoaded(function (callback) {
+					if (value !== "") {
+						var find = String(value);
+						find = VAL.removeHTMLTags(find);
+						find = find.toLowerCase();
+						find = VAL.toEnglishAlphabet(find);
+						find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
+						find = trim(find);
+						_this.activeGroup = [];
+						document.getElementById("app").focus();
+						for (let t in dataTemplates) {
+							numOfTables++;
+						}
+						for (let table in dataTemplates) {
+							if (dataTemplates.hasOwnProperty(table)) {
+								(function (table) {
+									wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
+										if (!errors && searchResults && searchResults.length > 0) {
+											generateList(table, searchResults, null, null, null, true, function (list) {
+												_this.activeGroup = _this.activeGroup.concat(list);
+												n++;
+												if (n === numOfTables && callback instanceof Function) return callback();
+											});
+										}
+									});
+								})(table);
+							}
+						}
+					}
+				});
+			},
+			groupKeyUp: function (e) {
+				var keyCode = e.which || e.keyCode || 0;
+				if (keyCode === 32) e.preventDefault();
+				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) app.groupSearchBox = trim(app.groupSearchBox);
+				switch (keyCode) {
+					case 27:/*escape key*/
+						this.resetGroupSearch();
+						break;
+				}
+			},
+			groupKeyDown: function (e) {
+				var keyCode = e.which || e.keyCode || 0;
+				if (keyCode === 9 || keyCode === 13 || keyCode === 32 || keyCode === 38 || keyCode === 27 || keyCode === 40) {
+					e.preventDefault();
+				}
+				if (keyCode === 32) {
+					if (app.groupSearchBox !== "" && app.groupSearchBox.slice(-1) !== " ") {
+						app.groupSearchBox = app.groupSearchBox + " ";
+					}
+				}
+			},
+			resetGroupSearch: function () {
+				app.groupSearchBox = "";
+			},
+			seeGroup: function (index) {
+				function add(group) {
+					if (group[0][2] !== "" && group[0][2] !== "[]") {
+						var ids = JSON.parse(group[0][2]),
+							lenIds = 0,
+							b = 0;
+						for (let a in ids) {
+							lenIds++;
+						}
+						for (let table in ids) {
+							if (ids.hasOwnProperty(table)) {
+								(function (table) {
+									generateListItems(table, ids[table], null, null, function (arr) {
+										list = list.concat(arr);
+										b++;
+										if (b === lenIds) {
+											remove(group);
+										}
+									});
+								})(table);
+							}
+						}
+					}
+					else remove(group);
+				}
+				function remove(group) {
+					if (group[0][4] && group[0][4] !== "" && group[0][4] !== "[]") {
+						var removeIds = JSON.parse(group[0][4]);
+						for (let table in removeIds) {
+							for (let a = 0, lenA = list.length; a < lenA; a++) {
+								if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
+									list[a].splice(a, 1);
+									a--;
+									lenA--;
+								}
+							}
+						}
+					}
+					app.searchResults = sortList(list);
+					app.searchResultsTitle = group[0][1];
+					app.searchResultsError = "";
+					app.navigate("search", app.currentQuery);
+				}
+				var list = [];
+				debug(index);
+				wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
+					if (group[0][3] !== "") {
+						var lenTables = 0,
+							n = 0;
+						for (let a in dataTemplates) {
+							lenTables++;
+						}
+						for (let table in dataTemplates) {
+							if (dataTemplates.hasOwnProperty(table)) {
+								(function (table) {
+									wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title, sync) {
+										if (!err) {
+											if (results) generateListItems(table, results, null, null, function (arr) {
+												list = list.concat(arr);
+												n++;
+												if (n === lenTables) add(group);
+											});
+											else {
+												n++;
+												if (n === lenTables) add(group);
+											}
+										}
+										else debug(err, title + " seeGroup error");
+									});
+								})(table);
+							}
+						}
+					}
+					else add(group);
+				});
+			},
+			addToGroup: function (groupName, detailsObj, searchQuery) {
+				this.addItemToGroupDropdown = false;
+				this.addSearchToGroupDropdown = false;
+				var _this = this;
+				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+					if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
+						ids = JSON.parse(ids);
+						if (ids instanceof Array) {//convert old array data to object
+							var obj = {};
+							for (let a = 0, len = ids.length; a < len; a++) {
+								if (!obj[ids[a].table]) obj[ids[a].table] = [];
+								obj[ids[a].table].push(ids[a].id);
+							}
+							ids = obj;
+						}
+						for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
+							if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
+							if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
+								ids[detailsObj[b].table].push(detailsObj[b].id);
+							}
+						}
+						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+						app.notify("Added 1 item to " + groupName, true);
+					});
+					if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
+						query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
+						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
+						app.notify("Added '" + searchQuery + "' to " + groupName, true);
+					});
+				});
+			},
+			showSelectGroupMembers: function () {
+				var _this = this;
+				for (let table in dataTemplates) {
+					generateList(table, null, null, null, null, false, function (list) {
+						_this.activeGroup = _this.activeGroup.concat(list);
+					});
+				}
+			},
+			resetGroups: function () {
+				app.groupPage = 1;
+				app.resetGroupSearch();
+				app.groupName = "";
+				app.activeGroup = [];
+				if (app.groups.length === 0) app.goBack();
+				else app.toggle('showNewGroupUI');
+			}
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<div v-if=\"groups.length === 0 || showNewGroupUI\">\
+					<button v-show=\"groupName !== '' && groupPage > 1\" v-on:click=\"groupPage = 1\"><span class=\"icon icon-arrow-left\"></span> Edit Group Name: {{groupName}}</button>\
+					<button v-show=\"groupSearchBox !== '' && groupPage > 2\" v-on:click=\"groupPage = 2\"><span class=\"icon icon-arrow-left\"></span> Edit Search Query: {{groupSearchBox}}</button>\
+					<div v-show=\"groupPage === 1\">\
+						<h2>Create a new group</h2>\
+						<label class=\"itemLabel\">Give the Group a Name</label>\
+						<input type=\"text\" class=\"textbox\" autocomplete=\"off\" v-model=\"groupName\" />\
+						<button type=button v-bind:disabled=\"groupName === ''\" v-on:click=\"groupPage++\">Next <span class=\"icon icon-arrow-right\"></span></button>\
+					</div>\
+					<div v-show=\"groupPage === 2\">\
+						<h2>Make the Group Dynamic based on a Search Query</h2>\
+						<p>The group can update itself dynamically as data changes in the database. <a v-on:click='toggle(\"groupHelp\")'>Learn how to refine your search</a></p>\
+						<div v-if=\"groupHelp\">\
+							<p>\
+								You can refine your search by adding to, or subtracting from your search by prefixing additional search terms with the \"+\" or \"-\" charactors.\
+								For example, searching for \"Bob Johnston\" would find Bob Johnston, as expected, but \"Bob +Johnston\" finds all the Bobs, as well as all the Johnstons\
+								(Bob Smith, Bob Johnston, Bob Dunn, Jim Johnston...), whereas \"Bob -Johnston\" finds all the Bobs who are not Johnstons (Bob Smith, Bob Dunn).\
+							</p>\
+							<p>Note: Every word doesn't need a prefix. \"Bob Johnston +Bob Dunn\" also works. And the first word doesn't need a prefix (it is always +)</p>\
+						</div>\
+						<label class=\"itemLabel\">Input Search Terms</label>\
+						<input type=\"search\" class=\"textbox\" autocomplete=\"off\" v-model=\"groupSearchBox\" v-on:keypress=\"groupKeyPress($event)\" v-on:keyup=\"groupKeyUp($event)\" v-on:keypdown=\"groupKeyDown($event)\" v-on:input=\"groupInput($event)\" />\
+						<button v-if=\"groupSearchBox === ''\" v-on:click=\"groupPage++\">Skip <span class=\"icon icon-arrow-right\"></span></button>\
+					</div>\
+					<div v-show=\"groupPage === 3\">\
+						<h2>Select Members</h2>\
+						<label class=\"itemLabel\">Add Members by Selection</label>\
+						<div id=\"selectGroupItems\" class=\"editbox\">\
+							<button v-if=\"activeGroup.length === 0\" v-on:click=\"showSelectGroupMembers\">Select Group Members</button>\
+							<jump-list v-else v-bind:links=\"activeGroup\" scrolldiv=\"selectGroupItems\" select></jump-list>\
+						</div>\
+					</div>\
+					<div v-show=\"groupPage > 1 && activeGroup.length > 0\">\
+						<label class=\"itemLabel\">Group Preview</label>\
+						<div id=\"groupPreview\" class=\"editbox\">\
+							<div v-if=\"activeGroup.length === 0\">Nothing to show</div>\
+							<div class=\"groupMember\" v-for=\"item in activeGroup\" v-if=\"item.selected\">{{ item.text }}&nbsp;<a v-on:click=\"item.selected = false\">&nbsp;&#10005;&nbsp;</a></div>\
+						</div>\
+						<button v-on:click=\"resetGroups\">Cancel</button>\
+						<button v-on:click=\"newGroup\">Create Group</button>\
+					</div>\
+				</div>\
+				<div v-else-if=\"showEditGroupUI\">\
+					<h2>Editing {{ groupName }} group</h2>\
+				</div>\
+				<div v-else>\
+					<h1>Groups</h1>\
+					<ul v-show=\"groups.length > 0\" class=\"links\">\
+						<li v-for=\"(groupName, index) in groups\" class=\"link\" v-on:click=\"seeGroup(index)\">{{ groupName }}</li>\
+					</ul>\
+					<button v-on:click=\"toggle('showNewGroupUI')\">Create a New Group</button>\
+				</div>\
+			</div>\
+		</div>" };
+	const View1 = {
+		methods: {
+			generateListView: generateListView,
+			importFile: importFile
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<h1>Contacts</h1>\
+				<a class=\"button\" v-on:click=\"importFile('Contacts')\">Select a CSV file from your device</a>\
+				<br />\
+				<br />\
+				<a class=\"button\" v-on:click=\"generateListView('Contacts')\">See all contacts</a>\
+			</div>\
+		</div>"
+	};
+	const View2 = {
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<h1>Passwords</h1>\
+			</div>\
+		</div>"
+	};
+	const View3 = {
+		methods: {
+			generateListView: generateListView,
+			importFile: importFile
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<h1>Files</h1>\
+				<a class=\"button\" v-on:click=\"importFile('Files')\">Select a file from your device</a>\
+				<input type=\"file\" class=\"hidden\" id=\"hiddenFileInput\" />\
+				<br />\
+				<br />\
+				<a class=\"button\" v-on:click=\"generateListView('Files')\">See all files</a>\
+			</div>\
+		</div>"
+	};
+	const Details = {
+		data: function () {
+			return {
+				details: state.details,
+				detailsTitleH1: state.detailsTitleH1,
+				detailsSubtitleH2: state.detailsSubtitleH2,
+				addItemToGroupDropdown: state.addItemToGroupDropdown,
+				groups: state.groups,
+				currentDetailsId: state.currentDetailsId,
+				currentDetailsTable: state.currentDetailsTable
+			};
+		},
+		methods: {
+			editDetails: function () {
+				app.navigate("edit");
+			},
+			toggleGroupsDropdown: function (e) {
+				initializeGroups(function () {
+					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
+				});
+			},
+			externalLink: function (item, type, details) {
+				var link;
+				if (type === "phone") link = "tel:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
+				else if (type === "sms") link = "sms:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
+				else if (type === "email") link = "mailto:" + encodeURIComponent(String(item.text));
+				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(item.text));
+				else if (type === "www") link = item.text;
+				if (link) return link;
+				else if (type === "gps" || type === "address" && !/mail/i.test(item.text)) {
+					var a = item.column.replace(/Type/, ""),
+						cols = [a + "Street", a + "City", a + "Region", a + "PostalCode", a + "Country"],
+						googlemaps = "http://maps.google.com/?q=",
+						bing = "http://www.bing.com/maps/?q=",
+						bingmaps = "bingmaps:?q=",
+						applemaps = "http://maps.apple.com/?q=",
+						userAgent = navigator.userAgent,
+						result = [];
+					if (type === "gps") {
+						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+					}
+					else {
+						for (var i = 0, length = details.length; i < length; i++) {
+							var index = cols.indexOf(details[i].column);
+							if (index > -1) result[index] = details[i].text;
+						}
+						link = "";
+						if (result[0]) link += result[0] + " ";
+						if (result[1]) {
+							link += result[1];
+							link += result[2] ? ", " : " ";
+						}
+						if (result[2]) link += result[2] + " ";
+						if (result[3]) link += result[3] + " ";
+						if (result[4]) link += result[4];
+					}
+					if (/\d/.test(link)) {
+						link = encodeURIComponent(trim(link));
+						if (/Windows/.test(userAgent)) {
+							if (/NT|Phone 10/.test(userAgent)) {
+								link = bingmaps + link;
+							}
+							else link = bing + link;
+						}
+						else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
+							link = applemaps + link;
+						}
+						else link = googlemaps + link;
+						return link;
+					}
+					else return false;
+				}
+				else return false;
+			},
+			detailsViewHelp: function () {
+				confirm("Item not found. Would you like to remove this listing?", function () {
+					app.recentlyViewed.splice(1, 1);
+					app.recentlyViewed = sortList(app.recentlyViewed);
+					app.storeState();
+				});
+			},
+			addToNewGroup: addToNewGroup,
+			seeDetails: seeDetails
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\" v-if=\"details[0] && details[0].text\">\
+				<h1>{{ detailsTitleH1 }}</h1>\
+				<h3 v-if=\"detailsSubtitleH2\">{{ detailsSubtitleH2 }}</h3>\
+				<div class=\"dropdown-container\">\
+					<button v-on:click=\"editDetails\" v-bind:title=\"'Edit ' + details[0].text\"><span class=\"icon icon-pencil\"></span>&nbsp;&nbsp;Edit</button>\
+					<button id=\"groupsDropdownButton\" v-on:click=\"toggleGroupsDropdown\" v-bind:title=\"'Add ' + details[0].text + ' to Group'\"><span class=\"icon icon-people\"></span>&nbsp;&nbsp;Add to Group</button>\
+					<ul v-show=\"addItemToGroupDropdown\" class=\"dropdown\">\
+						<li v-for=\"groupName in groups\" v-on:click=\"addToGroup(groupName, details)\" class=\"link\">{{ groupName }}</li>\
+						<li v-on:click=\"addToNewGroup(details)\" class=\"link\">Create new group</li>\
+					</ul>\
+				</div>\
+				<br />\
+				<br />\
+				<template v-for=\"(item, index) in details\" v-if=\"item.text\">\
+					<div class=\"clear hidden\" v-if=\"index === 0 || item.hidden\">\
+					</div>\
+					<div v-else class=\"clear\">\
+						<label class=\"itemLabel\">{{ item.label }}</label>\
+						<div v-if=\"item.type === 'email'\" class=\"itemText\">\
+							<a v-bind:href=\"externalLink(item, 'email')\">\
+								<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;{{ item.text }}\
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+							<a v-bind:href=\"externalLink(item, 'bcc')\">\
+								<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;E-mail&nbsp;BCC\
+							</a>\
+						</div>\
+						<div v-else-if=\"item.type === 'phoneNumber' && /home/i.test(item.label)\" class=\"itemText\">\
+							<a v-bind:href=\"externalLink(item, 'phone')\">\
+								<span class=\"icon icon-phone-alt\">\
+								</span>&nbsp;&nbsp;{{ item.text }}\
+							</a>\
+						</div>\
+						<div v-else-if=\"item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)\" class=\"itemText\">\
+							<a v-bind:href=\"externalLink(item, 'phone')\">\
+								<span class=\"icon icon-phone\"></span>&nbsp;&nbsp;{{ item.text }}\
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+							<a v-bind:href=\"externalLink(item, 'sms')\">\
+								<span class=\"icon icon-comment\"></span>&nbsp;&nbsp;SMS\
+							</a>\
+						</div>\
+						<div v-else-if=\"details[index].label === 'GPS'\" class=\"itemText\">\
+							<a v-bind:href=\"externalLink(item, 'www')\" target=\"_blank\">\
+								<span class=\"icon icon-world\"></span>&nbsp;&nbsp;{{ item.text }}\
+							</a>\
+							<br />\
+							<br />\
+							<a v-bind:href=\"externalLink(item, 'gps')\">\
+								<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;Maps\
+							</a>\
+						</div>\
+						<div v-else-if=\"item.type === 'multilineString'\" class=\"itemText\">\
+							<template v-for=\"line in item.text\">\
+								{{ line }}\
+							</template>\
+						</div>\
+						<div v-else class=\"itemText\">{{ item.text }}</div>\
+					</div>\
+				</template>\
+				<template v-for=\"(item, index) in details\" v-if=\"item.text && /Address1_Type|Address2_Type/.test(item.column) && (details[index + 2].text || details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text)\">\
+					<div class=\"clear\">\
+						<label class=\"itemLabel\" v-if=\"/Address/i.test(item.text)\">{{ item.text }}</label>\
+						<label class=\"itemLabel\" v-else>{{ item.text }} Address</label>\
+						<div class=\"itemText\">\
+							<a v-bind:href=\"externalLink(item, 'address', details)\">\
+								<template v-if=\"details[index + 2] && details[index + 2].text\">\
+									{{ details[index + 2].text }}\
+									<br v-if=\"details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text\" />\
+								</template>\
+								<template v-if=\"details[index + 4] && details[index + 4].text\">\
+									{{ details[index + 4].text }}\
+									<br v-if=\"details[index + 3].text || details[index + 5].text || details[index + 6].text || details[index + 7].text\" />\
+								</template>\
+								<template v-if=\"details[index + 3] && details[index + 3].text\">\
+									<template v-if=\"details[index + 5] && details[index + 5].text\">\
+										{{ details[index + 3].text }}, {{ details[index + 5].text }}\
+										<br v-if=\"details[index + 6].text || details[index + 7].text\" />\
+									</template>\
+									<template v-else>\
+										{{ details[index + 3].text }}\
+										<br v-if=\"details[index + 6].text || details[index + 7].text\" />\
+									</template>\
+								</template>\
+								<template v-if=\"details[index + 6] && details[index + 6].text\">\
+									{{ details[index + 6].text }}\
+									<br v-if=\"details[index + 7].text\" />\
+								</template>\
+								<template v-if=\"details[index + 7] && details[index + 7].text\">\
+									{{ details[index + 7].text }}\
+								</template>\
+							</a>\
+						</div>\
+					</div>\
+				</template>\
+				<div v-if=\"details[25] && details[25].text && details[25].column === 'Notes'\" class=\"clear\">\
+					<label class=\"itemLabel\">Notes</label>\
+					<div class=\"itemText\">\
+						<template v-for=\"line in details[25].text\">\
+							{{ line }}\
+							<br />\
+						</template>\
+					</div>\
+				</div>\
+			</div>\
+			<div class=\"view-container\" v-else>Nothing here<br /><a v-on:click=\"detailsViewHelp\">Help</a></div>\
+		</div>"
+	};
+	const Search = {
+		data: function () {
+			return {
+				currentQuery: state.currentQuery,
+				searchResults: state.searchResults,
+				searchResultsTitle: state.searchResultsTitle,
+				searchResultsError: state.searchResultsError,
+				addSearchToGroupDropdown: state.addSearchToGroupDropdown,
+				groups: state.groups,
+				selectSearchResults: false
+			};
+		},
+		methods: {
+			toggleResultsGroupDropdown: function (e) {
+				initializeGroups(function () {
+					app.addSearchToGroupDropdown = app.addSearchToGroupDropdown ? false : true;
+				});
+			},
+			addToNewGroup: addToNewGroup
+		},
+		template: "<div id=\"searchResultsView\" class=\"view\">\
+			<div class=\"view-container\">\
+				<div v-if=\"searchResults.length > 0\">\
+					<h2>{{ searchResultsTitle }}</h2>\
+					<div align=\"left\">\
+						<div class=\"dropdown-container right\">\
+							<button id=\"searchResultsGroupDropdown\" v-on:click=\"toggleResultsGroupDropdown\" v-bind:title=\"'Add ' + currentQuery + ' to Group'\"><span class=\"icon icon-people\"></span> Add Search to Group</button>\
+							<ul v-show=\"addSearchToGroupDropdown\" class=\"dropdown\">\
+								<li v-for=\"groupName in groups\" v-on:click=\"addToGroup(groupName, null, currentQuery)\" class=\"link\">{{ groupName }}</li>\
+								<li v-on:click=\"addToNewGroup(null, currentQuery)\" class=\"link\">Create new group</li>\
+							</ul>\
+						</div>\
+						<a id=\"hiddenEmailLink\" class=\"hidden\" href=\"\"></a>\
+						<button class=\"right\"><span class=\"icon icon-filter\"></span> Filter</button>\
+						<button class=\"right\"><span class=\"icon icon-sort\"></span> Sort</button>\
+						<button v-show=\"selectSearchResults\"><span class=\"icon icon-favorite-star\"></span> Add Selected to Favorites</button>\
+						<button v-show=\"selectSearchResults\"><span class=\"icon icon-mail\"></span> E-mail Selected</button>\
+					</div>\
+					<jump-list v-bind:links=\"searchResults\" v-bind:select=\"selectSearchResults\" scrolldiv=\"searchResultsView\"></jump-list>\
+				</div>\
+				<h4>{{ searchResultsError }}</h4>\
+			</div>\
+		</div>"
+	};
+	const Edit = {
+		data: function () {
+			return {
+				details: state.details
+			};
+		},
+		methods: {
+			saveChanges: function () {
+				debug("saveChanges not done");
+			},
+			cancelChanges: function () {
+				debug("cancelChanges not done");
+			}
+		},
+		template: "<div class=\"view\">\
+			<div class=\"view-container\">\
+				<h1>Edit</h1>\
+				<div v-for=\"item in details\">\
+					<label class=\"itemLabel\">{{ item.column.replace(/_/g,\" \") }}</label>\
+					<input v-if=\"item.type === 'number'\" type=\"number\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<input v-else-if=\"item.type === 'integer'\" type=\"number\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<input v-else-if=\"item.type === 'posInteger'\" type=\"number\" min=\"0\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<input v-else-if=\"item.type === 'negInteger'\" type=\"number\" max=\"0\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<div v-else-if=\"item.type === 'boolean'\" class=\"switch right\">\
+						<input type=\"checkbox\" v-bind:id=\"'switch_' + item.column\" v-model=\"item.text\" />\
+						<label v-bind:for=\"'switch_' + item.column\" v-on:click=\"toggleItem(item)\"></label>\
+					</div>\
+					<input v-else-if=\"item.type === 'date'\" type=\"date\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<input v-else-if=\"item.type === 'email'\" type=\"email\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<input v-else-if=\"item.type === 'phoneNumber'\" type=\"tel\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<div v-else-if=\"item.type === 'dropdown'\">\
+						<button v-on:click=\"item.showDropdown = true\">{{ item.text }}</button>\
+						<div v-show=\"item.showDropdown\">\
+							<ul v-for=\"option in item.options\">\
+								<li v-on:click=\"setItem(item, option)\">{{ option }}</li>\
+							</ul>\
+						</div>\
+					</div>\
+					<input v-else type=\"text\" v-bind:value=\"item.text\" class=\"textbox\" />\
+					<div class=\"alert\">{{ item.warning }}</div>\
+				</div>\
+				<button v-on:click=\"saveChanges\"><span class=\"icon icon-ok\"></span>&nbsp;&nbsp;Save</button>\
+				<button v-on:click=\"cancelChanges\"><span class=\"icon icon-remove\"></span>&nbsp;&nbsp;Cancel</button>\
+			</div>\
+		</div>"
+	};
+	const Blank = {
+		template: "<div class=\"view\"><div class='hidden'></div></div>"
+	};
+	// 2. Define some routes
+	// Each route should map to a component. The "component" can
+	// either be an actual component constructor created via
+	// `Vue.extend()`, or just a component options object.
+	// We'll talk about nested routes later.
+	const routes = [
+		{
+			path: '/',
+			name: "home",
+			components: {
+				default: Recent,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Home page - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/new',
+			name: "new",
+			components: {
+				default: New,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Create a new table - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/recent',
+			name: "recent",
+			components: {
+				default: Recent,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Recent - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/groups',
+			name: "groups",
+			components: {
+				default: Groups,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Groups - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/view1',
+			name: "view1",
+			components: {
+				default: View1,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Contacts - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/view2',
+			name: "view2",
+			components: {
+				default: View2,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Passwords - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/view3',
+			name: "view3",
+			components: {
+				default: View3,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Files - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/search',
+			name: "search",
+			components: {
+				default: Search,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Search Results - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/edit',
+			name: "edit",
+			components: {
+				default: Edit,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Edit - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/details',
+			name: "details",
+			components: {
+				default: Details,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Details - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/search/details',
+			name: "searchdetails",
+			components: {
+				default: Search,
+				viewRight: Details
+			},
+			meta: {
+				title: 'Search Results - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '/recent/details',
+			name: "recentdetails",
+			components: {
+				default: Recent,
+				viewRight: Details
+			},
+			meta: {
+				title: 'Recent - Nyckel (Beta)'
+			}
+		},
+		{
+			path: '*',
+			name: "notfound",
+			components: {
+				default: Recent,
+				viewRight: Blank
+			},
+			meta: {
+				title: 'Page not found :( - Nyckel (Beta)'
+			}
+		}
+	];
+
+	// 3. Create the router instance and pass the `routes` option
+	// You can pass in additional options here, but let's
+	// keep it simple for now.
+	const router = new VueRouter({
+		routes: routes
+	});
+	const app = new Vue({
+		router: router,
 		el: '#app',
 		data: state,
+		mounted: function() {
+			this.$router.afterEach(this.updateCurrentView);
+			this.$router.beforeEach((to, from, next) => {
+				// This goes through the matched routes from last to first, finding the closest route with a title.
+				// eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
+				const nearestWithTitle = to.matched.slice().reverse().find(r => r.meta && r.meta.title);
+
+				// If a route with a title was found, set the document (page) title to that value.
+				if (nearestWithTitle) document.title = nearestWithTitle.meta.title;
+
+				next();
+			});
+		},
 		methods: {
+			updateCurrentView: function (to = { name: this.$route.name, query: this.$route.query }) {
+				var _this = this,
+					location = to.name;
+				if (location === "home") location = this.startView;
+				if (location === "searchdetails" || location === "recentdetails" || location === "details") {
+					//if (to.query && (to.query.id !== this.currentDetailsId || to.query.table !== this.currentDetailsTable))
+					//	this.seeDetails({ table: to.query.table, id: to.query.id });
+					this.splitView = true;
+				}
+				else {
+					this.viewTransitionDone = false;
+					this.viewTransition = true;
+					this.splitView = false;
+					this.currentView = this.views[location] || this.views[startView];
+					setNavLinkIndicatorPosition(location);
+					if (location === "groups") initializeGroups();
+				}
+				if (to.query && to.query.i !== undefined) {
+					if (parseInt(to.query.i) !== backIndex) backIndex = parseInt(to.query.i);
+					else backIndex++;
+				} else backIndex = 0;
+				location = location || backstack[backIndex];
+				backstack[backIndex - 1] = location;
+
+				if (to.query && to.query.search && to.query.search !== this.currentQuery) {
+					debug(to.query.search, "nav");
+					this.search(null, to.query.search);
+				}
+				//show hide back arrow
+				if (Windows && WinJS) {
+					var currentview = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
+					currentview.appViewBackButtonVisibility = backIndex < 1;
+				}
+				else this.backArrow = backIndex > 0;
+				setTimeout(function () {
+					_this.viewTransition = false;
+					setTimeout(function () {
+						_this.viewTransitionDone = true;
+					}, 210);
+				}, 210);
+			},
 			goBack: function () {
 				if (this.showSearchBar) {
 					this.cancelSearch();
@@ -1135,12 +2420,13 @@
 					return true;
 				}
 				else {
-					if (backIndex > 1) {
+					if (backIndex > 0) {
 						backIndex = backIndex - 2;
-						this.navigate(backstack[backIndex]);
+						this.$router.go(-1);						
 						return true;
 					}
 					else {
+						this.$router.push('/');
 						if (cordova || Windows && WinJS) {//suspend app
 							this.storeState();
 						}
@@ -1148,52 +2434,35 @@
 					}
 				}
 			},
-			navigate: function (location) {
-				console.log(location);
-				if (location || backstack.length > backIndex) {
-					var _this = this;
-					if (location === "viewDetails") {
-						this.splitView = true;
+			/*options = {
+				urlQuery
+				search
+				table
+				id
+			}*/
+			navigate: function (location, searchquery, detailsObj) {
+				var query = { i: backIndex + 1 };
+				if (searchquery) {
+					query.search = encodeURIComponent(searchquery);
+					if ("#/" + location + "?i=" + backIndex + "&search=" + query.search === window.location.hash) return;//dont navigate if no change
+				}
+				else if (detailsObj) {
+					query.id = detailsObj.id;
+					query.table = detailsObj.table;
+					if ("#/" + this.currentView.path + "/" + location + "?i=" + backIndex + "&id=" + query.id + "&table=" + query.table === window.location.hash) return;//dont navigate if no change
+				}
+				else if ("#/" + location + "?i=" + backIndex === window.location.hash) return; //dont navigate if no change				
+				if (location === "details") {
+					if (this.$route.path === this.currentView.path + "/details") {
+						this.$router.replace({ query: query });
 					}
-					else {
-						//get index of location
-						setNavLinkIndicatorPosition(location);
-						this.viewTransitionDone = false;
-						this.viewTransition = true;
-						this.splitView = false;
-						this.currentView = viewNames[this.views.indexOf(location)];
-					}
-					setTimeout(function () {
-						//show hide back arrow
-						if (Windows && WinJS) {
-							var currentview = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
-							currentview.appViewBackButtonVisibility = backIndex < 1;
-						}
-						else _this.backArrow = backIndex > 0;
-						backIndex++;
-						location = location || backstack[backIndex];
-						backstack[backIndex - 1] = location;
-						//don't save backstack if navigation did not occur
-						if (backstack[backIndex - 1] === backstack[backIndex - 2]) backIndex--;
-						//iterate through all views and turn them on or off
-						for (var a = 0, len = _this.views.length; a < len; a++) {
-							_this[_this.views[a]] = location === _this.views[a];
-						}
-						var b = backIndex - 1;
-						if (_this.splitView) {
-							while (b > -1) {
-								if (backstack[b] === "viewRecent" || backstack[b] === "viewSearch") {
-									_this[backstack[b]] = true;
-									break;
-								}
-								b--;
-							}
-						}
-						_this.viewTransition = false;
-						setTimeout(function () {
-							_this.viewTransitionDone = true;
-						}, 210);
-					}, 210);
+					else this.$router.push({ path: this.currentView.path + "/details",  query: query });
+				}
+				else if (location) this.$router.push({ path: "/" + location, query: query });
+				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex], query: query });
+				else {
+					// get location from url hash
+					this.$router.push({ path: this.$route.path, query: this.$route.query });
 				}
 			},
 			toggle: function (prop) {
@@ -1239,25 +2508,36 @@
 						debug(navigator.userAgent, "navigator.userAgent");
 					}
 					else if (this.searchBox === "nukeapp") {
-						this.confirm("Are you sure you want to reset the app?", function () {
+						confirm("Are you sure you want to reset the app?", function () {
+							document.getElementById("loading").className = "";
 							APP.Sto.nuke();
-							_this.recentlyViewed = [];
 							_this.logout(function () {
 								if (cordova || Windows && WinJS) {
 									wwManager({ "cmd": "stop" }, function () {
-										appData = {};
-										backstack = [];
-										backIndex = 0;
-										_this.navigate(views[startView]);
-										_this.darkTheme = false;
-										state.stoKey = "unknown";
-										init();
-										loadDB = true;
-										checkDBLoaded();
+										setTimeout(function () {
+											webWorker = new Worker("scripts/webworker.js");
+											webWorker.addEventListener('message', wwReadMessage, false);
+											webWorker.addEventListener('error', wwOnError, false);
+											appData = {};
+											backstack = [];
+											backIndex = 0;
+											state = freshStateObj();
+											_this.storeState();
+											for (let s in state) {
+												if (_this[s]) _this[s] = state[s];
+											}
+											setTimeout(function () {
+												startApp();
+												loadDB = true;
+												loadDBQueue = [];
+												loadDBQueueIndex = 0;
+												loadingDB = false;
+												checkDBLoaded();
+											}, 1000);
+										}, 1000);
 									});
 								}
 								else if (window.location && window.location.reload) {
-									document.getElementById("loading").className = "";
 									setTimeout(function () {
 										window.location.reload(true);
 									}, 2000);
@@ -1284,10 +2564,16 @@
 												else _this.searchResultsError = 'No data found';
 											});
 										}
-										_this.navigate("viewSearch");
+										_this.navigate("search", _this.currentQuery);
 										_this.spin(false);
-										if (_this.searchResults.length === 1 && _this.searchResults[0].type === "link") _this.seeDetails(_this.searchResults[0]);
-										else if (_this.searchResults.length === 2 && _this.searchResults[0].type === "jumplink") _this.seeDetails(_this.searchResults[1]);
+										if (_this.searchResults.length === 1 && _this.searchResults[0].type === "link") {
+											debug(_this.searchResults[0], "search resutls direct link");
+											_this.seeDetails(_this.searchResults[0]);
+										}
+										else if (_this.searchResults.length === 2 && _this.searchResults[0].type === "jumplink") {
+											debug(_this.searchResults[0], "search resutls direct link");
+											_this.seeDetails(_this.searchResults[1]);
+										}
 										if (callback instanceof Function) return callback();
 									}
 								});
@@ -1477,13 +2763,6 @@
 					setTimeout(clearMsg, timer);
 				}
 			},
-			confirm: function (msg, callback, options) {
-				this.confirmMsg = msg || "Are you sure?";
-				this.confirmOK = options && options.ok ? options.ok : "OK";
-				this.confirmCancel = options && options.cancel ? options.cancel : "Cancel";
-				this.showConfirm = true;
-				this.confirmFunction = callback;
-			},
 			processConfirm: function (bool) {
 				this.showConfirm = false;
 				this.showUpdateKey = false;
@@ -1505,7 +2784,6 @@
 				this.storeState();
 			},
 			login: function (callback) {
-
 				function login() {
 					function welcome(user) {
 						_this.notify("Successfully linked to " + APP.User.alias + "'s Dropbox account", true);
@@ -1579,7 +2857,7 @@
 				}
 				this.showUpdateKey = true;
 				var _this = this;
-				this.confirm("Please input your current password", function () {
+				confirm("Please input your current password", function () {
 					checkDBLoaded(function (callback) {
 						var key = document.getElementById("updateStoKeyInput");
 						if (APP.User && APP.User.dbid) {
@@ -1717,78 +2995,6 @@
 					if (callback instanceof Function) return callback();
 				});
 			},
-			importFile: function (toTable) {
-				function done(success, errors, title, syncPending) {
-					if (success && !errors) {
-						if (syncPending) {//TODO
-							_this.notify("Data imported successfully", true);
-						}
-						else _this.notify("Data imported and synchronized successfully", true);
-					}
-					else if (errors) {
-						defaultErrorHandler(success, errors, title, syncPending);
-					}
-					else _this.notify("Done", true);
-				}
-				var _this = this;
-				if(toTable === "Files") this.loadFile('hiddenFileInput', null, function (data) {
-					wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
-				});
-				else if (toTable === "Contacts") this.loadFile('hiddenCSVInput', 'csv', function (data) {
-					wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, _this.stoKey, null] }, done);
-				});
-			},
-			importNewTable: function () {
-				function matches(subsetArr, ofArr) {
-					var matches = true;
-					for (let a = 0, len = subsetArr.length; a< len; a++) {
-						if (ofArr.indexOf(subsetArr[a]) === -1) matches = false;
-					}
-					return matches;
-				}
-				function createTempTable(JSON, template) {		
-					template.options.importJSON = JSON;
-					_this.notify("Building new table");
-					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] }, function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
-						if (errors) defaultErrorHandler(success, errors, title, requiresSync);
-						else _this.notify("Done", true);
-					});
-				}
-				var _this = this;
-				this.loadFile('hiddenCSVInput', 'csv', function (data) {
-					if (matches(data.Headers, _this.newTable.headers)) {
-						createTempTable(data, _this.newTable);
-					}
-					else {
-						_this.notify("CSV Headers don't match");
-						for (var template in dataTemplates) {
-							var tryHeaders = dataTemplates[template].headers;
-							if (dataTemplates[template].headers[0] === "id") {
-								tryHeaders = dataTemplates[template].headers.join("||").split("||");
-								tryHeaders.shift();
-							}
-							if (matches(data.Headers, tryHeaders)) {
-								(function (template) {
-									_this.confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
-										_this.template(template);
-										_this.notify("");
-										createTempTable(data, dataTemplates[template]);
-									});
-								})(template);
-							}
-						}
-					}
-				});
-			},
-			editDetails: function () {
-				this.navigate("viewEdit");
-			},
-			saveChanges: function () {
-				debug("saveChanges not done");
-			},
-			cancelChanges: function () {
-				debug("cancelChanges not done");
-			},
 			/*options = {
 				see NyckelDBObj.prototype.sync options
 
@@ -1846,7 +3052,7 @@
 						else {
 							debug(error, "couldn't sync " + title);
 							_this.spin(false);
-							app.notify("Sync did not complete successfully");
+							_this.notify("Sync did not complete successfully");
 						}
 					}
 					syncfile = syncfile || {};
@@ -1880,7 +3086,7 @@
 								else {
 									_this.spin(false);
 									debug(errors, "problem syncing " + title);
-									app.notify("Sync did not complete successfully");
+									_this.notify("Sync did not complete successfully");
 								}
 							});
 						}
@@ -1888,7 +3094,7 @@
 				}
 				function saveSyncfile(syncfile) {
 					function failed() {
-						app.notify("Sync did not complete successfully");
+						_this.notify("Sync did not complete successfully");
 						_this.spin(false);
 					}
 					function success() {
@@ -1912,7 +3118,7 @@
 						_this.spin(false);
 					}
 					else {
-						app.notify("Unhandled sync error: " + error);
+						_this.notify("Unhandled sync error: " + error);
 						_this.spin(false);
 					}
 				}
@@ -1951,479 +3157,14 @@
 						if (callback instanceof Function) return callback();
 					}
 				});
-			},
-			generateListView: function (tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected) {
-				var _this = this;
-				checkDBLoaded(function (callback) {
-					pageNumber = pageNumber || 1;
-					numberPerPage = numberPerPage || 100;
-					tableTitle = VAL.toPropName(tableTitle);
-					if (dataTemplates[tableTitle]) {
-						_this.searchResults = [];
-						generateList(tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected, function (list) {
-							_this.searchResults = list;
-							wwManager({ "cmd": "getTitle", "title": tableTitle }, function (title) { _this.searchResultsTitle = title; });
-							_this.searchResultsError = list.length === 0 ? "Nothing to display" : "";
-							_this.navigate("viewSearch");
-							if (callback instanceof Function) return callback();
-						});
-					}
-					else debug(tableTitle, "error generating list view");
-				});
-			},
-			externalLink: function (item, type, details) {
-				var link;
-				if (type === "phone") link = "tel:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
-				else if (type === "sms") link = "sms:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
-				else if (type === "email") link = "mailto:" + encodeURIComponent(String(item.text));
-				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(item.text));
-				else if (type === "www") link = item.text;
-				if (link) return link;
-				else if (type === "gps" || type === "address" && !/mail/i.test(item.text)) {
-					var a = item.column.replace(/Type/, ""),
-						cols = [a + "Street", a + "City", a + "Region", a + "PostalCode", a + "Country"],
-						googlemaps = "http://maps.google.com/?q=",
-						bing = "http://www.bing.com/maps/?q=",
-						bingmaps = "bingmaps:?q=",
-						applemaps = "http://maps.apple.com/?q=",
-						userAgent = navigator.userAgent,
-						result = [];
-					if (type === "gps") {
-						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g,",").replace(/%2B|\+/g,"");
-					}
-					else {
-						for (var i = 0, length = details.length; i < length; i++) {
-							var index = cols.indexOf(details[i].column);
-							if (index > -1) result[index] = details[i].text;
-						}
-						link = "";
-						if (result[0]) link += result[0] + " ";
-						if (result[1]) {
-							link += result[1];
-							link += result[2] ? ", " : " ";
-						}
-						if (result[2]) link += result[2] + " ";
-						if (result[3]) link += result[3] + " ";
-						if (result[4]) link += result[4];
-					}
-					if (/\d/.test(link)) {
-						link = encodeURIComponent(trim(link));
-						if (/Windows/.test(userAgent)) {
-							if (/NT|Phone 10/.test(userAgent)) {
-								link = bingmaps + link;
-							}
-							else link = bing + link;
-						}
-						else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
-							link = applemaps + link;
-						}
-						else link = googlemaps + link;
-						return link;
-					}
-					else return false;
-				}
-				else return false;
-			},
-			initializeGroups: function (callback) {
-				if (this.groups.length === 0) {
-					var _this = this;
-					wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
-						var ids = [];
-						for (var a = 0; a < length; a++) ids[a] = a;
-						wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
-							for (var a = 0, len = vals.length; a < len; a++) {
-								_this.groups[a] = vals[a][1];
-							}
-							if (callback instanceof Function) return callback();
-						});
-					});
-				}
-				else if (callback instanceof Function) return callback();
-			},
-			newGroup: function (event, groupName, callback) {
-				//Validate groupName
-				groupName = groupName || this.groupName;
-				groupName = VAL.toEnglishAlphabet(groupName);
-				groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
-				groupName = trim(groupName);
-				if (groupName && groupName !== "") {
-					groupName = groupName.split(" ");
-					for (let b = 0, lenB = groupName.length; b < lenB; b++) {
-						groupName[b] = groupName[b][0].toUpperCase() + groupName[b].slice(1);
-					}
-					groupName = groupName.join(" ");
-					var i = 2,
-						existingNames = [],
-						_this = this,
-						title,
-						ids = {};
-					//get group ids
-					for (let c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
-						if (this.activeGroup[c].selected === true) {
-							title = VAL.toPropName(this.activeGroup[c].table);
-							if (!ids[title]) ids[title] = [];
-							ids[title].push(this.activeGroup[c].id);
-						}
-					}
-					this.initializeGroups(function () {
-						//check for duplicate groupNames
-						if (_this.groups.indexOf(groupName) > -1) {
-							while (_this.groups.indexOf(groupName + " " + i) > -1) i++;
-							groupName = groupName + " " + i;
-						}
-						//Save new group
-						wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
-							_this.updateGroup(groupName, ids, _this.groupSearchBox);
-							_this.groups.push(groupName);
-							_this.activeGroup = [];
-							_this.showNewGroupUI = false;
-							_this.groupSearchBox = "";
-							_this.groupName = "";
-						});
-					});
-				}
-				else this.notify("Group requires a name");
-			},
-			updateGroup: function (groupName, ids, searchTerms) {
-				var _this = this;
-				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-					if (searchTerms) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
-				});
-			},
-			deleteGroup: function (groupName) {
-				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] });
-				});
-				this.groups.splice(this.groups.indexOf(groupName), 1);
-			},
-			groupKeyPress: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
-					e.preventDefault();
-				} else {
-					var key = e.char || e.key;
-					if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) this.groupSearchBox = trim(this.groupSearchBox + key);
-				}
-			},
-			groupInput: function (e) {	
-				var value = e ? e.target.value : this.groupSearchBox,
-					_this = this,
-					n = 0,
-					numOfTables = 0;
-				checkDBLoaded(function (callback) {
-					if (value !== "") {
-						var find = String(value);
-						find = VAL.removeHTMLTags(find);
-						find = find.toLowerCase();
-						find = VAL.toEnglishAlphabet(find);
-						find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
-						find = trim(find);
-						_this.activeGroup = [];
-						document.getElementById("app").focus();
-						for (let t in dataTemplates) {
-							numOfTables++;
-						}
-						for (let table in dataTemplates) {
-							if (dataTemplates.hasOwnProperty(table)) {
-								(function (table) {
-									wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
-										if (!errors && searchResults && searchResults.length > 0) {
-											generateList(table, searchResults, null, null, null, true, function (list) {
-												_this.activeGroup = _this.activeGroup.concat(list);
-												n++;
-												if (n === numOfTables && callback instanceof Function) return callback();
-											});
-										}
-									});
-								})(table);
-							}
-						}
-					}
-				});
-			},
-			groupKeyUp: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 32) e.preventDefault();
-				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) this.groupSearchBox = trim(this.groupSearchBox);
-				switch (keyCode) {
-					case 27:/*escape key*/
-						this.resetGroupSearch();
-						break;
-				}
-			},
-			groupKeyDown: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 9 || keyCode === 13 || keyCode === 32 || keyCode === 38 || keyCode === 27 || keyCode === 40) {
-					e.preventDefault();
-				}
-				if (keyCode === 32) {
-					if (this.groupSearchBox !== "" && this.groupSearchBox.slice(-1) !== " ") {
-						this.groupSearchBox = this.groupSearchBox + " ";
-					}
-				}
-			},
-			resetGroupSearch: function () {
-				this.groupSearchBox = "";
-			},
-			seeGroup: function (index) {
-				function add(group) {
-					if (group[0][2] !== "" && group[0][2] !== "[]") {
-						var ids = JSON.parse(group[0][2]),
-							lenIds = 0,
-							b = 0;
-						for (let a in ids) {
-							lenIds++;
-						}
-						for (let table in ids) {
-							if (ids.hasOwnProperty(table)) {
-								(function (table) {
-									generateListItems(table, ids[table], null, null, function (arr) {
-										list = list.concat(arr);
-										b++;
-										if (b === lenIds) {
-											remove(group);
-										}
-									});
-								})(table);
-							}
-						}
-					}
-					else remove(group);
-				}
-				function remove(group) {
-					if (group[0][4] && group[0][4] !== "" && group[0][4] !== "[]") {
-						var removeIds = JSON.parse(group[0][4]);
-						for (let table in removeIds) {
-							for (let a = 0, lenA = list.length; a < lenA; a++) {
-								if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
-									list[a].splice(a, 1);
-									a--;
-									lenA--;
-								}
-							}
-						}
-					}
-					_this.searchResults = sortList(list);
-					_this.searchResultsTitle = group[0][1];
-					_this.searchResultsError = "";
-					_this.navigate("viewSearch");
-				}
-				var _this = this,
-					list = [];
-				wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
-					if (group[0][3] !== "") {
-						var lenTables = 0,
-							n = 0;
-						for (let a in dataTemplates) {
-							lenTables++;
-						}
-						for (let table in dataTemplates) {
-							if (dataTemplates.hasOwnProperty(table)) {
-								(function (table) {
-									wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title, sync) {
-										if (!err) {
-											if(results) generateListItems(table, results, null, null, function (arr) {
-												list = list.concat(arr);
-												n++;
-												if (n === lenTables) add(group);
-											});
-											else {
-												n++;
-												if (n === lenTables) add(group);
-											}
-										}
-										else debug(err, title + " seeGroup error");
-									});
-								})(table);
-							}
-						}
-					}
-					else add(group);
-				});
-			},
-			addToGroup: function (groupName, detailsObj, searchQuery) {
-				this.addItemToGroupDropdown = false;
-				this.addSearchToGroupDropdown = false;
-				var _this = this;
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if(detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
-						ids = JSON.parse(ids);
-						if (ids instanceof Array) {//convert old array data to object
-							var obj = {};
-							for (let a = 0, len = ids.length; a < len; a++) {
-								if (!obj[ids[a].table]) obj[ids[a].table] = [];
-								obj[ids[a].table].push(ids[a].id);
-							}
-							ids = obj;
-						}
-						for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
-							if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
-							if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
-								ids[detailsObj[b].table].push(detailsObj[b].id);
-							}
-						}
-						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-						_this.notify("Added 1 item to " + groupName, true);
-					});
-					if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
-						query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
-						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
-						_this.notify("Added '" + searchQuery + "' to " + groupName, true);
-					});
-				});
-			},
-			addToNewGroup: function (detailsObj, searchQuery) {
-				this.addItemToGroupDropdown = false;
-				this.addSearchToGroupDropdown = false;
-				var _this = this;
-				if(detailsObj) generateListItems(detailsObj[0].table, detailsObj[0].id, null, true, function (list) {
-					list[0].selected = true;
-					_this.activeGroup = list;
-				});
-				if (searchQuery) {
-					this.groupSearchBox = searchQuery;
-					this.groupInput();
-				}
-				this.navigate(this.views[this.viewNames.indexOf("Groups")]);
-				this.showNewGroupUI = true;
-			},
-			toggleGroupsDropdown: function (e) {
-				var _this = this;
-				this.initializeGroups(function () {
-					_this.addItemToGroupDropdown = _this.addItemToGroupDropdown ? false : true;
-				});
-			},
-			toggleResultsGroupDropdown: function (e) {
-				var _this = this;
-				this.initializeGroups(function () {
-					_this.addSearchToGroupDropdown = _this.addSearchToGroupDropdown ? false : true;
-				});
-			},
-			showSelectGroupMembers: function () {
-				var _this = this;
-				for (let table in dataTemplates) {
-					generateList(table, null, null, null, null, false, function (list) {
-						_this.activeGroup = _this.activeGroup.concat(list);
-					});
-				}
-			},
-			resetGroups: function () {
-				this.groupPage = 1;
-				this.resetGroupSearch();
-				this.groupName = "";
-				this.activeGroup = [];
-				if (this.groups.length === 0) this.goBack();
-				else this.toggle('showNewGroupUI');
-			},
-			template: function (templateName) {
-				if (dataTemplates[templateName]) {
-					this.newTable.title = templateName;
-					this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
-					if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
-					this.newTable.types = dataTemplates[templateName].types;
-					this.newTable.options = dataTemplates[templateName].options;
-					this.newTable.display = dataTemplates[templateName].display;
-					this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
-					this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
-					this.newTable.display.detailsView.viewable = dataTemplates[templateName].display.detailsView.viewable || [];
-					this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
-					this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
-					this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
-				}
-				else {
-					this.newTable.title = "";
-					this.newTable.headers = ["", "", ""];
-					this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
-					this.newTable.options = {
-						customProperties: {},
-						doNotIndex: [],
-						initialIndex: [],
-						searchable: []
-					};
-					this.newTable.display = {
-						searchResultsText: [],
-						searchResultsJoiner: " ",
-						sortBy: "",
-						detailsView: {
-							labelCol: [],
-							viewable: []
-						},
-						editView: {
-							acceptedValues: [],
-							editable: [],
-							protect: []
-						}
-					};					
-				}
-				for (let a = 0, len = this.newTable.types.length; a < len; a++) {
-					this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
-					this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
-					this.newTable.display.detailsView.viewable[a] = this.newTable.display.detailsView.viewable[a] !== undefined ? this.newTable.display.detailsView.viewable[a] : this.newTable.viewableDefault;
-					this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
-					this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
-					this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
-				}
-			},
-			toggleDropdown: function (rowName, colIndex) {
-				if (this.newTable[rowName] !== undefined) {
-					this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
-				}
-				else debug(rowName, "no such row in table");
-			},
-			sortbyColumn: function (index) {
-
-			},
-			deleteColumn: function (index) {
-				this.newTable.headers.splice(index, 1);
-				this.newTable.types.splice(index, 1);
-				this.newTable.display.editView.protect.splice(index, 1);
-				this.newTable.display.editView.acceptedValues.splice(index, 1);
-				this.newTable.display.detailsView.viewable.splice(index, 1);
-				this.newTable.display.editView.editable.splice(index, 1);
-				this.newTable.options.searchable.splice(index, 1);
-				this.newTable.display.detailsView.labelCol.splice(index, 1);
-				this.newTable.optionsDropdown = -1;
-			},
-			insertColumn: function (index) {
-				if (!index) {
-					this.newTable.headers.push("");
-					this.newTable.types.push(this.newTable.typesDefault);
-					this.newTable.display.editView.protect.push(this.newTable.protectDefault);
-					this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
-					this.newTable.display.detailsView.viewable.push(this.newTable.viewableDefault);
-					this.newTable.display.editView.editable.push(this.newTable.editableDefault);
-					this.newTable.options.searchable.push(this.newTable.searchableDefault);
-					this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
-				}
-				else {
-					this.newTable.headers.splice(index, 0, "");
-					this.newTable.types.splice(index, 0, this.newTable.typesDefault);
-					this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
-					this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
-					this.newTable.display.detailsView.viewable.splice(index, 0, this.newTable.viewableDefault);
-					this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
-					this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
-					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
-				}
-				this.newTable.optionsDropdown = -1;
-			},
-			detailsViewHelp: function () {
-				app.confirm("Item not found. Would you like to remove this listing?", function () {
-					app.recentlyViewed.splice(1, 1);
-					app.recentlyViewed = sortList(app.recentlyViewed);
-					app.storeState();
-				});
 			}
 		}
 	});
 	//make some functions global
 	APP.goBack = app.goBack;
 	APP.notify = app.notify;
-	APP.confirm = app.confirm;
-	APP.WorkingOffline = WorkingOffline;
+	APP.confirm = confirm;
+	APP.localTestingMode = localTestingMode;
 
 	window.onresize = layout;//recalc layout on resize for a responsive experience
 
@@ -2456,7 +3197,7 @@
 					// TODO: This application had been suspended and was then terminated to reclaim memory.
 					// To create a smooth user experience, restore application state here so that it looks like the app never stopped running.
 					// Note: You may want to record the time when the app was last suspended and only restore state if they've returned after a short period.
-					init(true);
+					startApp(true);
 				}
 			}
 			if (!args.detail.prelaunchActivated) {
@@ -2471,7 +3212,7 @@
 				return APP.goBack();
 			};
 			if (isFirstActivation) {
-				init();//and... GO!
+				startApp();//and... GO!
 				document.addEventListener("visibilitychange", onVisibilityChanged);
 				uiSettings.addEventListener("colorvalueschanged", matchWindowsTheme);
 				args.setPromise(WinJS.UI.processAll());
@@ -2495,21 +3236,21 @@
 			}
 			function onResume() {
 				// This application has been reactivated. Restore application state here.
-				init(true);
+				startApp(true);
 			}
 			function onBack() {
-				if (!app.goBack() && navigator && navigator.app && navigator.app.exitApp) navigator.app.exitApp();
+				if (!APP.goBack() && navigator && navigator.app && navigator.app.exitApp) navigator.app.exitApp();
 			}
 			// Handle the Cordova pause and resume events
 			document.addEventListener('pause', onPause.bind(this), false);
 			document.addEventListener('resume', onResume.bind(this), false);
 			document.addEventListener('backbutton', onBack.bind(this), false);
 			// TODO: Cordova has been loaded. Perform any initialization that requires Cordova here.
-			init();//and... GO!
+			startApp();//and... GO!
 		};
 		document.addEventListener('deviceready', onDeviceReady.bind(this), false);
 	}
 	else {
-		init();//and... GO!
+		startApp();//and... GO!
 	}
 })();

@@ -5,8 +5,7 @@ var APP = APP || {}, Base64;
 		Version = 1.1,
 		PreviousVersion = 1,
 		WorkingOffline = function () {
-			var loc = window.location;
-			if (loc && (/^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://")) return true;
+			if (window.navigator.onLine === false || APP.localTestingMode) return true;
 			else return false;
 		}(),
 		LocalStorageObj = function (tryLawnchairAdaptors) {
@@ -88,7 +87,17 @@ var APP = APP || {}, Base64;
 			LocalStorageObj.prototype.nuke = function () {
 				function getAllKeys() { this.keys(deleteEachKey); }
 				function deleteEachKey(keys) { keys.forEach(_this.deleteItem); }
-				Lawnchair(getAllKeys);
+				if (Windows) {
+					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+					storageFolder.getFilesAsync().done(function (files) {
+						if(files.length > 0) for (var a = 0, len = files.length; a < len; a++) {
+							_this.deleteItem(files[a].name);
+						}
+					}, function (error) {
+						console.log(error);
+					});
+				}
+				else { Lawnchair(getAllKeys); }
 				LOCAL = {};
 			};
 			LocalStorageObj.prototype.deleteItem = function (refName) {
@@ -96,8 +105,7 @@ var APP = APP || {}, Base64;
 				if (Windows) {
 					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
 					storageFolder.getFileAsync(refName).done(function (file) {
-						console.log(file);
-						file.deleteAsync();
+						file.deleteAsync(Windows.Storage.StorageDeleteOption.default);
 					}, function (error) {
 						console.log(error);
 					});

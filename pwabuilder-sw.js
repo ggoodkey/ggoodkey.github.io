@@ -71,6 +71,7 @@ var precacheFiles = [
 	"scripts/nyckelDB.min.js",
 	"scripts/validate.min.js",
 	"scripts/vue.min.js",
+	"scripts/vue-router.min.js",
 	"scripts/webworker.js",
 	"scripts/adapters/memory.js",
 	"scripts/adapters/indexed-db.js",
