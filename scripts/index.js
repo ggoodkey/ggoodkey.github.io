@@ -2368,7 +2368,8 @@
 			});
 		},
 		methods: {
-			updateCurrentView: function (to = { name: this.$route.name, query: this.$route.query }) {
+			updateCurrentView: function (to) {
+				to = to || { name: this.$route.name, query: this.$route.query };
 				var _this = this,
 					location = to.name;
 				if (location === "home") location = this.startView;
