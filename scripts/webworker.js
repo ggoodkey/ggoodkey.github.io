@@ -143,6 +143,7 @@ self.addEventListener('message', function (e) {
 			case "NUKEALL":
 			case "isSyncPending":
 			case "setSyncCompleted":
+			case "getRow":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else {
 					appData[data.title][data.cmd](data.args[0], function (success, errors, title, syncPending) {

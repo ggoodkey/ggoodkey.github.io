@@ -55,11 +55,6 @@
 </head>
 <body>
 	<div id="loading"></div>
-	<div id="debug">
-		<button id="hideDebug" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		<h4>Click to move</h4>
-		<div id="debugMsg"></div>
-	</div>
 	<div id="app" v-bind:class="{'sidenav_open': showSideNav, 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme, changeViewTransition: viewTransition, changeViewDone: viewTransitionDone }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>

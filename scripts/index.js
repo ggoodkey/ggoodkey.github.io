@@ -356,6 +356,7 @@
 					else if (obj.cmd === "forEachCol" || obj.cmd === "forEachRow") appData[title][obj.cmd](callback, finalCallback);
 					else if (callback) {
 						switch (obj.cmd) {
+							//these functions take a callback as their last argument
 							case "deleteTable":
 							case "setTitle":
 							case "NUKEALL":
@@ -364,6 +365,7 @@
 							case "importJSON":
 							case "search":
 							case "getVals":
+							case "getRow":
 							case "getSearchSuggestions":
 								return appData[title][obj.cmd].apply(appData[title], obj.args);
 							default:
@@ -522,17 +524,11 @@
 						doneInit();
 					}
 				}, doneInit);
-			}
+			}			
 			getLocal();
 			matchWindowsTheme();
 			layout();
 			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-			if (typeof Worker !== "undefined" && !localTestingMode && typeof webWorker === "undefined") {
-				webWorker = new Worker("scripts/webworker.js");
-				webWorker.addEventListener('message', wwReadMessage, false);
-				webWorker.addEventListener('error', wwOnError, false);
-			}
-
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
@@ -727,88 +723,70 @@
 		},
 		//application functions
 		seeDetails = function (obj) {
-			function getText(a, title, id, col) {
-				function applyVal(val) {
-					if (app.details[a]) {
-						app.details[a].text = val;
-						app.details[a].label = app.details[a].column;
-						if (dataTemplates[app.details[a].table].display.detailsView.labelCol[a] !== false) {
-							wwManager({ "cmd": "getVal", "title": title, "args": [id, dataTemplates[obj.table].display.detailsView.labelCol[a]] }, function (label) {
-								app.details[a].label = label;
-							});
-						}
-						if (app.details[a].type === 'multilineString' && val && val !== "") {
-							app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
-						}
-					}
-				}
-				wwManager({ "cmd": "getVal", "title": title, "args": [id, col] }, applyVal);
-			}
-			function getType(a, title, col) {
-				wwManager({ "cmd": "getType", "title": title, "args": [col] }, function (type) {
-					if (app.details[a]) app.details[a].type = type;
-				});
-			}
-			function getVal(col, a, len) {
-				app.details[a] = { table: obj.table, id: obj.id, column: col, warning: "", hidden: !dataTemplates[obj.table].display.detailsView.viewable[a] };
-				getType(a, obj.table, col);
-				getText(a, obj.table, obj.id, col);
-			}
-			var a = 0;
-			checkDBLoaded(function (callback) {
+			checkDBLoaded(function () {
 				app.spin(true, "Loading contact data...");
 				app.details = [];
-				var recentlyViewed = false;
+				var recentlyViewed = false,
+					recent = JSON.parse(JSON.stringify(app.recentlyViewed));
 				//find and remove this item from recentlyViewed
-				for (var b = 0; b < app.recentlyViewed.length; b++) {
-					if (app.recentlyViewed[b].id === obj.id && app.recentlyViewed[b].table === obj.table) {
-						app.recentlyViewed[b].sortBy = new Date().getTime();
+				for (var b = 0; b < recent.length; b++) {
+					if (recent[b].id === obj.id && recent[b].table === obj.table) {
+						recent[b].sortBy = new Date().getTime();
 						recentlyViewed = true;
 					}
 				}
 				if (!recentlyViewed) {
 					obj.sortBy = new Date().getTime();
-					app.recentlyViewed.unshift(obj);
-					app.recentlyViewed = app.recentlyViewed.slice(0, 20);
+					recent.unshift(obj);
+					recent = recent.slice(0, 20);
 				}
 				//add this item to top of list
-				app.recentlyViewed = sortList(app.recentlyViewed);
+				app.recentlyViewed = sortList(recent);
 				app.storeState();
-				//set details title and subtitle
-				if (dataTemplates[obj.table].display.detailsView.titleH1) {
-					var title = dataTemplates[obj.table].display.detailsView.titleH1;
-					title = title.concat(dataTemplates[obj.table].display.detailsView.subtitleH2);
-					wwManager({ "cmd": "getVals", "title": obj.table, "args": [[obj.id], title] }, function (vals, errors) {
-						if (vals && !errors && vals.length > 0) {
-							vals[0].shift();
-							var h1 = [], h2 = [];
-							for (let a = 0, len = dataTemplates[obj.table].display.detailsView.titleH1.length; a < len; a++) {
-								if (vals[0][0] !== "") h1 = h1.concat(vals[0].shift());
-								else vals[0].shift();
-							}
-							app.detailsTitleH1 = h1.join(dataTemplates[obj.table].display.detailsView.titleH1Joiner || "");
-							if (dataTemplates[obj.table].display.detailsView.subtitleH2) {
-								for (let a = 0, len = dataTemplates[obj.table].display.detailsView.subtitleH2.length; a < len; a++) {
-									if (vals[0][0] !== "") h2 = h2.concat(vals[0].shift());
-									else vals[0].shift();
+				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
+					var h1 = [], h2 = [], detailsView = dataTemplates[obj.table].display.detailsView;
+					for (let a = 0, b = 0, c = 0, d = 0, len = row.length, lenB, lenC, lenD; a < len; a++) {
+						app.details[a] = {
+							table: obj.table,
+							id: obj.id,
+							column: row[a].column,
+							warning: "",
+							hidden: !detailsView.viewable[a],
+							type: row[a].type,
+							text: row[a].value,
+							label: row[a].column
+						};
+						//find and apply the right label
+						if (detailsView.labelCol[a] !== false) {
+							for (b = 0, lenB = row.length; b < lenB; b++) {
+								if (row[b].column === detailsView.labelCol[a]) {
+									app.details[a].label = row[b].value;
+									break;
 								}
-								app.detailsSubtitleH2 = h2.join(dataTemplates[obj.table].display.detailsView.subtitleH2Joiner || "");
 							}
-							else app.detailsSubtitleH2 = null;
 						}
-						else debug(errors, "values not found in " + obj.table);
-					});
-				}
-				else {
-					app.detailsTitleH1 = null;
-					app.detailsSubtitleH2 = null;
-				}
-				wwManager({ "cmd": "forEachCol", "title": obj.table }, getVal, function () {
+						//format multiline strings
+						if (app.details[a].type === 'multilineString' && row[a].value && row[a].value !== "") {
+							app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						}
+						//get h1 and h2 header values
+						if (detailsView.titleH1) {
+							for (c = 0, lenC = detailsView.titleH1.length; c < lenC; c++) {
+								if (detailsView.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
+							}
+							if (detailsView.subtitleH2) {
+								for (d = 0, lenD = detailsView.subtitleH2.length; d < lenD; d++) {
+									if (detailsView.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
+								}
+							}
+						}
+					}
+					app.detailsTitleH1 = detailsView.titleH1 ? h1.join(detailsView.titleH1Joiner || "") : null;
+					app.detailsSubtitleH2 = detailsView.subtitleH2 ? h2.join(detailsView.subtitleH2Joiner || "") : null;
 					app.currentDetailsId = obj.id;
 					app.currentDetailsTable = obj.table;
-					app.navigate("details", null, obj);
 					app.spin(false);
-					if (callback instanceof Function) return callback();
+					app.navigate("details", null, obj);					
 				});
 			});
 		},

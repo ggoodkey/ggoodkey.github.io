@@ -1706,6 +1706,23 @@ APP.nyckelDB = (function () {
 		}
 		else return callback instanceof Function ? callback(false, "invalid inputs", db[this.id].title, this.syncPending) : false;
 	};
+	NyckelDBObj.prototype.getRow = function (rowId, callback) {
+		var rowIndex = getIndexOfRow.call(this, rowId),
+			ret = [],
+			_this = this;
+		if (rowIndex > -1) {
+			this.forEachCol(function (colName, is, of) {
+				ret[is] = {
+					value: db[_this.id].table[rowIndex][is + 1],
+					type: db[_this.id].types[colName],
+					column: colName
+				};
+			}, function (success, errors, title, syncPending) {
+				return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
+			});			
+		}
+		else return callback instanceof Function ? callback(false, "row id not found", db[this.id].title, this.syncPending) : false;
+	};
 	NyckelDBObj.prototype.toCSV = function () {
 		//TODO
 		return "function not complete";
