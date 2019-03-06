@@ -2352,8 +2352,8 @@
 					location = to.name;
 				if (location === "home") location = this.startView;
 				if (location === "searchdetails" || location === "recentdetails" || location === "details") {
-					//if (to.query && (to.query.id !== this.currentDetailsId || to.query.table !== this.currentDetailsTable))
-					//	this.seeDetails({ table: to.query.table, id: to.query.id });
+					if (to.query && (to.query.id !== this.currentDetailsId || to.query.table !== this.currentDetailsTable))
+						this.seeDetails({ table: to.query.table, id: to.query.id });
 					this.splitView = true;
 				}
 				else {
