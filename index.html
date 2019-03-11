@@ -2,7 +2,7 @@
 <html>
 <head>
 
-	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com https://dropbox-api.arkoselabs.com/ https://www.dropbox.com 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com https://dropbox-api.arkoselabs.com/ https://www.dropbox.com https://*.googleusercontent.com/ 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 	<meta name="format-detection" content="telephone=no" />
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
@@ -82,7 +82,7 @@
 			<div id="sidenav-container">
 				<div class="views">
 					<div id="sideIndicator" class="navlinkIndicator phon tabl" v-bind:style="{ top: indicatorTop + 'px' }"></div>
-					<div v-for="(navlink, key, index) in views"  v-if="navlink.level === 1" v-bind:id="'sidenavlink_' + key" class="navlink phon tabl" v-on:click="navigate(key)" v-bind:tabindex="index + 13" v-bind:title="navlink.name"><span class="icon" v-bind:class="navlink.icon"></span> &nbsp;&nbsp;&nbsp; {{ navlink.name }}</div>
+					<div v-for="(navlink, key, index) in views" v-if="navlink.level === 1" v-bind:id="'sidenavlink_' + key" class="navlink phon tabl" v-on:click="navigate(key)" v-bind:tabindex="index + 13" v-bind:title="navlink.name"><span class="icon" v-bind:class="navlink.icon"></span> &nbsp;&nbsp;&nbsp; {{ navlink.name }}</div>
 					<div id="settings" class="navlink" v-on:click.stop="toggleSettings" tabindex="19">
 						<span class="icon icon-cog"></span> &nbsp;&nbsp;&nbsp; Settings
 						<span class="icon icon-menu-down right" v-show="showSettings === false">
@@ -154,6 +154,7 @@
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
 		<router-view v-bind:class="{splitViewLeft: splitView}" :key="$route.fullPath"></router-view>
 		<router-view v-bind:class="{splitViewRight: splitView}" name="viewRight" :key="$route.fullPath + 1"></router-view>
+		
 		<input type="file" class="hidden" id="hiddenCSVInput" />
 	</div>
 	<script type="text/javascript" src="scripts/vue.min.js"></script>

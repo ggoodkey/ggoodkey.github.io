@@ -3,103 +3,180 @@
 	"use strict";
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
-		APP_VERSION = "0.0.1";//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
-	var views = {
-		new: {
-			name: "Tables",
-			icon: "icon-plus",
-			level: 1,
-			path: "/new"
+		APP_VERSION = "0.0.1",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+		views = {
+			new: {
+				name: "Tables",
+				icon: "icon-plus",
+				level: 1,
+				path: "/new"
+			},
+			recent: {
+				name: "Recent",
+				icon: "icon-time",
+				level: 1,
+				path: "/recent"
+			},
+			groups: {
+				name: "Groups",
+				icon: "icon-people",
+				level: 1,
+				path: "/groups"
+			},
+			view1: {
+				name: "Contacts",
+				icon: "icon-user",
+				level: 1,
+				path: "/view1"
+			},
+			view2: {
+				name: "Passwords",
+				icon: "icon-lock",
+				level: 1,
+				path: "/view2"
+			},
+			view3: {
+				name: "Files",
+				icon: "icon-folder-open",
+				level: 1,
+				path: "/view3"
+			},
+			search: {
+				name: "Search Results",
+				level: 2,
+				path: "/search"
+			},
+			details: {
+				name: "Details",
+				level: 2,
+				path: "/details"
+			},
+			edit: {
+				name: "Edit",
+				level: 3,
+				path: "/edit"
+			},
+			recentdetails: {
+				name: "Details",
+				level: 2,
+				path: "/recentdetails"
+			},
+			searchdetails: {
+				name: "Details",
+				level: 2,
+				path: "/searchdetails"
+			}
 		},
-		recent: {
-			name: "Recent",
-			icon: "icon-time",
-			level: 1,
-			path: "/recent"
-		},
-		groups: {
-			name: "Groups",
-			icon: "icon-people",
-			level: 1,
-			path: "/groups"
-		},
-		view1: {
-			name: "Contacts",
-			icon: "icon-user",
-			level: 1,
-			path: "/view1"
-		},
-		view2: {
-			name: "Passwords",
-			icon: "icon-lock",
-			level: 1,
-			path: "/view2"
-		},
-		view3: {
-			name: "Files",
-			icon: "icon-folder-open",
-			level: 1,
-			path: "/view3"
-		},
-		search: {
-			name: "Search Results",
-			level: 2,
-			path: "/search"
-		},
-		details: {
-			name: "Details",
-			level: 2,
-			path: "/details"
-		},
-		edit: {
-			name: "Edit",
-			level: 3,
-			path: "/edit"
-		},
-		recentdetails: {
-			name: "Details",
-			level: 2,
-			path: "/recentdetails"
-		},
-		searchdetails: {
-			name: "Details",
-			level: 2,
-			path: "/searchdetails"
-		}
-	},
-		startView = "recent", //set to the view to start at by default
-		backstack = [],
-		backIndex = 0,
+		startView = "recent", //set the view to start at by default		
 		debug = APP.debug,//shortform access to APP.debug
-		fileReaderInitiated = [],
 		dataTemplates = {//add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups NyckelDB databases
 			Contacts: {
-				headers: ["Name", "GivenName", "AdditionalName", "FamilyName", "YomiName", "GivenNameYomi", "AdditionalNameYomi",
-					"FamilyNameYomi", "NamePrefix", "NameSuffix", "Initials", "Nickname", "ShortName", "MaidenName", "Birthday", "Gender",
-					"Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity", "Priority", "Subject",
-					"Notes", "Language", "Photo", "GroupMembership", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type",
-					"E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value",
-					"E_mail7_Type", "E_mail7_Value", "Phone1_Type", "Phone1_Value", "Phone2_Type", "Phone2_Value", "Phone3_Type", "Phone3_Value", "Phone4_Type",
-					"Phone4_Value", "Phone5_Type", "Phone5_Value", "Phone6_Type", "Phone6_Value", "Phone7_Type", "Phone7_Value",
-					"Phone8_Type", "Phone8_Value", "Phone9_Type", "Phone9_Value", "Phone10_Type", "Phone10_Value", "Address1_Type",
-					"Address1_Formatted", "Address1_Street", "Address1_City", "Address1_POBox", "Address1_Region", "Address1_PostalCode",
-					"Address1_Country", "Address1_ExtendedAddress", "Address2_Type", "Address2_Formatted", "Address2_Street", "Address2_City",
-					"Address2_POBox", "Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress",
-					"Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
-					"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription", "Website1_Type", "Website1_Value"],
-				types: ["string", "givenName", "givenName", "familyName", "string", "givenName", "givenName",
-					"familyName", "string", "string", "string", "string", "string", "familyName", "date", "string",
-					"geoLocation", "string", "string", "string", "string", "string", "string", "string", "string",
-					"multilineString", "string", "string", "string", "string", "email", "string", "email", "string",
-					"email", "string", "email", "string", "email", "string", "email",
-					"string", "email", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string",
-					"phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber",
-					"string", "phoneNumber", "string", "phoneNumber", "string", "phoneNumber", "string",
-					"multilineString", "streetAddress", "cityCounty", "mailAddress", "provinceStateRegion", "postalZipCode",
-					"country", "string", "string", "multilineString", "streetAddress", "cityCounty",
-					"mailAddress", "provinceStateRegion", "postalZipCode", "country", "string",
-					"string", "string", "string", "string", "string",
-					"string", "geoLocation", "string", "string", "string"],
+				//these column headers are setup as an object where the property name is the column header name and the property value is the column header type
+				//this makes it easier to see and apply "types" to each "header", especially in a big table like this
+				headers: {
+					Name: "string", 
+					GivenName: "givenName",
+					AdditionalName: "givenName",
+					FamilyName: "familyName",
+					YomiName: "string",
+					GivenNameYomi: "givenName",
+					AdditionalNameYomi: "givenName",
+					FamilyNameYomi: "familyName",
+					NamePrefix: "string",
+					NameSuffix: "string",
+					Initials: "string",
+					Nickname: "string",
+					ShortName: "string",
+					MaidenName: "familyName",
+					Birthday: "date",
+					Gender: "string",
+					Location: "geoLocation",
+					BillingInformation: "string",
+					DirectoryServer: "string",
+					Mileage: "string",
+					Occupation: "string",
+					Hobby: "string",
+					Sensitivity: "string",
+					Priority: "string",
+					Subject: "string",
+					Notes: "multilineString",
+					Language: "string",
+					Photo: "string",
+					GroupMembership: "string",
+					E_mail1_Type: "string", E_mail1_Value: "email",
+					E_mail2_Type: "string", E_mail2_Value: "email",
+					E_mail3_Type: "string", E_mail3_Value: "email",
+					E_mail4_Type: "string", E_mail4_Value: "email",
+					E_mail5_Type: "string", E_mail5_Value: "email",
+					E_mail6_Type: "string", E_mail6_Value: "email",
+					E_mail7_Type: "string", E_mail7_Value: "email",
+					E_mail8_Type: "string", E_mail8_Value: "email",
+					E_mail9_Type: "string", E_mail9_Value: "email",
+					E_mail10_Type: "string", E_mail10_Value: "email",
+					IM1_Type: "string", IM1_Service: "string", IM1_Value: "string",
+					IM2_Type: "string", IM2_Service: "string", IM2_Value: "string",
+					IM3_Type: "string", IM3_Service: "string", IM3_Value: "string",
+					IM4_Type: "string", IM4_Service: "string", IM4_Value: "string",
+					IM5_Type: "string", IM5_Service: "string", IM5_Value: "string",
+					IM6_Type: "string", IM6_Service: "string", IM6_Value: "string",
+					IM7_Type: "string", IM7_Service: "string", IM7_Value: "string",
+					IM8_Type: "string", IM8_Service: "string", IM8_Value: "string",
+					IM9_Type: "string", IM9_Service: "string", IM9_Value: "string",
+					IM10_Type: "string", IM10_Service: "string", IM10_Value: "string",
+					Phone1_Type: "string", Phone1_Value: "phoneNumber",
+					Phone2_Type: "string", Phone2_Value: "phoneNumber",
+					Phone3_Type: "string", Phone3_Value: "phoneNumber",
+					Phone4_Type: "string", Phone4_Value: "phoneNumber",
+					Phone5_Type: "string", Phone5_Value: "phoneNumber",
+					Phone6_Type: "string", Phone6_Value: "phoneNumber",
+					Phone7_Type: "string", Phone7_Value: "phoneNumber",
+					Phone8_Type: "string", Phone8_Value: "phoneNumber",
+					Phone9_Type: "string", Phone9_Value: "phoneNumber",
+					Phone10_Type: "string", Phone10_Value: "phoneNumber",
+					Address1_Type: "string", Address1_Formatted: "formattedAddress", Address1_Street: "streetAddress", Address1_City: "cityCounty", Address1_POBox: "mailAddress", Address1_Region: "provinceStateRegion", Address1_PostalCode: "postalZipCode", Address1_Country: "country", Address1_ExtendedAddress: "string",
+					Address2_Type: "string", Address2_Formatted: "formattedAddress", Address2_Street: "streetAddress", Address2_City: "cityCounty", Address2_POBox: "mailAddress", Address2_Region: "provinceStateRegion", Address2_PostalCode: "postalZipCode", Address2_Country: "country", Address2_ExtendedAddress: "string",
+					Organization1_Type: "string", Organization1_Name: "string", Organization1_YomiName: "string", Organization1_Title: "string", Organization1_Department: "string", Organization1_Symbol: "string", Organization1_Location: "geoLocation", Organization1_JobDescription: "string",
+					Relation1_Type: "string", Relation1_Value: "string",
+					Relation2_Type: "string", Relation2_Value: "string",
+					Relation3_Type: "string", Relation3_Value: "string",
+					Relation4_Type: "string", Relation4_Value: "string",
+					Relation5_Type: "string", Relation5_Value: "string",
+					Relation6_Type: "string", Relation6_Value: "string",
+					Relation7_Type: "string", Relation7_Value: "string",
+					Relation8_Type: "string", Relation8_Value: "string",
+					Relation9_Type: "string", Relation9_Value: "string",
+					Relation10_Type: "string", Relation10_Value: "string",
+					Website1_Type: "string", Website1_Value: "string",
+					Website2_Type: "string", Website2_Value: "string",
+					Website3_Type: "string", Website3_Value: "string",
+					Website4_Type: "string", Website4_Value: "string",
+					Website5_Type: "string", Website5_Value: "string",
+					Website6_Type: "string", Website6_Value: "string",
+					Website7_Type: "string", Website7_Value: "string",
+					Website8_Type: "string", Website8_Value: "string",
+					Website9_Type: "string", Website9_Value: "string",
+					Website10_Type: "string", Website10_Value: "string",
+					Event1_Type: "string", Event1_Value: "date",
+					Event2_Type: "string", Event2_Value: "date",
+					Event3_Type: "string", Event3_Value: "date",
+					Event4_Type: "string", Event4_Value: "date",
+					Event5_Type: "string", Event5_Value: "date",
+					Event6_Type: "string", Event6_Value: "date",
+					Event7_Type: "string", Event7_Value: "date",
+					Event8_Type: "string", Event8_Value: "date",
+					Event9_Type: "string", Event9_Value: "date",
+					Event10_Type: "string", Event10_Value: "date",
+					CustomField1_Type: "string", CustomField1_Value: "string",
+					CustomField2_Type: "string", CustomField2_Value: "string",
+					CustomField3_Type: "string", CustomField3_Value: "string",
+					CustomField4_Type: "string", CustomField4_Value: "string",
+					CustomField5_Type: "string", CustomField5_Value: "string",
+					CustomField6_Type: "string", CustomField6_Value: "string",
+					CustomField7_Type: "string", CustomField7_Value: "string",
+					CustomField8_Type: "string", CustomField8_Value: "string",
+					CustomField9_Type: "string", CustomField9_Value: "string",
+					CustomField10_Type: "string", CustomField10_Value: "string"
+				},
 				options: {
 					customProperties: {
 						"localization": {
@@ -107,54 +184,107 @@
 							type: "string"
 						}
 					},
-					doNotIndex: ["Photo", "E_mail1_Type", "E_mail2_Type", "E_mail3_Type", "E_mail4_Type", "E_mail5_Type", "E_mail6_Type", "E_mail7_Type",
-						"Phone1_Type", "Phone2_Type", "Phone3_Type", "Phone4_Type", "Phone5_Type", "Phone6_Type", "Phone7_Type", "Phone8_Type", "Phone9_Type", "Phone10_Type",
-						"Address1_Type", "Address2_Type", "Website1_Type"],
 					initialIndex: ["Name", "GivenName", "AdditionalName", "FamilyName", "Nickname", "ShortName", "MaidenName",
-						"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value", "E_mail6_Value", "E_mail7_Value", "Address1_City", "Address2_City",
-						"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department"]
+						"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value", "E_mail6_Value", "E_mail7_Value", "E_mail8_Value", "E_mail9_Value", "E_mail10_Value", "Address1_City", "Address2_City",
+						"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department"],
+					doNotIndex: ["Photo",
+						"E_mail1_Type", "E_mail2_Type", "E_mail3_Type", "E_mail4_Type", "E_mail5_Type", "E_mail6_Type", "E_mail7_Type", "E_mail8_Type", "E_mail9_Type", "E_mail10_Type",
+						"IM1_Type", "IM1_Service", "IM2_Type", "IM2_Service", "IM3_Type", "IM3_Service", "IM4_Type", "IM4_Service", "IM5_Type", "IM5_Service", "IM6_Type", "IM6_Service", "IM7_Type", "IM7_Service", "IM8_Type", "IM8_Service", "IM9_Type", "IM9_Service", "IM10_Type", "IM10_Service",
+						"Phone1_Type", "Phone2_Type", "Phone3_Type", "Phone4_Type", "Phone5_Type", "Phone6_Type", "Phone7_Type", "Phone8_Type", "Phone9_Type", "Phone10_Type",
+						"Address1_Type", "Address2_Type",
+						"Relation1_Type", "Relation2_Type", "Relation3_Type", "Relation4_Type", "Relation5_Type", "Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
+						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type", "Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"]
 				},
 				display: {
-					searchResultsText: ["FamilyName", "GivenName"],
-					searchResultsJoiner: ", ",
-					sortBy: "FamilyName",
+					listView: {
+						text: ["FamilyName", "GivenName"],//diaplay as "Jones, Bob"
+						joiner: ", ",
+						sortBy: "FamilyName"
+					},
 					detailsView: {
+						image: "Photo",
 						titleH1: ["Name"],
 						subtitleH2: ["Organization1_Name", "Organization1_Title", "Organization1_Department"],
-						subtitleH2Joiner: ", ",
-						viewable: [true, false, false, false, false, false, false,
-							false, false, false, false, false, false, false, true, true,
-							true, true, true, true, true, true, true, true, true,
-							false, true, true, false, false, true, false, true, false,
-							true, false, true, false, true, false, true,
-							false, true, false, true, false, true, false, true, false,
-							true, false, true, false, true, false, true,
-							false, true, false, true, false, true, false,
-							false, false, false, false, false, false,
-							false, false, false, false, false, false,
-							false, false, false, false, false,
-							false, false, false, true, false,
-							true, true, true, false, true],
-						labelCol: [false, false, false, false, false, false, false,
-							false, false, false, false, false, false, false, false, false,
-							false, false, false, false, false, false, false, false, false,
-							false, false, false, false, false, "E_mail1_Type", false, "E_mail2_Type", false, "E_mail3_Type",
-							false, "E_mail4_Type", false, "E_mail5_Type", false, "E_mail6_Type", false,
-							"E_mail7_Type", false, "Phone1_Type", false, "Phone2_Type", false, "Phone3_Type", false, "Phone4_Type",
-							false, "Phone5_Type", false, "Phone6_Type", false, "Phone7_Type", false,
-							"Phone8_Type", false, "Phone9_Type", false, "Phone10_Type", false, "Address1_Type",
-							false, false, false, false, false,
-							false, false, false, "Address2_Type", false, false,
-							false, false, false, false, false,
-							false, "Organization1_Type", false, false, false,
-							false, false, false, false, "Website1_Type"]
+						subtitleH2Joiner: ", ", //joins subtitleH2 together with these charactors
+						mainContent: [//displays the following content in the following order
+							"Nickname",//the value of Nickname is the value and "Nickname" is the label (because label is unspecified)
+							"ShortName",
+							"MaidenName",
+							"Birthday",
+							{ value: "Event1_Value", label: "Event1_Type" },//the value of Event1_Value is the value and the value of Event1_Type is 
+							{ value: "Event2_Value", label: "Event2_Type" },//the label when value and label are specified 
+							{ value: "Event3_Value", label: "Event3_Type" },
+							{ value: "Event4_Value", label: "Event4_Type" },
+							{ value: "Event5_Value", label: "Event5_Type" },
+							{ value: "Event6_Value", label: "Event6_Type" },
+							{ value: "Event7_Value", label: "Event7_Type" },
+							{ value: "Event8_Value", label: "Event8_Type" },
+							{ value: "Event9_Value", label: "Event9_Type" },
+							{ value: "Event10_Value", label: "Event10_Type" },
+							"Gender",
+							"Location",
+							{ value: "E_mail1_Value", label: "E_mail1_Type" },
+							{ value: "E_mail2_Value", label: "E_mail2_Type" },
+							{ value: "E_mail3_Value", label: "E_mail3_Type" },
+							{ value: "E_mail4_Value", label: "E_mail4_Type" },
+							{ value: "E_mail5_Value", label: "E_mail5_Type" },
+							{ value: "E_mail6_Value", label: "E_mail6_Type" },
+							{ value: "E_mail7_Value", label: "E_mail7_Type" },
+							{ value: "E_mail8_Value", label: "E_mail8_Type" },
+							{ value: "E_mail9_Value", label: "E_mail9_Type" },
+							{ value: "E_mail10_Value", label: "E_mail10_Type" },
+							{ value: "Phone1_Value", label: "Phone1_Type" },
+							{ value: "Phone2_Value", label: "Phone2_Type" },
+							{ value: "Phone3_Value", label: "Phone3_Type" },
+							{ value: "Phone4_Value", label: "Phone4_Type" },
+							{ value: "Phone5_Value", label: "Phone5_Type" },
+							{ value: "Phone6_Value", label: "Phone6_Type" },
+							{ value: "Phone7_Value", label: "Phone7_Type" },
+							{ value: "Phone8_Value", label: "Phone8_Type" },
+							{ value: "Phone9_Value", label: "Phone9_Type" },
+							{ value: "Phone10_Value", label: "Phone10_Type" },
+							{ value: "Address1_Formatted", label: "Address1_Type" },
+							{ value: "Address2_Formatted", label: "Address2_Type" },
+							{ value: "Relation1_Value", label: "Relation1_Type" },
+							{ value: "Relation2_Value", label: "Relation2_Type" },
+							{ value: "Relation3_Value", label: "Relation3_Type" },
+							{ value: "Relation4_Value", label: "Relation4_Type" },
+							{ value: "Relation5_Value", label: "Relation5_Type" },
+							{ value: "Relation6_Value", label: "Relation6_Type" },
+							{ value: "Relation7_Value", label: "Relation7_Type" },
+							{ value: "Relation8_Value", label: "Relation8_Type" },
+							{ value: "Relation9_Value", label: "Relation9_Type" },
+							{ value: "Relation10_Value", label: "Relation10_Type" },
+							{ value: "Website1_Value", label: "Website1_Type" },
+							{ value: "Website2_Value", label: "Website2_Type" },
+							{ value: "Website3_Value", label: "Website3_Type" },
+							{ value: "Website4_Value", label: "Website4_Type" },
+							{ value: "Website5_Value", label: "Website5_Type" },
+							{ value: "Website6_Value", label: "Website6_Type" },
+							{ value: "Website7_Value", label: "Website7_Type" },
+							{ value: "Website8_Value", label: "Website8_Type" },
+							{ value: "Website9_Value", label: "Website9_Type" },
+							{ value: "Website10_Value", label: "Website10_Type" },
+							{ value: "CustomField1_Value", label: "CustomField1_Type" },
+							{ value: "CustomField2_Value", label: "CustomField2_Type" },
+							{ value: "CustomField3_Value", label: "CustomField3_Type" },
+							{ value: "CustomField4_Value", label: "CustomField4_Type" },
+							{ value: "CustomField5_Value", label: "CustomField5_Type" },
+							{ value: "CustomField6_Value", label: "CustomField6_Type" },
+							{ value: "CustomField7_Value", label: "CustomField7_Type" },
+							{ value: "CustomField8_Value", label: "CustomField8_Type" },
+							{ value: "CustomField9_Value", label: "CustomField9_Type" },
+							{ value: "CustomField10_Value", label: "CustomField10_Type" },
+							"Notes"
+						],
+						mainContentSplitter: " ::: " //splits mainContent into separate line items at these charactors
 					},
 					editView: {}
 				}
 			},
 			Passwords: {
-				headers: ["Site", "Username", "Password", "Alias", "DateCreated"],
-				types: ["string", "string", "string", "string", "date"],
+				headers: ["Site", "Username", "Password", "Alias", "DateCreated"],//these headers are given as an array
+				types: ["string", "string", "string", "string", "date"],//when headers are an array, types are given as a corresponding array
 				options: {
 					customProperties: {
 					},
@@ -162,9 +292,11 @@
 					initialIndex: ["Site", "Username", "Alias"]
 				},
 				display: {
-					searchResultsText: ["Site", "Username"],
-					searchResultsJoiner: ": ",
-					sortBy: "Site",
+					listView: {
+						text: ["Site", "Username"],
+						joiner: ": ",
+						sortBy: "Site"
+					},
 					detailsView: {},
 					editView: {}
 				}
@@ -179,7 +311,9 @@
 					initialIndex: ["Name"]
 				},
 				display: {
-					searchResultsText: ["Display Name"],
+					listView: {
+						text: ["Display Name"]
+					},
 					detailsView: {},
 					editView: {}
 				}
@@ -194,7 +328,9 @@
 					initialIndex: ["groupName"]
 				},
 				display: {
-					searchResultsText: ["groupName"],
+					listView: {
+						text: ["groupName"]
+					},
 					detailsView: {},
 					editView: {}
 				}
@@ -251,6 +387,7 @@
 				showStoKeyInput: false,
 				stoKeyWarning: "",
 				details: [],
+				detailsImage: null,
 				detailsTitleH1: null,
 				detailsSubtitleH2: null,
 				currentDetailsId: null,
@@ -262,7 +399,10 @@
 				groupSearchBox: "",
 				groups: []
 			};
-		},
+		};
+	var fileReaderInitiated = [],
+		backstack = [],
+		backIndex = 0,
 		state = freshStateObj(),
 		localTestingMode = function () {
 			var loc = window.location;
@@ -723,52 +863,89 @@
 		},
 		//application functions
 		seeDetails = function (obj) {
+			function sortDetailsObj(detailsObj) {
+				function sortFunction(a, b) {
+					return sortOrder.indexOf(a.column) === sortOrder.indexOf(b.column) ? 0 : sortOrder.indexOf(a.column) < sortOrder.indexOf(b.column) ? -1 : 1;
+				}
+				var sortOrder = [],
+					detailsView = dataTemplates[obj.table].display.detailsView;
+				if (detailsView.image) sortOrder.push(detailsView.image);
+				if (detailsView.titleH1) sortOrder.push(detailsView.titleH1);
+				if (detailsView.subtitleH2) sortOrder.push(detailsView.subtitleH2);
+				if (detailsView.mainContent) {
+					for (let a = 0, len = detailsView.mainContent.length; a < len; a++) {
+						if (typeof detailsView.mainContent[a] === "string") sortOrder.push(detailsView.mainContent[a]);
+						else {
+							if (detailsView.mainContent[a].label) sortOrder.push(detailsView.mainContent[a].label);
+							if (detailsView.mainContent[a].value) sortOrder.push(detailsView.mainContent[a].value);
+						}
+					}
+				}
+				return detailsObj.sort(sortFunction);
+			}
 			checkDBLoaded(function () {
 				app.spin(true, "Loading contact data...");
 				app.details = [];
-				var recentlyViewed = false,
-					recent = JSON.parse(JSON.stringify(app.recentlyViewed));
-				//find and remove this item from recentlyViewed
-				for (var b = 0; b < recent.length; b++) {
-					if (recent[b].id === obj.id && recent[b].table === obj.table) {
-						recent[b].sortBy = new Date().getTime();
-						recentlyViewed = true;
+				if (app.recentlyViewed.length > 0) {
+					var recentlyViewed = false,
+						recent = JSON.parse(JSON.stringify(app.recentlyViewed));
+					//find and remove this item from recentlyViewed
+					for (var b = 0; b < recent.length; b++) {
+						if (recent[b].id === obj.id && recent[b].table === obj.table) {
+							recent[b].sortBy = new Date().getTime();
+							recentlyViewed = true;
+						}
 					}
+					if (!recentlyViewed) {
+						obj.sortBy = new Date().getTime();
+						recent.unshift(obj);
+						recent = recent.slice(0, 20);
+					}
+					//add this item to top of list
+					app.recentlyViewed = sortList(recent);
 				}
-				if (!recentlyViewed) {
-					obj.sortBy = new Date().getTime();
-					recent.unshift(obj);
-					recent = recent.slice(0, 20);
-				}
-				//add this item to top of list
-				app.recentlyViewed = sortList(recent);
 				app.storeState();
 				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
-					var h1 = [], h2 = [], detailsView = dataTemplates[obj.table].display.detailsView;
-					for (let a = 0, b = 0, c = 0, d = 0, len = row.length, lenB, lenC, lenD; a < len; a++) {
-						app.details[a] = {
+					var h1 = [],
+						h2 = [],
+						img,
+						details = [],
+						detailsView = dataTemplates[obj.table].display.detailsView;
+					for (let a = 0, b = 0, c = 0, d = 0, e = 0, len = row.length, lenB, lenC, lenD, lenE; a < len; a++) {
+						details[a] = {	
 							table: obj.table,
 							id: obj.id,
-							column: row[a].column,
 							warning: "",
-							hidden: !detailsView.viewable[a],
+							column: row[a].column,
 							type: row[a].type,
 							text: row[a].value,
 							label: row[a].column
 						};
 						//find and apply the right label
-						if (detailsView.labelCol[a] !== false) {
-							for (b = 0, lenB = row.length; b < lenB; b++) {
-								if (row[b].column === detailsView.labelCol[a]) {
-									app.details[a].label = row[b].value;
-									break;
+						if (detailsView.mainContent) {
+							var hide = detailsView.mainContent.indexOf(row[a].column) > -1 ? false : true;
+							for (b = 0, lenB = detailsView.mainContent.length; b < lenB; b++){
+								if (typeof detailsView.mainContent[b] !== "string" && detailsView.mainContent[b].label) {
+									if (row[a].column === detailsView.mainContent[b].value) {
+										hide = false;
+										for (e = 0, lenE = row.length; e < lenE; e++) {
+											if (row[e].column === detailsView.mainContent[b].label) {
+												details[a].label = row[e].value;
+												break;
+											}
+										}
+										
+									}
 								}
 							}
+							details[a].hidden = hide;
 						}
 						//format multiline strings
-						if (app.details[a].type === 'multilineString' && row[a].value && row[a].value !== "") {
-							app.details[a].text = app.details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						if (/multilineString|formattedAddress/.test(details[a].type) && details[a].text) {
+							details[a].text = details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
 						}
+						//split out multiple values in one cell
+						else details[a].text = detailsView.mainContentSplitter ? details[a].text.split(detailsView.mainContentSplitter) : details[a].text.split(" ::: ");
 						//get h1 and h2 header values
 						if (detailsView.titleH1) {
 							for (c = 0, lenC = detailsView.titleH1.length; c < lenC; c++) {
@@ -780,7 +957,12 @@
 								}
 							}
 						}
+						if (detailsView.image && row[a].column === detailsView.image) {
+							img = row[a].value;
+						}
 					}
+					app.details = sortDetailsObj(details);
+					app.detailsImage = img;
 					app.detailsTitleH1 = detailsView.titleH1 ? h1.join(detailsView.titleH1Joiner || "") : null;
 					app.detailsSubtitleH2 = detailsView.subtitleH2 ? h2.join(detailsView.subtitleH2Joiner || "") : null;
 					app.currentDetailsId = obj.id;
@@ -802,9 +984,9 @@
 				}
 				return callback instanceof Function ? callback(ret) : ret;
 			}
-			var columns = dataTemplates[tableName].display && dataTemplates[tableName].display.searchResultsText ? dataTemplates[tableName].display.searchResultsText.join("|||").split("|||") : [1],
-				joiner = dataTemplates[tableName].display && dataTemplates[tableName].display.searchResultsJoiner ? dataTemplates[tableName].display.searchResultsJoiner : " ";
-			sortByCol = sortByCol || dataTemplates[tableName].display.sortBy || columns[0];
+			var columns = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.text ? dataTemplates[tableName].display.listView.text.join("|||").split("|||") : [1],
+				joiner = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.joiner ? dataTemplates[tableName].display.listView.joiner : " ";
+			sortByCol = sortByCol || dataTemplates[tableName].display.listView.sortBy || columns[0];
 			columns.push(sortByCol);
 			if (typeof ids === "string") ids = [ids];
 			wwManager({ "cmd": "getVals", "title": tableName, "args": [ids, columns] }, buildList);
@@ -1170,8 +1352,6 @@
 		</div>"
 	});
 
-	// 1. Define route components.
-	// These can be imported from other files
 	const New = {
 		data: function() {
 			return {
@@ -1187,7 +1367,6 @@
 					protectDropdown: -1,
 					searchableDropdown: -1,
 					typesDropdown: -1,
-					viewableDropdown: -1,
 
 					acceptedValuesDefault: 'any',
 					editableDefault: true,
@@ -1195,14 +1374,12 @@
 					protectDefault: false,
 					searchableDefault: true,
 					typesDefault: 'string',
-					viewableDefault: true,
 
 					acceptedValuesDropdownOptions: ['any'],
 					editableDropdownOptions: [true, false],
 					protectDropdownOptions: [false, true, "to view", "to edit"],
 					searchableDropdownOptions: [true, false, 'optional'],
 					typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
-					viewableDropdownOptions: [true, false],
 
 					options: {
 						customProperties: {},
@@ -1211,11 +1388,13 @@
 						searchable: [true, true, true]
 					},
 					display: {
-						searchResultsText: [],
-						searchResultsJoiner: " ",
-						sortBy: "",
+						listView: {
+							text: [],
+							joiner: " ",
+							sortBy: ""
+						},
 						detailsView: {
-							viewable: [true, true, true],
+							hidden: [],
 							labelCol: [false, false, false]
 						},
 						editView: {
@@ -1282,7 +1461,6 @@
 					this.newTable.display = dataTemplates[templateName].display;
 					this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
 					this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
-					this.newTable.display.detailsView.viewable = dataTemplates[templateName].display.detailsView.viewable || [];
 					this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
 					this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
 					this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
@@ -1298,12 +1476,12 @@
 						searchable: []
 					};
 					this.newTable.display = {
-						searchResultsText: [],
-						searchResultsJoiner: " ",
-						sortBy: "",
+						listView: {
+							text: [],
+							joiner: " ",
+							sortBy: ""
+						},
 						detailsView: {
-							labelCol: [],
-							viewable: []
 						},
 						editView: {
 							acceptedValues: [],
@@ -1315,7 +1493,6 @@
 				for (let a = 0, len = this.newTable.types.length; a < len; a++) {
 					this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
 					this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
-					this.newTable.display.detailsView.viewable[a] = this.newTable.display.detailsView.viewable[a] !== undefined ? this.newTable.display.detailsView.viewable[a] : this.newTable.viewableDefault;
 					this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
 					this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
 					this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
@@ -1335,7 +1512,6 @@
 				this.newTable.types.splice(index, 1);
 				this.newTable.display.editView.protect.splice(index, 1);
 				this.newTable.display.editView.acceptedValues.splice(index, 1);
-				this.newTable.display.detailsView.viewable.splice(index, 1);
 				this.newTable.display.editView.editable.splice(index, 1);
 				this.newTable.options.searchable.splice(index, 1);
 				this.newTable.display.detailsView.labelCol.splice(index, 1);
@@ -1347,7 +1523,6 @@
 					this.newTable.types.push(this.newTable.typesDefault);
 					this.newTable.display.editView.protect.push(this.newTable.protectDefault);
 					this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
-					this.newTable.display.detailsView.viewable.push(this.newTable.viewableDefault);
 					this.newTable.display.editView.editable.push(this.newTable.editableDefault);
 					this.newTable.options.searchable.push(this.newTable.searchableDefault);
 					this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
@@ -1357,7 +1532,6 @@
 					this.newTable.types.splice(index, 0, this.newTable.typesDefault);
 					this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
 					this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
-					this.newTable.display.detailsView.viewable.splice(index, 0, this.newTable.viewableDefault);
 					this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
 					this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
 					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
@@ -1445,18 +1619,6 @@
 							<td></td>\
 						</tr >\
 						<tr>\
-							<th title=\"Do you want to hide this column from displaying when the item is viewed?\">Viewable</th>\
-							<td v-for=\"(bool, index) in newTable.display.detailsView.viewable\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('viewableDropdown', index)\">{{ bool }}</a>\
-									<ul v-show=\"newTable.viewableDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"option in newTable.viewableDropdownOptions\" v-on:click=\"newTable.display.detailsView.viewable[index] = option; newTable.viewableDropdown = -1;\">{{ option }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr >\
-						<tr>\
 							<th title=\"Do you want to hide this column from view when the item is being edited?\">Editable</th>\
 							<td v-for=\"(bool, index) in newTable.display.editView.editable\">\
 								<div class=\"dropdown-container\">\
@@ -1490,8 +1652,9 @@
 				<div class=\"itemText\"><button v-on:click=\"importNewTable('csv')\"><span class=\"icon icon-import\"></span>&nbsp;&nbsp;From CSV</button></div >\
 				<button>Save Table</button>\
 			</div>\
-		</div>"};
-	const Recent = {
+		</div>"
+	},
+		Recent = {
 		data: function () {
 			return {
 				recentlyViewed: state.recentlyViewed
@@ -1526,8 +1689,8 @@
 					<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>\
 				</div>\
 			</div>"
-	};
-	const Groups = {
+	},
+		Groups = {
 		data: function () {
 			return {
 				groups: state.groups,
@@ -1713,7 +1876,6 @@
 					app.navigate("search", app.currentQuery);
 				}
 				var list = [];
-				debug(index);
 				wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
 					if (group[0][3] !== "") {
 						var lenTables = 0,
@@ -1848,8 +2010,9 @@
 					<button v-on:click=\"toggle('showNewGroupUI')\">Create a New Group</button>\
 				</div>\
 			</div>\
-		</div>" };
-	const View1 = {
+		</div>"
+	},
+		View1 = {
 		methods: {
 			generateListView: generateListView,
 			importFile: importFile
@@ -1863,15 +2026,15 @@
 				<a class=\"button\" v-on:click=\"generateListView('Contacts')\">See all contacts</a>\
 			</div>\
 		</div>"
-	};
-	const View2 = {
+	},
+		View2 = {
 		template: "<div class=\"view\">\
 			<div class=\"view-container\">\
 				<h1>Passwords</h1>\
 			</div>\
 		</div>"
-	};
-	const View3 = {
+	},
+		View3 = {
 		methods: {
 			generateListView: generateListView,
 			importFile: importFile
@@ -1886,11 +2049,12 @@
 				<a class=\"button\" v-on:click=\"generateListView('Files')\">See all files</a>\
 			</div>\
 		</div>"
-	};
-	const Details = {
+	},
+		Details = {
 		data: function () {
 			return {
 				details: state.details,
+				detailsImage: state.detailsImage,
 				detailsTitleH1: state.detailsTitleH1,
 				detailsSubtitleH2: state.detailsSubtitleH2,
 				addItemToGroupDropdown: state.addItemToGroupDropdown,
@@ -1908,16 +2072,16 @@
 					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
 				});
 			},
-			externalLink: function (item, type, details) {
+			externalLink: function (text, column, type, details) {
 				var link;
-				if (type === "phone") link = "tel:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
-				else if (type === "sms") link = "sms:" + encodeURIComponent(String(item.text).replace(/[^0-9]/g, ""));
-				else if (type === "email") link = "mailto:" + encodeURIComponent(String(item.text));
-				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(item.text));
-				else if (type === "www") link = item.text;
+				if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+				else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+				else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
+				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(text));
+				else if (type === "www") link = text;
 				if (link) return link;
-				else if (type === "gps" || type === "address" && !/mail/i.test(item.text)) {
-					var a = item.column.replace(/Type/, ""),
+				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
+					var a = column.replace(/Type/, ""),
 						cols = [a + "Street", a + "City", a + "Region", a + "PostalCode", a + "Country"],
 						googlemaps = "http://maps.google.com/?q=",
 						bing = "http://www.bing.com/maps/?q=",
@@ -1926,7 +2090,7 @@
 						userAgent = navigator.userAgent,
 						result = [];
 					if (type === "gps") {
-						link = item.text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+						link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
 					}
 					else {
 						for (var i = 0, length = details.length; i < length; i++) {
@@ -1973,9 +2137,14 @@
 		},
 		template: "<div class=\"view\">\
 			<div class=\"view-container\" v-if=\"details[0] && details[0].text\">\
-				<h1>{{ detailsTitleH1 }}</h1>\
-				<h3 v-if=\"detailsSubtitleH2\">{{ detailsSubtitleH2 }}</h3>\
-				<div class=\"dropdown-container\">\
+				<div class=\"detailsHeader\">\
+					<img v-if=\"detailsImage\" v-bind:src=\"detailsImage\" class=\"roundImage left\"/>\
+					<div>\
+						<h1>{{ detailsTitleH1 }}</h1>\
+						<h3 v-if=\"detailsSubtitleH2\">{{ detailsSubtitleH2 }}</h3>\
+					</div>\
+				</div>\
+				<div class=\"dropdown-container clear\">\
 					<button v-on:click=\"editDetails\" v-bind:title=\"'Edit ' + details[0].text\"><span class=\"icon icon-pencil\"></span>&nbsp;&nbsp;Edit</button>\
 					<button id=\"groupsDropdownButton\" v-on:click=\"toggleGroupsDropdown\" v-bind:title=\"'Add ' + details[0].text + ' to Group'\"><span class=\"icon icon-people\"></span>&nbsp;&nbsp;Add to Group</button>\
 					<ul v-show=\"addItemToGroupDropdown\" class=\"dropdown\">\
@@ -1984,101 +2153,66 @@
 					</ul>\
 				</div>\
 				<br />\
-				<br />\
-				<template v-for=\"(item, index) in details\" v-if=\"item.text\">\
-					<div class=\"clear hidden\" v-if=\"index === 0 || item.hidden\">\
-					</div>\
-					<div v-else class=\"clear\">\
+				<template v-for=\"(item, index) in details\">\
+					<div class=\"clear\" v-if=\"item.text[0] && ! item.hidden\">\
 						<label class=\"itemLabel\">{{ item.label }}</label>\
-						<div v-if=\"item.type === 'email'\" class=\"itemText\">\
-							<a v-bind:href=\"externalLink(item, 'email')\">\
-								<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;{{ item.text }}\
-							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-							<a v-bind:href=\"externalLink(item, 'bcc')\">\
-								<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;E-mail&nbsp;BCC\
-							</a>\
-						</div>\
-						<div v-else-if=\"item.type === 'phoneNumber' && /home/i.test(item.label)\" class=\"itemText\">\
-							<a v-bind:href=\"externalLink(item, 'phone')\">\
-								<span class=\"icon icon-phone-alt\">\
-								</span>&nbsp;&nbsp;{{ item.text }}\
-							</a>\
-						</div>\
-						<div v-else-if=\"item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)\" class=\"itemText\">\
-							<a v-bind:href=\"externalLink(item, 'phone')\">\
-								<span class=\"icon icon-phone\"></span>&nbsp;&nbsp;{{ item.text }}\
-							</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-							<a v-bind:href=\"externalLink(item, 'sms')\">\
-								<span class=\"icon icon-comment\"></span>&nbsp;&nbsp;SMS\
-							</a>\
-						</div>\
-						<div v-else-if=\"details[index].label === 'GPS'\" class=\"itemText\">\
-							<a v-bind:href=\"externalLink(item, 'www')\" target=\"_blank\">\
-								<span class=\"icon icon-world\"></span>&nbsp;&nbsp;{{ item.text }}\
-							</a>\
-							<br />\
-							<br />\
-							<a v-bind:href=\"externalLink(item, 'gps')\">\
-								<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;Maps\
-							</a>\
-						</div>\
-						<div v-else-if=\"item.type === 'multilineString'\" class=\"itemText\">\
-							<template v-for=\"line in item.text\">\
-								{{ line }}\
+						<div class=\"itemText\">\
+							<template v-for=\"(line, lineIndex) in item.text\">\
+								<template v-if=\"lineIndex > 0\">\
+									<br />\
+								</template>\
+								<template v-if=\"item.type === 'email'\">\
+									<a v-bind:href=\"externalLink(line, item.column, 'email')\">\
+										<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;{{ line }}\
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+									<a v-bind:href=\"externalLink(line, item.column, 'bcc')\">\
+										<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;E-mail&nbsp;BCC\
+									</a>\
+								</template>\
+								<template v-else-if=\"item.type === 'phoneNumber' && /home/i.test(item.label)\">\
+									<a v-bind:href=\"externalLink(line, item.column, 'phone')\">\
+										<span class=\"icon icon-phone-alt\">\
+										</span>&nbsp;&nbsp;{{ line }}\
+									</a>\
+								</template>\
+								<template v-else-if=\"item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)\">\
+									<a v-bind:href=\"externalLink(line, item.column, 'phone')\">\
+										<span class=\"icon icon-phone\"></span>&nbsp;&nbsp;{{ line }}\
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+									<a v-bind:href=\"externalLink(line, item.column, 'sms')\">\
+										<span class=\"icon icon-comment\"></span>&nbsp;&nbsp;SMS\
+									</a>\
+								</template>\
+								<template v-else-if=\"item.type === 'formattedAddress' && lineIndex === 0\">\
+									<a v-bind:href=\"externalLink(line, item.column, 'address', details)\" target=\"_blank\">\
+										<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;\
+										<template v-for=\"addressLine in item.text\">\
+											{{ addressLine }}\
+											<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+										</template>\
+									</a>\
+								</template>\
+								<template v-else-if=\"item.type === 'formattedAddress'\"></template>\
+								<template v-else-if=\"details[index].label === 'GPS'\">\
+									<a v-bind:href=\"externalLink(line, item.column, 'www')\" target=\"_blank\">\
+										<span class=\"icon icon-world\"></span>&nbsp;&nbsp;{{ line }}\
+									</a>\
+									<br />\
+									<br />\
+									<a v-bind:href=\"externalLink(line, item.column, 'gps')\">\
+										<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;Maps\
+									</a>\
+								</template>\
+								<template v-else>{{ line }}</template>\
 							</template>\
 						</div>\
-						<div v-else class=\"itemText\">{{ item.text }}</div>\
 					</div>\
 				</template>\
-				<template v-for=\"(item, index) in details\" v-if=\"item.text && /Address1_Type|Address2_Type/.test(item.column) && (details[index + 2].text || details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text)\">\
-					<div class=\"clear\">\
-						<label class=\"itemLabel\" v-if=\"/Address/i.test(item.text)\">{{ item.text }}</label>\
-						<label class=\"itemLabel\" v-else>{{ item.text }} Address</label>\
-						<div class=\"itemText\">\
-							<a v-bind:href=\"externalLink(item, 'address', details)\">\
-								<template v-if=\"details[index + 2] && details[index + 2].text\">\
-									{{ details[index + 2].text }}\
-									<br v-if=\"details[index + 3].text || details[index + 4].text || details[index + 5].text || details[index + 6].text || details[index + 7].text\" />\
-								</template>\
-								<template v-if=\"details[index + 4] && details[index + 4].text\">\
-									{{ details[index + 4].text }}\
-									<br v-if=\"details[index + 3].text || details[index + 5].text || details[index + 6].text || details[index + 7].text\" />\
-								</template>\
-								<template v-if=\"details[index + 3] && details[index + 3].text\">\
-									<template v-if=\"details[index + 5] && details[index + 5].text\">\
-										{{ details[index + 3].text }}, {{ details[index + 5].text }}\
-										<br v-if=\"details[index + 6].text || details[index + 7].text\" />\
-									</template>\
-									<template v-else>\
-										{{ details[index + 3].text }}\
-										<br v-if=\"details[index + 6].text || details[index + 7].text\" />\
-									</template>\
-								</template>\
-								<template v-if=\"details[index + 6] && details[index + 6].text\">\
-									{{ details[index + 6].text }}\
-									<br v-if=\"details[index + 7].text\" />\
-								</template>\
-								<template v-if=\"details[index + 7] && details[index + 7].text\">\
-									{{ details[index + 7].text }}\
-								</template>\
-							</a>\
-						</div>\
-					</div>\
-				</template>\
-				<div v-if=\"details[25] && details[25].text && details[25].column === 'Notes'\" class=\"clear\">\
-					<label class=\"itemLabel\">Notes</label>\
-					<div class=\"itemText\">\
-						<template v-for=\"line in details[25].text\">\
-							{{ line }}\
-							<br />\
-						</template>\
-					</div>\
-				</div>\
 			</div>\
 			<div class=\"view-container\" v-else>Nothing here<br /><a v-on:click=\"detailsViewHelp\">Help</a></div>\
 		</div>"
-	};
-	const Search = {
+	},
+		Search = {
 		data: function () {
 			return {
 				currentQuery: state.currentQuery,
@@ -2121,8 +2255,8 @@
 				<h4>{{ searchResultsError }}</h4>\
 			</div>\
 		</div>"
-	};
-	const Edit = {
+	},
+		Edit = {
 		data: function () {
 			return {
 				details: state.details
@@ -2171,11 +2305,6 @@
 	const Blank = {
 		template: "<div class=\"view\"><div class='hidden'></div></div>"
 	};
-	// 2. Define some routes
-	// Each route should map to a component. The "component" can
-	// either be an actual component constructor created via
-	// `Vue.extend()`, or just a component options object.
-	// We'll talk about nested routes later.
 	const routes = [
 		{
 			path: '/',
@@ -2320,15 +2449,11 @@
 				title: 'Page not found :( - Nyckel (Beta)'
 			}
 		}
-	];
-
-	// 3. Create the router instance and pass the `routes` option
-	// You can pass in additional options here, but let's
-	// keep it simple for now.
-	const router = new VueRouter({
-		routes: routes
-	});
-	const app = new Vue({
+	],
+		router = new VueRouter({
+			routes: routes
+	}),
+		app = new Vue({
 		router: router,
 		el: '#app',
 		data: state,
@@ -2372,7 +2497,6 @@
 				backstack[backIndex - 1] = location;
 
 				if (to.query && to.query.search && to.query.search !== this.currentQuery) {
-					debug(to.query.search, "nav");
 					this.search(null, to.query.search);
 				}
 				//show hide back arrow
@@ -2546,11 +2670,9 @@
 										_this.navigate("search", _this.currentQuery);
 										_this.spin(false);
 										if (_this.searchResults.length === 1 && _this.searchResults[0].type === "link") {
-											debug(_this.searchResults[0], "search resutls direct link");
 											_this.seeDetails(_this.searchResults[0]);
 										}
 										else if (_this.searchResults.length === 2 && _this.searchResults[0].type === "jumplink") {
-											debug(_this.searchResults[0], "search resutls direct link");
 											_this.seeDetails(_this.searchResults[1]);
 										}
 										if (callback instanceof Function) return callback();
@@ -3116,7 +3238,7 @@
 					} else if (window.location.hash.match(/^#access_token=/)) {
 						_this.login(function (success) {
 							if (success) {
-								debug("login success");
+								//debug("login success");
 								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
 								_this.spin(true, "Synchronising with Dropbox");
@@ -3146,6 +3268,11 @@
 	APP.localTestingMode = localTestingMode;
 
 	window.onresize = layout;//recalc layout on resize for a responsive experience
+
+	if ('scrollRestoration' in window.history) {
+		window.history.scrollRestoration = 'manual';
+	}
+
 
 	if (Windows && WinJS) {
 		console.log("Windows");

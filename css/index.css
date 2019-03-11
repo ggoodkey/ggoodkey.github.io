@@ -99,6 +99,10 @@ img {
 	vertical-align: top;
 }
 
+.roundImage{
+	border-radius: 50%;
+}
+
 h1 {
 	font-size: 46px;
 	line-height: 56px;
@@ -514,6 +518,10 @@ html.desk #closeSidenav {
 
 .dark-theme :visited {
 	color: #555; /*dark-theme link visited*/
+}
+
+.left {
+	float: left;
 }
 
 .right {
@@ -1287,6 +1295,12 @@ html.desk .dark-theme .link:hover,
 	.switch input[type=checkbox]:checked + label {
 		left: 30px;
 	}
+
+.detailsHeader img {
+	height: 132px;
+	width: 132px;
+	margin-right: 16px;
+}
 
 .itemLabel {
 	text-transform: uppercase;

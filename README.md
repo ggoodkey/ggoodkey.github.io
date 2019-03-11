@@ -1,4 +1,5 @@
-# NyckelDB Documentation
+# ![N](favicon.ico)yckelDB Documentation
+
 #### NyckelDB Version 0.2
 ##### October 17, 2018
 Any data that you can visualize as a table or spreadsheet can be stored in a NyckelDB object.
@@ -155,6 +156,7 @@ Function Name | Parameters | Returns | Description
 --------------|------------|---------|------------
 addRow | array, *id | | Add a new row to the table. The array must be complete and contain initial values for all the cells in the row. Id is optional and will only be used if it doesn't already exist.
 deleteRow | rowId | | Delete a row along with all the data that it contains
+getRow | rowId | row Object | Get an entire row from the table including column name, column type, and values
 setVal | rowId, colName, newValue | | Change the value of a cell
 getVal | rowId, colName	| table cell value | Get the value of a cell
 setProp | propName, value | | Change the value of a table [custom property](#custom-properties)
