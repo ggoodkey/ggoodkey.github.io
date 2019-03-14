@@ -217,7 +217,7 @@ var APP = APP || {}, Base64;
 		};
 		DropboxSessionObj.prototype.login = function (password, successCallback, failureCallback) {
 			function auth() {
-				var redirectUri = cordova ? "https://www.dropbox.com/1/oauth2/redirect_receiver" : window.location.pathname.toLowerCase();
+				var redirectUri = cordova ? "https://www.dropbox.com/1/oauth2/redirect_receiver" : window.location.href.toLowerCase().split("#")[0];
 				dropbox.authenticate({ client_id: CLIENT_ID, redirect_uri: redirectUri }, { "onComplete": initiate, "onError": failureCallback });
 			}
 			function initiate() {

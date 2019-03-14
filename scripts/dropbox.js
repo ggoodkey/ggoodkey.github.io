@@ -106,7 +106,7 @@
 			if (isFunction(handlers)) handlers = { onComplete: handlers };
 			apiArgs = apiArgs || {};
 			if (isString(apiArgs)) apiArgs = { client_id: apiArgs };
-			apiArgs.redirect_uri = apiArgs.redirect_uri || window.location.pathname;
+			apiArgs.redirect_uri = apiArgs.redirect_uri || window.location.href;
 			var promise, promisectl = {};
 			if (Promise) {
 				promise = new Promise(function (resolve, reject) { promisectl.resolve = resolve; promisectl.reject = reject; });
