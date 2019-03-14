@@ -605,8 +605,9 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneInit() {
-				checkDBLoaded(function () {
+				checkDBLoaded(function (callback) {
 					app.updateCurrentView();
+					if (callback instanceof Function) return callback();
 				});
 			}
 			function tryDropbox(cachedStoKey) {
@@ -800,7 +801,6 @@
 		//load NyckelDB databases
 		loadDB = true,
 		loadDBQueue = [],
-		loadDBQueueIndex = 0,
 		loadingDB = false,
 		checkDBLoaded = function (callback) {
 			function initDB(title, template, dbNum, numOfTables) {
@@ -826,9 +826,8 @@
 						}
 						app.spin(false);
 						loadDB = false;
-						loadDBQueueIndex--;
-						if (loadDBQueueIndex < 0) return;
-						else return loadDBQueueIndex > 0 ? loadDBQueue[loadDBQueueIndex](cb) : loadDBQueue[loadDBQueueIndex]();
+						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
+						else loadDBQueue.pop()(cb);
 					};
 				}
 				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
@@ -848,8 +847,7 @@
 			}
 			if (loadDB) {
 				if (callback instanceof Function) {
-					loadDBQueue.unshift(callback);
-					loadDBQueueIndex++;
+					loadDBQueue.push(callback);
 				}
 				if (!loadingDB) {
 					loadingDB = true;
@@ -883,7 +881,7 @@
 				}
 				return detailsObj.sort(sortFunction);
 			}
-			checkDBLoaded(function () {
+			checkDBLoaded(function (callback) {
 				app.spin(true, "Loading contact data...");
 				app.details = [];
 				if (app.recentlyViewed.length > 0) {
@@ -945,8 +943,9 @@
 							details[a].text = details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
 						}
 						//split out multiple values in one cell
-						else details[a].text = detailsView.mainContentSplitter ? details[a].text.split(detailsView.mainContentSplitter) : details[a].text.split(" ::: ");
-						//get h1 and h2 header values
+						else if (typeof details[a].text === "string") details[a].text = detailsView.mainContentSplitter ? details[a].text.split(detailsView.mainContentSplitter) : details[a].text.split(" ::: ");
+						else details[a].text = [details[a].text];
+							//get h1 and h2 header values
 						if (detailsView.titleH1) {
 							for (c = 0, lenC = detailsView.titleH1.length; c < lenC; c++) {
 								if (detailsView.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
@@ -968,7 +967,8 @@
 					app.currentDetailsId = obj.id;
 					app.currentDetailsTable = obj.table;
 					app.spin(false);
-					app.navigate("details", null, obj);					
+					app.navigate("details", null, obj);		
+					if (callback instanceof Function) return callback();
 				});
 			});
 		},
@@ -1120,14 +1120,17 @@
 		},
 		initializeGroups = function (callback) {
 			if (app.groups.length === 0) {
-				wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
-					var ids = [];
-					for (var a = 0; a < length; a++) ids[a] = a;
-					wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
-						for (var a = 0, len = vals.length; a < len; a++) {
-							app.groups[a] = vals[a][1];
-						}
-						if (callback instanceof Function) return callback();
+				checkDBLoaded(function (cb) {
+					wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
+						var ids = [];
+						for (var a = 0; a < length; a++) ids[a] = a;
+						wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
+							for (var a = 0, len = vals.length; a < len; a++) {
+								app.groups[a] = vals[a][1];
+							}
+							if (cb instanceof Function) cb();
+							if (callback instanceof Function) return callback();
+						});
 					});
 				});
 			}
@@ -1148,7 +1151,10 @@
 						if (callback instanceof Function) return callback();
 					});
 				}
-				else debug(tableTitle, "error generating list view");
+				else {
+					debug(tableTitle, "error generating list view");
+					if (callback instanceof Function) return callback();
+				}
 			});
 		},
 		importFile = function (toTable) {
@@ -1657,11 +1663,12 @@
 		Recent = {
 		data: function () {
 			return {
-				recentlyViewed: state.recentlyViewed
+				recentlyViewed: state.recentlyViewed,
+				splitView: state.splitView
 			};
 		},
 		template: "\
-			<div id=\"recentView\" class=\"view\">\
+			<div id=\"recentView\" class=\"view\" v-bind:class=\"{splitViewLeft: splitView}\">\
 				<div v-if=\"recentlyViewed && recentlyViewed.length > 0\" class=\"view-container\" >\
 					<h1>Recently Viewed</h1>\
 					<jump-list v-bind:links=\"recentlyViewed\" scrolldiv=\"recentView\"></jump-list>\
@@ -1774,9 +1781,7 @@
 			},
 			groupInput: function (e) {
 				var value = e ? e.target.value : app.groupSearchBox,
-					_this = this,
-					n = 0,
-					numOfTables = 0;
+					_this = this;
 				checkDBLoaded(function (callback) {
 					if (value !== "") {
 						var find = String(value);
@@ -1787,9 +1792,6 @@
 						find = trim(find);
 						_this.activeGroup = [];
 						document.getElementById("app").focus();
-						for (let t in dataTemplates) {
-							numOfTables++;
-						}
 						for (let table in dataTemplates) {
 							if (dataTemplates.hasOwnProperty(table)) {
 								(function (table) {
@@ -1797,8 +1799,6 @@
 										if (!errors && searchResults && searchResults.length > 0) {
 											generateList(table, searchResults, null, null, null, true, function (list) {
 												_this.activeGroup = _this.activeGroup.concat(list);
-												n++;
-												if (n === numOfTables && callback instanceof Function) return callback();
 											});
 										}
 									});
@@ -1806,6 +1806,7 @@
 							}
 						}
 					}
+					if (callback instanceof Function) return callback();
 				});
 			},
 			groupKeyUp: function (e) {
@@ -2060,7 +2061,8 @@
 				addItemToGroupDropdown: state.addItemToGroupDropdown,
 				groups: state.groups,
 				currentDetailsId: state.currentDetailsId,
-				currentDetailsTable: state.currentDetailsTable
+				currentDetailsTable: state.currentDetailsTable,
+				splitView: state.splitView
 			};
 		},
 		methods: {
@@ -2135,7 +2137,7 @@
 			addToNewGroup: addToNewGroup,
 			seeDetails: seeDetails
 		},
-		template: "<div class=\"view\">\
+		template: "<div class=\"view\" v-bind:class=\"{splitViewRight: splitView}\">\
 			<div class=\"view-container\" v-if=\"details[0] && details[0].text\">\
 				<div class=\"detailsHeader\">\
 					<img v-if=\"detailsImage\" v-bind:src=\"detailsImage\" class=\"roundImage left\"/>\
@@ -2221,7 +2223,8 @@
 				searchResultsError: state.searchResultsError,
 				addSearchToGroupDropdown: state.addSearchToGroupDropdown,
 				groups: state.groups,
-				selectSearchResults: false
+				selectSearchResults: false,
+				splitView: state.splitView
 			};
 		},
 		methods: {
@@ -2232,7 +2235,7 @@
 			},
 			addToNewGroup: addToNewGroup
 		},
-		template: "<div id=\"searchResultsView\" class=\"view\">\
+		template: "<div id=\"searchResultsView\" class=\"view\"  v-bind:class=\"{splitViewLeft: splitView}\">\
 			<div class=\"view-container\">\
 				<div v-if=\"searchResults.length > 0\">\
 					<h2>{{ searchResultsTitle }}</h2>\
@@ -2303,7 +2306,7 @@
 		</div>"
 	};
 	const Blank = {
-		template: "<div class=\"view\"><div class='hidden'></div></div>"
+		template: "<div class=\"view hidden\"><div class='view-container'></div></div>"
 	};
 	const routes = [
 		{
@@ -2336,7 +2339,9 @@
 				viewRight: Blank
 			},
 			meta: {
-				title: 'Recent - Nyckel (Beta)'
+				title: 'Recent - Nyckel (Beta)',
+				preventScrollTop: true,
+				scrollDiv: "recentView"
 			}
 		},
 		{
@@ -2391,7 +2396,9 @@
 				viewRight: Blank
 			},
 			meta: {
-				title: 'Search Results - Nyckel (Beta)'
+				title: 'Search Results - Nyckel (Beta)',
+				preventScrollTop: true,
+				scrollDiv: "searchResultsView"
 			}
 		},
 		{
@@ -2424,7 +2431,9 @@
 				viewRight: Details
 			},
 			meta: {
-				title: 'Search Results - Nyckel (Beta)'
+				title: 'Search Results - Nyckel (Beta)',
+				preventScrollTop: true,
+				scrollDiv: "searchResultsView"
 			}
 		},
 		{
@@ -2435,7 +2444,9 @@
 				viewRight: Details
 			},
 			meta: {
-				title: 'Recent - Nyckel (Beta)'
+				title: 'Recent - Nyckel (Beta)',
+				preventScrollTop: true,
+				scrollDiv: "recentView"
 			}
 		},
 		{
@@ -2460,6 +2471,7 @@
 		mounted: function() {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
+
 				// This goes through the matched routes from last to first, finding the closest route with a title.
 				// eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
 				const nearestWithTitle = to.matched.slice().reverse().find(function (r) { r.meta && r.meta.title; });
@@ -2467,11 +2479,32 @@
 				// If a route with a title was found, set the document (page) title to that value.
 				if (nearestWithTitle) document.title = nearestWithTitle.meta.title;
 
-				next();
+				if (from.meta && from.meta.preventScrollTop && backstack[backIndex - 1]) {
+					//let _historyList = this.vsbHistoryList;
+					var div = to.meta.scrollDiv ? document.getElementById(from.meta.scrollDiv) : null;
+					backstack[backIndex - 1].scroll = from.meta.scrollDiv && div ? div.scrollTop : window.pageYOffset;
+
+					//let currentPathIndex = _historyList.findIndex(function (e) {
+					//	return e.path === from.fullPath;
+					//});
+
+					//if (currentPathIndex !== -1) {
+					//	_historyList[currentPathIndex].position = position;
+					//} else {
+					//	_historyList.push({
+					//		path: from.fullPath,
+					//		position: position
+					//	});
+					//}
+
+					next();
+				}
+				// Ignore route
+				else next();
 			});
 		},
 		methods: {
-			updateCurrentView: function (to) {
+			updateCurrentView: function (to, from) {
 				to = to || { name: this.$route.name, query: this.$route.query };
 				var _this = this,
 					location = to.name;
@@ -2489,14 +2522,17 @@
 					setNavLinkIndicatorPosition(location);
 					if (location === "groups") initializeGroups();
 				}
-				if (to.query && to.query.i !== undefined) {
-					if (parseInt(to.query.i) !== backIndex) backIndex = parseInt(to.query.i);
+				if (to.query && to.query.page !== undefined) {
+					if (parseInt(to.query.page) !== backIndex) backIndex = parseInt(to.query.page);
 					else backIndex++;
+					backstack[backIndex - 1] = backstack[backIndex - 1] || {};
+					location = location || backstack[backIndex].view;
+					backstack[backIndex - 1].view = location;
 				} else backIndex = 0;
-				location = location || backstack[backIndex];
-				backstack[backIndex - 1] = location;
-
-				if (to.query && to.query.search && to.query.search !== this.currentQuery) {
+				
+			
+				if (to.query && to.query.search && to.query.search !== encodeURIComponent(this.currentQuery)) {
+					this.currentQuery = to.query.search;
 					this.search(null, to.query.search);
 				}
 				//show hide back arrow
@@ -2505,10 +2541,19 @@
 					currentview.appViewBackButtonVisibility = backIndex < 1;
 				}
 				else this.backArrow = backIndex > 0;
+
+				if (backstack[backIndex - 2] && backstack[backIndex - 2].scroll && from.meta && from.meta.preventScrollTop) {
+					Vue.nextTick(function () {
+						var el = from.meta.scrollDiv ? document.getElementById(from.meta.scrollDiv) : window;
+						if (el) el.scrollTop = parseInt(backstack[backIndex - 2].scroll);
+						//else debug(from.meta.scrollDiv, "element not found");
+					});
+				}
+
 				setTimeout(function () {
 					_this.viewTransition = false;
 					setTimeout(function () {
-						_this.viewTransitionDone = true;
+						_this.viewTransitionDone = true;						
 					}, 210);
 				}, 210);
 			},
@@ -2544,17 +2589,17 @@
 				id
 			}*/
 			navigate: function (location, searchquery, detailsObj) {
-				var query = { i: backIndex + 1 };
+				var query = { page: backIndex + 1 };
 				if (searchquery) {
 					query.search = encodeURIComponent(searchquery);
-					if ("#/" + location + "?i=" + backIndex + "&search=" + query.search === window.location.hash) return;//dont navigate if no change
+					if ("#/" + location + "?page=" + backIndex + "&search=" + query.search === window.location.hash) return;//dont navigate if no change
 				}
 				else if (detailsObj) {
 					query.id = detailsObj.id;
 					query.table = detailsObj.table;
-					if ("#/" + this.currentView.path + "/" + location + "?i=" + backIndex + "&id=" + query.id + "&table=" + query.table === window.location.hash) return;//dont navigate if no change
+					if ("#/" + this.currentView.path + "/" + location + "?page=" + backIndex + "&id=" + query.id + "&table=" + query.table === window.location.hash) return;//dont navigate if no change
 				}
-				else if ("#/" + location + "?i=" + backIndex === window.location.hash) return; //dont navigate if no change				
+				else if ("#/" + location + "?page=" + backIndex === window.location.hash) return; //dont navigate if no change				
 				if (location === "details") {
 					if (this.$route.path === this.currentView.path + "/details") {
 						this.$router.replace({ query: query });
@@ -2562,7 +2607,7 @@
 					else this.$router.push({ path: this.currentView.path + "/details",  query: query });
 				}
 				else if (location) this.$router.push({ path: "/" + location, query: query });
-				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex], query: query });
+				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex].view, query: query });
 				else {
 					// get location from url hash
 					this.$router.push({ path: this.$route.path, query: this.$route.query });
@@ -2633,9 +2678,10 @@
 												startApp();
 												loadDB = true;
 												loadDBQueue = [];
-												loadDBQueueIndex = 0;
 												loadingDB = false;
-												checkDBLoaded();
+												checkDBLoaded(function (callback) {
+													if (callback instanceof Function) return callback();
+												});
 											}, 1000);
 										}, 1000);
 									});
@@ -2722,14 +2768,15 @@
 				this.searchPointer = -1;
 				document.getElementById("searchBox").focus();
 			},
-			searchKeyPress: function (e) {
+			searchKeyPress: function (e) {			
 				var keyCode = e.which || e.keyCode || 0;
 				if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
 					e.preventDefault();
 				} else {
 					this.searchPointer = -1;
 					var key = e.char || e.key;
-					if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) this.searchBox = trim(this.searchBox + key);
+					//debug(key);
+					//if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) this.searchBox = trim(this.searchBox + key);
 				}
 			},
 			searchInput: function (e) {
@@ -2777,7 +2824,9 @@
 							wwManager({ "cmd": "getSearchSuggestions", "title": table, "args": [str, { colNames: searchableColumns }] }, displaySuggestions);
 						}
 					}
-					else checkDBLoaded();
+					else checkDBLoaded(function (callback) {
+						if (callback instanceof Function) return callback();
+					});
 				}
 				else {
 					this.searchPointer = -1;
@@ -2791,6 +2840,7 @@
 				switch (keyCode) {
 					case 8://backspace
 						if (this.searchBox === "") {
+							this.searchPointer = -1;
 							this.searchSuggestions = [];
 							this.searchAutoComplete = "";
 						}
@@ -2835,7 +2885,7 @@
 				}
 				if (keyCode === 32) {
 					if (this.searchBox !== "" && this.searchBox.slice(-1) !== " ") {
-						this.searchBox = this.searchSuggestions[0] ? this.searchSuggestions[0] + " " : this.searchBox + " ";
+						this.searchBox = this.searchSuggestions[0] ? this.searchPointer > -1 ? this.searchSuggestions[this.searchPointer] + " " : this.searchSuggestions[0] + " " : this.searchBox + " ";
 					}
 				}
 			},
@@ -3087,13 +3137,13 @@
 					//APP.ADDRESSBOOK.mergeBooks(input, replaceExisting, finish);
 					debug("parseJSON not done");
 				}
-				function click() {
+				function click(callback) {
 					document.getElementById(fileInputId).click();
+					if (callback instanceof Function) return callback();
 				}
 				var _this = this;
 				checkDBLoaded(function (callback) {
-					init(click);
-					if (callback instanceof Function) return callback();
+					init(function () { click(callback); });
 				});
 			},
 			/*options = {
@@ -3248,15 +3298,14 @@
 								debug("login fail");
 								console.log("cannot sync to Dropbox now");
 								_this.spin(false);
-								if (callback instanceof Function) return callback();
 							}
 						});
 					}
 					else {
 						console.log("cannot sync to Dropbox now");
 						_this.spin(false);
-						if (callback instanceof Function) return callback();
 					}
+					if (callback instanceof Function) return callback();
 				});
 			}
 		}

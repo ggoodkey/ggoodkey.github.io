@@ -65,6 +65,7 @@
 			<div id="search" class="navlink right" v-on:click="search" tabindex="11"><span class="icon icon-search"></span></div>
 			<form id="searchBar" class="right">
 				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
+				<!--<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />-->
 				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
 				<div id="searchAutoComplete"> {{ searchAutoComplete }}</div>
 				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
@@ -152,8 +153,8 @@
 			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
 		</div>
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
-		<router-view v-bind:class="{splitViewLeft: splitView}" :key="$route.fullPath"></router-view>
-		<router-view v-bind:class="{splitViewRight: splitView}" name="viewRight" :key="$route.fullPath + 1"></router-view>
+		<router-view :key="$route.fullPath"></router-view>
+		<router-view name="viewRight" :key="$route.fullPath + 1"></router-view>
 		
 		<input type="file" class="hidden" id="hiddenCSVInput" />
 	</div>

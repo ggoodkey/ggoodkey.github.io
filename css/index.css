@@ -14,7 +14,7 @@
 	color: rgba(120, 120, 120, 0.75); /*light and dark theme medium grey*/
 	color: #555; /*dark-theme link visited*/
 	color: #1f1f1f; /*dark-theme nav panel*/
-	color: black; /*dark-theme page color*/
+	color: #111; /*dark-theme page color*/
 	color: black; /*main text color*/
 }
 
@@ -479,7 +479,7 @@ html.phon #searchSuggestions-container {
 	html.phon .dark-theme #searchSuggestions-container,
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm {
-		background-color: black; /*dark-theme page color*/
+		background-color: #111; /*dark-theme page color*/
 	}
 
 #closeSidenav {
@@ -780,7 +780,7 @@ html.tabl #app.sidenav_open #sidenav {
 	height: 3px;
 	top: 50px;
 	will-change: right, width;
-	transition: all ease-out 0.1s;
+	transition: all ease-out 0.2s;
 }
 
 #sideIndicator {
@@ -788,7 +788,7 @@ html.tabl #app.sidenav_open #sidenav {
 	width: 3px;
 	height: 54px;
 	will-change: top;
-	transition: top ease-out 0.1s;
+	transition: top ease-out 0.2s;
 }
 #stoKeyInput,
 #stoKeyInputConfirm {
