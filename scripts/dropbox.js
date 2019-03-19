@@ -12,7 +12,7 @@
 	}
 }(this, function () {
 	'use strict';
-	var toString = ({}).toString;
+	var toString = {}.toString;
 	function isFunction(x, type) { return toString.call(x) === '[object Function]'; }
 	function isString(x, type) { return toString.call(x) === '[object String]'; }
 	function isObject(x, type) { return toString.call(x) === '[object Object]'; }

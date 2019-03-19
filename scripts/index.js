@@ -55,16 +55,6 @@
 				name: "Edit",
 				level: 3,
 				path: "/edit"
-			},
-			recentdetails: {
-				name: "Details",
-				level: 2,
-				path: "/recentdetails"
-			},
-			searchdetails: {
-				name: "Details",
-				level: 2,
-				path: "/searchdetails"
 			}
 		},
 		startView = "recent", //set the view to start at by default		
@@ -344,8 +334,6 @@
 			return {//vue.js variables
 				version: APP_VERSION,
 				views: views,
-				viewTransition: false,
-				viewTransitionDone: true,
 				backArrow: false,
 				currentView: views[startView],
 				spinner: false,
@@ -354,7 +342,6 @@
 				indicatorRight: -164,
 				indicatorWidth: 0,
 				indicatorTop: 53,
-				splitView: false,
 				showSearchBar: false,
 				showSearchSuggestions: false,
 				showSideNav: false,
@@ -1663,12 +1650,11 @@
 		Recent = {
 		data: function () {
 			return {
-				recentlyViewed: state.recentlyViewed,
-				splitView: state.splitView
+				recentlyViewed: state.recentlyViewed
 			};
 		},
 		template: "\
-			<div id=\"recentView\" class=\"view\" v-bind:class=\"{splitViewLeft: splitView}\">\
+			<div id=\"recentView\" class=\"view\">\
 				<div v-if=\"recentlyViewed && recentlyViewed.length > 0\" class=\"view-container\" >\
 					<h1>Recently Viewed</h1>\
 					<jump-list v-bind:links=\"recentlyViewed\" scrolldiv=\"recentView\"></jump-list>\
@@ -2061,8 +2047,7 @@
 				addItemToGroupDropdown: state.addItemToGroupDropdown,
 				groups: state.groups,
 				currentDetailsId: state.currentDetailsId,
-				currentDetailsTable: state.currentDetailsTable,
-				splitView: state.splitView
+				currentDetailsTable: state.currentDetailsTable
 			};
 		},
 		methods: {
@@ -2137,7 +2122,7 @@
 			addToNewGroup: addToNewGroup,
 			seeDetails: seeDetails
 		},
-		template: "<div class=\"view\" v-bind:class=\"{splitViewRight: splitView}\">\
+		template: "<div class=\"view\">\
 			<div class=\"view-container\" v-if=\"details[0] && details[0].text\">\
 				<div class=\"detailsHeader\">\
 					<img v-if=\"detailsImage\" v-bind:src=\"detailsImage\" class=\"roundImage left\"/>\
@@ -2223,8 +2208,7 @@
 				searchResultsError: state.searchResultsError,
 				addSearchToGroupDropdown: state.addSearchToGroupDropdown,
 				groups: state.groups,
-				selectSearchResults: false,
-				splitView: state.splitView
+				selectSearchResults: false
 			};
 		},
 		methods: {
@@ -2235,7 +2219,7 @@
 			},
 			addToNewGroup: addToNewGroup
 		},
-		template: "<div id=\"searchResultsView\" class=\"view\"  v-bind:class=\"{splitViewLeft: splitView}\">\
+		template: "<div id=\"searchResultsView\" class=\"view\">\
 			<div class=\"view-container\">\
 				<div v-if=\"searchResults.length > 0\">\
 					<h2>{{ searchResultsTitle }}</h2>\
@@ -2305,16 +2289,15 @@
 			</div>\
 		</div>"
 	};
-	const Blank = {
-		template: "<div class=\"view hidden\"><div class='view-container'></div></div>"
+	const NotFound = {
+		template: "<div class=\"view\"><div class=\"view-container\"><h1>Page Not Found :´(</h1><h3>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h3></div></div>"
 	};
 	const routes = [
 		{
 			path: '/',
 			name: "home",
 			components: {
-				default: Recent,
-				viewRight: Blank
+				default: Recent
 			},
 			meta: {
 				title: 'Home page - Nyckel (Beta)'
@@ -2324,8 +2307,7 @@
 			path: '/new',
 			name: "new",
 			components: {
-				default: New,
-				viewRight: Blank
+				default: New
 			},
 			meta: {
 				title: 'Create a new table - Nyckel (Beta)'
@@ -2335,21 +2317,17 @@
 			path: '/recent',
 			name: "recent",
 			components: {
-				default: Recent,
-				viewRight: Blank
+				default: Recent
 			},
 			meta: {
-				title: 'Recent - Nyckel (Beta)',
-				preventScrollTop: true,
-				scrollDiv: "recentView"
+				title: 'Recent - Nyckel (Beta)'
 			}
 		},
 		{
 			path: '/groups',
 			name: "groups",
 			components: {
-				default: Groups,
-				viewRight: Blank
+				default: Groups
 			},
 			meta: {
 				title: 'Groups - Nyckel (Beta)'
@@ -2359,8 +2337,7 @@
 			path: '/view1',
 			name: "view1",
 			components: {
-				default: View1,
-				viewRight: Blank
+				default: View1
 			},
 			meta: {
 				title: 'Contacts - Nyckel (Beta)'
@@ -2370,8 +2347,7 @@
 			path: '/view2',
 			name: "view2",
 			components: {
-				default: View2,
-				viewRight: Blank
+				default: View2
 			},
 			meta: {
 				title: 'Passwords - Nyckel (Beta)'
@@ -2381,8 +2357,7 @@
 			path: '/view3',
 			name: "view3",
 			components: {
-				default: View3,
-				viewRight: Blank
+				default: View3
 			},
 			meta: {
 				title: 'Files - Nyckel (Beta)'
@@ -2392,21 +2367,17 @@
 			path: '/search',
 			name: "search",
 			components: {
-				default: Search,
-				viewRight: Blank
+				default: Search
 			},
 			meta: {
-				title: 'Search Results - Nyckel (Beta)',
-				preventScrollTop: true,
-				scrollDiv: "searchResultsView"
+				title: 'Search Results - Nyckel (Beta)'
 			}
 		},
 		{
 			path: '/edit',
 			name: "edit",
 			components: {
-				default: Edit,
-				viewRight: Blank
+				default: Edit
 			},
 			meta: {
 				title: 'Edit - Nyckel (Beta)'
@@ -2416,45 +2387,17 @@
 			path: '/details',
 			name: "details",
 			components: {
-				default: Details,
-				viewRight: Blank
+				default: Details
 			},
 			meta: {
 				title: 'Details - Nyckel (Beta)'
 			}
 		},
 		{
-			path: '/search/details',
-			name: "searchdetails",
-			components: {
-				default: Search,
-				viewRight: Details
-			},
-			meta: {
-				title: 'Search Results - Nyckel (Beta)',
-				preventScrollTop: true,
-				scrollDiv: "searchResultsView"
-			}
-		},
-		{
-			path: '/recent/details',
-			name: "recentdetails",
-			components: {
-				default: Recent,
-				viewRight: Details
-			},
-			meta: {
-				title: 'Recent - Nyckel (Beta)',
-				preventScrollTop: true,
-				scrollDiv: "recentView"
-			}
-		},
-		{
 			path: '*',
 			name: "notfound",
 			components: {
-				default: Recent,
-				viewRight: Blank
+				default: NotFound
 			},
 			meta: {
 				title: 'Page not found :( - Nyckel (Beta)'
@@ -2479,28 +2422,7 @@
 				// If a route with a title was found, set the document (page) title to that value.
 				if (nearestWithTitle) document.title = nearestWithTitle.meta.title;
 
-				if (from.meta && from.meta.preventScrollTop && backstack[backIndex - 1]) {
-					//let _historyList = this.vsbHistoryList;
-					var div = to.meta.scrollDiv ? document.getElementById(from.meta.scrollDiv) : null;
-					backstack[backIndex - 1].scroll = from.meta.scrollDiv && div ? div.scrollTop : window.pageYOffset;
-
-					//let currentPathIndex = _historyList.findIndex(function (e) {
-					//	return e.path === from.fullPath;
-					//});
-
-					//if (currentPathIndex !== -1) {
-					//	_historyList[currentPathIndex].position = position;
-					//} else {
-					//	_historyList.push({
-					//		path: from.fullPath,
-					//		position: position
-					//	});
-					//}
-
-					next();
-				}
-				// Ignore route
-				else next();
+				next();
 			});
 		},
 		methods: {
@@ -2509,53 +2431,31 @@
 				var _this = this,
 					location = to.name;
 				if (location === "home") location = this.startView;
-				if (location === "searchdetails" || location === "recentdetails" || location === "details") {
-					if (to.query && (to.query.id !== this.currentDetailsId || to.query.table !== this.currentDetailsTable))
-						this.seeDetails({ table: to.query.table, id: to.query.id });
-					this.splitView = true;
+				if (location === "details") {
+					if (to.query && (to.query.id !== _this.currentDetailsId || to.query.table !== _this.currentDetailsTable))
+						_this.seeDetails({ table: to.query.table, id: to.query.id });
 				}
-				else {
-					this.viewTransitionDone = false;
-					this.viewTransition = true;
-					this.splitView = false;
-					this.currentView = this.views[location] || this.views[startView];
-					setNavLinkIndicatorPosition(location);
-					if (location === "groups") initializeGroups();
+				this.currentView = this.views[location] || this.views[startView];
+				setNavLinkIndicatorPosition(location);
+				if (location === "groups") initializeGroups();
+				if (to.query && to.query.search && to.query.search !== encodeURIComponent(_this.currentQuery)) {
+					_this.currentQuery = to.query.search;
+					_this.search(null, to.query.search);
 				}
 				if (to.query && to.query.page !== undefined) {
 					if (parseInt(to.query.page) !== backIndex) backIndex = parseInt(to.query.page);
 					else backIndex++;
-					backstack[backIndex - 1] = backstack[backIndex - 1] || {};
-					location = location || backstack[backIndex].view;
-					backstack[backIndex - 1].view = location;
-				} else backIndex = 0;
-				
-			
-				if (to.query && to.query.search && to.query.search !== encodeURIComponent(this.currentQuery)) {
-					this.currentQuery = to.query.search;
-					this.search(null, to.query.search);
+					location = location || backstack[backIndex];
+					backstack[backIndex - 1] = location;
 				}
+				else backIndex = 0;
+				
 				//show hide back arrow
 				if (Windows && WinJS) {
 					var currentview = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
 					currentview.appViewBackButtonVisibility = backIndex < 1;
 				}
-				else this.backArrow = backIndex > 0;
-
-				if (backstack[backIndex - 2] && backstack[backIndex - 2].scroll && from.meta && from.meta.preventScrollTop) {
-					Vue.nextTick(function () {
-						var el = from.meta.scrollDiv ? document.getElementById(from.meta.scrollDiv) : window;
-						if (el) el.scrollTop = parseInt(backstack[backIndex - 2].scroll);
-						//else debug(from.meta.scrollDiv, "element not found");
-					});
-				}
-
-				setTimeout(function () {
-					_this.viewTransition = false;
-					setTimeout(function () {
-						_this.viewTransitionDone = true;						
-					}, 210);
-				}, 210);
+				else this.backArrow = backIndex > 0;				
 			},
 			goBack: function () {
 				if (this.showSearchBar) {
@@ -2600,14 +2500,8 @@
 					if ("#/" + this.currentView.path + "/" + location + "?page=" + backIndex + "&id=" + query.id + "&table=" + query.table === window.location.hash) return;//dont navigate if no change
 				}
 				else if ("#/" + location + "?page=" + backIndex === window.location.hash) return; //dont navigate if no change				
-				if (location === "details") {
-					if (this.$route.path === this.currentView.path + "/details") {
-						this.$router.replace({ query: query });
-					}
-					else this.$router.push({ path: this.currentView.path + "/details",  query: query });
-				}
-				else if (location) this.$router.push({ path: "/" + location, query: query });
-				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex].view, query: query });
+				if (location) this.$router.push({ path: "/" + location, query: query });
+				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex], query: query });
 				else {
 					// get location from url hash
 					this.$router.push({ path: this.$route.path, query: this.$route.query });
@@ -2713,7 +2607,6 @@
 												else _this.searchResultsError = 'No data found';
 											});
 										}
-										_this.navigate("search", _this.currentQuery);
 										_this.spin(false);
 										if (_this.searchResults.length === 1 && _this.searchResults[0].type === "link") {
 											_this.seeDetails(_this.searchResults[0]);
@@ -2721,6 +2614,7 @@
 										else if (_this.searchResults.length === 2 && _this.searchResults[0].type === "jumplink") {
 											_this.seeDetails(_this.searchResults[1]);
 										}
+										else _this.navigate("search", _this.currentQuery);
 										if (callback instanceof Function) return callback();
 									}
 								});
@@ -3317,11 +3211,6 @@
 	APP.localTestingMode = localTestingMode;
 
 	window.onresize = layout;//recalc layout on resize for a responsive experience
-
-	if ('scrollRestoration' in window.history) {
-		window.history.scrollRestoration = 'manual';
-	}
-
 
 	if (Windows && WinJS) {
 		console.log("Windows");

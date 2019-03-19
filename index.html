@@ -2,7 +2,7 @@
 <html>
 <head>
 
-	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com https://dropbox-api.arkoselabs.com/ https://www.dropbox.com https://*.googleusercontent.com/ 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com/2/ https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com/2/ https://dropbox-api.arkoselabs.com/ https://www.dropbox.com https://*.googleusercontent.com/ 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
 	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 	<meta name="format-detection" content="telephone=no" />
 	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
@@ -55,7 +55,7 @@
 </head>
 <body>
 	<div id="loading"></div>
-	<div id="app" v-bind:class="{'sidenav_open': showSideNav, 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme, changeViewTransition: viewTransition, changeViewDone: viewTransitionDone }">
+	<div id="app" v-bind:class="{'sidenav_open': showSideNav, 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
 			<div id="currentView"> {{ currentView.name }}</div>
@@ -153,9 +153,11 @@
 			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
 		</div>
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
-		<router-view :key="$route.fullPath"></router-view>
-		<router-view name="viewRight" :key="$route.fullPath + 1"></router-view>
-		
+		<div id="router-views">
+			<transition name="fade" mode="out-in">
+				<router-view></router-view>
+			</transition>
+		</div>
 		<input type="file" class="hidden" id="hiddenCSVInput" />
 	</div>
 	<script type="text/javascript" src="scripts/vue.min.js"></script>

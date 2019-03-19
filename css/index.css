@@ -468,14 +468,12 @@ html.desk .tabl {
 
 html,
 #app,
-.view:after,
 html.phon #searchSuggestions-container {
 	background-color: #eee; /*page color*/
 }
 
 	#app.dark-theme,
 	.dark-theme #searchBar,
-	.dark-theme .view:after,
 	html.phon .dark-theme #searchSuggestions-container,
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm {
@@ -826,13 +824,17 @@ html.tabl #app.sidenav_open #sidenav {
 	color: #555;
 }
 
+#router-views{
+	width: 200%;
+	height: 100%;
+}
+
 .view {
-	width: 100%;
+	width: 50%;
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: auto;
-	will-change: width;
-	transition: width ease 0.2s;
+	float: left;
 }
 
 .view-container {
@@ -844,32 +846,6 @@ html.tabl #app.sidenav_open #sidenav {
 	margin-right: auto;
 }
 
-.view:after {
-	content: "";
-	position: fixed;
-	top: 54px;
-	left: 0;
-	right: 16px;
-	bottom: 0;
-	transition: opacity ease 0.2s;
-	opacity: 0;
-	display: block;
-}
-
-.changeViewTransition .view:after {
-	opacity: 1;
-}
-
-.changeViewTransition .splitViewLeft.view:after {
-	display: none;
-}
-
-.splitViewRight.view:after {
-	left: auto;
-	width: 60%;
-}
-
-.changeViewDone .view:after,
 .splitViewLeft {
 	display: none;
 }
@@ -877,7 +853,7 @@ html.tabl #app.sidenav_open #sidenav {
 html.desk .splitViewLeft {
 	display: block;
 	float: left;
-	width: 40%;
+	width: 20%;
 	border-right: solid 2px lightgray;
 }
 
@@ -886,8 +862,7 @@ html.desk .dark-theme .splitViewLeft {
 }
 
 html.desk .splitViewRight {
-	float: left;
-	width: 60%;
+	width: 30%;
 }
 
 html.phon .searchBar_open #back,
@@ -1619,4 +1594,29 @@ button[disabled="disabled"]:focus {
 ::-webkit-scrollbar-thumb {
 	background: rgba(128, 128, 128, 0.25);
 	border-radius: 2px;
+}
+
+/*vue transitions*/
+.fade-enter-active, .fade-leave-active {
+	transition: opacity .2s ease;
+}
+
+.fade-enter, .fade-leave-to {
+	opacity: 0;
+}
+
+.width-enter-active, .width-leave-active {
+	transition: width .2s ease;
+}
+
+.width-enter, .width-leave-to {
+	width: 20%;
+}
+
+.slide-enter-active, .slide-leave-active {
+	transition: transform .2s ease;
+}
+
+.slide-enter, .slide-leave-to {
+	transform: translateX(30%);
 }
