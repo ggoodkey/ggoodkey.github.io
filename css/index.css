@@ -105,8 +105,11 @@ img {
 	vertical-align: top;
 }
 
-.roundImage{
+.roundImage {
 	border-radius: 50%;
+	height: 64px;
+	width: 64px;
+	margin: 0 12px;
 }
 
 h1 {
@@ -450,8 +453,9 @@ img {
 
 html.phon.land #app,
 html.tabl #app {
-	right: 54px;
+	right: 0px;
 	width: auto;
+	padding-right: 54px;
 }
 
 #app .hidden,
@@ -477,7 +481,8 @@ html.desk .tabl {
 
 html,
 #app,
-html.phon #searchSuggestions-container {
+html.phon #searchSuggestions-container,
+.splitViewRight{
 	background-color: #eee; /*page color*/
 }
 
@@ -485,7 +490,8 @@ html.phon #searchSuggestions-container {
 	.dark-theme #searchBar,
 	html.phon .dark-theme #searchSuggestions-container,
 	.dark-theme #stoKeyInput,
-	.dark-theme #stoKeyInputConfirm {
+	.dark-theme #stoKeyInputConfirm,
+	.dark-theme .splitViewRight{
 		background-color: #111; /*dark-theme page color*/
 	}
 
@@ -671,10 +677,10 @@ html.desk .dark-theme button:hover:active {
 	bottom: 0;
 	right: -320px;
 	will-change: transform;
-	-webkit-transition: transform ease 0.2s;
-	-moz-transition: transform ease 0.2s;
-	-o-transition: transform ease 0.2s;
-	transition: transform ease 0.2s;
+	-webkit-transition: transform 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-moz-transition: transform 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-o-transition: transform 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	transition: transform 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
 	-webkit-transform: translateX(0px);
 	-moz-transform: translateX(0px);
 	-ms-transform: translateX(0px);
@@ -694,6 +700,15 @@ topnav-container{
 	width: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
+	padding-right: 30px;
+}
+
+html.phon #sidenav-container,
+html.tabl #sidenav-container {
+	scrollbar-width: none;
+	overflow-y: scroll;
+	padding-right: 30px;
+	width: 100%; /*hide scrollbar hack*/
 }
 
 html.phon.land #sidenav,
@@ -702,20 +717,20 @@ html.tabl #sidenav {
 }
 
 #app.sidenav_open #sidenav {
-	-webkit-transform: translateX(-320px);
-	-moz-transform: translateX(-320px);
-	-ms-transform: translateX(-320px);
-	-o-transform: translateX(-320px);
-	transform: translateX(-320px);
+	-webkit-transform: translateX(-290px);
+	-moz-transform: translateX(-290px);
+	-ms-transform: translateX(-290px);
+	-o-transform: translateX(-290px);
+	transform: translateX(-290px);
 }
 
 html.phon.land #app.sidenav_open #sidenav,
 html.tabl #app.sidenav_open #sidenav {
-	-webkit-transform: translateX(-264px);
-	-moz-transform: translateX(-264px);
-	-ms-transform: translateX(-264px);
-	-o-transform: translateX(-264px);
-	transform: translateX(-264px);
+	-webkit-transform: translateX(-234px);
+	-moz-transform: translateX(-234px);
+	-ms-transform: translateX(-234px);
+	-o-transform: translateX(-234px);
+	transform: translateX(-234px);
 }
 
 #app.sidenav_open #closeSidenav {
@@ -747,10 +762,10 @@ html.tabl #app.sidenav_open #sidenav {
 	height: 3px;
 	top: 50px;
 	will-change: right, width;
-	-webkit-transition: all ease-out 0.2s;
-	-moz-transition: all ease-out 0.2s;
-	-o-transition: all ease-out 0.2s;
-	transition: all ease-out 0.2s;
+	-webkit-transition: all cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	-moz-transition: all cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	-o-transition: all cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	transition: all cubic-bezier(.4, 1, .4, 1.2) 0.3s;
 }
 
 #sideIndicator {
@@ -758,10 +773,10 @@ html.tabl #app.sidenav_open #sidenav {
 	width: 3px;
 	height: 54px;
 	will-change: top;
-	-webkit-transition: top ease-out 0.2s;
-	-moz-transition: top ease-out 0.2s;
-	-o-transition: top ease-out 0.2s;
-	transition: top ease-out 0.2s;
+	-webkit-transition: top cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	-moz-transition: top cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	-o-transition: top cubic-bezier(.4, 1, .4, 1.2) 0.3s;
+	transition: top cubic-bezier(.4, 1, .4, 1.2) 0.3s;
 }
 #stoKeyInput,
 #stoKeyInputConfirm {
@@ -810,16 +825,28 @@ html.tabl #app.sidenav_open #sidenav {
 }
 
 .view {
-	width: 50%;
+	width: 51%;
+	padding-right: 1%;
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: auto;
 	float: left;
 	will-change: width, opacity;
-	-webkit-transition: width 0.4s ease;
-	-moz-transition: width 0.4s ease;
-	-o-transition: width 0.4s ease;
-	transition: width .4s ease;
+	-webkit-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-moz-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-o-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	scrollbar-width: none;
+}
+
+.scroll-outer-container{
+	height: 100%;
+}
+
+html.phon .view,
+html.tabl .view{
+	width: 54%; /*hide scrollbars hack*/
+	padding-right: 4%;
 }
 
 .view-container {
@@ -839,15 +866,18 @@ html.desk .splitViewLeft {
 	display: block;
 	float: left;
 	width: 20%;
-	border-right: solid 2px lightgray;
-}
-
-html.desk .dark-theme .splitViewLeft {
-	border-right: 2px solid #333;
 }
 
 html.desk .splitViewRight {
-	width: 30%;
+	width: 35%;
+	padding-right: 3%;
+	position: relative;
+	right: 25px;
+	border-left: 2px solid lightgray;
+}
+
+html.desk .dark-theme .splitViewRight {
+	border-left: 2px solid #333;
 }
 
 html.phon .searchBar_open #back,
@@ -864,10 +894,10 @@ html.tabl .searchBar_open .navButtons.tabl.desk {
 	overflow: hidden;
 	width: 0;
 	will-change: width;
-	-webkit-transition: width 0.2s ease;
-	-moz-transition: width 0.2s ease;
-	-o-transition: width 0.2s ease;
-	transition: width 0.2s ease;
+	-webkit-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-moz-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-o-transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	transition: width 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
 	background-color: #fafafa;
 }
 
@@ -876,10 +906,10 @@ html.phon #searchBar {
 	left: 400px;
 	right: 114px;
 	will-change: left;
-	-webkit-transition: left 0.2s ease;
-	-moz-transition: left 0.2s ease;
-	-o-transition: left 0.2s ease;
-	transition: left 0.2s ease;
+	-webkit-transition: left 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-moz-transition: left 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	-o-transition: left 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
+	transition: left 0.3s cubic-bezier(.4, 0.75, .4, 1.2);
 }
 
 .searchBar_open #searchBar,
@@ -997,20 +1027,25 @@ html.tabl #searchSuggestions-container {
 	position: static;
 	max-height: 300px;
 	z-index: 30;
+
 }
 
-html.phon #searchSuggestions-container {
+html.tabl #searchSuggestions-container {
+	width: 330px; /*hide scrollbar hack*/
+	padding-right: 30px;
+	scrollbar-width: none;
+}
+
+html .phon #searchSuggestions-container {
 	position: fixed;
 	top: 54px;
 	bottom: 0;
 	left: 0;
-	right: 0;
 	z-index: 1;
 	box-shadow: none;
-}
-
-html.phon.land #searchSuggestions-container {
-	right: 54px;
+	width: 106%; /*hide scrollbar hack*/
+	padding-right: 6%;
+	scrollbar-width: none;
 }
 
 /*Forms*/

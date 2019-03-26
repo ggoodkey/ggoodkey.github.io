@@ -1119,89 +1119,94 @@
 			};
 		},
 		computed: {
-			list: function () {
-				function sortList(list) {
-					function sortFunction(a, b) {
-						//try to compare items as numbers
-						if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
-							a.sortBy = a.sortBy * 1;
-							b.sortBy = b.sortBy * 1;
+			list: {
+				get: function () {
+					function sortList(list) {
+						function sortFunction(a, b) {
+							//try to compare items as numbers
+							if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
+								a.sortBy = a.sortBy * 1;
+								b.sortBy = b.sortBy * 1;
+							}
+							if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
+							if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
+							return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
 						}
-						if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
-						if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
-						return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
-					}
-					function deleteDuplicates(arr) {
-						for (var x = 0, len = arr.length; x < len - 1; x++) {
-							for (var y = x + 1; y < len; y++) {
-								if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
-									arr.splice(y, 1);
-									len--;
-									y--;
+						function deleteDuplicates(arr) {
+							for (var x = 0, len = arr.length; x < len - 1; x++) {
+								for (var y = x + 1; y < len; y++) {
+									if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
+										arr.splice(y, 1);
+										len--;
+										y--;
+									}
+								}
+							}
+							return arr;
+						}
+						//generate headers
+						var alphabetHeaders = [],
+							b = 0,
+							nameHeaders = [],
+							c = 0,
+							date = new Date(),
+							now = date.getTime(),
+							time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
+							diff = 0,
+							recentHeaders = {
+								"Older": 2592e6,
+								"In the Past 30 Days": 6048e5,
+								"In the Past 7 Days": 1728e5 - time,
+								"Yesterday": 864e5 - time,
+								"Earlier Today": 36e5,
+								"In the Past Hour": 3e5,
+								"Just Now": 0
+							};
+						for (var a = 0, len = list.length, letter, name; a < len; a++) {
+							if (list[a].type === "jumplink") {//strip out old headers
+								list.splice(a, 1);
+								a--;
+								len--;
+							}
+							//by most recent
+							else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
+								diff = now - list[a].sortBy;
+								for (var header in recentHeaders) {
+									if (diff >= recentHeaders[header]) {
+										name = header;
+										break;
+									}
+								}
+								if (a === 0 || name !== nameHeaders[c - 1].text) {
+									nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
+									c++;
+								}
+							}
+							// by alphabetic
+							else {
+								name = list[a].sortBy.split("__")[0];
+								letter = name.charAt(0);
+								if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
+									alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
+									b++;
+								}
+								if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
+									nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
+									c++;
 								}
 							}
 						}
-						return arr;
+						if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
+						else list = alphabetHeaders.concat(list);
+						list = deleteDuplicates(list);
+						list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
+						return list;
 					}
-					//generate headers
-					var alphabetHeaders = [],
-						b = 0,
-						nameHeaders = [],
-						c = 0,
-						date = new Date(),
-						now = date.getTime(),
-						time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
-						diff = 0,
-						recentHeaders = {
-							"Older": 2592e6,
-							"In the Past 30 Days": 6048e5,
-							"In the Past 7 Days": 1728e5 - time,
-							"Yesterday": 864e5 - time,
-							"Earlier Today": 36e5,
-							"In the Past Hour": 3e5,
-							"Just Now": 0
-						};
-					for (var a = 0, len = list.length, letter, name; a < len; a++) {
-						if (list[a].type === "jumplink") {//strip out old headers
-							list.splice(a, 1);
-							a--;
-							len--;
-						}
-						//by most recent
-						else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
-							diff = now - list[a].sortBy;
-							for (var header in recentHeaders) {
-								if (diff >= recentHeaders[header]) {
-									name = header;
-									break;
-								}
-							}
-							if (a === 0 || name !== nameHeaders[c - 1].text) {
-								nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
-								c++;
-							}
-						}
-						// by alphabetic
-						else {
-							name = list[a].sortBy.split("__")[0];
-							letter = name.charAt(0);
-							if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
-								alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
-								b++;
-							}
-							if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
-								nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
-								c++;
-							}
-						}
-					}
-					if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
-					else list = alphabetHeaders.concat(list);
-					list = deleteDuplicates(list);
-					list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
-					return list;
+					return sortList(this.links);
+				},
+				set: function (newValue) {
+					app.links = newValue;
 				}
-				return sortList(this.links);
 			}
 		},
 		methods: {
@@ -1209,9 +1214,9 @@
 				var _this = this,
 					sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
 				if (sortByRecent) {
-					this.links.unshift(obj);
-					this.links[0].sortBy = new Date().getTime();
-					this.links = this.links.slice(0, 20);
+					this.list.unshift(obj);
+					this.list[0].sortBy = new Date().getTime();
+					this.list = this.list.slice(0, 20);
 				}
 				else _this.$emit("update-recently-viewed", obj);
 				getDetails(obj, function (detailsObj) {
