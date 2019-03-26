@@ -84,7 +84,13 @@ a, button, .link, .navlink, .addressLink, .jumplink {
 	a:focus,
 	button:active,
 	button:hover,
-	button:focus {
+	button:focus,
+	.link:active,
+	.link:hover,
+	.link:focus,
+	.navlink:active,
+	.navlink:hover,
+	.navlink:focus{
 		outline: 0;
 	}
 
@@ -242,6 +248,9 @@ table, th, td {
 	background-color: black;
 	z-index: 50;
 	opacity: 1;
+	-webkit-transition: opacity ease 1s, height 0s 1s;
+	-moz-transition: opacity ease 1s, height 0s 1s;
+	-o-transition: opacity ease 1s, height 0s 1s;
 	transition: opacity ease 1s, height 0s 1s;
 	will-change: opacity, height;
 }
@@ -569,7 +578,6 @@ html.desk #closeSidenav {
 	left: 0;
 	width: 100%;
 	height: 54px;
-	border-top: 1px solid white;
 	border-bottom: 1px solid lightgray;
 	z-index: 5;
 }
@@ -593,7 +601,6 @@ nav .switch label,
 .dark-theme #navbar,
 .dark-theme #sidenav {
 	border-bottom: 1px solid black;
-	border-top: 1px solid #222;
 }
 
 #navbar,
@@ -610,7 +617,7 @@ html.desk .dark-theme #searchSuggestions-container,
 	box-shadow: 0 0 10px black;
 }
 
-#navbar .views .navlink {
+#navbar .navButtons .navlink {
 	float: left;
 }
 
@@ -618,26 +625,13 @@ html.desk .dark-theme #searchSuggestions-container,
 #menu,
 #search,
 #cancelSearch,
-#navbar .views .navlink {
+#navbar .navButtons .navlink {
 	padding: 16px 20px;
 }
 
-.navlink {
-	/*border: 1px solid transparent;*/
-}
-
 #navbar .navlink {
-	position: relative;
-	top: -1px;
-	/*border-right: 1px solid white;
-	border-left: 1px solid #e1e1e1;*/
 	text-align: center;
 	height: 54px;
-}
-
-.dark-theme #navbar .navlink {
-	/*border-right: 1px solid #333;
-	border-left: 1px solid transparent;*/
 }
 
 .navlink {
@@ -648,13 +642,8 @@ html.desk .dark-theme #searchSuggestions-container,
 	color: #aaa;
 }
 
-#navbar .views {
-	/*border-left: 1px solid white;*/
+#navbar .navButtons {
 	height: 100%;
-}
-
-.dark-theme #navbar .views {
-	/*border-left: 1px solid #333;*/
 }
 
 .dark-theme .link:hover:active,
@@ -666,11 +655,6 @@ html.desk .dark-theme button:hover:active {
 
 #currentView {
 	padding: 16px;
-	/*border-left: 1px solid #e1e1e1;*/
-}
-
-.dark-theme #currentView {
-	/*border-left: 1px solid transparent;*/
 }
 
 #back, #currentView {
@@ -686,13 +670,16 @@ html.desk .dark-theme button:hover:active {
 	top: 54px;
 	bottom: 0;
 	right: -320px;
+	will-change: transform;
+	-webkit-transition: transform ease 0.2s;
+	-moz-transition: transform ease 0.2s;
+	-o-transition: transform ease 0.2s;
 	transition: transform ease 0.2s;
 	-webkit-transform: translateX(0px);
 	-moz-transform: translateX(0px);
 	-ms-transform: translateX(0px);
 	-o-transform: translateX(0px);
 	transform: translateX(0px);
-	will-change: transform;
 	z-index: 9;
 }
 
@@ -735,28 +722,10 @@ html.tabl #app.sidenav_open #sidenav {
 	pointer-events: auto;
 }
 
-#sidenav .views {
-	/*border-bottom: 1px solid white;*/
-}
-
-.dark-theme #sidenav .views {
-	/*border-bottom: 1px solid #333;*/
-}
-
-#sidenav .views .navlink,
+#sidenav .navButtons .navlink,
 #sidenav .text {
 	width: 100%;
 	padding: 16px 20px;
-}
-
-#sidenav .views .navlink {
-	/*border-top: 1px solid white;
-	border-bottom: 1px solid #e1e1e1;*/
-}
-
-.dark-theme #sidenav .views .navlink {
-	/*border-top: 1px solid #333;
-	border-bottom: 1px solid transparent;*/
 }
 
 #sidenav .text {
@@ -778,6 +747,9 @@ html.tabl #app.sidenav_open #sidenav {
 	height: 3px;
 	top: 50px;
 	will-change: right, width;
+	-webkit-transition: all ease-out 0.2s;
+	-moz-transition: all ease-out 0.2s;
+	-o-transition: all ease-out 0.2s;
 	transition: all ease-out 0.2s;
 }
 
@@ -786,6 +758,9 @@ html.tabl #app.sidenav_open #sidenav {
 	width: 3px;
 	height: 54px;
 	will-change: top;
+	-webkit-transition: top ease-out 0.2s;
+	-moz-transition: top ease-out 0.2s;
+	-o-transition: top ease-out 0.2s;
 	transition: top ease-out 0.2s;
 }
 #stoKeyInput,
@@ -829,12 +804,22 @@ html.tabl #app.sidenav_open #sidenav {
 	height: 100%;
 }
 
+.views{
+	width: 100%;
+	height: 100%;
+}
+
 .view {
 	width: 50%;
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: auto;
 	float: left;
+	will-change: width, opacity;
+	-webkit-transition: width 0.4s ease;
+	-moz-transition: width 0.4s ease;
+	-o-transition: width 0.4s ease;
+	transition: width .4s ease;
 }
 
 .view-container {
@@ -868,7 +853,7 @@ html.desk .splitViewRight {
 html.phon .searchBar_open #back,
 html.phon .searchBar_open #currentView,
 .searchBar_open #menu,
-html.tabl .searchBar_open .views.tabl.desk {
+html.tabl .searchBar_open .navButtons.tabl.desk {
 	display: none;
 }
 
@@ -884,14 +869,6 @@ html.tabl .searchBar_open .views.tabl.desk {
 	-o-transition: width 0.2s ease;
 	transition: width 0.2s ease;
 	background-color: #fafafa;
-}
-
-.dark-theme .searchBar_open #searchBar {
-	/*border-right: 1px solid #333;*/
-}
-
-html.desk .dark-theme .searchBar_open #searchBar {
-	/*border-left: 1px solid transparent;*/
 }
 
 html.phon #searchBar {
@@ -962,7 +939,6 @@ html.desk #searchBar {
 
 html.tabl .dark-theme #search:before,
 html.phon .dark-theme #search:before {
-	/*border-left: 1px solid #333;*/
 	width: 1px;
 	height: 52px;
 	content: "";
@@ -1459,8 +1435,6 @@ html.desk .link:hover,
 		border-bottom: 1px solid #478cdb; /*accent blue*/
 	}
 
-/*html.desk #navbar .navlink:hover,*/
-/*html.desk #sidenav .views .navlink:hover,*/
 #searchBox:focus,
 #stoKeyInput:focus,
 #stoKeyInputConfirm:focus,
@@ -1484,8 +1458,6 @@ html.desk .addressLink:focus {
 	outline: 1px dotted #478cdb; /*accent blue*/
 }
 
-/*html.desk #navbar .navlink:focus,*/
-/*html.desk #sidenav .views .navlink:focus,*/
 html.desk .switch label:focus {
 	border: 1px dotted #478cdb; /*accent blue*/
 }
@@ -1598,25 +1570,12 @@ button[disabled="disabled"]:focus {
 
 /*vue transitions*/
 .fade-enter-active, .fade-leave-active {
+	-webkit-transition: opacity .2s ease;
+	-moz-transition: opacity .2s ease;
+	-o-transition: opacity .2s ease;
 	transition: opacity .2s ease;
 }
 
 .fade-enter, .fade-leave-to {
 	opacity: 0;
-}
-
-.width-enter-active, .width-leave-active {
-	transition: width .2s ease;
-}
-
-.width-enter, .width-leave-to {
-	width: 20%;
-}
-
-.slide-enter-active, .slide-leave-active {
-	transition: transform .2s ease;
-}
-
-.slide-enter, .slide-leave-to {
-	transform: translateX(30%);
 }

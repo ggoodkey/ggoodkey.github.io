@@ -695,7 +695,7 @@ APP.nyckelDB = (function () {
 				colNamesIndexed[this.id] = colNamesToIndex ? colNamesToIndex.join("|").split("|") : db[this.id].indexable ? db[this.id].indexable.join("|").split("|") : db[this.id].headers.join("|").split("|");
 				APP.Sto.getItem("searchIndex_" + db[this.id].title, null, function (obj) {
 					if (typeof obj === "string") obj = JSON.parse(obj);
-					if (obj.version === this.Version + "_" + Base64.Version && obj.length === this.getLength() && obj.lastModified === db[this.id].lastModified && obj.colNamesIndexed.join("") === colNamesIndexed[this.id].join("")) {
+					if (obj && obj.version === this.Version + "_" + Base64.Version && obj.length === this.getLength() && obj.lastModified === db[this.id].lastModified && obj.colNamesIndexed.join("") === colNamesIndexed[this.id].join("")) {
 						searchIndex[this.id] = obj.searchIndex;
 						searchSuggestions[this.id] = obj.searchSuggestions;
 						recentlySearched[this.id] = obj.recentlySearched;

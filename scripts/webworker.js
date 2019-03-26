@@ -1,7 +1,7 @@
 ﻿importScripts('base64.min.js');
 importScripts('validate.min.js');
 importScripts('lists.min.js');
-importScripts('nyckelDB.min.js');
+importScripts('nyckelDB.js');
 
 function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),

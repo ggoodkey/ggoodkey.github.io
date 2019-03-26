@@ -64,7 +64,7 @@
 				//these column headers are setup as an object where the property name is the column header name and the property value is the column header type
 				//this makes it easier to see and apply "types" to each "header", especially in a big table like this
 				headers: {
-					Name: "string", 
+					Name: "string",
 					GivenName: "givenName",
 					AdditionalName: "givenName",
 					FamilyName: "familyName",
@@ -373,12 +373,14 @@
 				stoKey: "unknown",
 				showStoKeyInput: false,
 				stoKeyWarning: "",
-				details: [],
-				detailsImage: null,
-				detailsTitleH1: null,
-				detailsSubtitleH2: null,
-				currentDetailsId: null,
-				currentDetailsTable: null,
+				details: {
+					id: null,
+					table: null,
+					data: [],
+					image: null,
+					titleH1: null,
+					subtitleH2: null
+				},
 				recentlyViewed: [],
 				showUpdateKey: false,
 				addItemToGroupDropdown: false,
@@ -414,11 +416,13 @@
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
-			location = location ? location.replace(/\//,"") : startView;
+			location = location ? location.replace(/\//, "") : startView;
 			if (app.views[location] && app.views[location].level === 1) {
 				var sidenavlink = document.getElementById("sidenavlink_" + location).getBoundingClientRect(),
 					topnavlink = document.getElementById("topnavlink_" + location).getBoundingClientRect(),
-					extra = app.showSearchBar ? 1107 : 807;
+					views = document.getElementById("topnav-container").getBoundingClientRect(),
+					viewsWidth = views.right - views.left,
+					extra = app.showSearchBar ? viewsWidth + 410 : viewsWidth + 110;//width of navbar buttons + searchbar (300) + search and menu buttons (110)
 				app.indicatorTop = sidenavlink.top - 54;
 				app.indicatorWidth = topnavlink.right - topnavlink.left;
 				app.indicatorRight = getWidth() - topnavlink.left - extra;
@@ -615,11 +619,10 @@
 						if (s.version === app.version) {
 							for (var prop in state) {
 								if (s[prop] !== undefined) {
-									if (prop === "recentlyViewed") app[prop] = sortList(s[prop]);
-									else app[prop] = s[prop];
+									app[prop] = s[prop];
 								}
 							}
-							if (resumeBool && s.time && new Date().getTime() - s.time < 864e5) {								
+							if (resumeBool && s.time && new Date().getTime() - s.time < 864e5) {
 								//resume view and back history
 								backstack = s.backstack;
 								backIndex = s.backIndex;
@@ -652,7 +655,7 @@
 						doneInit();
 					}
 				}, doneInit);
-			}			
+			}
 			getLocal();
 			matchWindowsTheme();
 			layout();
@@ -847,57 +850,38 @@
 			}
 		},
 		//application functions
-		seeDetails = function (obj) {
+		getDetails = function (obj, callback) {
 			function sortDetailsObj(detailsObj) {
 				function sortFunction(a, b) {
 					return sortOrder.indexOf(a.column) === sortOrder.indexOf(b.column) ? 0 : sortOrder.indexOf(a.column) < sortOrder.indexOf(b.column) ? -1 : 1;
 				}
 				var sortOrder = [],
-					detailsView = dataTemplates[obj.table].display.detailsView;
-				if (detailsView.image) sortOrder.push(detailsView.image);
-				if (detailsView.titleH1) sortOrder.push(detailsView.titleH1);
-				if (detailsView.subtitleH2) sortOrder.push(detailsView.subtitleH2);
-				if (detailsView.mainContent) {
-					for (let a = 0, len = detailsView.mainContent.length; a < len; a++) {
-						if (typeof detailsView.mainContent[a] === "string") sortOrder.push(detailsView.mainContent[a]);
+					layout = dataTemplates[obj.table].display.detailsView;
+				if (layout.image) sortOrder.push(layout.image);
+				if (layout.titleH1) sortOrder.push(layout.titleH1);
+				if (layout.subtitleH2) sortOrder.push(layout.subtitleH2);
+				if (layout.mainContent) {
+					for (let a = 0, len = layout.mainContent.length; a < len; a++) {
+						if (typeof layout.mainContent[a] === "string") sortOrder.push(layout.mainContent[a]);
 						else {
-							if (detailsView.mainContent[a].label) sortOrder.push(detailsView.mainContent[a].label);
-							if (detailsView.mainContent[a].value) sortOrder.push(detailsView.mainContent[a].value);
+							if (layout.mainContent[a].label) sortOrder.push(layout.mainContent[a].label);
+							if (layout.mainContent[a].value) sortOrder.push(layout.mainContent[a].value);
 						}
 					}
 				}
 				return detailsObj.sort(sortFunction);
 			}
-			checkDBLoaded(function (callback) {
+			checkDBLoaded(function (cb) {
 				app.spin(true, "Loading contact data...");
-				app.details = [];
-				if (app.recentlyViewed.length > 0) {
-					var recentlyViewed = false,
-						recent = JSON.parse(JSON.stringify(app.recentlyViewed));
-					//find and remove this item from recentlyViewed
-					for (var b = 0; b < recent.length; b++) {
-						if (recent[b].id === obj.id && recent[b].table === obj.table) {
-							recent[b].sortBy = new Date().getTime();
-							recentlyViewed = true;
-						}
-					}
-					if (!recentlyViewed) {
-						obj.sortBy = new Date().getTime();
-						recent.unshift(obj);
-						recent = recent.slice(0, 20);
-					}
-					//add this item to top of list
-					app.recentlyViewed = sortList(recent);
-				}
 				app.storeState();
 				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
 					var h1 = [],
 						h2 = [],
 						img,
-						details = [],
-						detailsView = dataTemplates[obj.table].display.detailsView;
+						data = [],
+						layout = dataTemplates[obj.table].display.detailsView;
 					for (let a = 0, b = 0, c = 0, d = 0, e = 0, len = row.length, lenB, lenC, lenD, lenE; a < len; a++) {
-						details[a] = {	
+						data[a] = {
 							table: obj.table,
 							id: obj.id,
 							warning: "",
@@ -907,55 +891,56 @@
 							label: row[a].column
 						};
 						//find and apply the right label
-						if (detailsView.mainContent) {
-							var hide = detailsView.mainContent.indexOf(row[a].column) > -1 ? false : true;
-							for (b = 0, lenB = detailsView.mainContent.length; b < lenB; b++){
-								if (typeof detailsView.mainContent[b] !== "string" && detailsView.mainContent[b].label) {
-									if (row[a].column === detailsView.mainContent[b].value) {
+						if (layout.mainContent) {
+							var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
+							for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
+								if (typeof layout.mainContent[b] !== "string" && layout.mainContent[b].label) {
+									if (row[a].column === layout.mainContent[b].value) {
 										hide = false;
 										for (e = 0, lenE = row.length; e < lenE; e++) {
-											if (row[e].column === detailsView.mainContent[b].label) {
-												details[a].label = row[e].value;
+											if (row[e].column === layout.mainContent[b].label) {
+												data[a].label = row[e].value;
 												break;
 											}
 										}
-										
+
 									}
 								}
 							}
-							details[a].hidden = hide;
+							data[a].hidden = hide;
 						}
 						//format multiline strings
-						if (/multilineString|formattedAddress/.test(details[a].type) && details[a].text) {
-							details[a].text = details[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						if (/multilineString|formattedAddress/.test(data[a].type) && data[a].text) {
+							data[a].text = data[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
 						}
 						//split out multiple values in one cell
-						else if (typeof details[a].text === "string") details[a].text = detailsView.mainContentSplitter ? details[a].text.split(detailsView.mainContentSplitter) : details[a].text.split(" ::: ");
-						else details[a].text = [details[a].text];
-							//get h1 and h2 header values
-						if (detailsView.titleH1) {
-							for (c = 0, lenC = detailsView.titleH1.length; c < lenC; c++) {
-								if (detailsView.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
+						else if (typeof data[a].text === "string") data[a].text = layout.mainContentSplitter ? data[a].text.split(layout.mainContentSplitter) : data[a].text.split(" ::: ");
+						else data[a].text = [data[a].text];
+						//get h1 and h2 header values
+						if (layout.titleH1) {
+							for (c = 0, lenC = layout.titleH1.length; c < lenC; c++) {
+								if (layout.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
 							}
-							if (detailsView.subtitleH2) {
-								for (d = 0, lenD = detailsView.subtitleH2.length; d < lenD; d++) {
-									if (detailsView.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
+							if (layout.subtitleH2) {
+								for (d = 0, lenD = layout.subtitleH2.length; d < lenD; d++) {
+									if (layout.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
 								}
 							}
 						}
-						if (detailsView.image && row[a].column === detailsView.image) {
+						if (layout.image && row[a].column === layout.image) {
 							img = row[a].value;
 						}
 					}
-					app.details = sortDetailsObj(details);
-					app.detailsImage = img;
-					app.detailsTitleH1 = detailsView.titleH1 ? h1.join(detailsView.titleH1Joiner || "") : null;
-					app.detailsSubtitleH2 = detailsView.subtitleH2 ? h2.join(detailsView.subtitleH2Joiner || "") : null;
-					app.currentDetailsId = obj.id;
-					app.currentDetailsTable = obj.table;
 					app.spin(false);
-					app.navigate("details", null, obj);		
-					if (callback instanceof Function) return callback();
+					if (callback instanceof Function) callback({
+						id: obj.id,
+						table: obj.table,
+						data: sortDetailsObj(data),
+						image: img,
+						titleH1: layout.titleH1 ? h1.join(layout.titleH1Joiner || "") : null,
+						subtitleH2: layout.subtitleH2 ? h2.join(layout.subtitleH2Joiner || "") : null
+					});
+					if (cb instanceof Function) return cb();
 				});
 			});
 		},
@@ -986,10 +971,7 @@
 				if (numberPerPage && pageNumber && ids.length > numberPerPage) {
 					ids.slice(numberPerPage * (pageNumber - 1), numberPerPage * (pageNumber - 1) + numberPerPage);
 				}
-				return generateListItems(dbTitle, ids, sortByCol, selected, function (list) {
-					list = sortList(list);
-					return callback instanceof Function ? callback(list) : list;
-				});
+				return generateListItems(dbTitle, ids, sortByCol, selected, callback);
 			}
 			if (ids) getData();
 			else if (dbTitle) {
@@ -997,87 +979,6 @@
 				wwManager({ "cmd": "forEachRow", "title": dbTitle }, getIds, getData);
 			}
 			else debug(dbTitle, "title required");
-		},
-		sortList = function (list) {
-			function sortFunction(a, b) {
-				//try to compare items as numbers
-				if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
-					a.sortBy = a.sortBy * 1;
-					b.sortBy = b.sortBy * 1;
-				}
-				if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
-				if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
-				return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
-			}
-			function deleteDuplicates(arr) {
-				for (var x = 0, len = arr.length; x < len - 1; x++) {
-					for (var y = x + 1; y < len; y++) {
-						if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
-							arr.splice(y, 1);
-							len--;
-							y--;
-						}
-					}
-				}
-				return arr;
-			}
-			list.sort(sortFunction);
-			//generate headers
-			var alphabetHeaders = [],
-				b = 0,
-				nameHeaders = [],
-				c = 0,
-				date = new Date(),
-				now = date.getTime(),
-				time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
-				diff = 0,
-				recentHeaders = {
-					"Older": 2592e6,
-					"In the Past 30 Days": 6048e5,
-					"In the Past 7 Days": 1728e5 - time,
-					"Yesterday": 864e5 - time,
-					"Earlier Today": 36e5,
-					"In the Past Hour": 3e5,
-					"Just Now": 0
-				};
-			for (var a = 0, len = list.length, letter, name; a < len; a++) {
-				if (list[a].type === "jumplink") {//strip out old headers
-					list.splice(a, 1);
-					a--;
-					len--;
-				}
-				//by most recent
-				else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
-					diff = now - list[a].sortBy;
-					for (var header in recentHeaders) {
-						if (diff >= recentHeaders[header]) {
-							name = header;
-							break;
-						}
-					}
-					if (a === 0 || name !== nameHeaders[c - 1].text) {
-						nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
-						c++;
-					}
-				}
-				// by alphabetic
-				else {
-					name = list[a].sortBy.split("__")[0];
-					letter = name.charAt(0);
-					if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
-						alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
-						b++;
-					}
-					if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
-						nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
-						c++;
-					}
-				}
-			}
-			if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
-			else list = alphabetHeaders.concat(list);
-			list = deleteDuplicates(list);
-			return letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
 		},
 		buildMailtoUri = function (to, bcc, subject, message, callback) {
 			var query = bcc || subject || message ? "?" : "",
@@ -1144,6 +1045,24 @@
 				}
 			});
 		},
+		addToRecentlyViewed = function (obj) {
+			var recentlyViewed = false,
+				recent = JSON.parse(JSON.stringify(app.recentlyViewed));
+			//find and remove this item from recentlyViewed
+			for (var b = 0; b < recent.length; b++) {
+				if (recent[b].id === obj.id && recent[b].table === obj.table) {
+					recent[b].sortBy = new Date().getTime();
+					recentlyViewed = true;
+				}
+			}
+			if (!recentlyViewed) {
+				recent.unshift(JSON.parse(JSON.stringify(obj)));
+				recent[0].sortBy = new Date().getTime();
+				recent = recent.slice(0, 20);
+			}
+			//add this item to top of list
+			app.recentlyViewed = recent;
+		},
 		importFile = function (toTable) {
 			function done(success, errors, title, syncPending) {
 				if (success && !errors) {
@@ -1174,6 +1093,7 @@
 	//Components
 	Vue.component('jump-list', {
 		props: {
+			details: Object,
 			links: Array,
 			select: {
 				type: Boolean,
@@ -1198,16 +1118,120 @@
 				collapsed: this.collapse
 			};
 		},
+		computed: {
+			list: function () {
+				function sortList(list) {
+					function sortFunction(a, b) {
+						//try to compare items as numbers
+						if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
+							a.sortBy = a.sortBy * 1;
+							b.sortBy = b.sortBy * 1;
+						}
+						if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
+						if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
+						return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
+					}
+					function deleteDuplicates(arr) {
+						for (var x = 0, len = arr.length; x < len - 1; x++) {
+							for (var y = x + 1; y < len; y++) {
+								if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
+									arr.splice(y, 1);
+									len--;
+									y--;
+								}
+							}
+						}
+						return arr;
+					}
+					//generate headers
+					var alphabetHeaders = [],
+						b = 0,
+						nameHeaders = [],
+						c = 0,
+						date = new Date(),
+						now = date.getTime(),
+						time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
+						diff = 0,
+						recentHeaders = {
+							"Older": 2592e6,
+							"In the Past 30 Days": 6048e5,
+							"In the Past 7 Days": 1728e5 - time,
+							"Yesterday": 864e5 - time,
+							"Earlier Today": 36e5,
+							"In the Past Hour": 3e5,
+							"Just Now": 0
+						};
+					for (var a = 0, len = list.length, letter, name; a < len; a++) {
+						if (list[a].type === "jumplink") {//strip out old headers
+							list.splice(a, 1);
+							a--;
+							len--;
+						}
+						//by most recent
+						else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
+							diff = now - list[a].sortBy;
+							for (var header in recentHeaders) {
+								if (diff >= recentHeaders[header]) {
+									name = header;
+									break;
+								}
+							}
+							if (a === 0 || name !== nameHeaders[c - 1].text) {
+								nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
+								c++;
+							}
+						}
+						// by alphabetic
+						else {
+							name = list[a].sortBy.split("__")[0];
+							letter = name.charAt(0);
+							if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
+								alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
+								b++;
+							}
+							if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
+								nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
+								c++;
+							}
+						}
+					}
+					if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
+					else list = alphabetHeaders.concat(list);
+					list = deleteDuplicates(list);
+					list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
+					return list;
+				}
+				return sortList(this.links);
+			}
+		},
 		methods: {
-			seeDetails: seeDetails,
+			seeDetails: function (obj) {
+				var _this = this,
+					sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
+				if (sortByRecent) {
+					this.links.unshift(obj);
+					this.links[0].sortBy = new Date().getTime();
+					this.links = this.links.slice(0, 20);
+				}
+				else _this.$emit("update-recently-viewed", obj);
+				getDetails(obj, function (detailsObj) {
+					if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
+						_this.$emit("update-details", detailsObj);
+					}
+					else {
+						app.details = detailsObj;
+						app.navigate("details", null, detailsObj);
+					}
+				});
+			},
 			toggle: function (prop) {
 				if (this[prop] !== undefined) this[prop] = this[prop] ? false : true;
 				else debug(prop, "prop doesn't exist in jump-list");
 			},
 			toggleSelect: function (link) {
 				this.emailDropdown = false;
-				for (var a = 0, len = this.links.length; a < len; a++) {
-					if (this.links[a].type === "link") this.links[a].selected = false;
+				for (var a = 0, len = this.list.length; a < len; a++) {
+					if (this.list[a].type === "link") this.list[a].selected = false;
 				}
 				this.selectAll = false;
 				this.collapsed = false;
@@ -1217,8 +1241,8 @@
 			toggleSelectAll: function () {
 				this.emailDropdown = false;
 				this.toggle('selectAll');
-				for (var a = 0, len = this.links.length; a < len; a++) {
-					if (this.links[a].type === "link") this.links[a].selected = this.selectAll ? true : false;
+				for (var a = 0, len = this.list.length; a < len; a++) {
+					if (this.list[a].type === "link") this.list[a].selected = this.selectAll ? true : false;
 				}
 			},
 			showIf: function (link, collapse) {
@@ -1261,12 +1285,12 @@
 				}
 				function getEmails(ids) {
 					var emailAddresses = [];
-					if(ids.length > 0) wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
+					if (ids.length > 0) wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
 						if (vals && !errors) {
 							var type, email, name, primary = false;
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
 								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
-								if (vals[a][6]) {	
+								if (vals[a][6]) {
 									for (let b = 4; b < 17; b = b + 2) {//find primary email
 										if (/\*/.test(vals[a][b])) primary = b;
 									}
@@ -1307,7 +1331,7 @@
 					var link = {};
 					link.href = mailtoUri;
 					link.text = _this.selected ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
-					_this.emailLinks.push(link);	
+					_this.emailLinks.push(link);
 				}
 				var _this = this;
 				this.emailLinks = [];
@@ -1315,38 +1339,83 @@
 				else newEmailLink();
 			}
 		},
-		template: "<div v-if=\"links.length > 0\">\
-			<div align=\"left\">\
-				<button v-show=\"selected === false\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-check\"></span> Select</button>\
-				<button v-show=\"selected && selectAll === false\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-unchecked\"></span> Select All</button>\
-				<button v-show=\"selected && selectAll\" v-on:click=\"toggleSelectAll()\"><span class=\"icon icon-check\"></span> Deselect All</button>\
-				<button v-show=\"selected\" v-on:click=\"toggleSelect()\"><span class=\"icon icon-cancel\"></span> Cancel Select</button>\
-				<button v-on:click=\"toggle('collapsed')\" v-show=\"collapsed === false\"><span class=\"icon icon-th\"></span> Button View</button>\
-				<button v-on:click=\"toggle('collapsed')\" v-show=\"collapsed\"><span class=\"icon icon-th-list\"></span> List View</button>\
-				<div class=\"dropdown-container right\">\
-					<button v-on:click=\"updateEmailLinks(links)\"> <span class=\"icon icon-mail\"></span> E-mail</button>\
-					<div v-show=\"emailDropdown\" class=\"dropdown\">\
-						<a v-for=\"item in emailLinks\" class=\"link\" v-on:click=\"toggle('emailDropdown')\" v-bind:href=\"item.href\">{{ item.text }}</a>\
-					</div>\
-				</div>\
-			</div>\
-			<ul class=\"links\" v-bind:collapsed=\"collapsed\">\
-				<li v-for=\"link in links\" v-bind:id=\"link.id\" v-show=\"showIf(link, collapsed)\" v-on:click=\"action(link, scrolldiv, collapsed)\" v-bind:class=\"{\
-					'link':link.type === 'link',\
-					'jumplink':link.type === 'jumplink',\
-					'jumplink-button':link.type === 'jumplink' && collapsed === true,\
-					'icon':selected && link.type === 'link',\
-					'icon-unchecked':selected && link.selected === false,\
-					'icon-check selected':selected && link.selected\
-				}\">\
-					{{ link.text }}\
-				</li>\
-			</ul>\
-		</div>"
+		template: "#jump-list"
 	});
-
+	Vue.component('details-card', {
+		props: {
+			details: Object
+		},
+		data: function () {
+			return {
+				addItemToGroupDropdown: state.addItemToGroupDropdown,
+				groups: state.groups
+			};
+		},
+		methods: {
+			editDetails: function () {
+				app.navigate("edit");
+			},
+			toggleGroupsDropdown: function (e) {
+				initializeGroups(function () {
+					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
+				});
+			},
+			externalLink: function (text, column, type, details) {
+				var link;
+				if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+				else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+				else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
+				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(text));
+				else if (type === "www") link = text;
+				if (link) return link;
+				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
+					var a = column.replace(/Type/, ""),
+						googlemaps = "http://maps.google.com/?q=",
+						bing = "http://www.bing.com/maps/?q=",
+						bingmaps = "bingmaps:?q=",
+						applemaps = "http://maps.apple.com/?q=",
+						userAgent = navigator.userAgent;
+					if (type === "gps") {
+						link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+					}
+					else {
+						for (var i = 0, length = details.length; i < length; i++) {
+							if (details[i].column === column) {
+								link = details[i].text.join(" ");
+								break;
+							}
+						}
+					}
+					if (/\d/.test(link)) {
+						link = encodeURIComponent(trim(link));
+						if (/Windows/.test(userAgent)) {
+							if (/NT|Phone 10/.test(userAgent)) {
+								link = bingmaps + link;
+							}
+							else link = bing + link;
+						}
+						else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
+							link = applemaps + link;
+						}
+						else link = googlemaps + link;
+						return link;
+					}
+					else return false;
+				}
+				else return false;
+			},
+			detailsViewHelp: function () {
+				confirm("Item not found. Would you like to remove this listing?", function () {
+					app.recentlyViewed.splice(1, 1);
+					app.storeState();
+				});
+			},
+			addToNewGroup: addToNewGroup
+		},
+		template: "#details-card"
+	});
 	const New = {
-		data: function() {
+		data: function () {
 			return {
 				newTable: {
 					title: "",
@@ -1532,886 +1601,485 @@
 				this.newTable.optionsDropdown = -1;
 			}
 		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<h1>Create a New Table</h1>\
-				<label class=\"itemLabel\">Table Name</label>\
-				<input type=\"text\" class=\"textbox\" autocomplete=\"off\" v-model=\"newTable.title\" />\
-				<label class=\"itemLabel\">Templates</label>\
-				<div class=\"itemText\"><button v-on:click=\"template('Blank')\"><span class=\"icon icon-page\"></span>&nbsp;&nbsp;Blank Template</button><button v-on:click=\"template('Contacts')\"><span class=\"icon icon-user\"></span>&nbsp;&nbsp;Contacts Template</button> <button v-on:click=\"template('Passwords')\"><span class=\"icon icon-lock\"></span>&nbsp;&nbsp;Passwords Template</button> <button v-on:click=\"template('Files')\"><span class=\"icon icon-folder-open\"></span>&nbsp;&nbsp;Files Template</button></div>\
-				<label class=\"itemLabel\">Table Setup</label>\
-				<div class=\"table-container\" v-bind:class=\"{ 'fullscreen': newTable.fullscreen }\">\
-					<table>\
-						<tr>\
-							<th>\
-								<a v-show=\"newTable.fullscreen\" v-on:click=\"newTable.fullscreen = false\"><span class=\"icon icon-resize-small\"></span>&nbsp;&nbsp;Exit Fullscreen</a>\
-								<a v-show=\"newTable.fullscreen === false\" v-on:click=\"newTable.fullscreen = true\"><span class=\"icon icon-fullscreen\"></span>&nbsp;&nbsp;Fullscreen</a>\
-							</th>\
-							<th v-for=\"(column, index) in newTable.headers\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('optionsDropdown', index)\">Column {{ index + 1 }}</a>\
-									<ul v-show=\"newTable.optionsDropdown === index\" class=\"dropdown\">\
-										<li v-on:click=\"sortbyColumn(index)\">Sort By Column</li>\
-										<li v-on:click=\"deleteColumn(index)\">Delete Column</li>\
-										<li v-on:click=\"insertColumn(index)\">Insert Column Left</li>\
-										<li v-on:click=\"insertColumn(index + 1)\">Insert Column Right</li>\
-									</ul >\
-								</div >\
-							</th >\
-							<th><a v-on:click=\"insertColumn(false)\"><span class=\"icon icon-plus\" title=\"Add New Column\"></span></a></th >\
-						</tr >\
-						<tr><th title=\"These are the headers of the columns in your table\">Column&nbsp;Name</th><td v-for=\"(column, index) in newTable.headers\"><input type=\"text\" size=\"12\" v-model=\"newTable.headers[index]\" /></td><td></td></tr>\
-						<tr>\
-							<th>Column&nbsp;Data&nbsp;Type</th>\
-							<td v-for=\"(type, index) in newTable.types\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('typesDropdown', index)\">{{ type }}</a>\
-									<ul v-show=\"newTable.typesDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"validType in newTable.typesDropdownOptions\" v-on:click=\"newTable.types[index] = validType; newTable.typesDropdown = -1;\">{{ validType }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr >\
-						<tr>\
-							<th title=\"Select a label column if the data in this column has metadata about it specified in another column, ie label for 999-123-4567 might be 'Mobile Phone'\">Label&nbsp;Column</th>\
-							<td v-for=\"(colName, index) in newTable.display.detailsView.labelCol\">\
-								<div class=\"dropdown-container\">\
-									<a v-if=\"colName\" v-on:click=\"toggleDropdown('labelColDropdown', index)\">{{ colName }}</a>\
-									<a v-else v-on:click=\"toggleDropdown('labelColDropdown', index)\">&lt;none&gt;</a>\
-									<ul v-show=\"newTable.labelColDropdown === index\" class=\"dropdown\">\
-										<li v-on:click=\"newTable.display.detailsView.labelCol[index] = false; newTable.labelColDropdown = -1;\">&lt;none&gt;</li>\
-										<li v-for=\"header in newTable.headers\" v-if=\"header !== newTable.headers[index]\" v-on:click=\"newTable.display.detailsView.labelCol[index] = header; newTable.labelColDropdown = -1;\">{{ header }}</li>\
-									</ul >\
-								</div >\
-							</td >\
-							<td></td>\
-						</tr >\
-						<tr>\
-							<th title=\"When editing data you might want to have a dropdown list with only certain values available to be selected. Input those values here\">Accepted&nbsp;Values</th>\
-							<td v-for=\"(value, index) in newTable.display.editView.acceptedValues\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('acceptedValuesDropdown', index)\">{{ value }}</a>\
-									<ul v-show=\"newTable.acceptedValuesDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"option in newTable.acceptedValuesDropdownOptions\" v-on:click=\"newTable.display.editView.acceptedValues[index] = option; newTable.acceptedValuesDropdown = -1;\">{{ option }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr >\
-						<tr>\
-							<th title=\"Do you want data from this column to show up in search results?\">Searchable</th>\
-							<td v-for=\"(value, index) in newTable.options.searchable\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('searchableDropdown', index)\">{{ value }}</a>\
-									<ul v-show=\"newTable.searchableDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"option in newTable.searchableDropdownOptions\" v-on:click=\"newTable.options.searchable[index] = option; newTable.searchableDropdown = -1;\">{{ option }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr >\
-						<tr>\
-							<th title=\"Do you want to hide this column from view when the item is being edited?\">Editable</th>\
-							<td v-for=\"(bool, index) in newTable.display.editView.editable\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('editableDropdown', index)\">{{ bool }}</a>\
-									<ul v-show=\"newTable.editableDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"option in newTable.editableDropdownOptions\" v-on:click=\"newTable.display.editView.editable[index] = option; newTable.editableDropdown = -1;\">{{ option }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr>\
-						<tr>\
-							<th>Password&nbsp;Protect</th>\
-							<td v-for=\"(protected, index) in newTable.display.editView.protect\">\
-								<div class=\"dropdown-container\">\
-									<a v-on:click=\"toggleDropdown('protectDropdown', index)\">{{ protected }}</a>\
-									<ul v-show=\"newTable.protectDropdown === index\" class=\"dropdown\">\
-										<li v-for=\"option in newTable.protectDropdownOptions\" v-on:click=\"newTable.display.editView.protect[index] = option; newTable.protectDropdown = -1;\">{{ option }}</li>\
-									</ul>\
-								</div>\
-							</td >\
-							<td></td>\
-						</tr>\
-						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
-						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
-						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
-						<tr><th></th><td v-for=\"(type, index) in newTable.types\"></td><td></td></tr>\
-					</table>\
-				</div >\
-				<label class=\"itemLabel\">Import Data</label>\
-				<div class=\"itemText\"><button v-on:click=\"importNewTable('csv')\"><span class=\"icon icon-import\"></span>&nbsp;&nbsp;From CSV</button></div >\
-				<button>Save Table</button>\
-			</div>\
-		</div>"
+		template: "#new-table-page"
 	},
 		Recent = {
-		data: function () {
-			return {
-				recentlyViewed: state.recentlyViewed
-			};
+			data: function () {
+				return {
+					recentlyViewed: state.recentlyViewed,
+					recentDetails: {
+						id: null,
+						table: null,
+						data: [],
+						image: null,
+						titleH1: null,
+						subtitleH2: null
+					}
+				};
+			},
+			methods: {
+				onDetailsUpdate: function (newDetailsObj) {
+					this.recentDetails = newDetailsObj;
+				}
+			},
+			template: "#recent-page"
 		},
-		template: "\
-			<div id=\"recentView\" class=\"view\">\
-				<div v-if=\"recentlyViewed && recentlyViewed.length > 0\" class=\"view-container\" >\
-					<h1>Recently Viewed</h1>\
-					<jump-list v-bind:links=\"recentlyViewed\" scrolldiv=\"recentView\"></jump-list>\
-				</div>\
-				<div v-else class=\"view-container\">\
-					<h1>Nyckel <sup><small><small>(beta)</small></small></sup></h1>\
-					<h3>Store, search, view, share and sync data across devices using the cloud.</h3>\
-					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>\
-				<!--<p>\
-						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be\
-						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data\
-						in the form of a table, NyckelDB can handle it.\
-					</p>\
-					<p>\
-						Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,\
-						sorting, filtering, and synchronisation. For more information on NyckelDB, visit the\
-						<a href=\"https://github.com/ggoodkey/ggoodkey.github.io\" target=\"_blank\">NyckelDB Github Repository</a>.\
-					</p>-->\
-					<p class=\"alert\">\
-						<span class=\"icon icon-alert\"></span>\
-						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>\
-						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser\
-						data, deleting all files saved to Dropbox (in Dropbox\\Apps\\Nyckel\\) and typing the command 'nukeapp' into the search bar and pressing RETURN.\
-					</p>\
-					<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>\
-				</div>\
-			</div>"
-	},
 		Groups = {
-		data: function () {
-			return {
-				groups: state.groups,
-				groupName: "",
-				showNewGroupUI: false,
-				showEditGroupUI: false,
-				activeGroup: [],
-				groupPage: 1,
-				groupHelp: false,
-				groupSearchBox: state.groupSearchBox
-			};
-		},
-		methods: {
-			newGroup: function (event, groupName, callback) {
-				//Validate groupName
-				groupName = groupName || this.groupName;
-				groupName = VAL.toEnglishAlphabet(groupName);
-				groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
-				groupName = trim(groupName);
-				if (groupName && groupName !== "") {
-					groupName = groupName.split(" ");
-					for (let b = 0, lenB = groupName.length; b < lenB; b++) {
-						groupName[b] = groupName[b][0].toUpperCase() + groupName[b].slice(1);
-					}
-					groupName = groupName.join(" ");
-					var i = 2,
-						existingNames = [],
-						_this = this,
-						title,
-						ids = {};
-					//get group ids
-					for (let c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
-						if (this.activeGroup[c].selected === true) {
-							title = VAL.toPropName(this.activeGroup[c].table);
-							if (!ids[title]) ids[title] = [];
-							ids[title].push(this.activeGroup[c].id);
+			data: function () {
+				return {
+					groups: state.groups,
+					groupName: "",
+					showNewGroupUI: false,
+					showEditGroupUI: false,
+					activeGroup: [],
+					groupPage: 1,
+					groupHelp: false,
+					groupSearchBox: state.groupSearchBox
+				};
+			},
+			methods: {
+				newGroup: function (event, groupName, callback) {
+					//Validate groupName
+					groupName = groupName || this.groupName;
+					groupName = VAL.toEnglishAlphabet(groupName);
+					groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
+					groupName = trim(groupName);
+					if (groupName && groupName !== "") {
+						groupName = groupName.split(" ");
+						for (let b = 0, lenB = groupName.length; b < lenB; b++) {
+							groupName[b] = groupName[b][0].toUpperCase() + groupName[b].slice(1);
 						}
-					}
-					initializeGroups(function () {
-						//check for duplicate groupNames
-						if (_this.groups.indexOf(groupName) > -1) {
-							while (_this.groups.indexOf(groupName + " " + i) > -1) i++;
-							groupName = groupName + " " + i;
+						groupName = groupName.join(" ");
+						var i = 2,
+							existingNames = [],
+							_this = this,
+							title,
+							ids = {};
+						//get group ids
+						for (let c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
+							if (this.activeGroup[c].selected === true) {
+								title = VAL.toPropName(this.activeGroup[c].table);
+								if (!ids[title]) ids[title] = [];
+								ids[title].push(this.activeGroup[c].id);
+							}
 						}
-						//Save new group
-						wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
-							_this.updateGroup(groupName, ids, app.groupSearchBox);
-							_this.groups.push(groupName);
-							_this.activeGroup = [];
-							_this.showNewGroupUI = false;
-							app.groupSearchBox = "";
-							app.groupName = "";
+						initializeGroups(function () {
+							//check for duplicate groupNames
+							if (_this.groups.indexOf(groupName) > -1) {
+								while (_this.groups.indexOf(groupName + " " + i) > -1) i++;
+								groupName = groupName + " " + i;
+							}
+							//Save new group
+							wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
+								_this.updateGroup(groupName, ids, app.groupSearchBox);
+								_this.groups.push(groupName);
+								_this.activeGroup = [];
+								_this.showNewGroupUI = false;
+								app.groupSearchBox = "";
+								app.groupName = "";
+							});
 						});
+					}
+					else app.notify("Group requires a name");
+				},
+				updateGroup: function (groupName, ids, searchTerms) {
+					var _this = this;
+					groupName = String(groupName);
+					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+						if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+						if (searchTerms) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
 					});
-				}
-				else app.notify("Group requires a name");
-			},
-			updateGroup: function (groupName, ids, searchTerms) {
-				var _this = this;
-				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-					if (searchTerms) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
-				});
-			},
-			deleteGroup: function (groupName) {
-				groupName = String(groupName);
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] });
-				});
-				this.groups.splice(this.groups.indexOf(groupName), 1);
-			},
-			groupKeyPress: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
-					e.preventDefault();
-				} else {
-					var key = e.char || e.key;
-					if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) app.groupSearchBox = trim(app.groupSearchBox + key);
-				}
-			},
-			groupInput: function (e) {
-				var value = e ? e.target.value : app.groupSearchBox,
-					_this = this;
-				checkDBLoaded(function (callback) {
-					if (value !== "") {
-						var find = String(value);
-						find = VAL.removeHTMLTags(find);
-						find = find.toLowerCase();
-						find = VAL.toEnglishAlphabet(find);
-						find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
-						find = trim(find);
-						_this.activeGroup = [];
-						document.getElementById("app").focus();
-						for (let table in dataTemplates) {
-							if (dataTemplates.hasOwnProperty(table)) {
-								(function (table) {
-									wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
-										if (!errors && searchResults && searchResults.length > 0) {
-											generateList(table, searchResults, null, null, null, true, function (list) {
-												_this.activeGroup = _this.activeGroup.concat(list);
-											});
-										}
-									});
-								})(table);
-							}
-						}
+				},
+				deleteGroup: function (groupName) {
+					groupName = String(groupName);
+					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+						wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] });
+					});
+					this.groups.splice(this.groups.indexOf(groupName), 1);
+				},
+				groupKeyPress: function (e) {
+					var keyCode = e.which || e.keyCode || 0;
+					if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
+						e.preventDefault();
+					} else {
+						var key = e.char || e.key;
+						if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) app.groupSearchBox = trim(app.groupSearchBox + key);
 					}
-					if (callback instanceof Function) return callback();
-				});
-			},
-			groupKeyUp: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 32) e.preventDefault();
-				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) app.groupSearchBox = trim(app.groupSearchBox);
-				switch (keyCode) {
-					case 27:/*escape key*/
-						this.resetGroupSearch();
-						break;
-				}
-			},
-			groupKeyDown: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 9 || keyCode === 13 || keyCode === 32 || keyCode === 38 || keyCode === 27 || keyCode === 40) {
-					e.preventDefault();
-				}
-				if (keyCode === 32) {
-					if (app.groupSearchBox !== "" && app.groupSearchBox.slice(-1) !== " ") {
-						app.groupSearchBox = app.groupSearchBox + " ";
-					}
-				}
-			},
-			resetGroupSearch: function () {
-				app.groupSearchBox = "";
-			},
-			seeGroup: function (index) {
-				function add(group) {
-					if (group[0][2] !== "" && group[0][2] !== "[]") {
-						var ids = JSON.parse(group[0][2]),
-							lenIds = 0,
-							b = 0;
-						for (let a in ids) {
-							lenIds++;
-						}
-						for (let table in ids) {
-							if (ids.hasOwnProperty(table)) {
-								(function (table) {
-									generateListItems(table, ids[table], null, null, function (arr) {
-										list = list.concat(arr);
-										b++;
-										if (b === lenIds) {
-											remove(group);
-										}
-									});
-								})(table);
-							}
-						}
-					}
-					else remove(group);
-				}
-				function remove(group) {
-					if (group[0][4] && group[0][4] !== "" && group[0][4] !== "[]") {
-						var removeIds = JSON.parse(group[0][4]);
-						for (let table in removeIds) {
-							for (let a = 0, lenA = list.length; a < lenA; a++) {
-								if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
-									list[a].splice(a, 1);
-									a--;
-									lenA--;
+				},
+				groupInput: function (e) {
+					var value = e ? e.target.value : app.groupSearchBox,
+						_this = this;
+					checkDBLoaded(function (callback) {
+						if (value !== "") {
+							var find = String(value);
+							find = VAL.removeHTMLTags(find);
+							find = find.toLowerCase();
+							find = VAL.toEnglishAlphabet(find);
+							find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
+							find = trim(find);
+							_this.activeGroup = [];
+							document.getElementById("app").focus();
+							for (let table in dataTemplates) {
+								if (dataTemplates.hasOwnProperty(table)) {
+									(function (table) {
+										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
+											if (!errors && searchResults && searchResults.length > 0) {
+												generateList(table, searchResults, null, null, null, true, function (list) {
+													_this.activeGroup = _this.activeGroup.concat(list);
+												});
+											}
+										});
+									})(table);
 								}
 							}
 						}
+						if (callback instanceof Function) return callback();
+					});
+				},
+				groupKeyUp: function (e) {
+					var keyCode = e.which || e.keyCode || 0;
+					if (keyCode === 32) e.preventDefault();
+					if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) app.groupSearchBox = trim(app.groupSearchBox);
+					switch (keyCode) {
+						case 27:/*escape key*/
+							this.resetGroupSearch();
+							break;
 					}
-					app.searchResults = sortList(list);
-					app.searchResultsTitle = group[0][1];
-					app.searchResultsError = "";
-					app.navigate("search", app.currentQuery);
-				}
-				var list = [];
-				wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
-					if (group[0][3] !== "") {
-						var lenTables = 0,
-							n = 0;
-						for (let a in dataTemplates) {
-							lenTables++;
+				},
+				groupKeyDown: function (e) {
+					var keyCode = e.which || e.keyCode || 0;
+					if (keyCode === 9 || keyCode === 13 || keyCode === 32 || keyCode === 38 || keyCode === 27 || keyCode === 40) {
+						e.preventDefault();
+					}
+					if (keyCode === 32) {
+						if (app.groupSearchBox !== "" && app.groupSearchBox.slice(-1) !== " ") {
+							app.groupSearchBox = app.groupSearchBox + " ";
 						}
-						for (let table in dataTemplates) {
-							if (dataTemplates.hasOwnProperty(table)) {
-								(function (table) {
-									wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title, sync) {
-										if (!err) {
-											if (results) generateListItems(table, results, null, null, function (arr) {
-												list = list.concat(arr);
-												n++;
-												if (n === lenTables) add(group);
-											});
-											else {
-												n++;
-												if (n === lenTables) add(group);
+					}
+				},
+				resetGroupSearch: function () {
+					app.groupSearchBox = "";
+				},
+				seeGroup: function (index) {
+					function add(group) {
+						if (group[0][2] !== "" && group[0][2] !== "[]") {
+							var ids = JSON.parse(group[0][2]),
+								lenIds = 0,
+								b = 0;
+							for (let a in ids) {
+								lenIds++;
+							}
+							for (let table in ids) {
+								if (ids.hasOwnProperty(table)) {
+									(function (table) {
+										generateListItems(table, ids[table], null, null, function (arr) {
+											list = list.concat(arr);
+											b++;
+											if (b === lenIds) {
+												remove(group);
 											}
-										}
-										else debug(err, title + " seeGroup error");
-									});
-								})(table);
+										});
+									})(table);
+								}
 							}
 						}
+						else remove(group);
 					}
-					else add(group);
-				});
-			},
-			addToGroup: function (groupName, detailsObj, searchQuery) {
-				this.addItemToGroupDropdown = false;
-				this.addSearchToGroupDropdown = false;
-				var _this = this;
-				wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-					if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
-						ids = JSON.parse(ids);
-						if (ids instanceof Array) {//convert old array data to object
-							var obj = {};
-							for (let a = 0, len = ids.length; a < len; a++) {
-								if (!obj[ids[a].table]) obj[ids[a].table] = [];
-								obj[ids[a].table].push(ids[a].id);
-							}
-							ids = obj;
-						}
-						for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
-							if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
-							if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
-								ids[detailsObj[b].table].push(detailsObj[b].id);
+					function remove(group) {
+						if (group[0][4] && group[0][4] !== "" && group[0][4] !== "[]") {
+							var removeIds = JSON.parse(group[0][4]);
+							for (let table in removeIds) {
+								for (let a = 0, lenA = list.length; a < lenA; a++) {
+									if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
+										list[a].splice(a, 1);
+										a--;
+										lenA--;
+									}
+								}
 							}
 						}
-						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-						app.notify("Added 1 item to " + groupName, true);
+						app.searchResults = list;
+						app.searchResultsTitle = group[0][1];
+						app.searchResultsError = "";
+						app.navigate("search", app.currentQuery);
+					}
+					var list = [];
+					wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
+						if (group[0][3] !== "") {
+							var lenTables = 0,
+								n = 0;
+							for (let a in dataTemplates) {
+								lenTables++;
+							}
+							for (let table in dataTemplates) {
+								if (dataTemplates.hasOwnProperty(table)) {
+									(function (table) {
+										wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title, sync) {
+											if (!err) {
+												if (results) generateListItems(table, results, null, null, function (arr) {
+													list = list.concat(arr);
+													n++;
+													if (n === lenTables) add(group);
+												});
+												else {
+													n++;
+													if (n === lenTables) add(group);
+												}
+											}
+											else debug(err, title + " seeGroup error");
+										});
+									})(table);
+								}
+							}
+						}
+						else add(group);
 					});
-					if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
-						query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
-						wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
-						app.notify("Added '" + searchQuery + "' to " + groupName, true);
+				},
+				addToGroup: function (groupName, detailsObj, searchQuery) {
+					this.addItemToGroupDropdown = false;
+					this.addSearchToGroupDropdown = false;
+					var _this = this;
+					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+						if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
+							ids = JSON.parse(ids);
+							if (ids instanceof Array) {//convert old array data to object
+								var obj = {};
+								for (let a = 0, len = ids.length; a < len; a++) {
+									if (!obj[ids[a].table]) obj[ids[a].table] = [];
+									obj[ids[a].table].push(ids[a].id);
+								}
+								ids = obj;
+							}
+							for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
+								if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
+								if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
+									ids[detailsObj[b].table].push(detailsObj[b].id);
+								}
+							}
+							wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+							app.notify("Added 1 item to " + groupName, true);
+						});
+						if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
+							query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
+							wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
+							app.notify("Added '" + searchQuery + "' to " + groupName, true);
+						});
 					});
-				});
-			},
-			showSelectGroupMembers: function () {
-				var _this = this;
-				for (let table in dataTemplates) {
-					generateList(table, null, null, null, null, false, function (list) {
-						_this.activeGroup = _this.activeGroup.concat(list);
-					});
+				},
+				showSelectGroupMembers: function () {
+					var _this = this;
+					for (let table in dataTemplates) {
+						generateList(table, null, null, null, null, false, function (list) {
+							_this.activeGroup = _this.activeGroup.concat(list);
+						});
+					}
+				},
+				resetGroups: function () {
+					app.groupPage = 1;
+					app.resetGroupSearch();
+					app.groupName = "";
+					app.activeGroup = [];
+					if (app.groups.length === 0) app.goBack();
+					else app.toggle('showNewGroupUI');
 				}
 			},
-			resetGroups: function () {
-				app.groupPage = 1;
-				app.resetGroupSearch();
-				app.groupName = "";
-				app.activeGroup = [];
-				if (app.groups.length === 0) app.goBack();
-				else app.toggle('showNewGroupUI');
-			}
+			template: "#groups-page"
 		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<div v-if=\"groups.length === 0 || showNewGroupUI\">\
-					<button v-show=\"groupName !== '' && groupPage > 1\" v-on:click=\"groupPage = 1\"><span class=\"icon icon-arrow-left\"></span> Edit Group Name: {{groupName}}</button>\
-					<button v-show=\"groupSearchBox !== '' && groupPage > 2\" v-on:click=\"groupPage = 2\"><span class=\"icon icon-arrow-left\"></span> Edit Search Query: {{groupSearchBox}}</button>\
-					<div v-show=\"groupPage === 1\">\
-						<h2>Create a new group</h2>\
-						<label class=\"itemLabel\">Give the Group a Name</label>\
-						<input type=\"text\" class=\"textbox\" autocomplete=\"off\" v-model=\"groupName\" />\
-						<button type=button v-bind:disabled=\"groupName === ''\" v-on:click=\"groupPage++\">Next <span class=\"icon icon-arrow-right\"></span></button>\
-					</div>\
-					<div v-show=\"groupPage === 2\">\
-						<h2>Make the Group Dynamic based on a Search Query</h2>\
-						<p>The group can update itself dynamically as data changes in the database. <a v-on:click='toggle(\"groupHelp\")'>Learn how to refine your search</a></p>\
-						<div v-if=\"groupHelp\">\
-							<p>\
-								You can refine your search by adding to, or subtracting from your search by prefixing additional search terms with the \"+\" or \"-\" charactors.\
-								For example, searching for \"Bob Johnston\" would find Bob Johnston, as expected, but \"Bob +Johnston\" finds all the Bobs, as well as all the Johnstons\
-								(Bob Smith, Bob Johnston, Bob Dunn, Jim Johnston...), whereas \"Bob -Johnston\" finds all the Bobs who are not Johnstons (Bob Smith, Bob Dunn).\
-							</p>\
-							<p>Note: Every word doesn't need a prefix. \"Bob Johnston +Bob Dunn\" also works. And the first word doesn't need a prefix (it is always +)</p>\
-						</div>\
-						<label class=\"itemLabel\">Input Search Terms</label>\
-						<input type=\"search\" class=\"textbox\" autocomplete=\"off\" v-model=\"groupSearchBox\" v-on:keypress=\"groupKeyPress($event)\" v-on:keyup=\"groupKeyUp($event)\" v-on:keypdown=\"groupKeyDown($event)\" v-on:input=\"groupInput($event)\" />\
-						<button v-if=\"groupSearchBox === ''\" v-on:click=\"groupPage++\">Skip <span class=\"icon icon-arrow-right\"></span></button>\
-					</div>\
-					<div v-show=\"groupPage === 3\">\
-						<h2>Select Members</h2>\
-						<label class=\"itemLabel\">Add Members by Selection</label>\
-						<div id=\"selectGroupItems\" class=\"editbox\">\
-							<button v-if=\"activeGroup.length === 0\" v-on:click=\"showSelectGroupMembers\">Select Group Members</button>\
-							<jump-list v-else v-bind:links=\"activeGroup\" scrolldiv=\"selectGroupItems\" select></jump-list>\
-						</div>\
-					</div>\
-					<div v-show=\"groupPage > 1 && activeGroup.length > 0\">\
-						<label class=\"itemLabel\">Group Preview</label>\
-						<div id=\"groupPreview\" class=\"editbox\">\
-							<div v-if=\"activeGroup.length === 0\">Nothing to show</div>\
-							<div class=\"groupMember\" v-for=\"item in activeGroup\" v-if=\"item.selected\">{{ item.text }}&nbsp;<a v-on:click=\"item.selected = false\">&nbsp;&#10005;&nbsp;</a></div>\
-						</div>\
-						<button v-on:click=\"resetGroups\">Cancel</button>\
-						<button v-on:click=\"newGroup\">Create Group</button>\
-					</div>\
-				</div>\
-				<div v-else-if=\"showEditGroupUI\">\
-					<h2>Editing {{ groupName }} group</h2>\
-				</div>\
-				<div v-else>\
-					<h1>Groups</h1>\
-					<ul v-show=\"groups.length > 0\" class=\"links\">\
-						<li v-for=\"(groupName, index) in groups\" class=\"link\" v-on:click=\"seeGroup(index)\">{{ groupName }}</li>\
-					</ul>\
-					<button v-on:click=\"toggle('showNewGroupUI')\">Create a New Group</button>\
-				</div>\
-			</div>\
-		</div>"
-	},
 		View1 = {
-		methods: {
-			generateListView: generateListView,
-			importFile: importFile
+			methods: {
+				generateListView: generateListView,
+				importFile: importFile
+			},
+			template: "#view1-page"
 		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<h1>Contacts</h1>\
-				<a class=\"button\" v-on:click=\"importFile('Contacts')\">Select a CSV file from your device</a>\
-				<br />\
-				<br />\
-				<a class=\"button\" v-on:click=\"generateListView('Contacts')\">See all contacts</a>\
-			</div>\
-		</div>"
-	},
 		View2 = {
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<h1>Passwords</h1>\
-			</div>\
-		</div>"
-	},
+			template: "#view2-page"
+		},
 		View3 = {
-		methods: {
-			generateListView: generateListView,
-			importFile: importFile
+			methods: {
+				generateListView: generateListView,
+				importFile: importFile
+			},
+			template: "#view3-page"
 		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<h1>Files</h1>\
-				<a class=\"button\" v-on:click=\"importFile('Files')\">Select a file from your device</a>\
-				<input type=\"file\" class=\"hidden\" id=\"hiddenFileInput\" />\
-				<br />\
-				<br />\
-				<a class=\"button\" v-on:click=\"generateListView('Files')\">See all files</a>\
-			</div>\
-		</div>"
-	},
 		Details = {
-		data: function () {
-			return {
-				details: state.details,
-				detailsImage: state.detailsImage,
-				detailsTitleH1: state.detailsTitleH1,
-				detailsSubtitleH2: state.detailsSubtitleH2,
-				addItemToGroupDropdown: state.addItemToGroupDropdown,
-				groups: state.groups,
-				currentDetailsId: state.currentDetailsId,
-				currentDetailsTable: state.currentDetailsTable
-			};
+			data: function () {
+				return {
+					details: state.details
+				};
+			},
+			template: "#details-page"
 		},
-		methods: {
-			editDetails: function () {
-				app.navigate("edit");
-			},
-			toggleGroupsDropdown: function (e) {
-				initializeGroups(function () {
-					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
-				});
-			},
-			externalLink: function (text, column, type, details) {
-				var link;
-				if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-				else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-				else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(text));
-				else if (type === "www") link = text;
-				if (link) return link;
-				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-					var a = column.replace(/Type/, ""),
-						cols = [a + "Street", a + "City", a + "Region", a + "PostalCode", a + "Country"],
-						googlemaps = "http://maps.google.com/?q=",
-						bing = "http://www.bing.com/maps/?q=",
-						bingmaps = "bingmaps:?q=",
-						applemaps = "http://maps.apple.com/?q=",
-						userAgent = navigator.userAgent,
-						result = [];
-					if (type === "gps") {
-						link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
-					}
-					else {
-						for (var i = 0, length = details.length; i < length; i++) {
-							var index = cols.indexOf(details[i].column);
-							if (index > -1) result[index] = details[i].text;
-						}
-						link = "";
-						if (result[0]) link += result[0] + " ";
-						if (result[1]) {
-							link += result[1];
-							link += result[2] ? ", " : " ";
-						}
-						if (result[2]) link += result[2] + " ";
-						if (result[3]) link += result[3] + " ";
-						if (result[4]) link += result[4];
-					}
-					if (/\d/.test(link)) {
-						link = encodeURIComponent(trim(link));
-						if (/Windows/.test(userAgent)) {
-							if (/NT|Phone 10/.test(userAgent)) {
-								link = bingmaps + link;
-							}
-							else link = bing + link;
-						}
-						else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
-							link = applemaps + link;
-						}
-						else link = googlemaps + link;
-						return link;
-					}
-					else return false;
-				}
-				else return false;
-			},
-			detailsViewHelp: function () {
-				confirm("Item not found. Would you like to remove this listing?", function () {
-					app.recentlyViewed.splice(1, 1);
-					app.recentlyViewed = sortList(app.recentlyViewed);
-					app.storeState();
-				});
-			},
-			addToNewGroup: addToNewGroup,
-			seeDetails: seeDetails
-		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\" v-if=\"details[0] && details[0].text\">\
-				<div class=\"detailsHeader\">\
-					<img v-if=\"detailsImage\" v-bind:src=\"detailsImage\" class=\"roundImage left\"/>\
-					<div>\
-						<h1>{{ detailsTitleH1 }}</h1>\
-						<h3 v-if=\"detailsSubtitleH2\">{{ detailsSubtitleH2 }}</h3>\
-					</div>\
-				</div>\
-				<div class=\"dropdown-container clear\">\
-					<button v-on:click=\"editDetails\" v-bind:title=\"'Edit ' + details[0].text\"><span class=\"icon icon-pencil\"></span>&nbsp;&nbsp;Edit</button>\
-					<button id=\"groupsDropdownButton\" v-on:click=\"toggleGroupsDropdown\" v-bind:title=\"'Add ' + details[0].text + ' to Group'\"><span class=\"icon icon-people\"></span>&nbsp;&nbsp;Add to Group</button>\
-					<ul v-show=\"addItemToGroupDropdown\" class=\"dropdown\">\
-						<li v-for=\"groupName in groups\" v-on:click=\"addToGroup(groupName, details)\" class=\"link\">{{ groupName }}</li>\
-						<li v-on:click=\"addToNewGroup(details)\" class=\"link\">Create new group</li>\
-					</ul>\
-				</div>\
-				<br />\
-				<template v-for=\"(item, index) in details\">\
-					<div class=\"clear\" v-if=\"item.text[0] && ! item.hidden\">\
-						<label class=\"itemLabel\">{{ item.label }}</label>\
-						<div class=\"itemText\">\
-							<template v-for=\"(line, lineIndex) in item.text\">\
-								<template v-if=\"lineIndex > 0\">\
-									<br />\
-								</template>\
-								<template v-if=\"item.type === 'email'\">\
-									<a v-bind:href=\"externalLink(line, item.column, 'email')\">\
-										<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;{{ line }}\
-									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-									<a v-bind:href=\"externalLink(line, item.column, 'bcc')\">\
-										<span class=\"icon icon-envelope\"></span>&nbsp;&nbsp;E-mail&nbsp;BCC\
-									</a>\
-								</template>\
-								<template v-else-if=\"item.type === 'phoneNumber' && /home/i.test(item.label)\">\
-									<a v-bind:href=\"externalLink(line, item.column, 'phone')\">\
-										<span class=\"icon icon-phone-alt\">\
-										</span>&nbsp;&nbsp;{{ line }}\
-									</a>\
-								</template>\
-								<template v-else-if=\"item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)\">\
-									<a v-bind:href=\"externalLink(line, item.column, 'phone')\">\
-										<span class=\"icon icon-phone\"></span>&nbsp;&nbsp;{{ line }}\
-									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-									<a v-bind:href=\"externalLink(line, item.column, 'sms')\">\
-										<span class=\"icon icon-comment\"></span>&nbsp;&nbsp;SMS\
-									</a>\
-								</template>\
-								<template v-else-if=\"item.type === 'formattedAddress' && lineIndex === 0\">\
-									<a v-bind:href=\"externalLink(line, item.column, 'address', details)\" target=\"_blank\">\
-										<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;\
-										<template v-for=\"addressLine in item.text\">\
-											{{ addressLine }}\
-											<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
-										</template>\
-									</a>\
-								</template>\
-								<template v-else-if=\"item.type === 'formattedAddress'\"></template>\
-								<template v-else-if=\"details[index].label === 'GPS'\">\
-									<a v-bind:href=\"externalLink(line, item.column, 'www')\" target=\"_blank\">\
-										<span class=\"icon icon-world\"></span>&nbsp;&nbsp;{{ line }}\
-									</a>\
-									<br />\
-									<br />\
-									<a v-bind:href=\"externalLink(line, item.column, 'gps')\">\
-										<span class=\"icon icon-mappin\"></span>&nbsp;&nbsp;Maps\
-									</a>\
-								</template>\
-								<template v-else>{{ line }}</template>\
-							</template>\
-						</div>\
-					</div>\
-				</template>\
-			</div>\
-			<div class=\"view-container\" v-else>Nothing here<br /><a v-on:click=\"detailsViewHelp\">Help</a></div>\
-		</div>"
-	},
 		Search = {
-		data: function () {
-			return {
-				currentQuery: state.currentQuery,
-				searchResults: state.searchResults,
-				searchResultsTitle: state.searchResultsTitle,
-				searchResultsError: state.searchResultsError,
-				addSearchToGroupDropdown: state.addSearchToGroupDropdown,
-				groups: state.groups,
-				selectSearchResults: false
-			};
-		},
-		methods: {
-			toggleResultsGroupDropdown: function (e) {
-				initializeGroups(function () {
-					app.addSearchToGroupDropdown = app.addSearchToGroupDropdown ? false : true;
-				});
+			data: function () {
+				return {
+					currentQuery: state.currentQuery,
+					searchResults: state.searchResults,
+					searchResultsTitle: state.searchResultsTitle,
+					searchResultsError: state.searchResultsError,
+					addSearchToGroupDropdown: state.addSearchToGroupDropdown,
+					groups: state.groups,
+					selectSearchResults: false,
+					searchDetails: {
+						id: null,
+						table: null,
+						data: [],
+						image: null,
+						titleH1: null,
+						subtitleH2: null
+					},
+					recentlyViewed: state.recentlyViewed
+				};
 			},
-			addToNewGroup: addToNewGroup
+			methods: {
+				onDetailsUpdate: function (newDetailsObj) {
+					this.searchDetails = newDetailsObj;
+				},
+				onRecentlyViewedUpdate: addToRecentlyViewed,
+				toggleResultsGroupDropdown: function (e) {
+					initializeGroups(function () {
+						app.addSearchToGroupDropdown = app.addSearchToGroupDropdown ? false : true;
+					});
+				},
+				addToNewGroup: addToNewGroup
+			},
+			template: "#search-results-page"
 		},
-		template: "<div id=\"searchResultsView\" class=\"view\">\
-			<div class=\"view-container\">\
-				<div v-if=\"searchResults.length > 0\">\
-					<h2>{{ searchResultsTitle }}</h2>\
-					<div align=\"left\">\
-						<div class=\"dropdown-container right\">\
-							<button id=\"searchResultsGroupDropdown\" v-on:click=\"toggleResultsGroupDropdown\" v-bind:title=\"'Add ' + currentQuery + ' to Group'\"><span class=\"icon icon-people\"></span> Add Search to Group</button>\
-							<ul v-show=\"addSearchToGroupDropdown\" class=\"dropdown\">\
-								<li v-for=\"groupName in groups\" v-on:click=\"addToGroup(groupName, null, currentQuery)\" class=\"link\">{{ groupName }}</li>\
-								<li v-on:click=\"addToNewGroup(null, currentQuery)\" class=\"link\">Create new group</li>\
-							</ul>\
-						</div>\
-						<a id=\"hiddenEmailLink\" class=\"hidden\" href=\"\"></a>\
-						<button class=\"right\"><span class=\"icon icon-filter\"></span> Filter</button>\
-						<button class=\"right\"><span class=\"icon icon-sort\"></span> Sort</button>\
-						<button v-show=\"selectSearchResults\"><span class=\"icon icon-favorite-star\"></span> Add Selected to Favorites</button>\
-						<button v-show=\"selectSearchResults\"><span class=\"icon icon-mail\"></span> E-mail Selected</button>\
-					</div>\
-					<jump-list v-bind:links=\"searchResults\" v-bind:select=\"selectSearchResults\" scrolldiv=\"searchResultsView\"></jump-list>\
-				</div>\
-				<h4>{{ searchResultsError }}</h4>\
-			</div>\
-		</div>"
-	},
 		Edit = {
-		data: function () {
-			return {
-				details: state.details
-			};
-		},
-		methods: {
-			saveChanges: function () {
-				debug("saveChanges not done");
+			methods: {
+				saveChanges: function () {
+					debug("saveChanges not done");
+				},
+				cancelChanges: function () {
+					debug("cancelChanges not done");
+				}
 			},
-			cancelChanges: function () {
-				debug("cancelChanges not done");
-			}
+			template: "#edit-details-page"
 		},
-		template: "<div class=\"view\">\
-			<div class=\"view-container\">\
-				<h1>Edit</h1>\
-				<div v-for=\"item in details\">\
-					<label class=\"itemLabel\">{{ item.column.replace(/_/g,\" \") }}</label>\
-					<input v-if=\"item.type === 'number'\" type=\"number\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<input v-else-if=\"item.type === 'integer'\" type=\"number\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<input v-else-if=\"item.type === 'posInteger'\" type=\"number\" min=\"0\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<input v-else-if=\"item.type === 'negInteger'\" type=\"number\" max=\"0\" step=\"1\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<div v-else-if=\"item.type === 'boolean'\" class=\"switch right\">\
-						<input type=\"checkbox\" v-bind:id=\"'switch_' + item.column\" v-model=\"item.text\" />\
-						<label v-bind:for=\"'switch_' + item.column\" v-on:click=\"toggleItem(item)\"></label>\
-					</div>\
-					<input v-else-if=\"item.type === 'date'\" type=\"date\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<input v-else-if=\"item.type === 'email'\" type=\"email\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<input v-else-if=\"item.type === 'phoneNumber'\" type=\"tel\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<div v-else-if=\"item.type === 'dropdown'\">\
-						<button v-on:click=\"item.showDropdown = true\">{{ item.text }}</button>\
-						<div v-show=\"item.showDropdown\">\
-							<ul v-for=\"option in item.options\">\
-								<li v-on:click=\"setItem(item, option)\">{{ option }}</li>\
-							</ul>\
-						</div>\
-					</div>\
-					<input v-else type=\"text\" v-bind:value=\"item.text\" class=\"textbox\" />\
-					<div class=\"alert\">{{ item.warning }}</div>\
-				</div>\
-				<button v-on:click=\"saveChanges\"><span class=\"icon icon-ok\"></span>&nbsp;&nbsp;Save</button>\
-				<button v-on:click=\"cancelChanges\"><span class=\"icon icon-remove\"></span>&nbsp;&nbsp;Cancel</button>\
-			</div>\
-		</div>"
-	};
-	const NotFound = {
-		template: "<div class=\"view\"><div class=\"view-container\"><h1>Page Not Found :´(</h1><h3>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h3></div></div>"
-	};
-	const routes = [
-		{
-			path: '/',
-			name: "home",
-			components: {
-				default: Recent
-			},
-			meta: {
-				title: 'Home page - Nyckel (Beta)'
-			}
+		NotFound = {
+			template: "<div class=\"view\"><div class=\"view-container\"><h1>Page Not Found :´(</h1><h3>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h3></div></div>"
 		},
-		{
-			path: '/new',
-			name: "new",
-			components: {
-				default: New
+		routes = [
+			{
+				path: '/',
+				name: "home",
+				components: {
+					default: Recent
+				},
+				meta: {
+					title: 'Home page - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Create a new table - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/recent',
-			name: "recent",
-			components: {
-				default: Recent
+			{
+				path: '/new',
+				name: "new",
+				components: {
+					default: New
+				},
+				meta: {
+					title: 'Create a new table - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Recent - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/groups',
-			name: "groups",
-			components: {
-				default: Groups
+			{
+				path: '/recent',
+				name: "recent",
+				components: {
+					default: Recent
+				},
+				meta: {
+					title: 'Recent - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Groups - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/view1',
-			name: "view1",
-			components: {
-				default: View1
+			{
+				path: '/groups',
+				name: "groups",
+				components: {
+					default: Groups
+				},
+				meta: {
+					title: 'Groups - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Contacts - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/view2',
-			name: "view2",
-			components: {
-				default: View2
+			{
+				path: '/view1',
+				name: "view1",
+				components: {
+					default: View1
+				},
+				meta: {
+					title: 'Contacts - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Passwords - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/view3',
-			name: "view3",
-			components: {
-				default: View3
+			{
+				path: '/view2',
+				name: "view2",
+				components: {
+					default: View2
+				},
+				meta: {
+					title: 'Passwords - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Files - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/search',
-			name: "search",
-			components: {
-				default: Search
+			{
+				path: '/view3',
+				name: "view3",
+				components: {
+					default: View3
+				},
+				meta: {
+					title: 'Files - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Search Results - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/edit',
-			name: "edit",
-			components: {
-				default: Edit
+			{
+				path: '/search',
+				name: "search",
+				components: {
+					default: Search
+				},
+				meta: {
+					title: 'Search Results - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Edit - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '/details',
-			name: "details",
-			components: {
-				default: Details
+			{
+				path: '/edit',
+				name: "edit",
+				components: {
+					default: Edit
+				},
+				meta: {
+					title: 'Edit - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Details - Nyckel (Beta)'
-			}
-		},
-		{
-			path: '*',
-			name: "notfound",
-			components: {
-				default: NotFound
+			{
+				path: '/details',
+				name: "details",
+				components: {
+					default: Details
+				},
+				meta: {
+					title: 'Details - Nyckel (Beta)'
+				}
 			},
-			meta: {
-				title: 'Page not found :( - Nyckel (Beta)'
+			{
+				path: '*',
+				name: "notfound",
+				components: {
+					default: NotFound
+				},
+				meta: {
+					title: 'Page not found :( - Nyckel (Beta)'
+				}
 			}
-		}
-	],
+		],
 		router = new VueRouter({
 			routes: routes
-	}),
-		app = new Vue({
+		});
+
+	const app = new Vue({
 		router: router,
 		el: '#app',
 		data: state,
-		mounted: function() {
+		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
 
@@ -2428,19 +2096,18 @@
 		methods: {
 			updateCurrentView: function (to, from) {
 				to = to || { name: this.$route.name, query: this.$route.query };
-				var _this = this,
-					location = to.name;
+				var location = to.name;
 				if (location === "home") location = this.startView;
 				if (location === "details") {
-					if (to.query && (to.query.id !== _this.currentDetailsId || to.query.table !== _this.currentDetailsTable))
-						_this.seeDetails({ table: to.query.table, id: to.query.id });
+					if (to.query && (to.query.id !== this.details.id || to.query.table !== this.details.table))
+						this.seeDetails({ table: to.query.table, id: to.query.id });
 				}
 				this.currentView = this.views[location] || this.views[startView];
 				setNavLinkIndicatorPosition(location);
 				if (location === "groups") initializeGroups();
-				if (to.query && to.query.search && to.query.search !== encodeURIComponent(_this.currentQuery)) {
-					_this.currentQuery = to.query.search;
-					_this.search(null, to.query.search);
+				if (to.query && to.query.search && to.query.search !== encodeURIComponent(this.currentQuery)) {
+					this.currentQuery = to.query.search;
+					this.search(null, to.query.search);
 				}
 				if (to.query && to.query.page !== undefined) {
 					if (parseInt(to.query.page) !== backIndex) backIndex = parseInt(to.query.page);
@@ -2449,13 +2116,13 @@
 					backstack[backIndex - 1] = location;
 				}
 				else backIndex = 0;
-				
+
 				//show hide back arrow
 				if (Windows && WinJS) {
 					var currentview = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
 					currentview.appViewBackButtonVisibility = backIndex < 1;
 				}
-				else this.backArrow = backIndex > 0;				
+				else this.backArrow = backIndex > 0;
 			},
 			goBack: function () {
 				if (this.showSearchBar) {
@@ -2470,7 +2137,7 @@
 				else {
 					if (backIndex > 0) {
 						backIndex = backIndex - 2;
-						this.$router.go(-1);						
+						this.$router.go(-1);
 						return true;
 					}
 					else {
@@ -2501,7 +2168,7 @@
 				}
 				else if ("#/" + location + "?page=" + backIndex === window.location.hash) return; //dont navigate if no change				
 				if (location) this.$router.push({ path: "/" + location, query: query });
-				else if(backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex], query: query });
+				else if (backstack[backIndex]) this.$router.push({ path: "/" + backstack[backIndex], query: query });
 				else {
 					// get location from url hash
 					this.$router.push({ path: this.$route.path, query: this.$route.query });
@@ -2593,11 +2260,11 @@
 							function displayResults(searchResults, errors, table, requiresSync) {
 								if (errors) debug(errors, "search error");
 								else if (searchResults) generateList(table, searchResults, null, null, null, null, function (list) {
-									_this.searchResults = _this.searchResults.concat(list);
+									results = results.concat(list);
 									n++;
 									if (n === numOfSearches) {
-										_this.searchResults = sortList(_this.searchResults);
-										if (_this.searchResults.length > 0) {
+										_this.searchResults = results;
+										if (results.length > 0) {
 											_this.searchResultsTitle = 'Results for "' + _this.currentQuery + '"';
 											_this.searchResultsError = "";
 										}
@@ -2608,25 +2275,27 @@
 											});
 										}
 										_this.spin(false);
-										if (_this.searchResults.length === 1 && _this.searchResults[0].type === "link") {
-											_this.seeDetails(_this.searchResults[0]);
+										if (results.length === 1 && results[0].type === "link") {
+											_this.seeDetails(results[0]);
+											addToRecentlyViewed(results[0]);
 										}
-										else if (_this.searchResults.length === 2 && _this.searchResults[0].type === "jumplink") {
-											_this.seeDetails(_this.searchResults[1]);
+										else if (results.length === 2 && results[0].type === "jumplink") {
+											_this.seeDetails(results[1]);
+											addToRecentlyViewed(results[1]);
 										}
 										else _this.navigate("search", _this.currentQuery);
 										if (callback instanceof Function) return callback();
 									}
 								});
 							}
-							var find = optionalQuery ? optionalQuery : _this.searchAutoComplete === "" ? _this.searchBox : _this.searchAutoComplete;
+							var find = optionalQuery ? optionalQuery : _this.searchAutoComplete === "" ? _this.searchBox : _this.searchAutoComplete,
+								results = [];
 							find = trim(find);
 							if (find) {
 								_this.currentQuery = find;
 								_this.resetSearch();
 								_this.showSearchBar = false;
 								_this.showSearchSuggestions = false;
-								_this.searchResults = [];
 								document.getElementById("app").focus();
 								var numOfSearches = 0,
 									n = 0;
@@ -2662,15 +2331,13 @@
 				this.searchPointer = -1;
 				document.getElementById("searchBox").focus();
 			},
-			searchKeyPress: function (e) {			
+			searchKeyPress: function (e) {
 				var keyCode = e.which || e.keyCode || 0;
 				if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
 					e.preventDefault();
 				} else {
 					this.searchPointer = -1;
 					var key = e.char || e.key;
-					//debug(key);
-					//if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) this.searchBox = trim(this.searchBox + key);
 				}
 			},
 			searchInput: function (e) {
@@ -2730,7 +2397,9 @@
 			searchKeyUp: function (e) {
 				var keyCode = e.which || e.keyCode || 0;
 				if (keyCode === 32) e.preventDefault();
-				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) this.searchBox = trim(this.searchBox);
+				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) {
+					this.searchBox = this.searchBox.slice(-1) === " " ? trim(this.searchBox) + " " : trim(this.searchBox);
+				}
 				switch (keyCode) {
 					case 8://backspace
 						if (this.searchBox === "") {
@@ -2783,7 +2452,13 @@
 					}
 				}
 			},
-			seeDetails: seeDetails,
+			seeDetails: function (obj) {
+				var _this = this;
+				getDetails(obj, function (detailsObj) {
+					_this.details = detailsObj;
+					_this.navigate("details", null, detailsObj);
+				});
+			},
 			notify: function (msg, autoFade, callback) {
 				function clearMsg() {
 					_this.notifyMsg = "";
@@ -2824,7 +2499,6 @@
 				this.spinner = active || this.spinIndex > 0 ? true : false;
 			},
 			toggleUseWindowsTheme: function () {
-				this.toggle("useWindowsTheme");
 				matchWindowsTheme();
 				this.storeState();
 			},
