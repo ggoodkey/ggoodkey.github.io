@@ -336,6 +336,7 @@
 				views: views,
 				backArrow: false,
 				currentView: views[startView],
+				transitionName: "forward", //or "back"
 				spinner: false,
 				spinnerMsg: ["Working..."],
 				spinIndex: 0,
@@ -596,10 +597,8 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneInit() {
-				checkDBLoaded(function (callback) {
-					app.updateCurrentView();
-					if (callback instanceof Function) return callback();
-				});
+				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
+				checkDBLoaded();
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
@@ -656,10 +655,10 @@
 					}
 				}, doneInit);
 			}
-			getLocal();
 			matchWindowsTheme();
 			layout();
-			document.getElementById("loading").className = "done"; //app is rendered so fade in from black
+			app.updateCurrentView();
+			getLocal();			
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
@@ -2097,6 +2096,13 @@
 
 				next();
 			});
+		},
+		watch: {
+			'$route'(to, from) {
+				const toDepth = to.query.page || 0;
+				const fromDepth = from.query.page || 0;
+				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
+			}
 		},
 		methods: {
 			updateCurrentView: function (to, from) {

@@ -154,7 +154,7 @@
 		</div>
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
 		<div id="router-views">
-			<transition name="fade" mode="out-in">
+			<transition :name="transitionName" mode="out-in">
 				<router-view :key='$route.fullPath' ref="router1"></router-view>
 			</transition>
 		</div>
@@ -193,6 +193,89 @@
 					{{ link.text }}
 				</li>
 			</ul>
+		</div>
+	</script>
+
+	<!--Details Card Template-->
+	<script type="text/x-template" id="details-card">
+		<div>
+			<div v-if="details.data[0] && details.data[0].text">
+				<div class="details.header">
+					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
+					<div>
+						<h1>{{ details.titleH1 }}</h1>
+						<h3 v-if="details.subtitleH2">{{ details.subtitleH2 }}</h3>
+					</div>
+				</div>
+				<div class="dropdown-container clear">
+					<button v-on:click="editDetails" v-bind:title="'Edit ' + details.data[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
+					<button id="groupsDropdownButton" v-on:click="toggleGroupsDropdown" v-bind:title="'Add ' + details.data[0].text + ' to Group'"><span class="icon icon-people"></span>&nbsp;&nbsp;Add to Group</button>
+					<ul v-show="addItemToGroupDropdown" class="dropdown">
+						<li v-for="groupName in groups" v-on:click="addToGroup(groupName, details.data)" class="link">{{ groupName }}</li>
+						<li v-on:click="addToNewGroup(details.data)" class="link">Create new group</li>
+					</ul>
+				</div>
+				<br />
+				<template v-for="(item, index) in details.data">
+					<div class="clear" v-if="item.text[0] && ! item.hidden">
+						<label class="itemLabel">{{ item.label }}</label>
+						<div class="itemText">
+							<template v-for="(line, lineIndex) in item.text">
+								<template v-if="lineIndex > 0">
+									<br />
+								</template>
+								<template v-if="item.type === 'email'">
+									<a v-bind:href="externalLink(line, item.column, 'email')">
+										<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									<a v-bind:href="externalLink(line, item.column, 'bcc')">
+										<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
+									</a>
+								</template>
+								<template v-else-if="item.type === 'phoneNumber' && /home/i.test(item.label)">
+									<a v-bind:href="externalLink(line, item.column, 'phone')">
+										<span class="icon icon-phone-alt">
+										</span>&nbsp;&nbsp;{{ line }}
+									</a>
+								</template>
+								<template v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)">
+									<a v-bind:href="externalLink(line, item.column, 'phone')">
+										<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									<a v-bind:href="externalLink(line, item.column, 'sms')">
+										<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+									</a>
+								</template>
+								<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
+									<a v-bind:href="externalLink(line, item.column, 'address', details.data)">
+										<span class="icon icon-mappin"></span>&nbsp;&nbsp;
+										<template v-for="addressLine in item.text">
+											{{ addressLine }}
+											<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+										</template>
+									</a>
+								</template>
+								<template v-else-if="item.type === 'formattedAddress'">
+								</template>
+								<template v-else-if="details.data[index].label === 'GPS'">
+									<a v-bind:href="externalLink(line, item.column, 'www')">
+										<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
+									</a>
+									<br />
+									<br />
+									<a v-bind:href="externalLink(line, item.column, 'gps')">
+										<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
+									</a>
+								</template>
+								<template v-else>
+									{{ line }}
+								</template>
+							</template>
+						</div>
+					</div>
+				</template>
+			</div>
+			<div v-else align="center">Nothing here<br /><a v-on:click="detailsViewHelp">Help</a></div>
 		</div>
 	</script>
 
@@ -327,15 +410,15 @@
 					<h3>Store, search, view, share and sync data across devices using the cloud.</h3>
 					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>
 					<!--<p>
-				NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
-				stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
-				in the form of a table, NyckelDB can handle it.
-			</p>
-			<p>
-				Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,
-				sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
-				<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
-			</p>-->
+						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
+						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
+						in the form of a table, NyckelDB can handle it.
+					</p>
+					<p>
+						Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,
+						sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
+						<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
+					</p>-->
 					<p class="alert">
 						<span class="icon icon-alert"></span>
 						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
@@ -449,95 +532,12 @@
 		</div>
 	</script>
 
-	<!--Details Card Template-->
-	<script type="text/x-template" id="details-card">
-		<div>
-			<div v-if="details.data[0] && details.data[0].text">
-				<div class="details.header">
-					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
-					<div>
-						<h1>{{ details.titleH1 }}</h1>
-						<h3 v-if="details.subtitleH2">{{ details.subtitleH2 }}</h3>
-					</div>
-				</div>
-				<div class="dropdown-container clear">
-					<button v-on:click="editDetails" v-bind:title="'Edit ' + details.data[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
-					<button id="groupsDropdownButton" v-on:click="toggleGroupsDropdown" v-bind:title="'Add ' + details.data[0].text + ' to Group'"><span class="icon icon-people"></span>&nbsp;&nbsp;Add to Group</button>
-					<ul v-show="addItemToGroupDropdown" class="dropdown">
-						<li v-for="groupName in groups" v-on:click="addToGroup(groupName, details.data)" class="link">{{ groupName }}</li>
-						<li v-on:click="addToNewGroup(details.data)" class="link">Create new group</li>
-					</ul>
-				</div>
-				<br />
-				<template v-for="(item, index) in details.data">
-					<div class="clear" v-if="item.text[0] && ! item.hidden">
-						<label class="itemLabel">{{ item.label }}</label>
-						<div class="itemText">
-							<template v-for="(line, lineIndex) in item.text">
-								<template v-if="lineIndex > 0">
-									<br />
-								</template>
-								<template v-if="item.type === 'email'">
-									<a v-bind:href="externalLink(line, item.column, 'email')">
-										<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
-									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-									<a v-bind:href="externalLink(line, item.column, 'bcc')">
-										<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
-									</a>
-								</template>
-								<template v-else-if="item.type === 'phoneNumber' && /home/i.test(item.label)">
-									<a v-bind:href="externalLink(line, item.column, 'phone')">
-										<span class="icon icon-phone-alt">
-										</span>&nbsp;&nbsp;{{ line }}
-									</a>
-								</template>
-								<template v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)">
-									<a v-bind:href="externalLink(line, item.column, 'phone')">
-										<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
-									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-									<a v-bind:href="externalLink(line, item.column, 'sms')">
-										<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
-									</a>
-								</template>
-								<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
-									<a v-bind:href="externalLink(line, item.column, 'address', details.data)">
-										<span class="icon icon-mappin"></span>&nbsp;&nbsp;
-										<template v-for="addressLine in item.text">
-											{{ addressLine }}
-											<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-										</template>
-									</a>
-								</template>
-								<template v-else-if="item.type === 'formattedAddress'">
-								</template>
-								<template v-else-if="details.data[index].label === 'GPS'">
-									<a v-bind:href="externalLink(line, item.column, 'www')">
-										<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
-									</a>
-									<br />
-									<br />
-									<a v-bind:href="externalLink(line, item.column, 'gps')">
-										<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
-									</a>
-								</template>
-								<template v-else>
-									{{ line }}
-								</template>
-							</template>
-						</div>
-					</div>
-				</template>
-			</div>
-			<div v-else>Nothing here<br /><a v-on:click="detailsViewHelp">Help</a></div>
-		</div>
-	</script>
-
 	<!--Details Page Template-->
 	<script type="text/x-template" id="details-page">
 		<div class="view">
 			<div class="view-container">
 				<details-card v-bind:details="details"></details-card>
-			</div>				
+			</div>
 		</div>
 	</script>
 
