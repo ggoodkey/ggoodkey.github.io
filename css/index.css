@@ -832,10 +832,10 @@ html.tabl #app.sidenav_open #sidenav {
 	overflow-y: auto;
 	float: left;
 	will-change: width, opacity;
-	-webkit-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	-moz-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	-o-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
+	-webkit-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
+	-moz-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
+	-o-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
+	transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
 	scrollbar-width: none;
 }
 
@@ -894,10 +894,10 @@ html.tabl .searchBar_open .navButtons.tabl.desk {
 	overflow: hidden;
 	width: 0;
 	will-change: width;
-	-webkit-transition: width 0.3s cubic-bezier(.4, 0, .1, 1.4);
-	-moz-transition: width 0.3s cubic-bezier(.4, 0, .1, 1.4);
-	-o-transition: width 0.3s cubic-bezier(.4, 0, .1, 1.4);
-	transition: width 0.3s cubic-bezier(.4, 0, .1, 1.4);
+	-webkit-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
+	-moz-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
+	-o-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
+	transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
 	background-color: #fafafa;
 }
 
@@ -1606,10 +1606,10 @@ button[disabled="disabled"]:focus {
 /*vue transitions*/
 .forward-leave-active,
 .back-leave-active {
-	-webkit-transition: all 0.2s cubic-bezier(0.7, 0, 1, 0.5);
-	-moz-transition: all 0.2s cubic-bezier(0.7, 0, 1, 0.5);
-	-o-transition: all 0.2s cubic-bezier(0.7, 0, 1, 0.5);
-	transition: all 0.2s cubic-bezier(0.7, 0, 1, 0.5);
+	-webkit-transition: transform 0.15s cubic-bezier(0.7, 0, 1, 0.5), opacity 0.15s ease-out;
+	-moz-transition: transform 0.15s cubic-bezier(0.7, 0, 1, 0.5), opacity 0.15s ease-out;
+	-o-transition: transform 0.15s cubic-bezier(0.7, 0, 1, 0.5), opacity 0.15s ease-out;
+	transition: transform 0.15s cubic-bezier(0.7, 0, 1, 0.5), opacity 0.15s ease-out;
 }
 
 .forward-enter-active,
@@ -1634,7 +1634,7 @@ html.desk .forward-enter{
 
 html.tabl .forward-leave-to,
 html.desk .forward-leave-to {
-	transform: translateX(-50px);
+	transform: translateX(-300px);
 }
 
 html.tabl .back-enter,
@@ -1644,5 +1644,5 @@ html.desk .back-enter {
 
 html.tabl .back-leave-to,
 html.desk .back-leave-to {
-	transform: translateX(50px);
+	transform: translateX(300px);
 }
