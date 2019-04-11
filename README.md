@@ -1,52 +1,64 @@
-# ![N](favicon.ico)yckelDB Documentation
+# ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
-#### NyckelDB Version 0.2
-##### October 17, 2018
-Any data that you can visualize as a table or spreadsheet can be stored in a NyckelDB object.
-NyckelDB is a database that is sortable, searchable, filterable, syncable and shareable. All data inputs are validated according to data type, and data can be exported as JSON or CSV (coming soon).
+#### NyckelDB Version 0.4
+##### April 11, 2019
+NyckelDB is a highly structured JavaScript data store. Any data that 
+you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
+is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
+according to data type, and data can be imported or exported as JSON or CSV (coming soon).
 
 ## Table of Contents
-Page 1
-* [Dependancies](#dependancies)
 
-Page 2
-* [Features](#features)
-  * [Sort, Shuffle and Filter](#sort-shuffle-and-filter)
-  * [Search](#search)
-  * [Sync and Share](#sync-and-share)
-  * [Data Validation](#data-validation)
-
-Page3
-* [Types](#types)
-  * [String types](#string-types)
-  * [Numeric types](#numeric-types)
-  * [Boolean types](#boolean-types)
-
-Page 4
+* [Overview](#overview)
+  * [Dependancies](#dependancies)
+  * [Features](#features)
+    * [Sort, Shuffle and Filter](#sort-shuffle-and-filter)
+    * [Search](#search)
+    * [Sync and Share](#sync-and-share)
+    * [Data Validation](#data-validation)
+  * [Types](#types)
+    * [String types](#string-types)
+    * [Numeric types](#numeric-types)
+    * [Boolean types](#boolean-types)
 * [Setting up a new NyckelDB Object](#setting-up-a-new-nyckeldb-object)
-* [Custom Properties](#custom-properties)
-
-Page 5-6
+  * [The Options Parameter](#the-options-parameter)
+    * [Importing Data](#importing-data)
+    * [Custom Properties](#custom-properties)
 * [Functions](#functions)
-
-Page 7
+* [Formulas](#formulas)
 * [Miscellaneous](#miscellaneous)
   * [Database Structure](#database-structure)
   * [Null and Undefined](#null-and-undefined)
   * [Time Stamps](#time-stamps)
+
+# Overview
+Nyckel (nick-hell) is a Swedish word that means "key". Keys are used for keeping things safe that are important to you. They are kinda like pouches, but different. Pouches are nice and soft, and you can put just about anything into a pouch. 
+It is quite difficult to put just about anything into a key! Keys are small, light-weight, and handy, but not very flexible, which might be the very reason that you want to use a key. Keys mean safety, responsibility, integrity, access.
+
+The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.
+NyckelDB uses Lawnchair as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistant storage. For a cloud solution,
+a compressed and encrypted JSON object can be exported for you to send wherever you want it to go, and imported again and synchronised on another device.
+
+NyckelDB can be visualised as having a table-like structure, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
+This enables the database to behave like both an Array and an Object, where data is sortable like in an Array, but also highly performant like an Object for read, write, search and sync operations.
+
+The data store can (and if possible should) be run in the background in a webWorker, and so as much computational work as possible is handled by the database including basic search, sort, filter, 
+and even very simple application specific custom formulas.
+
+LZString compression is used in localStorage so you can fit several MB of data in the very limited storage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.
+
+All data written to the data store is automatically validated before being written, taking care of much of your form validation work for you such as names, email addresses and phone numbers. 
+Some best practices are enforced on password storage by only saving hashed passwords of sufficient length, and requiring the password itself to get it back! 
+
+The basic question that NyckelDB tries to answer is, "How would I like my own personal data to be collected, stored, transmitted and shared?" But beware! It is part of, but not a complete answer to this question.
 
 ## Dependancies
 * validate.js
 * base64.js
 * storage.js
 * Lawnchair.js
-* dropbox.js
-
-<div style="page-break-before: always;" align="right"><small>Page 2</small><hr></div>
 
 ## Features
-NyckelDB can be visualised as having a table-like stucture, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
-This enables a no compromise combination of features, including the sortability of Arrays, as well as the lightning quick lookup of JSON Objects for search.
 
 ### Sort, Shuffle and Filter
 Like a table, data can be sorted alphabetically and/or numerically by any column in the table, or conversly, shuffled to be completely random &ndash; useful if you want to create a playlist, or stack of flashcards.
@@ -76,8 +88,6 @@ Some subtypes fall into more than one category such as *postalZipCode* which can
 [See Types below](#types) for a complete list of all the different subtypes.
 
 If you want the most flexibilty you can specify *any*, which will allow any type of data to be saved to that column in the table, as long as it is a String, Number or Boolean value.
-
-<div style="page-break-before: always;" align="right"><small>Page 3</small><hr></div>
 
 ## Types
 ### String types
@@ -114,8 +124,6 @@ If you want the most flexibilty you can specify *any*, which will allow any type
 * **any** see [String types: any](#string-types)
 * **boolean** accepts only true or false
 
-<div style="page-break-before: always;" align="right"><small>Page 4</small><hr></div>
-
 ## Setting up a new NyckelDB Object
 Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
 
@@ -141,23 +149,121 @@ var headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
 var myTable = new APP.NyckelDB(headers, types, options, callback);
 myTable.getLength(); //returns 0
 ```
-## Custom Properties
-Custom properties can be used for data that doesn't quite fit into the table model, maybe some metadata that applies to the entire database. 
+There is (surprisingly) quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
+or you can pass types as an Object in the form: \<columnName>: \<columnType>
+
+```javascript
+var types = { 
+	Month: "date",
+	"Monthly Income": "posInteger",
+	"Monthly Expenses": "negInteger",
+	Balance: "integer"
+}
+```
+which might be an easier way to manage your code, especially if you have a large number of columns. 
+
+If the order of the columns in your table is unimportant, you can pass this Object directly as the headers
+themselves in the first parameter instead of an Array, and the second parameter as null.
+
+Finally, additional metadata can be set such as whether a column should be indexed for searching, what should it's initial value be if nothing is
+specified, or even a [formula](#formulas), by passing Types in like this:
+
+```javascript
+var types = { 
+	Month: { 
+		type: "string", 
+		search: true,
+		initialValue: "January"
+	},
+	"Monthly Income": {
+		type: "posInteger",
+		search: false,
+		initialValue: 2000
+	},
+	"Monthly Expenses": {
+		type: "negInteger",
+		search: false
+	},
+	Balance: {
+		type: "integer",
+		formula: "SUBTRACT('Monthly Income','Monthly Expenses')"
+	}
+}
+```
+Likewise, you can pass this form of Object directly to the headers parameter instead of an Array, if the specific order of the columns in your table is unimportant.
+
+> __Q: When should you use an Array for your column headers? When would order matter?__
+> 
+> A: If you want to display the data from an entire row all at once on the screen in a specific order, 
+or if you receive your data  as an Array and want to pass it directly into a newly created row in your 
+table at once. You can work around this by reordering the output afterwards of course, but better to be aware of this in the beginning.
+
+## The Options Parameter
+The 'options' parameter accepts an Object. It may contain data to import immediately after the database is
+created in the form of a CSV file (string), or JSON object, and custom properties that you would like to add to your table.
+
+```javascript
+var options = {
+	importData: nyckelDBTable,
+	importJSON: json,
+	importCSV: string,
+	customProperties:{
+		"FinalBalance": {
+			type: "integer",
+			initialValue: 10000
+		},
+		"ICanBuyMyGroceriesThisMonth": {
+			type: "boolean",
+			initialValue: true
+		}
+	}	
+};
+```
+
+### Importing Data
+CSV, or JSON data can be imported into the table in the 'options' parameter in one of 3 forms:
+
+```javascript
+//table data that was generated by NyckelDB sync or exportJSON functions
+importData: nyckelDBTable, 
+
+//json data that needs to be parsed
+importJSON: json, 
+
+//or CSV data that needs to be converted to JSON and then parsed
+importCSV: string, 
+```
+
+### Custom Properties
+Custom properties can be used for data that doesn't quite fit into the "table" model, such as maybe some metadata that applies to the entire database. 
 The existance of a custom property must be initated when the NyckelDB object is created, and must be given an initial value. 
 Custom properties can be given a type as well, but only "string", "number" or "boolean", or left as "any".
 
-<div style="page-break-before: always;" align="right"><small>Page 5</small><hr></div>
-
+```javascript
+customProperties:{
+	//name the custom property what ever you want
+	"FinalBalance": {
+		type: "integer",
+		initialValue: 10000
+	},
+	"ICanBuyMyGroceriesThisMonth": {
+		type: "boolean",
+		initialValue: true
+	}
+}	
+```
 
 ## Functions
 There are all the basic functions for adding, changing and deleting data in the NyckelDB Object including:
 
 Function Name | Parameters | Returns | Description
 --------------|------------|---------|------------
-addRow | array, *id | | Add a new row to the table. The array must be complete and contain initial values for all the cells in the row. Id is optional and will only be used if it doesn't already exist.
-deleteRow | rowId | | Delete a row along with all the data that it contains
+addColumn | colName, position, *options, *callback | success | Add a new column to the table. Options are 'type', 'intialValue', 'formula'
+deleteColumn | colName | success | Delete a column from the table
+addRow | array, *id | rowId | Add a new row to the table. The array must be complete and contain initial values for all the cells in the row. Id is optional and will only be used if it doesn't already exist.
+deleteRow | rowId | success | Delete a row along with all the data that it contains
 getRow | rowId | row Object | Get an entire row from the table including column name, column type, and values
-setVal | rowId, colName, newValue | | Change the value of a cell
+setVal | rowId, colName, newValue | validated value | Change the value of a cell
 getVal | rowId, colName	| table cell value | Get the value of a cell
 setProp | propName, value | | Change the value of a table [custom property](#custom-properties)
 getProp | propName | property value | Get the value of a table [custom property](#custom-properties)
@@ -188,8 +294,8 @@ NUKEALL | msg, *callback | | Clear all the locally cached copies of all the Nyck
 
 \* parameter not required
 
-<div style="page-break-before: always;" align="right"><small>Page 7</small><hr></div>
-
+## Formulas
+Coming soon
 
 ## Miscellaneous
 The following information may be helpful to understanding how the database works, but is not key to being able to use it.
