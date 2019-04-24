@@ -5,6 +5,7 @@ var precacheFiles = [
 	"manifest.json",
 	//"pwabuilder-sw.js",
 	"css/icons.css",
+	"css/icons-mdl2.css",
 	"css/index.css",
 	"css/fonts/glyphicons-halflings-regular.eot",
 	"css/fonts/glyphicons-halflings-regular.svg",
