@@ -1,16 +1,29 @@
 ﻿/**
- * Dependancies: base64, dropbox, lawnchair, storage, validate, app
- */ 
-var APP = APP || {}, Base64, Windows, cordova;
+ * @fileOverview Table structured client side JavaScript data store
+ * @version 0.4
+ * @requires base64.js a string manipulation library
+ * @requires lawnchair.js cross-platform localStorage solution
+ * @requires storage.js local and cloud storage library
+ * @requires validate.js data validation library
+ */
+
+/**
+ * Application
+ */
+var APP = APP || {}, VAL, Base64, Windows, cordova, Spelling;
+/**
+ * @lends APP#
+ * @class
+ */
 APP.nyckelDB = (function () {
 	"use strict";
-	function isNumeric(n) {
+	function IS_NUMERIC(n) {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	}
 	/*delete duplicate values held in an array
-	note: deleteDuplicates converts non String values to Strings first :. "1" matches 1
+	note: DELETE_DUPLICATES converts non String values to Strings first :. "1" matches 1
 	also handles multi dimensional arrays*/
-	function deleteDuplicates(arr) {
+	function DELETE_DUPLICATES(arr) {
 		for (var x = 0, len = arr.length, y; x < len - 1; x++) {
 			for (y = x + 1; y < len; y++) {
 				if (String(arr[x]) === String(arr[y])) {
@@ -24,14 +37,14 @@ APP.nyckelDB = (function () {
 		return arr;
 	}
 	/*returns number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000, or since 15e11 in javascript time
-	wRefTo (with reference to) specifies a base timestamp as reference. Returns the difference b/t wRefTo
-	and Now. Optional */
-	function timestamp(wRefTo) {
+	use wRefTo (with reference to, Optional) to specify a different base time stamp as reference. Returns the difference
+	b/t wRefTo and Now. */
+	function TIMESTAMP(wRefTo) {
 		var now = Math.floor((new Date().getTime() - 15e11) / 6e4);
-		return isNumeric(wRefTo) ? now - wRefTo : now;
+		return IS_NUMERIC(wRefTo) ? now - wRefTo : now;
 	}
 	//returns a string in the form YYYYMMDDHHMM ie. 201812312359
-	function readableTimestamp() {
+	function READABLE_TIMESTAMP() {
 		function twoDigits(a) {
 			a = String(a);
 			while (a.length < 2) a = "0" + a;
@@ -46,457 +59,604 @@ APP.nyckelDB = (function () {
 		date = null;
 		return year + month + day + hour + minute;
 	}
-	function rowIdIsValid(rowId) {
+	function READABLE_JSON_STRING(str) {
+		function enter() {
+			out += "\r\n";
+			for (a = 0; a < tabDepth; a++) {
+				out += "\t";
+			}
+		}
+		var quote = false,
+			tabDepth = 0,
+			prevChar,
+			out = "",
+			a = 0,
+			array = 0;
+		for (let c = 0, len = str.length; c < len; c++) {
+			if (str[c] === "}" && !quote) {
+				tabDepth--;
+				enter();
+			}
+			out += str[c];
+			switch (str[c]) {
+				case '"':
+					if (prevChar !== "\\") quote = !quote;
+					break;
+				case ",":
+					if (!quote && !array) enter();
+					break;
+				case "[":
+					if (!quote) array++;
+					break;
+				case "]":
+					if (!quote) array--;
+					break;
+				case "{":
+					if (!quote) {
+						tabDepth++;
+						enter();
+					}
+					break;
+			}
+			prevChar = str[c];
+		}
+		return out;
+	}
+	function ROW_IDS_IS_VALID(rowId) {
 		if (this.isDeleted()) return false;
-		if (isNumeric(rowId)) {
+		if (IS_NUMERIC(rowId)) {
 			if (rowId < 0) {
-				cacheError.call(this, rowId, "row id cannot be less than 0");
+				CACHE_ERROR.call(this, rowId, "row id cannot be less than 0");
 				return false;
 			}
-			else if (rowId < db[this.id].table.length) return true;
+			else if (rowId < DB[this.id].table.length) return true;
 			else return false;
 		}
 		else if (typeof rowId === "string" && /^[a-z0-9]+$/i.test(rowId)) {
-			if (db[this.id].ids[rowId]) return true;
+			if (DB[this.id].ids[rowId]) return true;
 			else return false;
 		}
 		else {
-			cacheError.call(this, typeof rowId, "invalid row Id, number or  string required: " + rowId);
+			CACHE_ERROR.call(this, typeof rowId, "invalid row Id, number or string required: " + rowId);
 			return false;
 		}
 	}
-	function colNameIsValid(colName) {
-		if (this.isDeleted()) return false;
-		if (typeof colName === "string" && db[this.id].headers.indexOf(VAL.toPropName(colName)) > -1) {
-			if (colName === "id") {
-				cacheError.call(this, colName, "'id' is a reserved column name, and is not accessible");
-				return false;
+	function COL_NAME_IS_VALID(colName) {
+		function checkString(str) {
+			if (headers.indexOf(VAL.toPropName(str)) > -1) {
+				if (str === "id") {
+					CACHE_ERROR.call(this, str, "'id' is a reserved column name, and is not accessible");
+					return false;
+				}
+				else return true;
 			}
-			else return true;
-		}
-		else if (isNumeric(colName)) {
-			if (colName < 1) {
-				cacheError.call(this, colName, "column name cannot be less than 1");
-				return false;
-			}
-			else if (colName < db[this.id].headers.length) return true;
 			else {
-				cacheError.call(this, colName, "column name not found");
+				var ret = false;
+				for (let a = 0, len = headers.length, column; a < len; a++) {
+					column = DB[this.id].columns[headers[a]];
+					if (column.exportAs && column.exportAs[0] === str) {
+						CACHE_ERROR.call(this, headers[a], str + " conflicts with another column name. Access it with it's new name");
+						break;
+					}
+				}
+				return ret;
+			}
+		}
+		function checkNumber(num) {
+			if (num < 1) {
+				CACHE_ERROR.call(this, num, "column name cannot be less than 1");
+				return false;
+			}
+			else if (num < headers.length) return true;
+			else {
+				CACHE_ERROR.call(this, num, "column name not found");
 				return false;
 			}
 		}
+		if (this.isDeleted()) return false;
+		var headers = DB[this.id].columns.$headers;		
+		if (typeof colName === "string") return checkString.call(this, colName);		
+		else if (IS_NUMERIC(colName)) return checkNumber.call(this, colName);
 		else {
-			cacheError.call(this, colName, "column name not found");
+			CACHE_ERROR.call(this, colName, "column name not found");
 			return false;
 		}
 	}
-	function valueIsValid(value, type) {
-		if (value == null) {//checks for both null and undefined
-			cacheError.call(this, value, type + " value cannot be");
+	function VALUE_IS_VALID(value, type) {
+		if (value == null) {// eslint-disable-line eqeqeq
+			CACHE_ERROR.call(this, value, type + " value cannot be");
 			return false;
 		}
 		else if (type === "any") return true;
-		else if (typeof value === "string" && type.match(/string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation/)) {
-			return true;
-		}
-		else if (typeof value === "number" && type.match(/number|integer|posInteger|negInteger|date|phoneNumber|password|postalZipCode|longitude|latitude/)) {
-			if (isNaN(value) || value === Infinity) {
-				cacheError.call(this, value, "number value cannot be");
-				return false;
-			}
-			else return true;
-		}
+		else if (typeof value === "string" && type.match(VALID_STRING_TYPES)) return true;
+		else if (IS_NUMERIC(value) && type.match(VALID_NUMBER_TYPES)) return true;
 		else if (typeof value === "boolean" && type === "boolean") return true;
 		else {
-			if (!type.match(validTypes)) cacheError.call(this, type, "Invalid data type");
-			else cacheError.call(this, "invalid value", value + " is a " + typeof value + ", not a " + type);
+			if (typeof type !== "string") CACHE_ERROR.call(this, type, "Type must be supplied as a string");
+			else if (!type.match(VALID_TYPES)) CACHE_ERROR.call(this, type, "Invalid data type");
+			else CACHE_ERROR.call(this, value + " is a " + typeof value + ", not a " + type, "invalid value");
 			return false;
 		}
 	}
-	function getIndexOfRow(rowId) {
+	function GET_INDEX_OF_ROW(rowId) {
+		function getIndex(rowId) {
+			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
+				ROW_INDEX_CACHE[this.id][DB[this.id].table[a][0]] = a;//build a cache for faster performance
+				if (DB[this.id].table[a][0] === rowId) return a;
+			}
+		}
 		if (this.isDeleted()) return -1;
-		if (rowIdIsValid.call(this, rowId)) {
-			if (isNumeric(rowId)) return rowId;
+		if (ROW_IDS_IS_VALID.call(this, rowId)) {
+			if (IS_NUMERIC(rowId)) return rowId;
 			else {
-				if (db[this.id].ids[rowId][0] === "del") return -1;
-				if (rowIndex[this.id] && rowIndex[this.id][rowId]) return rowIndex[this.id][rowId]; //direct from cache
-				else {
-					for (let a = 0, len = db[this.id].table.length; a < len; a++) {
-						rowIndex[this.id][db[this.id].table[a][0]] = a;//build a cache for faster performance
-						if (db[this.id].table[a][0] === rowId) {
-							return a;
-						}
-					}
-				}
+				if (DB[this.id].ids[rowId][0] === "del") return -1;
+				if (ROW_INDEX_CACHE[this.id] && ROW_INDEX_CACHE[this.id][rowId]) return ROW_INDEX_CACHE[this.id][rowId]; //direct from cache
+				else return getIndex.call(this, rowId);
 			}
 		}
 		else return -1;
 	}
-	function getIndexOfCol(colName) {
+	function GET_INDEX_OF_HIDDEN_ROW(rowId) {
+		if (DB[this.id].hidden && DB[this.id].hidenIds[rowId]) {
+			if (DB[this.id].hiddenIds[rowId][0] === "del") return -1;
+			for (let a = 0, len = DB[this.id].hidden.length; a < len; a++) {
+				if (DB[this.id].hidden[a][0] === rowId) return a;
+			}
+		}
+		else return -1;
+	}
+	function GET_INDEX_OF_COLUMN(colName) {
 		if (this.isDeleted()) return -1;
-		else if (isNumeric(colName) && colName > 0 && colName < db[this.id].headers.length) return colName;
+		var headers = DB[this.id].columns.$headers;
+		if (IS_NUMERIC(colName) && colName > 0 && colName < headers.length) return colName;
+		var orig = colName;
+		colName = VAL.toPropName(colName);
+		if (colName === "id") return -1;
+		var ret = headers.indexOf(colName);
+		if (ret > -1) return ret;
+		for (let a = 1, len = headers.length, column; a < len; a++) {
+			column = DB[this.id].columns[headers[a]];
+			if (column.exportAs && column.exportAs[0] === orig) {
+				if (ret === -1) ret = a;
+				else {
+					//more than 1 possible matches exist, return no match found
+					ret = -1;
+					break;
+				}
+			}
+		}
+		return ret;
+	}
+	function EXPORT_DB() {
+		if (!DB[this.id].hidden) return DB[this.id];
 		else {
-			colName = VAL.toPropName(colName);
-			if (colName !== "id") return db[this.id].headers.indexOf(colName);
-			else return -1;
+			var db = JSON.parse(JSON.stringify(DB[this.id]));
+			var row;
+			while (db.hidden.length > 0) {
+				row = db.hidden[0];
+				db.ids[row[0]] = JSON.parse(JSON.stringify(db.hiddenIds[row[0]]));
+				delete db.hiddenIds[row[0]];
+				db.table.push(db.hidden.splice(0, 1)[0]);
+			}
+			row = null;
+			delete db.hidden;
+			delete db.hiddenIds;
+			return db;
 		}
 	}
-	function toLocalStorage(changes) {
+	function TO_LOCAL_STORAGE(changes) {
 		function save() {
 			if (typeof changes === "undefined" || changes === true) {
-				APP.Sto.setItem(db[this.id].title, JSON.stringify(db[this.id]));
+				//check for and surface hidden values before save				
+				APP.Sto.setItem(DB[this.id].title, EXPORT_DB.call(this)); //TODO temp commented out while making changes
 			}
-			errors[this.id] = null;
+			ERRORS[this.id] = null;
 		}
 		if (APP.Sto) {
-			if (errors[this.id]) {
-				var msg = "The following errors are found in the " + db[this.id].title + " database\n" + errors[this.id] + "\nWould you still like to save changes?",
-					_this = this;
+			if (ERRORS[this.id]) {
+				var msg = "The following errors are found in the " + DB[this.id].title + " database\n" +
+						ERRORS[this.id] + "\nWould you still like to save changes?";
 				if (APP.confirm) {
-					APP.confirm(msg, save.bind(_this), null, { "okButton": "Save" });
+					APP.confirm(msg, save.bind(this), null, { "okButton": "Save" });
 				}
 				else if (window && window.confirm(msg.replace(/<[^>]+>/g, " "))) save.call(this);
 				msg = null;
 			}
 			else save.call(this);
 		}
-		buildSearchIndex.call(this);
+		BUILD_SEARCH_INDEX.call(this);
 	}
-	function importJSON(json, callback, key, fromLocalStorageBool) {
-		if (typeof json === "string") json = JSON.parse(json);
-		var syncChanges = false;
-		if (json && json.data && json.version === this.Version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
-			json = Base64.read(json.data, key);
+	/*json.identifierCol to specify a specific column in the data to use as the basis for the generated unique id for each row
+	*/
+	function IMPORT_JSON(json, callback, key, fromLocalStorageBool) {
+		function ret(success, err, changes) {
+			if (callback instanceof Function) return callback(success, err, DB[this.id] && DB[this.id].title, !err ? false: changes), this;
+			else return this;
 		}
-		if (json && json.title) {
-			var eTitle = VAL.toPropName(db[this.id].title),
+		function applyJSON(json) {
+			function checkDBForMissingItems() {
+				//check for errors
+				var missing = [];
+				for (let item in json.ids) {
+					if (!DB[this.id].ids[item] && json.ids[item][0] !== "del") {
+						missing.push(item);
+					}
+				}
+				if (missing.length > 0) {
+					CACHE_ERROR.call(this, missing, "import did not complete sucessfully");
+					for (let a = 0, lenA = missing.length, d, lenD; a < lenA; a++) {
+						for (d = 0, lenD = json.length; d < lenD; d++) {
+							if (json.table[d][0] === missing[a]) {
+								//TODO
+								console.log("error in row " + missing[a]);
+								break;
+							}
+						}
+					}
+				}
+				if (!DB[this.id].hidden && json.table.length !== DB[this.id].table.length ||
+					DB[this.id].hidden && json.table.length !== DB[this.id].table.length + DB[this.id].hidden.length) {
+					CACHE_ERROR.call(this, "lastModified date not updated");
+				}
+			}
+			function syncColumns(columns, callback) {
+				if (!columns) return callback();
+				//added in verions 0.4+
+				for (let colName in columns) {
+					//go through all metadata and delete deleted columns //ignore $headers and $id
+					if (colName.charAt(0) !== "$" && columns[colName].deleted && DB[this.id].columns[colName] && !DB[this.id].columns[colName].deleted) {
+						DELETE_COLUMN.call(this, colName, false, columns[colName].deleted[1]);
+					}
+				}
+				for (let a = 0, lenA = columns.$headers.length, colIndex, colName, prop; a < lenA; a++) {
+					colName = columns.$headers[a];
+					colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+					if (colIndex === -1) ADD_COLUMN.call(this, colName, a, columns[colName], false, columns.$created[a]);
+					if (colIndex > 0) {//make changes					
+						if (colIndex !== a) MOVE_COLUMN.call(this, colName, colIndex, false);
+						//go through all properties and update
+						for (prop in columns[colName]) {
+							if (columns[colName][prop][1] > DB[this.id].columns[colName][prop][1]) {
+								switch (prop) {
+									case "deleted"://shouldn't find an unsynced deleted column here!!!
+										CACHE_ERROR.call(this, colName, "deleted column not synced");
+										break;
+									case "type": SET_TYPE.call(this, colName, columns[colName][prop][0], null, false, columns[colName][prop][1]);
+										break;
+									//TODO add more props here
+									default:
+										CACHE_ERROR.call(this, prop, "unknown column property not being synced");
+									//report sync not handling this property
+								}
+							}
+						}
+					}
+				}
+				return callback();
+			}
+			function syncTable(table, ids) {
+				function updateTimestamps() {
+					function deleteRows() {
+						function applyProperties() {
+							if (json.properties && DB[this.id].properties) {
+								var _prop;
+								for (let prop in json.properties) {
+									_prop = VAL.toPropName(prop);
+									if (DB[this.id].properties[_prop]) {
+										if (!DB[this.id].properties[_prop][1] || DB[this.id].properties[_prop][1] < json.properties[prop][1]) {
+											SET_PROP.call(this, prop, json.properties[prop][0], json.properties[prop][1], false);
+											syncChanges = true;
+										}
+										else if (DB[this.id].properties[_prop][1] && DB[this.id].properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
+									}
+									else CACHE_ERROR.call(this, "customProperty " + _prop + " not initialized");
+								}
+								_prop = null;
+							}
+							checkDBForMissingItems.call(this);
+						}
+						//delete deleted rows
+						for (let rowId in json.ids) {
+							if (json.ids[rowId][0] === "del" && DB[this.id].ids[rowId] && DB[this.id].ids[rowId][0] !== "del") {
+								if (json.ids[rowId][1] !== DB[this.id].ids[rowId][0]) syncChanges = true;
+								//if it was deleted after it was created (not restored)
+								if (json.ids[rowId][1] - createdDiff > DB[this.id].ids[rowId][0]) {
+									DELETE_ROW.call(this, rowId, false, json.ids[rowId][1]);
+								}
+							}
+						}
+						applyProperties.call(this);
+					}
+					if (json.created < DB[this.id].created) {
+						//update created time stamp
+						DB[this.id].created = json.created;
+						DB[this.id].lastModified = DB[this.id].lastModified === 0 ? json.lastModified : DB[this.id].lastModified - createdDiff;
+						//update all other time stamps to reflect change in created time stamp
+						var i, idiLen;
+						for (let id in DB[this.id].ids) {
+							for (i = 0, idiLen = DB[this.id].ids[id].length; i < idiLen; i++) {
+								if (i !== 0 || DB[this.id].ids[id][i] !== "del")
+									DB[this.id].ids[id][i] = DB[this.id].ids[id][i] - createdDiff;
+							}
+						}
+						i = null; idiLen = null;
+						syncChanges = true;
+						//TODO update column timestamps
+					}
+					deleteRows.call(this);
+				}
+				function updateRow(toTable, toIds, nRow) {
+					for (let c = 0, lenC = toTable.length, e, eLen, xRow, xId, nId; c < lenC; c++) {
+						xRow = toTable[c];//existing row
+						if (xRow[0] !== nRow[0]) continue;
+						//ids match, found right row
+						xId = toIds[xRow[0]];//existing row metadata
+						nId = ids[nRow[0]];//new row metadata
+						for (e = 1, eLen = nId.length; e < eLen; e++) {
+							if (xId[0] + xId[e] === nId[0] + nId[e] - createdDiff) continue;
+							//cells are different
+							syncChanges = true;
+							if (nId[0] !== "del" && xId[0] + xId[e] < nId[0] + nId[e] - createdDiff) {
+								//cell needs updated
+								SET_VAL.call(this, c, e, nRow[e], false, nId[e]);
+							}
+						}
+						match = true;
+						break;//row match found and updated so don't need to search further
+					}
+				}
+				//update rows
+				var match;
+				for (let b = 0, len = table.length, nRow; b < len; b++) {
+					match = false;
+					nRow = table[b];//new row
+					updateRow.call(this, DB[this.id].table, DB[this.id].ids, nRow);
+					if (!match) updateRow.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, nRow);
+					if (!match && (!DB[this.id].ids[nRow[0]] || DB[this.id].ids[nRow[0]][0] === "del" && DB[this.id].ids[nRow[0]][1] < ids[nRow[0]][0]) - createdDiff) {
+						//new row
+						syncChanges = true;
+						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
+					}
+				}
+				updateTimestamps.call(this);
+			}
+			function checkDeleted() {
+				if (!this.isDeleted()) {
+					//delete table
+					return DELETE_TABLE.call(this, function () { return ret.call(this, true, null, true); }, json.deleted, false);
+				}
+				else return ret.call(this, true, null, false);
+			}
+			function directLoadDB() {
+				//database has just been initiated and can load all data directly from json, or is being restored from being deleted
+				if (DB[this.id].lastModified >= json.lastModified) return ret.call(this, true, null, false);
+				//recreate existing/deleted table
+				this.unhideRows();
+				delete DB[this.id].deleted;
+				DB[this.id].created = json.created;
+				DB[this.id].ids = json.ids;
+				DB[this.id].lastModified = json.lastModified;
+				DB[this.id].properties = json.properties;
+				DB[this.id].table = json.table;
+				if (json.types && json.headers && json.version === "0.3_1.1") {
+					//migrate old json.types to columns
+					DB[this.id].columns = APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created);
+				}
+				else DB[this.id].columns = json.columns;
+				DB[this.id].version = this.Version + "_" + Base64.Version;
+				if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this);
+				return ret.call(this, true, null, true);
+			}			
+			if (json.lastModified && json.lastModified === DB[this.id].lastModified) {
+				//no changes
+				checkDBForMissingItems.call(this);
+				return ret.call(this, true, null, false);
+			}
+			var eTitle = VAL.toPropName(DB[this.id].title),
 				nTitle = VAL.toPropName(json.title);
 			if (json.previousTitle && json.previousTitle.indexOf(eTitle) > -1) {
 				//title has been changed
-				db[this.id].title = json.title;
+				DB[this.id].title = json.title;
 			}
-			if (nTitle === eTitle || db[this.id].previousTitle && db[this.id].previousTitle.indexOf(nTitle) > -1) {
-				//table titles match
-				if (typeof json.deleted !== "undefined") {
-					if (!this.isDeleted()) {
-						//delete table
-						deleteTable.call(this, function () {
-							if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
-							else return this;
-						}.bind(this), json.deleted, false);
+			if (nTitle !== eTitle && !DB[this.id].previousTitle ||
+				DB[this.id].previousTitle && DB[this.id].previousTitle.indexOf(nTitle) === -1) {
+				return ret.call(this, false, "cannot import " + json.title);
+			}
+			//table titles match
+			if (typeof json.deleted !== "undefined") {
+				return checkDeleted.call(this);
+			}
+			else if (!json.table) return ret.call(this, false, "json is not valid");
+			if (DB[this.id].lastModified === 0 && DB[this.id].table.length === 0 && DB[this.id].created !== json.created || this.isDeleted()) {
+				return directLoadDB.call(this);
+			}
+			var createdDiff = DB[this.id].created - json.created;//the difference in time between when the two tables were created
+			syncColumns.call(this, json.columns, function () {
+				syncTable.call(this, json.table, json.ids);
+			});				
+			//TODO check for errors in headers and column metadata
+
+			if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this, syncChanges);
+			else BUILD_SEARCH_INDEX.call(this);
+			createdDiff = null;
+			return ret.call(this, true, ERRORS[this.id], syncChanges);
+		}
+		function applyCSV(json) {
+			function getId(jsonRow, searchLevel, remainingIds, idColName) {
+				function findDifferences(id, json) {
+					var x, y, b = 0, ret = [];
+					for (var item in json) {
+						if (json.hasOwnProperty(item)) {
+							x = String(json[item]);
+							y = String(this.getVal(id, item));
+							if (y && x !== y) {
+								ret[b] = item;
+								b++;
+							}
+						}
 					}
-					else if (callback instanceof Function) return callback(true, "table is deleted", db[this.id].title, false), this;
-					else return this;
+					if (b === 0) return false;
+					else return ret;
 				}
-				else if (json.table) {
-					if (db[this.id].lastModified === 0 && db[this.id].table.length === 0 && db[this.id].created !== json.created || this.isDeleted()) {
-						if (db[this.id].lastModified < json.lastModified) {
-							//recreate existing/deleted table
-							delete db[this.id].deleted;
-							db[this.id].created = json.created;
-							db[this.id].headers = json.headers;
-							db[this.id].ids = json.ids;
-							db[this.id].lastModified = json.lastModified;
-							db[this.id].properties = json.properties;
-							db[this.id].table = json.table;
-							db[this.id].types = json.types;
-							db[this.id].version = this.Version + "_" + Base64.Version;
-							if (!fromLocalStorageBool) toLocalStorage.call(this);
-							if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
-							else return this;
-						}
-						else if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, false), this;
-						else return this;
-					}
-					var createdDiff = db[this.id].created - json.created;//the difference in time between when the two tables were created
-					//update rows
-					for (var b = 0, len = json.table.length, c, lenC, e, eLen, match, nRow, xRow, xId, nId; b < len; b++) {
-						match = false;
-						nRow = json.table[b];//new row
-						for (c = 0, lenC = db[this.id].table.length; c < lenC; c++) {
-							xRow = db[this.id].table[c];//existing row
-							if (xRow[0] && nRow[0] && xRow[0] === nRow[0]) {
-								//ids match, found right row
-								xId = db[this.id].ids[xRow[0]];//existing row metadata
-								nId = json.ids[nRow[0]];//new row metadata
-								for (e = 1, eLen = nId.length; e < eLen; e++) {
-									if (xId[0] + xId[e] !== nId[0] + nId[e] - createdDiff) {
-										//cells are different
-										syncChanges = true;
-										if (nId[0] !== "del" && xId[0] + xId[e] < nId[0] + nId[e] - createdDiff) {
-											//cell needs updated
-											setVal.call(this, c, e, nRow[e], false, nId[e]);
-										}
-									}
-								}
-								match = true;
-								continue;//row match found and updated so don't need to search further
-							}
-						}
-						if (!match && (!db[this.id].ids[nRow[0]] || db[this.id].ids[nRow[0]][0] === "del" && db[this.id].ids[nRow[0]][1] < json.ids[nRow[0]][0]) - createdDiff) {
-							//new row
-							syncChanges = true;
-							addRow.call(this, nRow, nRow[0], false, json.ids[nRow[0]]);
-						}
-					}
-					b = null; len = null; c = null; lenC = null; e = null; eLen = null; match = null; xRow = null; nRow = null; xId = null; nId = null;
-					if (json.created < db[this.id].created) {
-						//update created timestamp
-						db[this.id].created = json.created;
-						db[this.id].lastModified = db[this.id].lastModified === 0 ? json.lastModified : db[this.id].lastModified - createdDiff;
-						//update all other timestamps to reflect change in created timestamp
-						var i, idiLen;
-						for (var id in db[this.id].ids) {
-							for (i = 0, idiLen = db[this.id].ids[id].length; i < idiLen; i++) {
-								if (i !== 0 || db[this.id].ids[id][i] !== "del")
-									db[this.id].ids[id][i] = db[this.id].ids[id][i] - createdDiff;
-							}
-						}
-						id = null; i = null; idiLen = null;
+				function onePossibleMatch(matchedID, minimunFindIdLoop, searchLevel, json) {
+					var dif = findDifferences.call(this, matchedID, json);
+					if (dif === false) return matchedID;
+					if (searchLevel < minimunFindIdLoop) return false;
+					for (let a = 0, difLen = dif.length; a < difLen; a++) {
+						SET_VAL.call(this, matchedID, dif[a], json[dif[a]], false, 0);						
 						syncChanges = true;
 					}
-					//delete deleted rows
-					for (var rowId in json.ids) {
-						if (json.ids[rowId][0] === "del" && db[this.id].ids[rowId] && db[this.id].ids[rowId][0] !== "del") {
-							if (json.ids[rowId][1] !== db[this.id].ids[rowId][0]) syncChanges = true;
-							//if it was deleted after it was created (not restored)
-							if (json.ids[rowId][1] - createdDiff > db[this.id].ids[rowId][0]) {
-								deleteRow.call(this, rowId, false, json.ids[rowId][1]);
-								//dbLength--;//not used for anything
-							}
+					return matchedID;
+				}
+				function toArray(json) {
+					var arr = [],
+						headerName;
+					for (let a = 0, headers = DB[this.id].columns.$headers, len = headers.length - 1; a < len; a++) {
+						headerName = headers[a + 1];
+						arr[a] = json[headerName];
+						//add empty values to table for boolean (false), number (0) or string ("") values
+						if (arr[a] === undefined) {
+							if (DB[this.id].columns[headerName].type[0] === "boolean") arr[a] = false;
+							else if (/^number|nteger$|itude$/.test(DB[this.id].columns[headerName].type[0])) arr[a] = 0;
+							else arr[a] = "";
 						}
 					}
-					rowId = null;
-					if (json.properties && db[this.id].properties) {
-						for (var prop in json.properties) {
-							var _prop = VAL.toPropName(prop);
-							if (db[this.id].properties[_prop]) {
-								if (!db[this.id].properties[_prop][1] || db[this.id].properties[_prop][1] < json.properties[prop][1]) {
-									setProp.call(this, prop, json.properties[prop][0], json.properties[prop][1], false);
-									syncChanges = true;
-								}
-								else if (db[this.id].properties[_prop][1] && db[this.id].properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
-							}
-							else cacheError.call(this, "customProperty " + _prop + " not initialized");
-						}
-						prop = null; _prop = null;
+					return arr;
+				}
+				function toEditTimesArr(json, traceStr) {
+					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(json.lastModified), null, "row", null, traceStr)];
+					for (let a = 1, len = DB[this.id].columns.$headers.length; a < len; a++) {
+						ret[a] = 0;
 					}
-					//check for errors
-					var missing = [];
-					for (var item in json.ids) {
-						if (!db[this.id].ids[item] && json.ids[item][0] !== "del") {
-							missing.push(item);
-						}
-					}
-					item = null;
-					if (missing.length !== 0) {
-						cacheError.call(this, missing, "import did not complete sucessfully");
-						for (let a = 0, lenA = missing.length, d, lenD; a < lenA; a++) {
-							for (d = 0, lenD = json.length; d < lenD; d++) {
-								if (json.table[d][0] === missing[a]) {
-									//TODO
-									console.log("error");
-									break;
-								}
-							}
-						}
-					}
-					if (!fromLocalStorageBool) toLocalStorage.call(this, syncChanges);
-					else buildSearchIndex.call(this);
-					createdDiff = null;
-					if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, syncChanges), this;
-					else return this;
+					return ret;
+				}
+				//if there are no registered ids existing/left, create a new one
+				if (remainingIds.length === 0) {
+					syncChanges = true;
+					return ADD_ROW.call(this, toArray.call(this, jsonRow), false, false, toEditTimesArr.call(this, json, "create new row from csv"));
 				}
 				else {
-					cacheError.call(this, json.title, "json is not valid");
-					if (callback instanceof Function) return callback(false, errors[this.id], db[this.id].title, false), this;
-					else return this;
+					var ids = [];
+					for (let a = 0, b = 0, idsLen = remainingIds.length; a < idsLen; a++) {
+						if (this.getVal(remainingIds[a], idColName) === jsonRow[idColName]) {
+							ids[b] = remainingIds[a];
+							b++;
+						}
+					}
+					switch (ids.length) {
+						case 0:
+							if (searchLevel < 2) return false;
+							syncChanges = true;
+							return ADD_ROW.call(this, toArray.call(this, jsonRow), false, false, toEditTimesArr.call(this, json, "no remaining ids"));
+						case 1:
+							return onePossibleMatch.call(this, ids[0], 3, searchLevel, jsonRow);
+						default:
+							if (searchLevel < 4) return false;
+							var numDif = [],
+								dif = [];
+							for (var k = 0; k < ids.length; k++) {
+								dif[k] = findDifferences.call(this, ids[k], jsonRow);
+								if (dif[k] === false) return ids[k];
+								numDif[k] = dif[k].length;
+							}
+							if (searchLevel < 5) return false;
+							var closest = 0;
+							for (var m = 1; m < numDif.length; m++) {
+								if (numDif[m] < numDif[m - 1]) closest = m;
+							}
+							return onePossibleMatch.call(this, ids[closest], 5, searchLevel, jsonRow);
+					}
 				}
 			}
-			else {
-				cacheError.call(this, eTitle, "cannot import " + json.title);
-				if (callback instanceof Function) return callback(false, errors[this.id], db[this.id].title, false), this;
-				else return this;
+			function finish() {
+				if (json.Rows.length > 0) return ret.call(this, false, "CSV import not completed");
+				if (json.replaceAll && remainingIds.length > 0) {
+					//delete remaining rows
+					for (var h = 0, hLen = remainingIds.length; h < hLen; h++) {
+						DELETE_ROW.call(this, remainingIds[h], false, TIMESTAMP(json.lastModified));
+					}
+					syncChanges = true;
+				}
+				TO_LOCAL_STORAGE.call(this, syncChanges);
+				return ret.call(this, true, null, syncChanges);
 			}
-		}
-		else if (json && json.Headers && json.Rows) {
 			//importing CSV file converted to JSON with csv2json function
-			var headers = checkHeadersArray(json.Headers),
-				headersOK = true, foundMatch = false;
-			for (let a = 0, lenA = headers.length, b, lenB; a < lenA; a++) {
+			var headers = CHECK_HEADERS_ARRAY.call(this, json.Headers),
 				foundMatch = false;
-				for (b = 0, lenB = db[this.id].headers.length; b < lenB; b++) {
-					if (headers[a] === db[this.id].headers[b]) {
+			if (json.lastModified) {
+				if (json.lastModified instanceof Date) json.lastModified = json.lastModified.getTime();
+				if (IS_NUMERIC(json.lastModified)) json.lastModified = parseInt((json.lastModified - 15e11) / 6e4);
+				else json.lastModified = null;
+			}
+			//check for matching headers
+			for (let a = 0, lenA = headers.length, b, lenB, existingHeaders = DB[this.id].columns.$headers; a < lenA; a++) {
+				foundMatch = false;
+				for (b = 0, lenB = existingHeaders.length; b < lenB; b++) {
+					if (headers[a] === existingHeaders[b]) {
 						foundMatch = true;
 						continue;
 					}
 				}
 				if (foundMatch === false) {
-					cacheError.call(this, db[this.id].headers, headers[a] + " csv file header not found");
-					headersOK = false;
+					for (let col in DB[this.id].columns) {
+						if (headers[a] === col || DB[this.id].columns[col].exportAs && headers[a] === DB[this.id].columns[col].exportAs[0]) {
+							foundMatch = true;
+							continue;
+						}
+					}
+				}
+				if (foundMatch === false) {
+					ADD_COLUMN.call(this, headers[a], a, null, false);
 				}
 			}
-			foundMatch = false;
-			if (headersOK) {
-				function getId(json, searchLevel, remainingIds, idColName) {
-					function findDifferences(id, json) {
-						var x, y, b = 0, ret = [];
-						for (var item in json) {
-							if (json.hasOwnProperty(item)) {
-								x = String(json[item]);
-								y = String(this.getVal(id, item));
-								if (y && x !== y) {
-									ret[b] = item;
-									b++;
-								}
-							}
-						}
-						if (b === 0) return false;
-						else return ret;
-					}
-					function onePossibleMatch(matchedID, minimunFindIdLoop, searchLevel, json) {
-						var dif = findDifferences.call(this, matchedID, json);
-						if (searchLevel >= minimunFindIdLoop || dif === false) {// contact info changed so update metadata
-							if (dif) {
-								for (let a = 0, difLen = dif.length; a < difLen; a++) {
-									setVal.call(this, matchedID, dif[a], json[dif[a]], false, json.lastModified);
-									syncChanges = true;
-								}
-							}
-							return matchedID; //perfect match
-						}
-						else return false;
-					}
-					function toArray(json) {
-						var arr = [];
-						for (let a = 0, len = db[this.id].headers.length - 1; a < len; a++) {
-							arr[a] = json[db[this.id].headers[a + 1]];
-							//add empty values to table for boolean (false), number (0) or string ("") values
-							if (arr[a] === undefined) {
-								if (db[this.id].types[a + 1] === "boolean") arr[a] = false;
-								else if (/^number|nteger$|itude$/.test(db[this.id].types[a + 1])) arr[a] = 0;
-								else arr[a] = "";
-							}
-						}
-						return arr;
-					}
-					//if there are no registered ids existing/left, create a new one
-					if (remainingIds.length === 0) {
-						syncChanges = true;
-						return addRow.call(this, toArray.call(this, json), false, false, json.lastModified);
-					}
-					else {
-						var ids = [],
-							b = 0,
-							matchedID = false;
-						for (let a = 0, idsLen = remainingIds.length; a < idsLen; a++) {
-							if (this.getVal(remainingIds[a], idColName) === json[idColName]) {
-								ids[b] = remainingIds[a];
-								b++;
-							}
-						}
-						if (ids.length === 1) {//found one possible match
-							return onePossibleMatch.call(this, ids[0], 3, searchLevel, json);
-						}
-						else if (ids.length === 0 && searchLevel > 1) {
-							syncChanges = true;
-							return addRow.call(this, toArray.call(this, json), false, false, json.lastModified);
-						}
-						else if (ids.length > 1 && searchLevel >= 4) {
-							var numDif = [],
-								dif = [];
-							for (var k = 0; k < ids.length; k++) {
-								dif[k] = findDifferences.call(this, ids[k], json);
-								if (dif[k] === false) {
-									return ids[k];
-								}
-								numDif[k] = dif[k].length;
-							}
-							if (searchLevel >= 5) {
-								var closest = 0;
-								for (var m = 1; m < numDif.length; m++) {
-									if (numDif[m] < numDif[m - 1]) closest = m;
-								}
-								return onePossibleMatch.call(this, ids[closest], 5, searchLevel, json);
-							}
-							else return false;
-						}
-						else {//no confirmed id match found. increase searchLevel and try again on a smaller subset of ids
-							return false;
-						}
+			//try match rows with existing data
+			var remainingIds = [],
+				f = 0,
+				identifierCol = json.identifierCol && headers.indexOf(json.identifierCol) > -1 ? json.identifierCol : headers[0];
+			this.forEachRow(function (id) {
+				if (DB[this.id].ids[id][0] !== "del") {
+					remainingIds[f] = id;
+					f++;
+				}
+			}.bind(this));
+			for (let loop = 0, g, lenG, id; loop < 10; loop++) {
+				for (g = 0, lenG = json.Rows.length; g < lenG; g++) {
+					//TODO add some hirarchy to which columns must match, which should, and which don't matter when finding the matching row
+					id = getId.call(this, json.Rows[g], loop, remainingIds, identifierCol);
+					if (id) {
+						json.Rows.splice(g, 1);
+						g--;
+						lenG--;
+						remainingIds.splice(remainingIds.indexOf(id), 1);
 					}
 				}
-				function finish() {
-					if (json.Rows.length > 0) {
-						cacheError.call(this, JSON.stringify(json.Rows), "CSV import not completed");
-						if (callback instanceof Function) return callback(false, errors[this.id], db[this.id].title, false), this;
-						else return this;
-					}
-					else {
-						if (json.replaceAll && remainingIds.length > 0) {
-							//delete remaining rows
-							for (var h = 0, hLen = remainingIds.length; h < hLen; h++) {
-								deleteRow.call(this, remainingIds[h], false, json.lastModified);
-							}
-							syncChanges = true;
-						}
-						toLocalStorage.call(this, syncChanges);
-						if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, syncChanges), this;
-						else return this;
-					}
-				}
-				//try match rows with existing data
-				var remainingIds = [],
-					f = 0,
-					identifierCol = json.identifierCol && headers.indexOf(json.identifierCol) > -1 ? json.identifierCol : headers[0];
-				this.forEachRow(function (id) {
-					if (db[this.id].ids[id][0] !== "del") {
-						remainingIds[f] = id;
-						f++;
-					}
-				}.bind(this));
-				for (let loop = 0, g, lenG, id; loop < 10; loop++) {
-					for (g = 0, lenG = json.Rows.length; g < lenG; g++) {
-						id = getId.call(this, json.Rows[g], loop, remainingIds, identifierCol);
-						if (id) {
-							json.Rows.splice(g, 1);
-							g--;
-							lenG--;
-							remainingIds.splice(remainingIds.indexOf(id), 1);
-						}
-					}
-				}
-				return finish.call(this);
 			}
-			else {
-				if (callback instanceof Function) return callback(false, "incompatible table headers: csv file headers don't match NyckelDB file headers", db[this.id] && db[this.id].title, false), this;
-				else return this;
-			}
+			return finish.call(this);
 		}
-		else {
-			if (callback instanceof Function) return callback(false, "no json", db[this.id] && db[this.id].title, false), this;
-			else return this;
+		if (!json) return ret.call(this, false, "no json");
+		if (typeof json === "string") json = JSON.parse(json);
+		var syncChanges = false;
+		if (json.data && json.version === this.Version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
+			json = Base64.read(json.data, key);
 		}
+		if (json.title) return applyJSON.call(this, json);
+		else if (json.Headers && json.Rows) return applyCSV.call(this, json);
+		else return ret.call(this, false, "json incompatible");
 	}
-	function cacheError(error, description) {
+	function CACHE_ERROR(error, description) {
 		error = description ? String(description) + ": " + String(error) : String(error);
 		description = null;
-		errors[this.id] = errors[this.id] ? errors[this.id] + "<br />" + error : error;
-		if (console && console.log) db[this.id] ? console.log(db[this.id].title + ": " + error) : console.log(error);
+		ERRORS[this.id] = ERRORS[this.id] ? ERRORS[this.id] + "<br />" + error : error;
+		if (console && console.log) DB[this.id] ? console.log(DB[this.id].title + ": " + error) : console.log(error);
 	}
-	function saveFile(str, fileName, mimeType) {
-		//depends on a hidden link with id='hiddenDownloadLink'
-		//<a id='hiddenDownloadLink' style='display:none' download='' href=''></a>
-		//somewhere in the page to create a web browser download link
-		//create link
-		if (!mimeType) mimeType = "text/plain";
-		if (Windows) {
+	function SAVE_FILE(str, fileName, mimeType) {
+		function saveToWindows(str, fileName) {
 			// Verify that we are currently not snapped, or that we can unsnap to open the picker
 			var currentState = Windows.UI.ViewManagement.ApplicationView.value;
 			if (currentState === Windows.UI.ViewManagement.ApplicationViewState.snapped &&
 				!Windows.UI.ViewManagement.ApplicationView.tryUnsnap()) {
 				// Fail silently if we can't unsnap
-				cacheError.call(this, "Some kind of Windows 8 bug prevented saving this file.");
+				CACHE_ERROR.call(this, "Some kind of Windows 8 bug prevented saving this file.");
 				return;
 			}
 			// Create the picker object and set options
@@ -521,7 +681,7 @@ APP.nyckelDB = (function () {
 							if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
 								return true;
 							} else {
-								cacheError.call(this, "File " + file.name + " couldn't be saved.");
+								CACHE_ERROR.call(this, "File " + file.name + " couldn't be saved.");
 								return false;
 							}
 						}.bind(this));
@@ -531,7 +691,7 @@ APP.nyckelDB = (function () {
 				}
 			}.bind(this));
 		}
-		else if (cordova && cordova.file) {
+		function saveToCordova(str, fileName) {
 			var fileApi = cordova.file,
 				path;
 			if (fileApi.externalDataDirectory) path = fileApi.externalDataDirectory;//Android SD Card
@@ -540,7 +700,12 @@ APP.nyckelDB = (function () {
 			fileApi.writeFile(path, fileName, str, true);
 			return true;
 		}
-		else {
+		function downloadToBrowser(str, fileName, mimeType) {
+			//depends on a hidden link with id='hiddenDownloadLink'
+			//<a id='hiddenDownloadLink' style='display:none' download='' href=''></a>
+			//somewhere in the page to create a web browser download link
+			//create link
+			if (!mimeType) mimeType = "text/plain";
 			var url = "";
 			if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
 				var blobObject = new Blob([str], { type: mimeType });
@@ -562,9 +727,13 @@ APP.nyckelDB = (function () {
 			if (URL) URL.revokeObjectURL(url);
 			return true;
 		}
+		str = READABLE_JSON_STRING(str);
+		if (Windows) return saveToWindows.call(this, str, fileName);
+		else if (cordova && cordova.file) return saveToCordova.call(this, str, fileName);
+		else return downloadToBrowser.call(this, str, fileName, mimeType);
 	}
 	//returns an array of valid search terms
-	function searchValidate(str) {
+	function SEARCH_VALIDATE(str) {
 		if (!str) return [];
 		str = String(str);
 		str = str.replace(/<[^>]+>/g, "");//removeHTMLTags
@@ -593,10 +762,10 @@ APP.nyckelDB = (function () {
 			str[a] = str[a].replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
 			if (/\d/.test(str[a].charAt(0))) str[a] = "_" + str[a];
 		}
-		str = deleteDuplicates(str);
+		str = DELETE_DUPLICATES(str);
 		return str;
 	}
-	function buildSearchIndex(colNamesToIndex, callback) {
+	function BUILD_SEARCH_INDEX(colNamesToIndex, callback) {
 		function sortByFirstCol(a, b) {
 			//sort index by first column
 			return a[0] === b[0] ? 0 : a[0] < b[0] ? -1 : 1;
@@ -612,22 +781,22 @@ APP.nyckelDB = (function () {
 			return a === b ? 0 : a > b ? -1 : 1;
 		}
 		function start() {
-			searchIndex[this.id] = {}; //clear searchIndex
-			searchSuggestions[this.id] = []; //clear searchSuggestions
+			SEARCH_INDEX[this.id] = {}; //clear search index
+			SEARCH_SUGGESTIONS[this.id] = []; //clear search suggestions
 			var indexItem = [],
 				a = 0,
 				colNums = [];
-			for (var h = 0, hLen = colNamesIndexed[this.id].length; h < hLen; h++) {
-				colNums[h] = getIndexOfCol.call(this, colNamesIndexed[this.id][h]);
+			for (var h = 0, hLen = COL_NAMES_INDEXED[this.id].length; h < hLen; h++) {
+				colNums[h] = GET_INDEX_OF_COLUMN.call(this, COL_NAMES_INDEXED[this.id][h]);
 			}
 			//get all the words in the table
-			for (var b = 0, len = this.getLength(), words, d, f, fLen, dLen = colNamesIndexed[this.id].length; b < len; b++) {
+			for (var b = 0, len = this.getLength(), words, d, f, fLen, dLen = COL_NAMES_INDEXED[this.id].length; b < len; b++) {
 				for (words = [], d = 0; d < dLen; d++) {
 					if (colNums[d] > -1) {
-						words = searchValidate(db[this.id].table[b][colNums[d]]);
+						words = SEARCH_VALIDATE(DB[this.id].table[b][colNums[d]]);
 						for (f = 0, fLen = words.length; f < fLen; f++) {
 							//arrange words in arrays of [word, columnName, rowId]
-							indexItem[a] = [words[f], colNamesIndexed[this.id][d], db[this.id].table[b][0]];
+							indexItem[a] = [words[f], COL_NAMES_INDEXED[this.id][d], DB[this.id].table[b][0]];
 							a++;
 						}
 					}
@@ -638,7 +807,7 @@ APP.nyckelDB = (function () {
 			for (var x = 0, y = 1, z = 0, reps = indexItem.length; x < reps; x = z > 0 ? x + z : x + 1, y = x + 1, z = 0) {
 				var foundMatch = true,
 					row, col,
-					i = searchIndex[this.id][indexItem[x][0]] = {};
+					i = SEARCH_INDEX[this.id][indexItem[x][0]] = {};
 				while (foundMatch === true) {
 					if (!indexItem[y + z] || indexItem[x][0] !== indexItem[y + z][0]) {
 						foundMatch = false;
@@ -653,75 +822,85 @@ APP.nyckelDB = (function () {
 			indexItem = null; row = null; col = null; i = null;
 			var searchWords = [],
 				numResultsPerWord = [];
-			searchWords = Object.keys(searchIndex[this.id]);
-			for (var c = 0, lenC = searchWords.length, g, lenG = colNamesIndexed[this.id].length; c < lenC; c++) {
+			searchWords = Object.keys(SEARCH_INDEX[this.id]);
+			for (var c = 0, lenC = searchWords.length, g, lenG = COL_NAMES_INDEXED[this.id].length; c < lenC; c++) {
 				numResultsPerWord[c] = 0;
 				for (g = 0; g < lenG; g++) {
-					if (colNamesIndexed[this.id][g] !== "id" && searchIndex[this.id][searchWords[c]][colNamesIndexed[this.id][g]]) {
-						numResultsPerWord[c] += searchIndex[this.id][searchWords[c]][colNamesIndexed[this.id][g]].length;
+					if (COL_NAMES_INDEXED[this.id][g] !== "id" && SEARCH_INDEX[this.id][searchWords[c]][COL_NAMES_INDEXED[this.id][g]]) {
+						numResultsPerWord[c] += SEARCH_INDEX[this.id][searchWords[c]][COL_NAMES_INDEXED[this.id][g]].length;
 					}
 				}
 				searchWords[c] = [numResultsPerWord[c], searchWords[c]];
 			}
 			searchWords.sort(sortSearchWords);
 			for (var e = 0, lenE = searchWords.length; e < lenE; e++) {
-				searchSuggestions[this.id][e] = searchWords[e][1];
+				SEARCH_SUGGESTIONS[this.id][e] = searchWords[e][1];
 			}
-			stoSearchIndex.call(this);
+			STO_SEARCH_INDEX.call(this);
 			searchWords = null; numResultsPerWord = null;
 			runQueuedCallbacks.call(this);
 			if (callback instanceof Function) return callback();
 		}
 		function runQueuedCallbacks() {
-			while (buildingSearchIndexQueue[this.id].length > 0) {
-				buildingSearchIndexQueue[this.id].shift()();
+			while (BUILDING_SEARCH_INDEX_QUEUE[this.id].length > 0) {
+				BUILDING_SEARCH_INDEX_QUEUE[this.id].shift()();
 			}
-			buildingSearchIndex[this.id] = false;
+			BUILDING_SEARCH_INDEX[this.id] = false;
 		}
-		if (!this.isDeleted()) {
-			if (!buildingSearchIndex[this.id]) {
-				buildingSearchIndexQueue[this.id] = [];
-				buildingSearchIndex[this.id] = true;
-				if (db[this.id].indexable !== undefined) {
-					if (!colNamesToIndex) colNamesToIndex = db[this.id].indexable.join("|").split("|");
-					//refine colNames list
-					else for (let c = 0, d = 0; c < colNamesToIndex.length; c++ , d++) {
-						if (colNamesToIndex[c] && colNamesToIndex[c] !== "" && db[this.id].indexable.indexOf(colNamesToIndex[c]) === -1) {
-							colNamesToIndex.splice(d, 1);
-							d--;
-						}
-					}
+		if (this.isDeleted()) return;
+		if (BUILDING_SEARCH_INDEX[this.id]) {
+			if (callback instanceof Function) BUILDING_SEARCH_INDEX_QUEUE[this.id].push(callback);
+			return;
+		}
+		BUILDING_SEARCH_INDEX_QUEUE[this.id] = [];
+		BUILDING_SEARCH_INDEX[this.id] = true;
+		if (DB[this.id].columns.$indexable !== undefined) {
+			if (!colNamesToIndex) colNamesToIndex = DB[this.id].columns.$indexable.join("|").split("|");
+			//refine colNames list
+			else for (let c = 0, d = 0; c < colNamesToIndex.length; c++ , d++) {
+				colNamesToIndex[c] = VAL.toPropName(colNamesToIndex[c]);
+				if (colNamesToIndex[c] && colNamesToIndex[c] !== "" && DB[this.id].columns.$indexable.indexOf(colNamesToIndex[c]) === -1) {
+					colNamesToIndex.splice(d, 1);
+					d--;
 				}
-				colNamesIndexed[this.id] = colNamesToIndex ? colNamesToIndex.join("|").split("|") : db[this.id].indexable ? db[this.id].indexable.join("|").split("|") : db[this.id].headers.join("|").split("|");
-				APP.Sto.getItem("searchIndex_" + db[this.id].title, null, function (obj) {
-					if (typeof obj === "string") obj = JSON.parse(obj);
-					if (obj && obj.version === this.Version + "_" + Base64.Version && obj.length === this.getLength() && obj.lastModified === db[this.id].lastModified && obj.colNamesIndexed.join("") === colNamesIndexed[this.id].join("")) {
-						searchIndex[this.id] = obj.searchIndex;
-						searchSuggestions[this.id] = obj.searchSuggestions;
-						recentlySearched[this.id] = obj.recentlySearched;
-						runQueuedCallbacks.call(this);
-						if (callback instanceof Function) return callback();
-					}
-					else return start.call(this);
-				}.bind(this), start.bind(this));
-			}
-			else if (callback instanceof Function) {
-				buildingSearchIndexQueue[this.id].push(callback);
 			}
 		}
+		COL_NAMES_INDEXED[this.id] = colNamesToIndex ?
+			colNamesToIndex.join("|").split("|") :
+			DB[this.id].columns.$indexable ?
+				DB[this.id].columns.$indexable.join("|").split("|") :
+				DB[this.id].columns.$headers.join("|").split("|");
+		APP.Sto.getItem("searchIndex_" + DB[this.id].title, null, function (obj) {
+			if (typeof obj === "string") obj = JSON.parse(obj);
+			if (!(
+				obj &&
+				obj.version === this.Version + "_" + Base64.Version &&
+				obj.length === this.getLength() &&
+				obj.lastModified === DB[this.id].lastModified &&
+				obj.colNamesIndexed.join("") === COL_NAMES_INDEXED[this.id].join("")
+			)) {
+				return start.call(this);
+			}
+			SEARCH_INDEX[this.id] = obj.searchIndex;
+			SEARCH_SUGGESTIONS[this.id] = obj.searchSuggestions;
+			RECENTLY_SEARCHED[this.id] = obj.recentlySearched;
+			runQueuedCallbacks.call(this);
+			if (callback instanceof Function) return callback();
+		}.bind(this), start.bind(this));
 	}
-	function stoSearchIndex() {
-		APP.Sto.setItem("searchIndex_" + db[this.id].title, {
-			"lastModified": db[this.id].lastModified,
-			"colNamesIndexed": colNamesIndexed[this.id],
-			"searchIndex": searchIndex[this.id],
-			"searchSuggestions": searchSuggestions[this.id],
-			"recentlySearched": recentlySearched[this.id],
+	function STO_SEARCH_INDEX() {
+		APP.Sto.setItem("searchIndex_" + DB[this.id].title, {
+			"lastModified": DB[this.id].lastModified,
+			"colNamesIndexed": COL_NAMES_INDEXED[this.id],
+			"searchIndex": SEARCH_INDEX[this.id],
+			"searchSuggestions": SEARCH_SUGGESTIONS[this.id],
+			"recentlySearched": RECENTLY_SEARCHED[this.id],
 			"length": this.getLength(),
 			"version": this.Version + "_" + Base64.Version
 		});
 	}
-	function setProp(propName, value, editTime, storeBool) {
+	function SET_PROP(propName, value, editTime, storeBool) {
+		if (this.isDeleted()) return;
 		if (typeof value === "string") {
 			value = value.replace(/<[^>]+>/g, "");//remove html markup
 			if (value !== "" && !isNaN(value * 1)) value = value * 1; //convert numbers in String form to Number form
@@ -729,55 +908,48 @@ APP.nyckelDB = (function () {
 			if (value === "false") value = false;
 		}
 		propName = VAL.toPropName(propName);
-		if (!this.isDeleted() && db[this.id].properties[propName] && valueIsValid.call(this, value, db[this.id].properties[propName][2])) {
-			if (db[this.id].properties[propName] !== undefined) {
-				editTime = typeof editTime === "number" ? editTime : timestamp(db[this.id].created);
-				db[this.id].properties[propName][0] = value;
-				db[this.id].properties[propName][1] = editTime;
-				db[this.id].lastModified = editTime > db[this.id].lastModified ? editTime : db[this.id].lastModified;
+		if  (DB[this.id].properties[propName] && VALUE_IS_VALID.call(this, value, DB[this.id].properties[propName][2])) {
+			if (DB[this.id].properties[propName] !== undefined) {
+				editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "property", null, "setProp");
+				DB[this.id].properties[propName][0] = value;
+				DB[this.id].properties[propName][1] = editTime;
+				DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
 				this.syncPending = true;
-				if (storeBool !== false) toLocalStorage.call(this, true);
+				if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 				return value;
 			}
-			else cacheError.call(this, propName, "invalid property name");
+			else CACHE_ERROR.call(this, propName, "invalid property name");
 		}
-		else cacheError.call(this, value, "cannot set " + propName);
+		else CACHE_ERROR.call(this, value, "cannot set " + propName);
 	}
-	function addRow(array, id, storeBool, editTimesArr) {
+	function ADD_ROW(array, id, storeBool, editTimesArr) {
 		function getNextId(idLength, existingIds, startingPoint) {
-			var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),
-				forbidden = "alert all anchor anchors area assign blur button checkbox clearInterval clearTimeout clientInformation close closed confirm constructor crypto decodeURI decodeURIComponent";
-			forbidden += " defaultStatus document element elements embed embeds encodeURI encodeURIComponent escape event fileUpload focus form forms frame innerHeight innerWidth layer layers link location";
-			forbidden += " mimeTypes navigate navigator frames frameRate hidden history image images offscreenBuffering open opener option outerHeight outerWidth packages pageXOffset pageYOffset parent";
-			forbidden += " parseFloat parseInt password pkcs11 plugin prompt propertyIsEnum radio reset screenX screenY scroll secure select self setInterval setTimeout status submit taint text textarea";
-			forbidden += " Array Date eval function hasOwnProperty Infinity isFinite isNaN isPrototypeOf length Math NaN name Number Object prototype String toString undefined valueOfabstract arguments";
-			forbidden += " boolean break byte case catch char class const continue debugger default delete do double else enum eval export extends false final finally float for function goto if implements";
-			forbidden += " import in instanceof int interface let long native new null package private protected public return short static super switch synchronized this throw throws transient true try typeof";
-			forbidden += " top unescape untaint window var void volatile while with yield onblur onclick onerror onfocus onkeydown onkeypress onkeyup onmouseover onload onmouseup onmousedown onsubmit";
-			forbidden += " jQuery Lawnchair Dropbox Base64 WinJS cordova APP COM VAL getClass java JavaArray javaClass JavaObject JavaPackage debug DEBUGMODE DEBUGTOCONSOLE DEBUGCOUNT DEBUGTIME DEBUGSTOP";
-			forbidden = forbidden.split(" ");
-			idLength = parseInt(idLength, 10);
+			function setStartingPoint(startingPoint) {
+				if (startingPoint) {
+					newId = VAL.toEnglishAlphabet(startingPoint);
+					newId = newId.replace(/[^A-z0-9]/g, "");
+					if (/^\d/.test(newId)) newId = alpha + newId;
+					newId = newId.slice(0, idLength);
+				}
+				while (newId.length < idLength) newId += alpha;
+			}
+			function buildId(){
+				for (var activeChar = idLength - 1, letterIndex, end;
+					(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible;
+					activeChar--, num++) {
 
-			existingIds = existingIds || {};
-			if (typeof existingIds !== "object") {
-				cacheError.call(this, "getNextId failed", "Invalid parameters: existingIds expects a JSON object");
-				return false;
-			}
-			var alphabetLength = alphabet.length,
-				maxIdsPossible = Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10),
-				newId = "",
-				num = 0,
-				alpha = alphabet[0];
-			if (startingPoint) {
-				newId = VAL.toEnglishAlphabet(startingPoint);
-				newId = newId.replace(/[^A-z0-9]/g, "");
-				if (/^\d/.test(newId)) newId = alpha + newId;
-				newId = newId.slice(0, idLength);
-			}
-			while (newId.length < idLength) newId += alpha;
-			for (var activeChar = idLength - 1, letterIndex, end; (existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible; activeChar-- , num++) {
-				for (letterIndex = alphabet.indexOf(newId.charAt(activeChar)); (existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible; letterIndex++ , num++) {
-					if (letterIndex + 1 === alphabetLength) {
+					for (letterIndex = alphabet.indexOf(newId.charAt(activeChar));
+						(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible;
+						letterIndex++, num++) {
+
+						if (letterIndex + 1 !== alphabetLength) {
+							if (activeChar === 0 && /\d/.test(alphabet[letterIndex + 1])) {
+								num--;
+								continue;
+							}
+							newId = newId.slice(0, activeChar) + alphabet[letterIndex + 1] + newId.slice(activeChar + 1, idLength);
+							continue;
+						}
 						while (letterIndex + 1 === alphabetLength) {
 							//reached the end of the alphabet
 							end = "";
@@ -805,146 +977,202 @@ APP.nyckelDB = (function () {
 							}
 						}
 					}
-					else {
-						if (activeChar === 0 && /\d/.test(alphabet[letterIndex + 1])) {
-							num--;
-							continue;
-						}
-						newId = newId.slice(0, activeChar) + alphabet[letterIndex + 1] + newId.slice(activeChar + 1, idLength);
-					}
 				}
-			}
-			alphabet = null; forbidden = null; alphabetLength = null; alpha = null; activeChar = null; letterIndex = null; end = null;
-			if (num > maxIdsPossible) {
-				cacheError.call(this, "getNextId failed", "You have exceeded a design limitation in the number of possible records that this application can handle.");
-				return false;
-			}
-			else return newId;
-		}
-		if (!this.isDeleted()) {
-			if (id && array.length === db[this.id].headers.length && array[0] === id) {
-				array = array.slice(1);
-			}
-			if (array.length !== db[this.id].headers.length - 1) {
-				cacheError.call(this, array, "new row doesn't match table size: " + db[this.id].headers.length);
-				return false;
-			}
-			id = getNextId.call(this, 3, db[this.id].ids, id ? id : array && array instanceof Array ? array.join("") : null);
-			if (id) {
-				var row = [id];
-				if (array && array instanceof Array) {
-					db[this.id].table.push(row);
-					rowIndex[this.id] = {};
-					db[this.id].lastModified = editTimesArr && editTimesArr[0] !== undefined ? editTimesArr[0] + db[this.id].created > db[this.id].lastModified ? editTimesArr[0] + db[this.id].created : db[this.id].lastModified : timestamp();
-					db[this.id].ids[id] = editTimesArr && editTimesArr[0] !== undefined ? [editTimesArr[0]] : [timestamp(db[this.id].created)];
-					for (let a = 0, len = db[this.id].headers.length - 1, editTime; a < len; a++) {
-						editTime = editTimesArr && editTimesArr[a + 1] !== undefined ? editTimesArr[a + 1] : false;
-						setVal.call(this, id, a + 1, array[a], false, editTime);
-					}
-					row = null;
-					this.syncPending = true;
-					if (storeBool !== false) toLocalStorage.call(this, true);
-					return id;
-				}
-				else {
-					cacheError.call(this, array, "cannot add row");
-					row = null;
+				alphabet = null; forbidden = null; alphabetLength = null; alpha = null; activeChar = null; letterIndex = null; end = null;
+				if (num > maxIdsPossible) {
+					CACHE_ERROR.call(this, "getNextId failed", "You have exceeded a design limitation in the number of possible records that this application can handle.");
 					return false;
 				}
+				else return newId;
 			}
-			else return false;
+			var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),
+				forbidden = "alert all anchor anchors area assign blur button checkbox clearInterval clearTimeout clientInformation close closed";
+			forbidden += " confirm constructor crypto decodeURI decodeURIComponent defaultStatus document element elements embed embeds encodeURI";
+			forbidden += " encodeURIComponent escape event fileUpload focus form forms frame innerHeight innerWidth layer layers link location";
+			forbidden += " mimeTypes navigate navigator frames frameRate hidden history image images offscreenBuffering open opener option outerHeight";
+			forbidden += " outerWidth packages pageXOffset pageYOffset parent parseFloat parseInt password pkcs11 plugin prompt propertyIsEnum radio";
+			forbidden += " reset screenX screenY scroll secure select self setInterval setTimeout status submit taint text textarea Array Date eval";
+			forbidden += " function hasOwnProperty Infinity isFinite isNaN isPrototypeOf length Math NaN name Number Object prototype String toString";
+			forbidden += " undefined valueOf abstract arguments boolean break byte case catch char class const continue debugger default delete do";
+			forbidden += " double else enum eval export extends false final finally float for function goto if implements import in instanceof int";
+			forbidden += " interface let long native new null package private protected public return short static super switch synchronized this";
+			forbidden += " throw throws transient true try typeof top unescape untaint window var void volatile while with yield onblur onclick";
+			forbidden += " onerror onfocus onkeydown onkeypress onkeyup onmouseover onload onmouseup onmousedown onsubmit getClass java JavaArray";
+			forbidden += " javaClass JavaObject JavaPackage";
+			forbidden = forbidden.split(" ");
+			idLength = parseInt(idLength, 10);
+
+			existingIds = existingIds || {};
+			if (typeof existingIds !== "object") {
+				CACHE_ERROR.call(this, "getNextId failed", "Invalid parameters: existingIds expects a JSON object");
+				return false;
+			}
+			var alphabetLength = alphabet.length,
+				maxIdsPossible = Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10),
+				newId = "",
+				num = 0,
+				alpha = alphabet[0];
+
+			setStartingPoint(startingPoint);
+			return buildId.call(this);			
 		}
-		else {
-			cacheError.call(this, "please recreate table before adding rows");
+		if (this.isDeleted()) {
+			CACHE_ERROR.call(this, "please recreate table before adding rows");
 			return false;
 		}
+		var hLen = DB[this.id].columns.$headers.length;
+		if (id && array.length === hLen && array[0] === id) {
+			array = array.slice(1);
+		}
+		if (array.length !== hLen - 1) {
+			CACHE_ERROR.call(this, array, "new row doesn't match table size: " + hLen);
+			return false;
+		}
+		id = getNextId.call(this, 3, DB[this.id].ids, id ? id : array && array.constructor === Array ? array.join("") : null);
+		if (!id) return false;
+		var row = [id];
+		if (!array || array.constructor !== Array) {
+			CACHE_ERROR.call(this, array, "cannot add row");
+			row = null;
+			return false;
+		}
+		DB[this.id].table.push(row);
+		ROW_INDEX_CACHE[this.id] = {};
+		editTimesArr = editTimesArr || [];
+		editTimesArr[0] = VALIDATE_EDIT_TIME.call(this, editTimesArr[0], null, "row", null, "addRow");
+
+		DB[this.id].lastModified = editTimesArr && editTimesArr[0] !== undefined ?
+			editTimesArr[0] + DB[this.id].created > DB[this.id].lastModified ?
+				editTimesArr[0] + DB[this.id].created : DB[this.id].lastModified : TIMESTAMP();
+
+		DB[this.id].ids[id] = editTimesArr && editTimesArr[0] !== undefined ? [editTimesArr[0]] : [TIMESTAMP(DB[this.id].created)];
+
+		for (let a = 0, len = hLen - 1; a < len; a++) {
+			SET_VAL.call(this, id, a + 1, array[a], false, editTimesArr[a + 1]);
+		}
+		row = null;
+		this.syncPending = true;
+		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+		return id;
 	}
-	function setVal(rowId, colName, newValue, storeBool, editTime, callback) {
-		var error;
+	function SET_VAL(rowId, colName, newValue, storeBool, editTime, callback) {
+		function applyVal(toTable, toIds, rowIndex) {
+			editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "cell", toTable[rowIndex][0], "setVal");
+			toTable[rowIndex][colIndex] = newValue;
+			toIds[toTable[rowIndex][0]][colIndex] = editTime;
+			thisModified = editTime + toIds[toTable[rowIndex][0]][0] + DB[this.id].created;
+		}
+		if (this.isDeleted()) {
+			return callback instanceof Function ? callback(false, "table is deleted", DB[this.id].title, this.syncPending) : false;
+		}
 		if (typeof newValue === "string") {
 			newValue = newValue.replace(/<[^>]+>/g, "");//remove html markup
 			if (newValue !== "" && !isNaN(newValue * 1)) newValue = newValue * 1; //convert numbers in String form to Number form
 			if (newValue === "true") newValue = true;
 			if (newValue === "false") newValue = false;
+		}		
+		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
+			colIndex = GET_INDEX_OF_COLUMN.call(this, colName),
+			rowIsHidden = false;
+		if (rowIndex < 0) {
+			rowIndex = GET_INDEX_OF_HIDDEN_ROW(rowId);
+			if (rowId > -1) rowIsHidden = true;
 		}
-		if (!this.isDeleted()) {
-			var type = isNumeric(colName) ? db[this.id].types[VAL.toPropName(db[this.id].headers[colName])] : db[this.id].types[colName];
-			if (valueIsValid.call(this, newValue, type)) {//get row index
-				type = null;
-				var rowIndex = getIndexOfRow.call(this, rowId),
-					colIndex = getIndexOfCol.call(this, colName);
-				//if found, update data
-				if (rowIndex > -1 && colIndex > 0) {
-					editTime = typeof editTime === "number" ? editTime : timestamp(db[this.id].created + db[this.id].ids[db[this.id].table[rowIndex][0]][0]);
-					db[this.id].table[rowIndex][colIndex] = newValue;
-					db[this.id].ids[db[this.id].table[rowIndex][0]][colIndex] = editTime;
-					var thisModified = editTime + db[this.id].ids[db[this.id].table[rowIndex][0]][0] + db[this.id].created;
-					db[this.id].lastModified = thisModified > db[this.id].lastModified ? thisModified : db[this.id].lastModified;
-					thisModified = null; rowIndex = null; colIndex = null;
-					this.syncPending = true;
-					if (storeBool !== false) toLocalStorage.call(this, true);
-					return callback instanceof Function ? callback(true, false, db[this.id].title, true) : newValue;
-				}
-				else {
-					error = rowIndex === -1 ? "rowId not found" : "colName not found";
-					cacheError.call(this, rowId + "," + colName, error);
-					rowIndex = null; colIndex = null;
-					return callback instanceof Function ? callback(false, error, db[this.id].title, this.syncPending) : error;
-				}
-			}
-			else return callback instanceof Function ? callback(false, errors[this.id], db[this.id].title, this.syncPending) : errors[this.id];
+		if (!(rowIndex > -1 && colIndex > 0)) {
+			var error = rowIndex === -1 ? "rowId not found: " + rowId : "colName not found: " + colName;
+			rowIndex = null; colIndex = null;
+			return callback instanceof Function ? callback(false, error, DB[this.id].title, this.syncPending) : false;
 		}
-		else {
-			error = "table is deleted";
-			cacheError.call(this, error);
-			return callback instanceof Function ? callback(false, error, db[this.id].title, this.syncPending) : error;
+		if (!VALUE_IS_VALID.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0])) {
+			return callback instanceof Function ? callback(false, ERRORS[this.id], DB[this.id].title, this.syncPending) : false;
 		}
+		var thisModified;
+		if (rowIsHidden) applyVal.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, rowIndex);
+		else applyVal.call(this, DB[this.id].table, DB[this.id].ids, rowIndex);
+		if (thisModified > DB[this.id].lastModified) DB[this.id].lastModified = thisModified;
+		this.syncPending = true;
+		thisModified = null; rowIndex = null; colIndex = null;
+		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+		return callback instanceof Function ? callback(newValue, false, DB[this.id].title, true) : newValue;
 	}
-	function deleteRow(rowId, storeBool, editTime) {
-		if (!this.isDeleted()) {//get row index
-			var index = getIndexOfRow.call(this, rowId);
-			//if found, update data
-			if (index > -1) {
-				//delete row
-				db[this.id].table.splice(index, 1);
-				rowIndex[this.id] = {};
-				index = null;
-				editTime = typeof editTime === "number" ? editTime : timestamp(db[this.id].created);
-				db[this.id].ids[rowId] = ["del", editTime];
-				db[this.id].lastModified = editTime + db[this.id].created > db[this.id].lastModified ? editTime + db[this.id].created : db[this.id].lastModified;
-				this.syncPending = true;
-				if (storeBool !== false) toLocalStorage.call(this, true);
-				return true;
+	function DELETE_ROW(rowId, storeBool, editTime) {
+		if (this.isDeleted()) {
+			CACHE_ERROR.call(this, rowId, "could not delete row, table has been deleted");
+			return false;
+		}
+		//get row index
+		var index = GET_INDEX_OF_ROW.call(this, rowId),
+			rowIsHidden = false;
+		//if not found
+		if (index === -1) {
+			//check hidden rows
+			if (DB[this.id].hidden && DB[this.id].hiddenIds[rowId]) {
+				rowIsHidden = true;
+				index = GET_INDEX_OF_HIDDEN_ROW.call(this, rowId);
 			}
-			else {
+			if (index === -1) {
 				index = null;
-				cacheError.call(this, rowId, "row does not exist or was already deleted");
+				CACHE_ERROR.call(this, rowId, "row does not exist or was already deleted");
 				return false;
 			}
 		}
-		else {
-			cacheError.call(this, rowId, "could not delete row, table has been deleted");
-			return false;
-		}
+		//if found, delete row
+		if (rowIsHidden) DB[this.id].hidden.splice(index, 1);
+		else DB[this.id].table.splice(index, 1);
+		ROW_INDEX_CACHE[this.id] = {};
+		index = null;
+		editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "row", null, "deleteRow");
+		if (rowIsHidden) DB[this.id].hiddenIds[rowId] = ["del", editTime];
+		else DB[this.id].ids[rowId] = ["del", editTime];
+		DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
+		this.syncPending = true;
+		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+		return true;
 	}
-	function validateEditTime(num, createdDiff) {
-		var t = timestamp();
+	function VALIDATE_EDIT_TIME(num, createdDiff, type, id, traceStr) {
+		var t = TIMESTAMP();
+		switch (type) {
+			case "created":
+			case "lastModified":
+			case "deleted":
+				break;
+			case "row":
+			case "property":
+			case "column":
+				t = TIMESTAMP(DB[this.id].created);
+				break;
+			case "cell":
+				t = TIMESTAMP(DB[this.id].created + DB[this.id].ids[id][0]);
+				break;
+			default:
+				CACHE_ERROR(type, "no such item to timestamp @ " + traceStr);
+		}
 		createdDiff = createdDiff || 0;
 		if (num === "del") return num;
-		else if (!(typeof num * 1 === "number")) return t;
-		else return num + db[this.id].created - createdDiff <= t ? num : num - db[this.id].created;
+		else if (!num && num !== 0) return t;
+		else if (!IS_NUMERIC(num) || num === 0 && (type === "created" || type === "lastModified" || type === "deleted")) {
+			CACHE_ERROR.call(this, num, "invalid " + type + " timestamp found @ " + traceStr);
+			return t;
+		}
+		else if (num - createdDiff <= t){
+			return num;
+		}
+		else {
+			CACHE_ERROR.call(this, num, type + " timestamp out of range @ " + traceStr + ". Should be less than " + t);
+			return num - DB[this.id].created;
+		}
 	}
-	function deleteTable(callback, editTime, storeBool) {
-		var msg = "Are you sure you want to delete " + db[this.id].title + " ?",
+	function DELETE_TABLE(callback, editTime, storeBool) {
+		var msg = "Are you sure you want to delete " + DB[this.id].title + " ?",
 			del = function () {
-				deleteTableById.call(this, this.id, editTime);
+				DELETE_TABLE_BY_ID.call(this, this.id, editTime);
 				this.syncPending = true;
-				if (storeBool !== false) toLocalStorage.call(this, true);
-				if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
+				if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+				if (callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, true), this;
 				else return this;
 			}.bind(this),
 			cancel = function () {
-				if (callback instanceof Function) return callback(false, errors[this.id], db[this.id].title, false), this;
+				if (callback instanceof Function) return callback(false, ERRORS[this.id], DB[this.id].title, false), this;
 				else return this;
 			}.bind(this);
 		if (APP.confirm) APP.confirm(msg, del, cancel, { "okButton": "Delete" });
@@ -952,68 +1180,78 @@ APP.nyckelDB = (function () {
 		else cancel();
 		msg = null; del = null; cancel = null;
 	}
-	function deleteTableById(id, editTime) {
-		db[id] = {
-			"title": db[id].title,
-			"created": db[id].created,
-			"deleted": editTime ? validateEditTime.call(this, editTime) : timestamp(),
-			"lastModified": editTime > db[id].lastModified ? editTime : db[id].lastModified
+	function DELETE_TABLE_BY_ID(id, editTime) {
+		editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "deleted", null, "deleteTableById");
+		DB[id] = {
+			"title": DB[id].title,
+			"created": DB[id].created,
+			"deleted": editTime,
+			"lastModified": editTime > DB[id].lastModified ? editTime : DB[id].lastModified,
+			"version": this.Version + "_" + Base64.Version
 		};
 	}
-	function initiateNewDB(title, callback) {
+	function INITIATE_NEW_DB(title, callback) {
+		function initiateEmptyDBObjects(id) {
+			SEARCH_INDEX[id] = {};
+			SEARCH_SUGGESTIONS[id] = [];
+			RECENTLY_SEARCHED[id] = [];
+			ROW_INDEX_CACHE[id] = {};
+		}
 		function newDBS() {
-			dbs[uid] = this.title;
-			//declare private db object and unique this.id for every new instance of APP.NyckelBDObj()
-			this.id = Base64.number_hash(this.title + Base64.hash(uid++), 12);
-			searchIndex[this.id] = {};
-			searchSuggestions[this.id] = [];
-			recentlySearched[this.id] = [];
-			rowIndex[this.id] = {};
-			APP.Sto.setItem("tables", JSON.stringify(dbs));
+			DBS[UID] = this.title;
+			//declare private DB object and unique this.id for every new instance of APP.NyckelBDObj()
+			this.id = Base64.number_hash(this.title + Base64.rand(), 12);
+			initiateEmptyDBObjects(this.id);
+			APP.Sto.setItem("tables", JSON.stringify(DBS));
 			return callback(title);
 		}
 		title = String(title).replace(/[^A-z\s_0-9]/g, "");
 		this.title = VAL.toPropName(title);
 		APP.Sto && APP.Sto.getItem("tables", null, function (tables) {
 			if (tables) {
-				dbs = JSON.parse(tables);
-				if (dbs.indexOf(this.title) > -1) {
-					this.id = Base64.number_hash(this.title + Base64.hash(dbs.indexOf(this.title)), 12);
-					searchIndex[this.id] = {};
-					searchSuggestions[this.id] = [];
-					recentlySearched[this.id] = [];
-					rowIndex[this.id] = {};
-					uid++;
+				DBS = JSON.parse(tables);
+				if (DBS.indexOf(this.title) > -1) {
+					this.id = Base64.number_hash(this.title + Base64.rand(), 12);
+					initiateEmptyDBObjects(this.id);
+					UID++;
 					return callback(title);
 				}
 				else newDBS.call(this);
 			}
-			else cacheError.call(this, "couldn't find tables");
+			else CACHE_ERROR.call(this, "couldn't find tables");
 		}.bind(this), newDBS.bind(this));
 	}
-	function checkHeadersArray(headers) {
-		var header;
-		for (var a = 0, b = 1, len = headers.length, c; a < len; a++) {
-			headers[a] = VAL.toPropName(headers[a]);
-			header = headers[a];
-			for (c = a + 1, b = 2; c < len; c++) {
-				if (headers[c] === header) {
-					headers[a] = header + "_" + 1;
-					headers[c] = header + "_" + b;
+	function CHECK_HEADERS_ARRAY(headers) {
+		var header,
+			ret = [];
+		for (let a = 0, b = 1, len = headers.length; a < len; a++) {
+			for (b = a + 1; b < len; b++) {
+				if (headers[a] === headers[b]) CACHE_ERROR.call(this, headers[a], "duplicate header values");
+			}
+			ret[a] = VAL.toPropName(headers[a]);
+		}
+		for (var a = 0, b = 1, len = ret.length, c; a < len; a++) {
+			header = ret[a];
+			for (c = a + 1, b = 1; c < len; c++) {
+				if (ret[c] === header) {
+					while (ret.indexOf(header.replace(/_\d$/, "") + "_" + b) > 0) {
+						b++;
+					}
+					ret[c] = header.replace(/_\d$/, "") + "_" + b;
 					b++;
 				}
 			}
 		}
 		header = null; a = null; b = null; c = null; len = null;
-		if (headers[0] !== "id") {
-			if (headers.indexOf("id") > -1) headers[headers.indexOf("id")] = "_id";
-			headers.unshift("id");
+		if (ret[0] !== "id") {
+			if (ret.indexOf("id") > -1) ret[ret.indexOf("id")] = "_id";
+			ret.unshift("id");
 		}
-		return headers;
+		return ret;
 	}
-	function createBase64File(key, token, callback) {
+	function CREATE_BASE64_FILE(key, token, callback) {
 		function dataString() {
-			var str = Base64.write(JSON.stringify(db[this.id]), key);
+			var str = Base64.write(JSON.stringify(EXPORT_DB.call(this)), key);
 			return JSON.stringify({
 				"data": str,
 				"signature": Base64.hmac(str, key),
@@ -1021,9 +1259,9 @@ APP.nyckelDB = (function () {
 			});
 		}
 		function syncFile() {
-			var title = VAL.toPropName(db[this.id].title);
-			if (!dbxSyncObj[title] || db[this.id].lastModified > dbxSyncObj[title]) dbxSyncObj[title] = db[this.id].lastModified;
-			return JSON.stringify(dbxSyncObj);
+			var title = VAL.toPropName(DB[this.id].title);
+			if (!DBX_SYNC_OBJ[title] || DB[this.id].lastModified > DBX_SYNC_OBJ[title]) DBX_SYNC_OBJ[title] = DB[this.id].lastModified;
+			return JSON.stringify(DBX_SYNC_OBJ);
 		}
 		function syncToken(token) {
 			if (token) {
@@ -1032,389 +1270,646 @@ APP.nyckelDB = (function () {
 					if (token.signature && token.token && token.signature === Base64.hmac(token.token, key)) {
 						token = JSON.parse(Base64.read(token.token, key));
 						for (var i in token) {
-							if (!dbxSyncObj[i]) dbxSyncObj[i] = token[i];
+							if (!DBX_SYNC_OBJ[i]) DBX_SYNC_OBJ[i] = token[i];
 						}
 					}
 					else {
-						syncError = true;
-						syncErrorTime = new Date().getTime();
-						cacheError.call(this, "incorrect key tried");
+						SYNC_ERROR = true;
+						SYNC_ERROR_TIME = new Date().getTime();
+						CACHE_ERROR.call(this, "incorrect key tried");
 					}
 				}
-				else cacheError.call(this, "token version not supported");
+				else CACHE_ERROR.call(this, "token version not supported");
 			}
-			var title = VAL.toPropName(db[this.id].title);
-			if (!dbxSyncObj[title] || db[this.id].lastModified > dbxSyncObj[title]) dbxSyncObj[title] = db[this.id].lastModified;
-			token = Base64.write(JSON.stringify(dbxSyncObj), key);
+			var title = VAL.toPropName(DB[this.id].title);
+			if (!DBX_SYNC_OBJ[title] || DB[this.id].lastModified > DBX_SYNC_OBJ[title]) DBX_SYNC_OBJ[title] = DB[this.id].lastModified;
+			token = Base64.write(JSON.stringify(DBX_SYNC_OBJ), key);
 			return JSON.stringify({
 				"token": token,
 				"signature": Base64.hmac(token, key),
 				"version": this.Version + "_" + Base64.Version
 			});
 		}
-		if (syncError && new Date().getTime() - syncErrorTime < 6e4) return callback instanceof Function ? (callback(false, "try again later", db[this.id].title, false), this) : this;
+		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return callback instanceof Function ? (callback(false, "try again later", DB[this.id].title, false), this) : this;
 		var obj = {
-			"title": db[this.id].title,
+			"title": DB[this.id].title,
 			"file": dataString.call(this),
 			"syncFile": syncFile.call(this),
 			"syncToken": syncToken.call(this, token)
 		};
-		return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, obj), this) : this;
+		return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, obj), this) : this;
 	}
-	/** @param {string} tableTitle the database title
-	* @param {arrayOrObject} tableHeaders an array of the column headers, or object containing column headers and corresponding types
-	* @param {arrayOrObject} headerTypes optional, if not specified in with tableHeaders
-	* @param {object} options {
-	*	customProperties:{
-	*	  <property1Name>: {
-	*	    initialValue: <value>,
-	*	    type: "String", "Boolean" or "Number" <String>
-	*	  },
-	*	  <property2Name>...
-	*	},
-	*	importData: <json>, table data that is ready to drop in to the database without parsing
-	*	importJSON: <json>, json data that needs to be parsed
-	*	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
-	*	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
-	*	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
-	*	key: <string>,
-    *	token: <string>
-	* }
-	* @param {function} callback the callback function
-	* @returns {parameters} to callback function: success (boolean), errors (array), tableTitle (string), and syncPending (boolean)
-	*/
-	function NyckelDBObj(tableTitle, tableHeaders, headerTypes, options, callback) {
-		function validateType(type, options) {
-			type = type ? String(type).toLowerCase().replace(/[^a-z]/g, "") : "null";
-			if (!options) {
-				type = type.replace(/^(posinteger|posintegers|positiveint|positiveinteger|pos)$/, "posInteger");
-				type = type.replace(/^(neginteger|negintegers|negativeint|negativeinteger|neg)$/, "negInteger");
-				type = type.replace(/^(uniquestring|uniquestrings|unique|id|uniqueid)$/, "uniqueString");
-				type = type.replace(/^(multiline|mulitlinestring|multilinestring|multilinestrings)$/, "multilineString");
-				type = type.replace(/^(phonenumber|phonenumbers|phone|phones|mobile|mobilephone|homephone|workphone|personalphone|cellphone|cell)$/, "phoneNumber");
-				type = type.replace(/^(formattedaddress|fulladdress|address)$/, "formattedAddress");
-				type = type.replace(/^(streetaddress|streetaddresses|street)$/, "streetAddress");
-				type = type.replace(/^(mailaddress|mailaddresses|mail|pobox)$/, "mailAddress");
-				type = type.replace(/^(citycounty|city|town|citytown|citytowncounty|county)$/, "cityCounty");
-				type = type.replace(/^(provincestateregion|province|state|region)$/, "provinceStateRegion");
-				type = type.replace(/^(nation)$/, "country");
-				type = type.replace(/^(postalzipcode|postalcode|zipcode|postal|zip)$/, "postalZipCode");
-				type = type.replace(/^(givenname|givennames|firstnames|names|firstname|first|name)$/, "givenName");
-				type = type.replace(/^(familyname|familynames|lastnames|lastname|last|family)$/, "familyName");
-				type = type.replace(/^(geolocation|geolocations|location|geo|gpscoordinates)$/, "geoLocation");
-				type = type.replace(/^(time|dates|times)$/, "date");
-				type = type.replace(/^(emailaddress|emailaddresses)$/, "email");
-				type = type.replace(/^(passwords|key|keys)$/, "password");
-				type = type.replace(/^(int|integers)$/, "integer");
-			}
-			type = type.replace(/^(num|numbers)$/, "number");
-			type = type.replace(/^(bool|booleans)$/, "boolean");
-			type = type.replace(/^(str|strings)$/, "string");
-			type = type.replace(/^(all|other)$/, "any");
+	function VALIDATE_TYPE(type, options) {
+		type = type ? String(type).toLowerCase().replace(/[^a-z]/g, "") : "null";
+		if (!options) {
+			type = type.replace(/^(posinteger|posintegers|positiveint|positiveinteger|pos)$/, "posInteger");
+			type = type.replace(/^(neginteger|negintegers|negativeint|negativeinteger|neg)$/, "negInteger");
+			type = type.replace(/^(uniquestring|uniquestrings|unique|id|uniqueid)$/, "uniqueString");
+			type = type.replace(/^(multiline|mulitlinestring|multilinestring|multilinestrings)$/, "multilineString");
+			type = type.replace(/^(phonenumber|phonenumbers|phone|phones|mobile|mobilephone|homephone|workphone|personalphone|cellphone|cell)$/, "phoneNumber");
+			type = type.replace(/^(formattedaddress|fulladdress|address)$/, "formattedAddress");
+			type = type.replace(/^(streetaddress|streetaddresses|street)$/, "streetAddress");
+			type = type.replace(/^(mailaddress|mailaddresses|mail|pobox)$/, "mailAddress");
+			type = type.replace(/^(citycounty|city|town|citytown|citytowncounty|county)$/, "cityCounty");
+			type = type.replace(/^(provincestateregion|province|state|region)$/, "provinceStateRegion");
+			type = type.replace(/^(nation|nationality)$/, "country");
+			type = type.replace(/^(postalzipcode|postalcode|zipcode|postal|zip)$/, "postalZipCode");
+			type = type.replace(/^(givenname|givennames|firstnames|names|firstname|first|name)$/, "givenName");
+			type = type.replace(/^(familyname|familynames|lastnames|lastname|last|family)$/, "familyName");
+			type = type.replace(/^(geolocation|geolocations|location|geo|gpscoordinates)$/, "geoLocation");
+			type = type.replace(/^(time|dates|times)$/, "date");
+			type = type.replace(/^(emailaddress|emailaddresses)$/, "email");
+			type = type.replace(/^(passwords|key|keys)$/, "password");
+			type = type.replace(/^(int|integers)$/, "integer");
+		}
+		type = type.replace(/^(num|numbers)$/, "number");
+		type = type.replace(/^(bool|booleans)$/, "boolean");
+		type = type.replace(/^(str|strings)$/, "string");
+		type = type.replace(/^(all|other)$/, "any");
 
-			if (type && type.match(validTypes)) return type;
-			else {
-				if (options) cacheError.call(_this, type, "customProperties can only be set to string, number, boolean, or any, not");
-				else cacheError.call(_this, type, "invalid Header type");
-				return "any";
-			}
+		if (type && type.match(VALID_TYPES)) return type;
+		else {
+			if (options) CACHE_ERROR.call(this, type, "customProperties can only be set to string, number, boolean, or any, not");
+			else CACHE_ERROR.call(this, type, "invalid Header type");
+			return "any";
 		}
+	}
+	function APPLY_COLUMN_PROPERTIES(tableHeaders, columnProperties, tableCreated, doNotIndex) {
 		function applyHeaders(headers) {
-			if (headers && headers instanceof Array) {
-				return checkHeadersArray(headers);
+			if (headers && headers.constructor === Array) {
+				return CHECK_HEADERS_ARRAY.call(this, headers);
 			}
-			else if (headers && typeof headers === "object") {
-				headerTypes = { "id": "uniqueString" };
-				var _headers = headers;
+			else if (!headers || typeof headers !== "object") return ["id"];
+			var _headers = headers,
 				b = 1;
-				headers = ["id"];
-				for (a in _headers) {
-					if (a !== "id") {
-						if (typeof _headers[a] === "object") {
-							headerTypes[a] = validateType.call(_this, _headers[a].type);
-						}
-						else if (typeof _headers[a] === "string") {
-							headerTypes[a] = validateType.call(_this, _headers[a]);
-						}
-						headers[b] = a;
-						b++;
+			headers = ["id"];
+			for (let a in _headers) {
+				if (a !== "id") {
+					headers[b] = a;
+					b++;
+					//initiate columnProperties with unchecked header values (to be fixed later)
+					columnProperties[a] = columnProperties[a] || {};
+					if (typeof _headers[a] === "object") {
+						columnProperties[a].type = columnProperties[a].type || VALIDATE_TYPE.call(this, _headers[a].type);
+					}
+					else if (typeof _headers[a] === "string") {
+						columnProperties[a].type = columnProperties[a].type || VALIDATE_TYPE.call(this, _headers[a]);
 					}
 				}
-				_headers = null;
-				return headers;
 			}
-			else cacheError.call(_this, "Please include properly formatted table header information");
+			return CHECK_HEADERS_ARRAY.call(this, headers);
 		}
-		function applyHeaderTypes(types) {
-			if (types && types instanceof Array) {
-				var _types = { "id": "uniqueString" },
-					idExists = tableHeaders[0] === "id" && tableHeaders.length === types.length + 1;
-				for (a = idExists ? 1 : 0, b = 0, len = tableHeaders.length; a < len; a++ , b++) {
-					_types[VAL.toPropName(tableHeaders[a])] = validateType.call(_this, types[b]);
-				}
-				idExists = null;
-				return _types;
+		function apply_Simple_Array() {
+			for (let a = 1, b = 0, len = tableHeaders.length; a < len; a++ , b++) {
+				obj[obj.$headers[a]] = {
+					type: [VALIDATE_TYPE.call(this, columnProperties[b]), time]
+					//TODO add other properties
+					//initialValue: 
+					//search:
+				};
+				if (obj.$headers[a] !== tableHeaders[a]) obj[obj.$headers[a]].exportAs = [tableHeaders[a], time];
+				obj.$created[a] = 0;
+				obj.$modified[a] = 0;
 			}
-			else if (types && typeof types === "object") {
-				types.id = "uniqueString";
-				for (a = 0, len = tableHeaders.length; a < len; a++) {
-					if (tableHeaders[a] !== VAL.toPropName(tableHeaders[a])) {
-						var oldType = tableHeaders[a];
-						tableHeaders[a] = VAL.toPropName(tableHeaders[a]);
-						types[tableHeaders[a]] = types[oldType];
-						types[tableHeaders[a]] = validateType.call(_this, types[tableHeaders[a]]);
-						delete types[oldType];
-						oldType = null;
-					}
-					else types[tableHeaders[a]] = validateType.call(_this, types[tableHeaders[a]]);
-				}
-				return types;
-			}
-			else cacheError.call(_this, "Please include properly formatted header types");
+			return obj;
 		}
-		function applyProperties(props) {
-			if (props) {
-				var _props = {};
-				if (props instanceof Array) {
-					for (var a = 0, len = props.length; a < len; a++) {
-						_props[VAL.toPropName(props[a])] = [0, 0, "any"];
+		function applyArray() {
+			for (let a = 1, len = tableHeaders.length; a < len; a++) {
+				if (columnProperties[tableHeaders[a]]) {
+					//if given tableHeader name contains a space or invalid character
+					if (!columnProperties[obj.$headers[a]]) {
+						var _badHeader = tableHeaders[a];
+						columnProperties[obj.$headers[a]] = columnProperties[_badHeader];
+						delete columnProperties[_badHeader];
+						_badHeader = null;
 					}
-					a = null; len = null;
-					return _props;
-				}
-				else if (typeof props === "object") {
-					var _type = null, _initialValue = 0, _prop;
-					for (var prop in props) {
-						if (props.hasOwnProperty(prop)) {
-							_prop = VAL.toPropName(prop);
-							if (typeof props[prop] === "string") {
-								_type = validateType.call(_this, props[prop], "custom");
-								_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
-								_props[_prop] = [_initialValue, 0, _type];
-							}
-							else if (props[prop] instanceof Array && props[prop].length === 3) {
-								_type = validateType.call(_this, props[prop][2], "custom");
-								if (valueIsValid.call(_this, props[prop][0], _type)) _props[_prop] = [props[prop][0], props[prop][1], _type];
-							}
-							else if (typeof props[prop] === "object") {
-								if (props[prop].type) {
-									_props[_prop] = [0, 0, validateType.call(_this, props[prop].type, "custom")];
-								}
-								else _props[_prop] = [0, 0, "any"];
-								if (props[prop].initialValue && valueIsValid.call(_this, props[prop].initialValue, _props[_prop][2])) {
-									_props[_prop][0] = props[prop].initialValue;
-								}
-								else {
-									_type = _props[_prop][2];
-									_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
-									_props[_prop][0] = _initialValue;
-								}
-							}
-							else cacheError.call(_this, prop, "invalid customProperty");
-						}
+					if (typeof columnProperties[obj.$headers[a]] === "string") {
+						//migrate old version of types data forward to be held in an object
+						obj[obj.$headers[a]] = {
+							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]]), time]
+							//TODO add other properties
+							//initialValue: 
+							//search:
+						};
 					}
-					_type = null; _initialValue = null; _prop = null; prop = null;
-					return _props;
-				}
-				else cacheError.call(_this, "Please supply properties in proper format");
-			}
-			else return {};
-		}
-		function setIndexableColumns() {
-			if (options.doNotIndex && options.doNotIndex instanceof Array) {
-				db[_this.id].indexable = db[_this.id].headers.join("|").split("|");
-				db[_this.id].indexable.splice(0, 1);//remove "id" column
-				for (var a = 0, len = options.doNotIndex.length, i; a < len; a++) {
-					i = db[_this.id].indexable.indexOf(VAL.toPropName(options.doNotIndex[a]));
-					if (i > -1) db[_this.id].indexable.splice(i, 1);
-				}
-				a = null; len = null; i = null;
-			}
-		}
-		function gotCachedTable(json) {
-			if (json) {
-				if (typeof json === "string") json = JSON.parse(json);
-				if (json.version !== undefined && json.title && json.title === tableTitle && json.created !== undefined && json.lastModified !== undefined) {
-					var version = String(json.version).split("_");
-					if (json.lastModified < json.created && json.lastModified !== 0 || json.lastModified > timestamp()) {
-						console.log("database lastModified dates are corrupted: " + json.lastModified);
-						didntGetCachedTable();
+					else if (columnProperties[obj.$headers[a]].type) {
+						if (columnProperties[obj.$headers[a]].type.constructor === Array) obj[obj.$headers[a]] = {
+							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]].type[0]), columnProperties[obj.$headers[a]].type[1]]
+							//TODO add other properties
+							//initialValue: 
+							//search:
+						};
+						else obj[obj.$headers[a]] = {
+							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]].type), time]
+							//TODO add other properties
+							//initialValue: 
+							//search:
+						};
 					}
-					else if (String(version[0]) === String(this.Version)) {
-						if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
-							json = Base64.read(json.data, options.key);
-							return importJSON.call(_this, json, function (syncChanges, errors) {
-								if (syncChanges && !errors) return createBase64File.call(_this, options.key, options.token, callback);
-								else if (callback instanceof Function) return callback(true, errors, db[_this.id].title, false);
-								else return errors;
-							}, false, true);
-						}
-						else {//loading directly from local storage
-							db[_this.id] = json;
-							buildSearchIndex.call(_this, options.initialIndex || null);
-							return createBase64File.call(_this, options.key, options.token, callback);
-						}
-					}
-					else {
-						console.log("versions do not match", String(version[0]), String(this.Version));
-						didntGetCachedTable();
-					}
+					else console.log(columnProperties[obj.$headers[a]], "error");
+					if (columnProperties[obj.$headers[a]].exportAs) obj[obj.$headers[a]].exportAs = columnProperties[obj.$headers[a]].exportAs;
+					else if (obj.$headers[a] !== tableHeaders[a]) obj[obj.$headers[a]].exportAs = [tableHeaders[a], time];
 				}
 				else {
-					console.log("properties don't match");
-					didntGetCachedTable();
+					obj[obj.$headers[a]] = {
+						type: ["any", time]
+						//TODO add other properties
+						//initialValue: 
+						//search:
+					};
+					if (obj.$headers[a] !== tableHeaders[a]) obj[obj.$headers[a]].exportAs = [tableHeaders[a], time];
+				}
+				obj.$created[a] = 0;
+				obj.$modified[a] = 0;
+			}
+			return obj;
+		}
+		function applyObject() {
+			var b = 1;
+			for (let a in tableHeaders) {
+				if (a !== "id") {
+					obj[obj.$headers[b]] = {
+						type: [typeof columnProperties[a] === "string" ?
+							VALIDATE_TYPE.call(this, columnProperties[a]) : columnProperties[a] && columnProperties[a].type ?
+								VALIDATE_TYPE.call(this, columnProperties[a].type) : "any", time]
+
+						//TODO add other properties
+						//initialValue: 
+						//search:
+					};
+					if (obj.$headers[b] !== a) obj[obj.$headers[b]].exportAs = [a, time];
+					obj.$created[b] = 0;
+					obj.$modified[b] = 0;
+					b++;
 				}
 			}
-			else {
+			return obj;
+		}
+		//columnProperties could be an Array ["string","number"...] or
+		//an Object like this {Column_1: "string", Column_2: "number"...} or
+		//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
+		//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
+		columnProperties = columnProperties || {};
+			
+		var time = TIMESTAMP(tableCreated),
+			obj = {
+				$headers: applyHeaders.call(this, tableHeaders),
+				$created: [0],
+				$modified: [0]
+			};
+		obj.$indexable = obj.$headers.join("|").split("|"),
+		obj.$indexable.splice(0, 1);//remove id
+		if (doNotIndex && doNotIndex.constructor === Array) {
+			for (let a = 0, len = doNotIndex.length, i; a < len; a++) {
+				i = obj.$indexable.indexOf(VAL.toPropName(doNotIndex[a]));
+				if (i > -1) obj.$indexable.splice(i, 1);
+			}
+		}
+		if (tableHeaders.constructor === Array) {
+			if (tableHeaders[0] !== "id" && obj.$headers.length === tableHeaders.length + 1) tableHeaders.unshift("id");
+			if (columnProperties.constructor === Array) return apply_Simple_Array.call(this); //old db code with types array
+			else return applyArray.call(this);
+		}
+		else return applyObject.call(this);
+	}
+	function DELETE_COLUMN(colName, storeBool, editTime, callback) {
+		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+		if (colIndex > 0) {
+			var columns = DB[this.id].columns,
+				col = columns.$headers[colIndex],
+				time = VALIDATE_EDIT_TIME.call(this, editTime, null, "column", null, "deleteColumn");
+			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
+				DB[this.id].table[a].splice(colIndex, 1);
+				DB[this.id].ids[DB[this.id].table[a][0]].splice(colIndex, 1);
+			}
+			if (DB[this.id].hidden) {
+				for (let a = 0, len = DB[this.id].hidden.length; a < len; a++) {
+					DB[this.id].hidden[a].splice(colIndex, 1);
+					DB[this.id].hiddenIds[DB[this.id].hidden[a][0]].splice(colIndex, 1);
+				}
+			}
+			columns.$headers.splice(colIndex, 1);
+			columns.$created.splice(colIndex, 1);
+			columns.$modified.splice(colIndex, 1);
+			columns[col] = {
+				deleted: [true, time]
+			};
+			//update search index
+			var i = columns.$indexable.indexOf(col);
+			if (i > -1) {
+				columns.$indexable.splice(i, 1);
+			}
+			DB[this.id].lastModified = time + DB[this.id].created > DB[this.id].lastModified ? time + DB[this.id].created : DB[this.id].lastModified;
+			this.syncPending = true;
+			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+			if (callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending);
+			else return true;
+		}
+		else return callback instanceof Function ? callback(false, colName + " column not found", DB[this.id].title, this.syncPending) : false;
+	}
+	function ADD_COLUMN(colName, position, options, storeBool, editTime, callback) {
+		function timestamp(val) {
+			return val && val.constructor === Array ? val : [val, editTime];
+		}
+		function applyProps(cb) {
+			for (let prop in options) {
+				options[prop] = timestamp(options[prop]);
+				switch (prop) {
+					case "deleted": //taken care of above
+					case "type": break; //skip type, already added above
+					case "initialValue":
+						if (VALUE_IS_VALID.call(this, options[prop][0], props.type[0])) props[prop] = options[prop];
+						break;
+					case "search":
+						if (VALUE_IS_VALID.call(this, options[prop][0], "boolean")) props[prop] = options[prop];
+						break;
+					//TODO add more properties here
+					default: console.log("property not implemented: " + prop);
+				}
+			}
+			cols[colName] = props;
+			return cb();
+		}
+		function updateTable() {
+			if (!options.initialValue || options.initialValue && !VALUE_IS_VALID.call(this, options.initialValue[0], props.type[0])) {
+				if (props.type === "boolean") options.initialValue = false;
+				else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(props.type)) options.initialValue = 0;
+				else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(props.type)) options.initialValue = "";
+				else {
+					CACHE_ERROR("initial value not found for data type: " + props.type);
+					options.initialValue = "";
+				}
+			}
+			//insert empty cell to every row in table
+			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
+				DB[this.id].table[a].splice(position, 0, options.initialValue[0]);
+				DB[this.id].ids[DB[this.id].table[a][0]].splice(position + 1, 0, editTime);
+			}
+			if (DB[this.id].hidden) {
+				for (let a = 0, len = DB[this.id].hidden.length; a < len; a++) {
+					DB[this.id].hidden[a].splice(position, 0, options.initialValue[0]);
+					DB[this.id].hiddenIds[DB[this.id].hidden[a][0]].splice(position + 1, 0, editTime);
+				}
+			}
+			//update search index
+			if (props.search !== false) {
+				cols.$indexable.push(colName);
+			}
+			DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
+			this.syncPending = true;
+			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+			if (callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending);
+			else return true;
+		}
+		options = options || {};
+		if (this.isDeleted() || options.deleted) {
+			return callback instanceof Function ? callback(false, "cannot add deleted column", DB[this.id].title, this.syncPending) : false; //don't add deleted columns to table
+		}
+		var orig = String(colName),
+			i = 1,
+			props = {},
+			cols = DB[this.id].columns,
+			headers = cols.$headers;
+		colName = VAL.toPropName(colName);
+		if (colName === "id") colName = "_id";
+		//check if column already existes
+		while (GET_INDEX_OF_COLUMN.call(this, colName) > -1) {
+			colName = VAL.toPropName(orig.replace(/_\d$/, "")) + "_" + i;
+			i++;
+		}
+		editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "column", null, "addColumn");
+		props.type = [typeof options === "string" ? VALIDATE_TYPE.call(this, options) : options.type ? VALIDATE_TYPE.call(this, options.type) : "any", editTime];
+		if (colName !== orig) props.exportAs = [orig, editTime];
+		//insert colName to headers
+		position = position && position > 0 && position < headers.length ? position : headers.length;
+		cols.$created.splice(position, 0, editTime);
+		cols.$modified.splice(position, 0, 0);
+		headers.splice(position, 0, colName);
+		//add column properties
+		return applyProps.call(this, updateTable.bind(this));
+	}
+	function GET_COL_PROP(colName, propName) {
+		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+		if (colIndex > 0) {
+			var prop = DB[this.id].columns[DB[this.id].columns.$headers[colIndex]][propName];
+			return prop ? prop[0] : null;
+		}
+		else return undefined;
+	}
+	function SET_TYPE(colName, type, data, storeBool, editTime, callback) {
+		//TODO check for data type conflicts in column
+		//TODO if conflicts, try soft massage data to fit type
+		//TODO check for data type conflicts in column
+		//TODO if data, recieve new data and validate
+		//TODO if valid, check modifed dates
+		//TODO if conflicts, or not most current, return error and data conflicts
+		//TODO if no type conflics found and most current, apply data and update type
+	}
+	function MOVE_COLUMN(colName, position, storeBool) {
+		//TODO
+	}
+	/**
+	 * Initialise a new instance of nyckelDB
+	 * @constructs APP.nyckelDB
+	 * @param {string} tableTitle the database title
+	 * @param {array|object} tableHeaders an array of the column headers, or object containing column headers and corresponding properties (types, formulas)
+	 * @param {array|object} [columnProperties] optional, if not specified in with tableHeaders, array if just types, object if also formulas
+	 * @param {object} [options] {
+	 *	customProperties:{
+	 *	  <property1Name>: {
+	 *	    initialValue: <value>,
+	 *	    type: "String", "Boolean" or "Number" <String>
+	 *	  },
+	 *	  <property2Name>...
+	 *	},
+	 *	importData: <json>, table data that is ready to drop in to the database without parsing
+	 *	importJSON: <json>, json data that needs to be parsed
+	 *	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
+	 *	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
+	 *	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
+	 *	key: <string>,
+     *	token: <string>
+	 * }
+	 * @param {successCallback} [callback] the callback function
+	 * @returns {object} methods
+	 * @property {string} title the database title
+	 * @property {string} id the randomly generated unique id of the database instance
+	 * @property {string} Version nyckelDB version number
+	 * @property {boolean} syncPending whether or not the database has been synchronized with an external file since changes
+	 */
+	function NyckelDBObj(tableTitle, tableHeaders, columnProperties, options, callback) {		
+		function applyCustomProperties(props) {
+			if (!props) return {};
+			var _props = {};
+			if (props.constructor === Array) {
+				for (var a = 0, len = props.length; a < len; a++) {
+					_props[VAL.toPropName(props[a])] = [0, 0, "any"];
+				}
+				a = null; len = null;
+				return _props;
+			}
+			else if (typeof props !== "object") {
+				CACHE_ERROR.call(this, "Please supply properties in proper format");
+				return {};
+			}
+			var _type = null, _initialValue = 0, _prop;
+			for (var prop in props) {
+				if (props.hasOwnProperty(prop)) {
+					_prop = VAL.toPropName(prop);
+					if (typeof props[prop] === "string") {
+						_type = VALIDATE_TYPE.call(this, props[prop], "custom");
+						_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
+						_props[_prop] = [_initialValue, 0, _type];
+					}
+					else if (props[prop].constructor === Array && props[prop].length === 3) {
+						_type = VALIDATE_TYPE.call(this, props[prop][2], "custom");
+						if (VALUE_IS_VALID.call(this, props[prop][0], _type)) _props[_prop] = [props[prop][0], props[prop][1], _type];
+					}
+					else if (typeof props[prop] === "object") {
+						if (props[prop].type) {
+							_props[_prop] = [0, 0, VALIDATE_TYPE.call(this, props[prop].type, "custom")];
+						}
+						else _props[_prop] = [0, 0, "any"];
+						if (props[prop].initialValue && VALUE_IS_VALID.call(this, props[prop].initialValue, _props[_prop][2])) {
+							_props[_prop][0] = props[prop].initialValue;
+						}
+						else {
+							_type = _props[_prop][2];
+							_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
+							_props[_prop][0] = _initialValue;
+						}
+					}
+					else CACHE_ERROR.call(this, prop, "invalid customProperty");
+				}
+			}
+			_type = null; _initialValue = null; _prop = null; prop = null;
+			return _props;
+		}
+		function applyData(json) {
+			function setColumns(json) {
+				return json && json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns, json.created, options.doNotIndex) :
+					json && (json.types && json.headers || json.version === "0.3_1.1") ?
+						APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created, options.doNotIndex) ://migrate old types
+						APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), options.doNotIndex);
+			}
+			json = json && json.deleted !== undefined ? {
+				"title": tableTitle,
+				"created": json.created || TIMESTAMP(),
+				"deleted": json.deleted,
+				"lastModified": json.lastModified !== undefined ? json.lastModified : 0,
+				"version": this.Version + "_" + Base64.Version
+			} : {
+					"title": tableTitle,
+					"created": json && json.created !== undefined ? json.created : TIMESTAMP(),
+					"lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
+					"version": this.Version + "_" + Base64.Version,
+					"ids": json && json.ids ? json.ids : {},
+					"columns": setColumns.call(this, json),
+					"table": json && json.table ? json.table : [],
+					"properties": json && json.properties ? json.properties : properties
+				};
+			return json;
+		}
+		function gotCachedTable(json) {
+			function returnFunc(syncChanges, errors) {
+				if (syncChanges && !errors) return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
+				else if (callback instanceof Function) return callback(true, errors, DB[this.id].title, false);
+				else return errors;
+			}
+			if (!json) {
 				console.log('json not found');
-				didntGetCachedTable();
+				didntGetCachedTable.call(this);
+				return;
+			}
+			if (typeof json === "string") json = JSON.parse(json);
+			if (!json.title || json.title !== tableTitle || !json.version || json.created === undefined || json.lastModified === undefined) {
+				console.log("properties don't match");
+				didntGetCachedTable.call(this);
+				return;
+			}
+			var version = String(json.version).split("_");
+			if (json.lastModified < json.created && json.lastModified !== 0 || json.lastModified > TIMESTAMP()) {
+				console.log("database lastModified dates are corrupted: " + json.lastModified);
+				didntGetCachedTable.call(this);
+				return;
+			}
+			if (String(version[0]) !== String(this.Version) && !(String(version[0]) === "0.3" && String(this.Version) === "0.4")) {
+				console.log("versions do not match", String(version[0]), String(this.Version));
+				didntGetCachedTable.call(this);
+				return;
+			}
+			if (json.data && String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
+				json = Base64.read(json.data, options.key);
+				return IMPORT_JSON.call(this, json, returnFunc.bind(this), false, true);
+			}
+			else {//loading directly from local storage
+				DB[this.id] = applyData.call(this, json);
+				BUILD_SEARCH_INDEX.call(this, options.initialIndex || null);
+				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
 			}
 		}
 		function didntGetCachedTable() {
 			console.log("didnt get cached table");
 			//creating a brand new table
-			db[_this.id] = options.importData && typeof options.importData.deleted !== "undefined" ? {
-				"title": tableTitle,
-				"created": options.importData.created || timestamp(),
-				"deleted": options.importData.deleted,
-				"lastModified": options.importData.lastModified !== undefined ? options.importData.lastModified : 0
-			} : {
-					"title": tableTitle,
-					"created": options.importData && options.importData.created !== undefined ? options.importData.created : timestamp(),
-					"lastModified": options.importData && options.importData.lastModified !== undefined ? options.importData.lastModified : 0,
-					"version": _this.Version + "_" + Base64.Version,
-					"ids": options.importData && options.importData.ids ? options.importData.ids : {},
-					"headers": options.importData && options.importData.headers ? applyHeaders.call(_this, options.importData.headers) : tableHeaders || ["id"],
-					"types": options.importData && options.importData.types ? applyHeaderTypes.call(_this, options.importData.types) : headerTypes,
-					"table": options.importData && options.importData.table ? options.importData.table : [],
-					"properties": options.importData && options.importData.properties ? options.importData.properties : properties
-				};
-			//validate ids
-			for (let id in db[_this.id].ids) {
-				if (db[_this.id].ids.hasOwnProperty(id)) {
-					for (let a = 0; a < db[_this.id].ids[id].length; a++) {
-						db[_this.id].ids[id][a] = validateEditTime.call(_this, db[_this.id].ids[id][a]);
+			DB[this.id] = applyData.call(this, options.importData);
+			//validate columns edit time
+			var columns = DB[this.id].columns;
+			if (columns) {
+				for (let a = 1, headers = columns.$headers, len = headers.length, colProp; a < len; a++) {
+					for (colProp in columns[headers[a]]) {
+						columns[headers[a]][colProp][1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp][1], null, "column", null, "didn't get cached table");
 					}
 				}
 			}
-			for (let prop in db[_this.id].properties) {
-				if (db[_this.id].properties.hasOwnProperty(prop)) {
-					db[_this.id].properties[prop][1] = validateEditTime.call(_this, db[_this.id].properties[prop][1]);
+			//validate ids
+			for (let id in DB[this.id].ids) {
+				if (DB[this.id].ids.hasOwnProperty(id)) {
+					for (let a = 0; a < DB[this.id].ids[id].length; a++) {
+						DB[this.id].ids[id][a] = VALIDATE_EDIT_TIME.call(this, DB[this.id].ids[id][a], null, a === 0 ? "row" : "cell", id, "didn't get cached table");
+					}
 				}
 			}
-			setIndexableColumns.call(_this);
+			for (let prop in DB[this.id].properties) {
+				if (DB[this.id].properties.hasOwnProperty(prop)) {
+					DB[this.id].properties[prop][1] = VALIDATE_EDIT_TIME.call(this, DB[this.id].properties[prop][1], null, "property", null, "didn't get cached table");
+				}
+			}
 			properties = null;
-			if (options.importJSON) importJSON.call(_this, options.importJSON, function () {
-				return createBase64File.call(_this, options.key, options.token, callback);
+			if (options.importJSON) IMPORT_JSON.call(this, options.importJSON, function () {
+				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
 			}, );
 			else {
-				toLocalStorage.call(_this, true);
-				return createBase64File.call(_this, options.key, options.token, callback);
+				TO_LOCAL_STORAGE.call(this, true);
+				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
 			}
 		}
-		function done(title) {
+		function initiateTable(title) {
 			tableTitle = title;
-			tableHeaders = applyHeaders.call(this, tableHeaders);
-			if (headerTypes) headerTypes = applyHeaderTypes.call(this, headerTypes);
-			if (options.importData && options.importData.properties) options.importData.properties = applyProperties.call(this, options.importData.properties);
-			else if (options.customProperties) properties = applyProperties.call(this, options.customProperties);
+			if (options.importData && options.importData.properties) options.importData.properties = applyCustomProperties.call(this, options.importData.properties);
+			else if (options.customProperties) properties = applyCustomProperties.call(this, options.customProperties);
 			//try to get cached table
 			if (APP.Sto) APP.Sto.getItem(tableTitle, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
 			else return callback instanceof Function ? callback(false, "localStorage not found", tableTitle, false) : "localStorage not found";
 		}
-		options = options || {};
+		options = options ? JSON.parse(JSON.stringify(options)) : {};
 		if (typeof options.importData === "string") options.importData = JSON.parse(options.importData);
 
-		if (options.importData && (options.importData.lastModified < options.importData.created && options.importData.lastModified !== 0 || options.importData.lastModified > timestamp())) {
+		if (options.importData && (options.importData.lastModified < options.importData.created && options.importData.lastModified !== 0 || options.importData.lastModified > TIMESTAMP())) {
 			console.log("importData lastModified dates are corrupted: " + options.importData.lastModified);
 		}
 		tableTitle = options.importData && options.importData.title ? options.importData.title : tableTitle;
-		var a, b, len, properties = {};
+		var properties = {};
 		this.syncPending = true;
-		this.Version = 0.3;
-		var _this = this;
-		if (tableTitle == null) {//checks for null or undefined
+		this.Version = 0.4;
+		//var _this = this;
+		if (tableTitle == null) {// eslint-disable-line
 			return callback instanceof Function ? callback(false, "title not defined", null, false) : "title not defined";
 		}
 		else {
 			if (options.importData && options.importData.data) {
-				if (options.importData.version !== this.Version + "_" + Base64.Version && options.importData.version !== this.Version + "." + Base64.Version) return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
+				if (options.importData.version !== this.Version + "_" + Base64.Version && options.importData.version !== this.Version + "." + Base64.Version) {
+					return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : "imported database version not supported";
+				}
 				else if (Base64.hmac(options.importData.data, options.key) === options.importData.signature) {
 					options.importData = JSON.parse(Base64.read(options.importData.data, options.key));
-					initiateNewDB.call(this, tableTitle, done.bind(this));
+					INITIATE_NEW_DB.call(this, tableTitle, initiateTable.bind(this));
 				}
 				else return callback instanceof Function ? callback(false, "imported databse corrupted", null, false) : "imported database corrupted";
 			}
-			else initiateNewDB.call(this, tableTitle, done.bind(this));
+			else INITIATE_NEW_DB.call(this, tableTitle, initiateTable.bind(this));
 		}
 	}
-	var db = db || {},
-		uid = 0,
-		dbs = [],
-		dbxSyncObj = {},
-		searchIndex = {},
-		searchSuggestions = {},
-		recentlySearched = {},
-		colNamesIndexed = {},
-		buildingSearchIndex = {},
-		buildingSearchIndexQueue = {},
-		rowIndex = {},
-		errors = [],
-		syncFrequency = 3e5, //5 minutes
-		syncError = false,
-		syncErrorTime,
-		validTypes = /^(any|number|integer|posInteger|negInteger|boolean|string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation|longitude|latitude)$/;
+	//ALL CAPS "GLOBAL" VARIABLES
+	var DB = DB || {},//all databases, contains objects in form 
+		/*
+		 * {
+		 *	title: String,
+		 *	created: Number,
+		 *	lastModified: Number,
+		 *	version: String,
+		 *	deleted?: Number,
+		 *	columns?: { },
+		 *	ids?: { }
+		 *	table?:[2d Array],
+		 *	properties?: { }
+		 * }
+		 */
 
-	/*options = {
-		"colNames": Array,
-		"fuzzyMatch": Boolean 
-	 }*/
+		UID = 0,//incrementing database number (DB.length)
+		DBS = [],//array of database titles
+		DBX_SYNC_OBJ = {},//lastSync dates of all databases
+		SEARCH_INDEX = {},//tree structured search indexes of all databases 
+		SEARCH_SUGGESTIONS = {},//tree structured search suggestions of all databases
+		RECENTLY_SEARCHED = {},//cached last 25 successful searches for surfacing more relevent search suggestions
+		COL_NAMES_INDEXED = {},//current columns search indexed
+		BUILDING_SEARCH_INDEX = {},//search index build state, indicates whether search index is ready, or to queue the search for when the search index is built
+		BUILDING_SEARCH_INDEX_QUEUE = {},// queue of searches to execute after search index is built
+		ROW_INDEX_CACHE = {},//a cache of the current positions of ids in databases to avoid repetitive looping through the table looking for an id
+		ERRORS = [],
+		MAX_SYNC_FREQUENCY = 5, //5 minutes
+		SYNC_ERROR = false,
+		SYNC_ERROR_TIME,
+		VALID_TYPES = /^(any|number|integer|posInteger|negInteger|boolean|string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation|longitude|latitude)$/,
+		VALID_STRING_TYPES = /^(string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation)$/,
+		VALID_NUMBER_TYPES = /^(number|integer|posInteger|negInteger|date|phoneNumber|password|postalZipCode|longitude|latitude)$/;
+	/**
+	 * Search for rows that contain all of the words given in the search query
+	 * @name APP.nyckelDB#search
+	 * @function
+	 * @param {string} searchQuery words to search for in the database
+	 * @param {object} [options] {
+	 *	"colNames": Array, an Array of columns to search in
+	 *	"fuzzyMatch": Boolean
+	 * }
+	 * @param {searchCallback} [callback] callback function
+	 * @returns {array} an Array of row ids which contain the searchQuery
+	 */
 	NyckelDBObj.prototype.search = function (searchQuery, options, callback) {
 		function findMatches(arr, min) {
 			min = min || 2;
 			if (min === 1) return arr;
 			var ret = [], /*return array*/
 				a = 0,
-				mat = false; /*match found*/
+				found = false;
 			arr = arr.sort();
-			for (var x = 0, y = x + 1, len = arr.length, b; x < len - min + 1; x++ , y = x + 1) {
+			for (let x = 0, y = x + 1, len = arr.length, b; x < len - min + 1; x++ , y = x + 1) {
 				if (String(arr[x]) === String(arr[y])) {
-					mat = true;
+					found = true;
 					for (b = 0; b < min - 1; b++) {
-						if (arr[x] !== arr[y + b]) mat = false;
+						if (arr[x] !== arr[y + b]) found = false;
 					}
-					if (mat === true) {
+					if (found === true) {
 						ret[a] = arr[x];
 						x = x + min - 1;
 						a++;
 					}
 				}
 			}
-			arr = null; a = null; mat = null; min = null; x = null; y = null; len = null, b = null;
+			arr = null; a = null; found = null; min = null;
 			return ret;
 		}
 		function querySearchIndex(searchQuery, lastRoundBool, callback) {
 			var aLen = searchQuery.length,
 				tempIds = [];
-			for (let a = 0, b, bLen = colNamesIndexed[this.id].length, i; a < aLen; a++) {
+			for (let a = 0, b, bLen = COL_NAMES_INDEXED[this.id].length, i; a < aLen; a++) {
 				for (b = 0, i = []; b < bLen; b++) {
-					if (searchIndex[this.id][searchQuery[a]] && searchIndex[this.id][searchQuery[a]][colNamesIndexed[this.id][b]]) {
-						i = i.concat(searchIndex[this.id][searchQuery[a]][colNamesIndexed[this.id][b]]);
+					if (SEARCH_INDEX[this.id][searchQuery[a]] && SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]) {
+						i = i.concat(SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]);
 					}
 				}
-				tempIds = tempIds.concat(deleteDuplicates(i));
+				tempIds = tempIds.concat(DELETE_DUPLICATES(i));
 			}
-			ids = ids.concat(deleteDuplicates(findMatches.call(this, tempIds, aLen)));
+			ids = ids.concat(DELETE_DUPLICATES(findMatches.call(this, tempIds, aLen)));
 			if (ids.length > 0) {
-				recentlySearched[this.id] = deleteDuplicates(searchQuery.concat(recentlySearched[this.id]));
-				recentlySearched[this.id] = recentlySearched[this.id].slice(0, 25);
-				stoSearchIndex.call(this);
+				RECENTLY_SEARCHED[this.id] = DELETE_DUPLICATES(searchQuery.concat(RECENTLY_SEARCHED[this.id]));
+				RECENTLY_SEARCHED[this.id] = RECENTLY_SEARCHED[this.id].slice(0, 25);
+				STO_SEARCH_INDEX.call(this);
 			}
-			if (lastRoundBool) return callback instanceof Function ? callback(ids, errors[this.id], db[this.id].title, this.requiresSync) : ids;
+			if (lastRoundBool) return callback instanceof Function ? callback(ids, ERRORS[this.id], DB[this.id].title, this.requiresSync) : ids;
 		}
 		function fuzzyMatch(searchQuery, callback) {
 			//collect all possible alternate queries
-			for (let a = 0, lenA = searchQuery.length, b, lenB; a < lenA; a++) {
+			for (let a = 0, lenA = searchQuery.length; a < lenA; a++) {
 				if (Spelling[searchQuery[a]]) {
 					searchQuery[a] = Spelling[searchQuery[a]].split(" ");
 				}
@@ -1422,7 +1917,6 @@ APP.nyckelDB = (function () {
 			}
 			//combine them in all possible combinations
 			var queries = [],
-				activeColumn = 0,
 				a = 0,
 				n = 0,
 				cursor = [],
@@ -1445,7 +1939,7 @@ APP.nyckelDB = (function () {
 					cursor[n + 1]++;
 					n++;
 					if (n === len) break;
-				}		
+				}
 			}
 			for (let a = 0, len = queries.length - 1; a < len; a++) {
 				querySearchIndex.call(this, queries[a]);
@@ -1456,77 +1950,96 @@ APP.nyckelDB = (function () {
 			if (options.fuzzyMatch) fuzzyMatch.call(this, searchQuery, callback);
 			else querySearchIndex.call(this, searchQuery, true, callback);
 		}
-		if (!this.isDeleted()) {
-			options = options || {};
-			var cols = options.colNames ? options.colNames.join("|").split("|") : null,
-				ids = [];
-			searchQuery = searchValidate(searchQuery);
-			//check for searchIndex
-			buildSearchIndex.call(this, cols, search.bind(this, searchQuery, callback));
-		}
-		else return callback instanceof Function ? callback([], "no data", db[this.id].title, this.requiresSync) : [];
+		if (this.isDeleted()) return callback instanceof Function ? callback([], "no data", DB[this.id].title, this.requiresSync) : [];
+		options = options || {};
+		var cols = options.colNames ? options.colNames.join("|").split("|") : null,
+			ids = [];
+		searchQuery = SEARCH_VALIDATE(searchQuery);
+		//check for search index
+		BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQuery, callback));
 	};
+	/**
+	 * Same as search, but accepts join (+) and filter (-) between search terms to create more specific queries
+	 *      Possible future deprication and merge functionality into search
+	 * @name APP.nyckelDB#advancedSearch
+	 * @function
+	 * @param {string} searchQuery words to search for in the database
+	 * @param {object} [options] {
+	 *	"colNames": Array, an Array of columns to search in
+	 *	"fuzzyMatch": Boolean
+	 * }
+	 * @param {searchCallback} [callback] callback function
+	 * @returns {array} an Array of row ids which contain the searchQuery
+	 */
 	NyckelDBObj.prototype.advancedSearch = function (searchQuery, options, callback) {
 		function filter(ids, filterOutQueries, callback) {
-			if (filterOutQueries.length > 0) {
-				for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
-					(function (b) {
-						_this.search.call(_this, filterOutQueries[b], options, function (result, err, table, sync) {
-							if (!err) filterIds = filterIds.concat(result);
-							else return callback instanceof Function ? callback([], err, table, sync) : [];
-							if (b === lenB - 1) {
-								filterIds = deleteDuplicates(filterIds);
-								if (filterIds.length > 0) {
-									for (let c = 0, lenC = filterIds.length, t = "", d, lenD; c < lenC; c++) {
-										t = String(filterIds[c]);
-										for (d = 0, lenD = ids.length; d < lenD; d++) {
-											if (t === String(ids[d])) {
-												ids.splice(d, 1);
-												d--;
-												lenD--;
-											}
+			if (filterOutQueries.length === 0) {
+				return callback instanceof Function ? callback(ids, ERRORS[this.id], DB[this.id].title, this.requiresSync) : ids;
+			}
+			for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
+				(function (self, b) {
+					this.search.call(this, filterOutQueries[b], options, function (result, err, table, sync) {
+						if (!err) filterIds = filterIds.concat(result);
+						else return callback instanceof Function ? callback([], err, table, sync) : [];
+						if (b === lenB - 1) {
+							filterIds = DELETE_DUPLICATES(filterIds);
+							if (filterIds.length > 0) {
+								for (let c = 0, lenC = filterIds.length, t = "", d, lenD; c < lenC; c++) {
+									t = String(filterIds[c]);
+									for (d = 0, lenD = ids.length; d < lenD; d++) {
+										if (t === String(ids[d])) {
+											ids.splice(d, 1);
+											d--;
+											lenD--;
 										}
 									}
 								}
-								return callback instanceof Function ? callback(ids, errors[_this.id], db[_this.id].title, _this.requiresSync) : ids;
 							}
-						});
-					})(b);
-				}
-			}
-			else return callback instanceof Function ? callback(ids, errors[_this.id], db[_this.id].title, _this.requiresSync) : ids;
-		}
-		if (searchQuery) {
-			var ids = [],
-				filterIds = [],
-				filterOutQueries = [],
-				_this = this;
-			if (/\s\+|\s\-/.test(searchQuery)) {
-				searchQuery = searchQuery.split(" +");
-				for (let a = 0; a < searchQuery.length; a++) {
-					if (/\s\-/.test(searchQuery[a])) {
-						var f = searchQuery[a].split(" -");
-						searchQuery[a] = f.shift();
-						filterOutQueries.push.apply(filterOutQueries, f);
-					}
-				}
-			}
-			else searchQuery = [searchQuery];
-			for (let a = 0, len = searchQuery.length; a < len; a++) {
-				(function (a) {
-					_this.search.call(_this, searchQuery[a], options, function (result, errors, table, sync) {
-						if (!errors) ids = ids.concat(result);
-						else return callback instanceof Function ? callback([], errors, table, sync) : [];
-						if (a === len - 1) {
-							ids = deleteDuplicates(ids);
-							filter.call(_this, ids, filterOutQueries, callback);
+							return callback instanceof Function ? callback(ids, ERRORS[self.id], DB[self.id].title, self.requiresSync) : ids;
 						}
 					});
-				})(a);
+				})(this, b);
 			}
 		}
-		else return callback instanceof Function ? callback([], "no query supplied", db[this.id].title, this.requiresSync) : [];
+		if (!searchQuery) return callback instanceof Function ? callback([], "no query supplied", DB[this.id].title, this.requiresSync) : [];
+		var ids = [],
+			filterIds = [],
+			filterOutQueries = [];
+		if (/\s\+|\s\-/.test(searchQuery)) {
+			searchQuery = searchQuery.split(" +");
+			for (let a = 0; a < searchQuery.length; a++) {
+				if (/\s\-/.test(searchQuery[a])) {
+					var f = searchQuery[a].split(" -");
+					searchQuery[a] = f.shift();
+					filterOutQueries.push.apply(filterOutQueries, f);
+				}
+			}
+		}
+		else searchQuery = [searchQuery];
+		for (let a = 0, len = searchQuery.length; a < len; a++) {
+			(function (self, a) {
+				self.search.call(self, searchQuery[a], options, function (result, errors, table, sync) {
+					if (!errors) ids = ids.concat(result);
+					else return callback instanceof Function ? callback([], errors, table, sync) : [];
+					if (a === len - 1) {
+						ids = DELETE_DUPLICATES(ids);
+						filter.call(self, ids, filterOutQueries, callback);
+					}
+				});
+			})(this, a);
+		}
 	};
+	/**
+	 * Get search suggestions from partial words, for example, as you type in a search box
+	 * @name APP.nyckelDB#getSearchSuggestions
+	 * @function
+	 * @param {string} searchQuery partial search query
+	 * @param {object} [options] {
+	 *	"colNames": Array, an Array of columns to search in
+	 * }
+	 * @param {suggestionsCallback} [callback] callback function
+	 * @returns {array} an Array of search queries that would return a match
+	 */
 	NyckelDBObj.prototype.getSearchSuggestions = function (searchQuery, options, callback) {
 		function buildSuggestionsList() {
 			searchQuery = searchQuery.split(" ");
@@ -1535,26 +2048,26 @@ APP.nyckelDB = (function () {
 				a = 0,
 				prefix = last.charAt(0);
 			prefix = prefix.match(/\+|\-/) ? prefix : "";
-			last = searchValidate(last)[0];
+			last = SEARCH_VALIDATE(last)[0];
 			if (last) {
 				var matchesThis = new RegExp("^" + last);
 				searchQuery = searchQuery.join(" ");
-				for (let b = 0, len = searchSuggestions[this.id].length; b < len; b++) {
-					if (searchSuggestions[this.id][b].match(matchesThis)) {
-						if (searchSuggestions[this.id][b] === last) {//found exact match, suggest at top of list
+				for (let b = 0, len = SEARCH_SUGGESTIONS[this.id].length; b < len; b++) {
+					if (SEARCH_SUGGESTIONS[this.id][b].match(matchesThis)) {
+						if (SEARCH_SUGGESTIONS[this.id][b] === last) {//found exact match, suggest at top of list
 							suggest.unshift(searchQuery === "" ? prefix + last : searchQuery + " " + prefix + last);
 							suggest[0] = suggest[0].replace(/[^0-9a-z\s\+\-]/g, "").trim();
 						}
 						else {
-							suggest[a] = searchQuery === "" ? prefix + searchSuggestions[this.id][b] : searchQuery + " " + prefix + searchSuggestions[this.id][b];
+							suggest[a] = searchQuery === "" ? prefix + SEARCH_SUGGESTIONS[this.id][b] : searchQuery + " " + prefix + SEARCH_SUGGESTIONS[this.id][b];
 							suggest[a] = suggest[a].replace(/[^0-9a-z\s\+\-]/g, "").trim();
 						}
 						a++;
 					}
 				}
 				matchesThis = null;
-				for (let c = 0, lenC = recentlySearched[this.id].length, i, item; c < lenC; c++) {
-					i = suggest.indexOf(recentlySearched[this.id][c]);
+				for (let c = 0, lenC = RECENTLY_SEARCHED[this.id].length, i, item; c < lenC; c++) {
+					i = suggest.indexOf(RECENTLY_SEARCHED[this.id][c]);
 					if (i !== -1) {
 						item = suggest.splice(i, 1)[0];
 						suggest.unshift(item);
@@ -1562,74 +2075,114 @@ APP.nyckelDB = (function () {
 				}
 			}
 			last = null; a = null; searchQuery = null;
-			return callback instanceof Function ? callback(suggest, errors[this.id], db[this.id].title, this.requiresSync) : suggest;
+			return callback instanceof Function ? callback(suggest, ERRORS[this.id], DB[this.id].title, this.requiresSync) : suggest;
 		}
-		if (searchSuggestions[this.id].length > 0) {
+		if (SEARCH_SUGGESTIONS[this.id].length > 0) {
 			buildSuggestionsList.call(this);
 		}
 		else {
 			var cols = options.colNames ? options.colNames.join("|").split("|") : null;
-			if(callback instanceof Function) callback([], "currently busy building search index", db[this.id].title, this.requiresSync);
-			buildSearchIndex.call(this, cols);
+			if(callback instanceof Function) callback([], "currently busy building search index", DB[this.id].title, this.requiresSync);
+			BUILD_SEARCH_INDEX.call(this, cols);
 			return [];
 		}
 	};
+	/**
+	 * Iterate through all (unhidden) rows in a table (in the current sorted order). Passes row ids to funct in sequence and executes funct
+	 * @name APP.nyckelDB#forEachRow
+	 * @function
+	 * @param {function} funct the function to execute for each row in the table
+	 * @param {successCallback} [callback] callback function to execute when everything is finished
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.forEachRow = function (funct, callback) {
 		if (funct instanceof Function) {
 			for (var a = 0, len = this.getLength(); a < len; a++) {
-				funct(db[this.id].table[a][0], a, len);
+				funct(DB[this.id].table[a][0], a, len);
 			}
 			a = null; len = null;
-			return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, this.syncPending), this) : this;
+			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
 	};
+	/**
+	 * Iterate through all columns in a table. Passes the column name to funct in sequence and executes funct
+	 * @name APP.nyckelDB#forEachCol
+	 * @function
+	 * @param {function} funct the function to execute for each column in the table
+	 * @param {successCallback} [callback] callback function to execute after everything is finished
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.forEachCol = function (funct, callback) {
 		if (funct instanceof Function) {
-			for (var a = 1, len = db[this.id].headers.length; a < len; a++) {
-				funct(db[this.id].headers[a], a - 1, len - 1);
+			for (var a = 1, headers = DB[this.id].columns.$headers, len = headers.length; a < len; a++) {
+				funct(headers[a], a - 1, len - 1);
 			}
 			a = null; len = null;
-			return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, this.syncPending), this) : this;
+			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
 	};
-	NyckelDBObj.prototype.getTitle = function () { return db[this.id] ? db[this.id].title : undefined; };
+	/**
+	 * Get the title of the table
+	 * @name APP.nyckelDB#getTitle
+	 * @function
+	 * @returns {string} table title
+	 */
+	NyckelDBObj.prototype.getTitle = function () { return DB[this.id] ? DB[this.id].title : undefined; };
+	/**
+	 * Change the title of the table.
+	 * 	   note: This actually deletes the table and creates a new one
+	 *     with the new name – something to be aware of if you try
+	 * 	   to access the table by it's old name and see that it has
+	 * 	   been deleted!
+	 * @name APP.nyckelDB#setTitle
+	 * @function
+	 * @param {string} newTitle the new title to apply
+	 * @param {successCallback} [callback] callback function
+	 * @returns {string} the new title
+	 */
 	NyckelDBObj.prototype.setTitle = function (newTitle, callback) {
 		var oldId = this.id,
-			oldTitle = db[this.id].title,
-			y = dbs.indexOf(oldTitle);
+			oldTitle = DB[this.id].title,
+			y = DBS.indexOf(oldTitle);
 
 		//applyTitle creates a new id from title
-		return initiateNewDB.call(this, newTitle, function (newTitle) {
+		return INITIATE_NEW_DB.call(this, newTitle, function (newTitle) {
 			//copy table and newTitle to new id
-			db[this.id] = JSON.parse(JSON.stringify(db[oldId]));
-			db[this.id].title = newTitle;
+			DB[this.id] = JSON.parse(JSON.stringify(DB[oldId]));
+			DB[this.id].title = newTitle;
 
 			//cache oldTitle to maintain syncability
-			if (db[this.id].previousTitle) db[this.id].previousTitle.push(VAL.toPropName(oldTitle));
-			else db[this.id].previousTitle = [VAL.toPropName(oldTitle)];
+			if (DB[this.id].previousTitle) DB[this.id].previousTitle.push(VAL.toPropName(oldTitle));
+			else DB[this.id].previousTitle = [VAL.toPropName(oldTitle)];
 
 			//delete old table
-			deleteTableById.call(this, oldId, timestamp());
+			DELETE_TABLE_BY_ID.call(this, oldId, TIMESTAMP());
 			oldId = null;
 
 			//update lastModified
-			db[this.id].lastModified = timestamp();
+			DB[this.id].lastModified = TIMESTAMP();
 			this.syncPending = true;
 
 			//swap database references to refer to the new table
-			var x = dbs.indexOf(newTitle);
-			dbs[y] = dbs[x];
-			dbs[x] = oldTitle;
+			var x = DBS.indexOf(newTitle);
+			DBS[y] = DBS[x];
+			DBS[x] = oldTitle;
 			oldTitle = null; y = null; x = null;
 
-			toLocalStorage.call(this, true);
-			return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, true), this) : this;
+			TO_LOCAL_STORAGE.call(this, true);
+			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, true), this) : this;
 		}.bind(this));
 	};
-	/*options {
-		"reverse": sort Z-A, (true or false)
-		"fromEndOfStr": sort xA-xZ, (true or false)
-	*/
+	/**
+	 * Sort the table alphabetically or numerically by a particular column.
+	 * @name APP.nyckelDB#sortByCol
+	 * @function
+	 * @param {string} colName is the column name from the table header
+	 * @param {object} [options] {
+	 *	"reverse": sort Z-A, (true or false)
+	 *	"fromEndOfStr": sort xA-xZ, (true or false) }
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.sortByCol = function (colName, options) {
 		function reverseStr(str) {
 			str = String(str);
@@ -1656,97 +2209,157 @@ APP.nyckelDB = (function () {
 			return a === b ? 0 : a < b ? -1 : 1;
 		}
 		options = options || {};
-		var colIndex = getIndexOfCol.call(this, colName);
+		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex > 0) {
-			options.reverse ? db[this.id].table.reverse(sortFunction) : db[this.id].table.sort(sortFunction);
+			options.reverse ? DB[this.id].table.reverse(sortFunction) : DB[this.id].table.sort(sortFunction);
 			colIndex = null;
 			return this;
 		}
 	};
-	/* rowId can be the index of the row, or it's 3 digit identifier,
-	 * colName is the column name from the table header
+	/**
+	 * Get the value of a cell
+	 * @name APP.nyckelDB#getVal
+	 * @function
+	 * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+	 * @param {string} colName is the column name from the table header
+	 * @returns {string|number|boolean} table cell value
 	 */
 	NyckelDBObj.prototype.getVal = function (rowId, colName) {
-		var rowIndex = getIndexOfRow.call(this, rowId),
-			colIndex = getIndexOfCol.call(this, colName);
-		if (rowIndex > -1 && colIndex > 0) return db[this.id].table[rowIndex][colIndex];
+		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
+			colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+		if (rowIndex > -1 && colIndex > 0) return DB[this.id].table[rowIndex][colIndex];
 	};
-	/* rowIds can be an Array of the index of the row, or it's 3 digit identifier,
-	 * colNames is an Array the column names from the table header
+	/**
+	 * Get a number of cell values from the table at once
+	 * @name APP.nyckelDB#getVals
+	 * @function
+	 * @param {string[]|number[]} rowIds can be an Array of the index of the row, or it's 3 digit identifier
+	 * @param {string[]} colNames is an Array the column names from the table header
+	 * @param {getValsCallback} [callback] callback function
+	 * @returns {array|boolean} 2d array of table values, or false if nothing found
 	 */
 	NyckelDBObj.prototype.getVals = function (rowIds, colNames, callback) {
-		if (rowIds instanceof Array && colNames instanceof Array && rowIds.length > 0 && colNames.length > 0) {
-			var rowIndex,
-				colIndex,
-				ret = [],
-				a, b, x, y,
-				len = rowIds.length,
-				lenB = colNames.length;
-			for (a = 0, x = 0; a < len; a++) {
-				rowIndex = getIndexOfRow.call(this, rowIds[a]);
-				if (rowIndex > -1) {
-					ret[x] = [rowIds[a]];
-					for (b = 0, y = 1; b < lenB; b++) {
-						colIndex = getIndexOfCol.call(this, colNames[b]);
-						if (colIndex > 0) {
-							ret[x][y] = db[this.id].table[rowIndex][colIndex];
-							y++;
-						}
-						else if (!colNameIsValid.call(this, colNames[b])) {
-							return callback instanceof Function ? callback(false, colNames[b] + " is not a valid colName", db[this.id].title, this.syncPending) : false;
-						}
-					}
-					x++;
-				}
-				else if (!rowIdIsValid.call(this, rowIds[a])) {
-					return callback instanceof Function ? callback(false, rowIds[a] + " is not a valid rowId", db[this.id].title, this.syncPending) : false;
-				}
-			}
-			rowIndex = null; colIndex = null; x = null; y = null; a = null; b = null; len = null; lenB = null;
-			return callback instanceof Function ? callback(ret, errors[this.id], db[this.id].title, this.syncPending) : ret;
+		if (!rowIds || rowIds.constructor !== Array || !colNames || colNames.constructor !== Array) {
+			return callback instanceof Function ? callback(false, "invalid inputs", DB[this.id].title, this.syncPending) : false;
 		}
-		else return callback instanceof Function ? callback(false, "invalid inputs", db[this.id].title, this.syncPending) : false;
-	};
-	NyckelDBObj.prototype.getRow = function (rowId, callback) {
-		var rowIndex = getIndexOfRow.call(this, rowId),
+		var rowIndex,
+			colIndex,
 			ret = [],
-			_this = this;
+			a, b, x, y,
+			len = rowIds.length,
+			lenB = colNames.length;
+		for (a = 0, x = 0; a < len; a++) {
+			rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
+			if (rowIndex > -1) {
+				ret[x] = [rowIds[a]];
+				for (b = 0, y = 1; b < lenB; b++) {
+					colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
+					if (colIndex > 0) {
+						ret[x][y] = DB[this.id].table[rowIndex][colIndex];
+						y++;
+					}
+					else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
+						return callback instanceof Function ? callback(false, colNames[b] + " is not a valid colName", DB[this.id].title, this.syncPending) : false;
+					}
+				}
+				x++;
+			}
+			else if (!ROW_IDS_IS_VALID.call(this, rowIds[a])) {
+				return callback instanceof Function ? callback(false, rowIds[a] + " is not a valid rowId", DB[this.id].title, this.syncPending) : false;
+			}
+		}
+		rowIndex = null; colIndex = null; x = null; y = null; a = null; b = null; len = null; lenB = null;
+		return callback instanceof Function ? callback(ret, ERRORS[this.id], DB[this.id].title, this.syncPending) : ret;
+	};
+	/**
+	 * Get an entire row from the table including column name, column type, and values
+	 * @name APP.nyckelDB#getRow
+	 * @function
+	 * @param {string|number} rowId the row's id, or its current index
+	 * @param {getRowCallback} [callback] callback
+	 * @returns {object|boolean} json formatted data, or false if nothing found
+	 */
+	NyckelDBObj.prototype.getRow = function (rowId, callback) {
+		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
+			ret = [];
 		if (rowIndex > -1) {
-			this.forEachCol(function (colName, is, of) {
+			this.forEachCol(function (colName, is) {
 				ret[is] = {
-					value: db[_this.id].table[rowIndex][is + 1],
-					type: db[_this.id].types[colName],
+					value: DB[this.id].table[rowIndex][is + 1],
+					type: DB[this.id].columns[colName].type[0],
 					column: colName
 				};
-			}, function (success, errors, title, syncPending) {
+				if (DB[this.id].columns[colName].exportAs) ret[is].name = DB[this.id].columns[colName].exportAs[0];
+			}.bind(this), function (success, errors, title, syncPending) {
 				return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
 			});			
 		}
-		else return callback instanceof Function ? callback(false, "row id not found", db[this.id].title, this.syncPending) : false;
+		else return callback instanceof Function ? callback(false, "row id not found", DB[this.id].title, this.syncPending) : false;
 	};
+	/**
+	 * Exports table as CSV string. Not implemented yet
+	 * @name APP.nyckelDB#toCSV
+	 * @function
+	 * @returns {string} database in CSV string format
+	 */
 	NyckelDBObj.prototype.toCSV = function () {
 		//TODO
 		return "function not complete";
 	};
-	/*exports table as JSON 2d array*/
+	/**
+	 * exports table as JSON 2d array
+	 * @name APP.nyckelDB#toJSON_Array
+	 * @function
+	 * @returns {array} database in array format
+	 */
 	NyckelDBObj.prototype.toJSON_Array = function () {
-		return saveFile.call(this, JSON.stringify(db[this.id]), db[this.id].title + "_" + readableTimestamp() + ".json");
+		return SAVE_FILE.call(this, JSON.stringify(DB[this.id]), DB[this.id].title + "_" + READABLE_TIMESTAMP() + ".json");
 	};
-	/*exports table as JSON key value pairs*/
+	/**
+	 * Exports table as JSON key value pairs. Not implemented (and may not...?)
+	 * @name APP.nyckelDB#toJSON_KeyValuePairs
+	 * @function
+	 * @returns {json} database in json format
+	 */
 	NyckelDBObj.prototype.toJSON_KeyValuePairs = function () {
 		//TODO
 		return "function not complete";
 	};
+	/**
+	 * Get the value of a table custom property
+	 * @name APP.nyckelDB#getProp
+	 * @function
+	 * @param {string} propName the name of the custom property
+	 * @returns {string|number|boolean} the property value
+	 */
 	NyckelDBObj.prototype.getProp = function (propName) {
 		propName = VAL.toPropName(propName);
-		return db[this.id].properties && db[this.id].properties[propName] ? db[this.id].properties[propName][0] : undefined;
+		return DB[this.id].properties && DB[this.id].properties[propName] ? DB[this.id].properties[propName][0] : undefined;
 	};
+	/**
+	 * Get the number of (unhidden, unfiltered) rows in the table
+	 * @name APP.nyckelDB#getLength
+	 * @function
+	 * @returns {number} the number of rows in the table
+	 */
 	NyckelDBObj.prototype.getLength = function () {
-		return !db[this.id] || this.isDeleted() ? 0 : db[this.id].table.length;
+		return !DB[this.id] || this.isDeleted() ? 0 : DB[this.id].table.length;
 	};
+	/**
+	 * Check if the table has been deleted or not
+	 * @name APP.nyckelDB#isDeleted
+	 * @function
+	 * @returns {boolean} whether or not the table has been deleted
+	 */
 	NyckelDBObj.prototype.isDeleted = function () {
-		return db[this.id] && db[this.id].deleted !== undefined ? true : false;
+		return DB[this.id] && DB[this.id].deleted !== undefined ? true : false;
 	};
+	/**
+	 * Shuffle the order of the rows in the table
+	 * @name APP.nyckelDB#shuffle
+	 * @function
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.shuffle = function () {
 		function shuffle(array) {
 			var len = array.length,
@@ -1776,33 +2389,38 @@ APP.nyckelDB = (function () {
 		}
 		if (!this.isDeleted()) {
 			var len = this.getLength(),
-				shuffled = shuffle(db[this.id].table);
+				shuffled = shuffle(DB[this.id].table);
 			if (shuffled.length !== len) {
-				cacheError.call(this, "shuffle error " + len + " != " + this.getLength());
+				CACHE_ERROR.call(this, "shuffle error " + len + " != " + this.getLength());
 				len = null; shuffled = null;
 			}
 			else {
-				db[this.id].table = shuffled;
-				rowIndex[this.id] = {};
+				DB[this.id].table = shuffled;
+				ROW_INDEX_CACHE[this.id] = {};
 				len = null; shuffled = null;
 				return this;
 			}
 		}
 	};
-	/*
-	 * find current index of row by 'id'
-	 * or else by value and column name ('orValue' and 'colName')
+	/**
+	 * Get a row's current position in the table. You can supply either a row id, or else both a value and colName to find the first row that contains that value in the given column.
+	 * @name APP.nyckelDB#getIndexOf
+	 * @function
+	 * @param {string} [id] row id
+	 * @param {string|number|boolean} [orValue] cell value
+	 * @param {string} [colName] is the column name from the table header
+	 * @returns {number} zero based index of a row's current position in the table, -1 if not found
 	 */
 	NyckelDBObj.prototype.getIndexOf = function (id, orValue, colName) {
 		if (this.isDeleted()) return -1;
 		else if (id) {
-			return getIndexOfRow.call(this, id);
+			return GET_INDEX_OF_ROW.call(this, id);
 		}
 		else if (orValue && colName) {
-			var colIndex = getIndexOfCol.call(this, colName);
+			var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 			if (colIndex > 0) {
-				for (var a = 0, arrLen = db[this.id].table.length; a < arrLen; a++) {
-					if (orValue === db[this.id].table[a][colIndex]) {
+				for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
+					if (orValue === DB[this.id].table[a][colIndex]) {
 						return a;
 					}
 				}
@@ -1811,45 +2429,66 @@ APP.nyckelDB = (function () {
 		}
 		else return -1;
 	};
+	/**
+	 * Hide a row. The row will not be accessible at all until you call unHideRows.
+	 * @name APP.nyckelDB#hideRow
+	 * @function
+	 * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.hideRow = function (rowId) {
 		if (!this.isDeleted()) {
-			var index = getIndexOfRow.call(this, rowId);
+			var index = GET_INDEX_OF_ROW.call(this, rowId);
 			if (index > -1) {
-				var row = db[this.id].table[index];
-				db[this.id].hiddenIds = db[this.id].hiddenIds || {};
-				db[this.id].hiddenIds[row[0]] = JSON.parse(JSON.stringify(db[this.id].ids[row[0]]));
-				delete db[this.id].ids[row[0]];
-				db[this.id].hidden = db[this.id].hidden || [];
-				db[this.id].hidden.push(db[this.id].table.splice(index, 1)[0]);
-				rowIndex[this.id] = {};
+				var row = DB[this.id].table[index];
+				DB[this.id].hiddenIds = DB[this.id].hiddenIds || {};
+				DB[this.id].hiddenIds[row[0]] = JSON.parse(JSON.stringify(DB[this.id].ids[row[0]]));
+				delete DB[this.id].ids[row[0]];
+				DB[this.id].hidden = DB[this.id].hidden || [];
+				DB[this.id].hidden.push(DB[this.id].table.splice(index, 1)[0]);
+				ROW_INDEX_CACHE[this.id] = {};
 			}
 			index = null;
 		}
 		return this;
 	};
+	/**
+	 * Make all hidden rows accessible again
+	 * @name APP.nyckelDB#unhideRows
+	 * @function
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.unhideRows = function () {
-		if (db[this.id].hidden !== undefined) {
+		if (DB[this.id].hidden !== undefined) {
 			var row;
-			while (db[this.id].hidden.length > 0) {
-				row = db[this.id].hidden[0];
-				db[this.id].ids[row[0]] = JSON.parse(JSON.stringify(db[this.id].hiddenIds[row[0]]));
-				delete db[this.id].hiddenIds[row[0]];
-				db[this.id].table.push(db[this.id].hidden.splice(0, 1)[0]);
+			while (DB[this.id].hidden.length > 0) {
+				row = DB[this.id].hidden[0];
+				DB[this.id].ids[row[0]] = JSON.parse(JSON.stringify(DB[this.id].hiddenIds[row[0]]));
+				delete DB[this.id].hiddenIds[row[0]];
+				DB[this.id].table.push(DB[this.id].hidden.splice(0, 1)[0]);
 			}
 			row = null;
-			delete db[this.id].hidden;
-			delete db[this.id].hiddenIds;
-			rowIndex[this.id] = {};
+			delete DB[this.id].hidden;
+			delete DB[this.id].hiddenIds;
+			ROW_INDEX_CACHE[this.id] = {};
 		}
 		return this;
 	};
+	/**
+	 * Hide all rows who's value in a specific column don't match the given regular expression
+	 * @name APP.nyckelDB#filter
+	 * @function
+	 * @param {string} colName is the column name from the table header
+	 * @param {regExp} regExp the regular expression to match
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.filter = function (colName, regExp) {
 		if (this.getLength() > 0) {
-			var colIndex = getIndexOfCol.call(this, colName),
+			var colIndex = GET_INDEX_OF_COLUMN.call(this, colName),
 				val;
 			if (colIndex > 0) {
-				for (var a = 0, arrLen = db[this.id].table.length; a < arrLen; a++) {
-					val = String(db[this.id].table[a][colIndex]);
+				for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
+					val = String(DB[this.id].table[a][colIndex]);
 					if (!val.match(regExp)) {
 						this.hideRow(a);
 						a--;
@@ -1862,135 +2501,389 @@ APP.nyckelDB = (function () {
 		}
 		return this;
 	};
+	/**
+	 * Make all hidden rows accessible again (another way to call unHideRows)
+	 * @name APP.nyckelDB#unfilter
+	 * @function
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.unfilter = function () {
 		return this.unhideRows();
 	};
+	/**
+	 * Change the value of a table's custom property
+	 * @name APP.nyckelDB#setProp
+	 * @function
+	 * @param {string} propName the name of the property to change
+	 * @param {string|number|boolean} value new value
+	 * @returns {string|number|boolean} the validated property value that was applied
+	 */
 	NyckelDBObj.prototype.setProp = function (propName, value) {
-		return setProp.call(this, propName, value);
+		return SET_PROP.call(this, propName, value);
 	};
+	/**
+	 * Add a new row to the table.
+	 * @name APP.nyckelDB#addRow
+	 * @function
+	 * @param {array} array array must be complete and contain initial values for all the cells in the row
+	 * @param {string} [id] id is optional and will only be used if it doesn't already exist
+	 * @returns {string} new row id
+	 */
 	NyckelDBObj.prototype.addRow = function (array, id) {
-		return addRow.call(this, array, id);
+		return ADD_ROW.call(this, array, id);
 	};
+	/**
+	 * Change the value of a cell
+	 * @name APP.nyckelDB#setVal
+	 * @function
+	 * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+	 * @param {string} colName is the column name from the table header
+	 * @param {string|number|boolean} newValue the new value to apply to the cell
+	 * @param {setCallback} [callback] callback function
+	 * @returns {string|number|boolean} the actual value that was set after passing through data validation
+	 */
 	NyckelDBObj.prototype.setVal = function (rowId, colName, newValue, callback) {
-		return setVal.call(this, rowId, colName, newValue, null, null, callback);
+		return SET_VAL.call(this, rowId, colName, newValue, true, null, callback);
 	};
+	/**
+	 * Delete a row along with all the data that it contains
+	 * @name APP.nyckelDB#deleteRow
+	 * @function
+	 * @param {string|number} rowId the row's id, or its current index
+	 * @returns {boolean} success
+	 */
 	NyckelDBObj.prototype.deleteRow = function (rowId) {
-		return deleteRow.call(this, rowId);
+		return DELETE_ROW.call(this, rowId);
 	};
+	/**
+	 * Merge two copys of the same NyckelDB table (same title, column headers and column types) into one
+	 * @name APP.nyckelDB#importJSON
+	 * @function
+	 * @param {json} json an exported NyckelDB object
+	 * @param {string} syncKey the key used to obfuscate the data
+	 * @param {string} syncToken the obfuscated version number, hashed message authentication code (HMAC), and lastSync timestamp of the NyckelDB json object
+	 * @param {function} [callback] callback function
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.importJSON = function (json, syncKey, syncToken, callback) {
-		return importJSON.call(this, json, function (syncChanges, errors) {
-			if (syncChanges && !errors) return createBase64File.call(this, syncKey, syncToken, callback), this;
-			else return callback instanceof Function ? (callback(true, errors, db[this.id] && db[this.id].title, false), this) : this;
+		return IMPORT_JSON.call(this, json, function (syncChanges, errors) {
+			if (syncChanges && !errors) return CREATE_BASE64_FILE.call(this, syncKey, syncToken, callback), this;
+			else return callback instanceof Function ? (callback(true, errors, DB[this.id] && DB[this.id].title, false), this) : this;
 		}.bind(this), syncKey);
 	};
+	/**
+	 * Delete a table along with all the data that it contains, including custom properties
+	 * @name APP.nyckelDB#deleteTable
+	 * @function
+	 * @param {function} [callback] callback function
+	 * @returns {object} this
+	 */
 	NyckelDBObj.prototype.deleteTable = function (callback) {
-		return deleteTable.call(this, callback);
+		return DELETE_TABLE.call(this, callback);
 	};
+	/**
+	 * Clear all the locally cached copies of all the NyckelDB databases.
+	 * @name APP.nyckelDB#NUKEALL
+	 * @function
+	 * @param {string} msg the message that you want to tell the user before you blow everything up!
+	 * @param {successCallback} [callback] callback function
+	 */
 	NyckelDBObj.prototype.NUKEALL = function (msg, callback) {
 		function nuke() {
-			for (var a = 0; a < uid; a++) {
-				db[this.id] = { "title": db[this.id].title, "deleted": timestamp() };
-				if (APP.Sto) {
-					APP.Sto.deleteItem(VAL.toPropName(db[this.id].title));
-					APP.Sto.deleteItem(dbs[a]);
+			if (APP.Sto) {
+				for (let a = 0, len = UID; a < len; a++) {
+					APP.Sto.deleteItem(DBS[a]);
+					APP.Sto.deleteItem("searchIndex_" + DBS[a]);
 				}
+				APP.Sto.deleteItem("tables");
 			}
-			a = null;
-			if (APP.Sto) APP.Sto.nuke();
-			setTimeout(function () {
-				if (!Windows && window.location && window.location.reload) {
-					window.location.reload(true);
-				}
-			}, 2000);
-			if (callback instanceof Function) return callback(true, errors[this.id], db[this.id].title, true), this;
+			DB = new Array(Math.pow(2, 32) - 1);
+			UID = 0;
+			DBS = [];
+			DBX_SYNC_OBJ = {};
+			SEARCH_INDEX = {};
+			SEARCH_SUGGESTIONS = {};
+			RECENTLY_SEARCHED = {};
+			COL_NAMES_INDEXED = {};
+			BUILDING_SEARCH_INDEX = {};
+			BUILDING_SEARCH_INDEX_QUEUE = {};
+			ROW_INDEX_CACHE = {};
+			ERRORS = [];
+			MAX_SYNC_FREQUENCY = 5;
+			SYNC_ERROR = false;
+			SYNC_ERROR_TIME = null;
+			if (callback instanceof Function) return callback(true, null, null, true), this;
 			else return this;
 		}
-		if (APP.confirm && APP.notify) APP.confirm(msg, nuke.bind(this), function () { APP.notify("<b>Oi!</b> That was close!", true); }, {
-			"okButton": "Delete All"
+		if (APP.confirm && APP.notify) APP.confirm(msg, nuke.bind(this), function () {
+			APP.notify("<b>Oi!</b> That was close!", true);
+		}, {
+			"okButton": "Delete all of this site's saved data in this web browser or app"
 		});
 		else if (window && window.confirm(msg)) nuke.call(this);
 	};
+	/**
+	 * Checks whether there are changes since the last time the database was synchronized
+	 * @name APP.nyckelDB#isSyncPending
+	 * @function
+	 * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
+	 * @param {successCallback} [callback] callback function
+	 * @returns {boolean} whether or not sync is needed
+	 */
 	NyckelDBObj.prototype.isSyncPending = function (cloudSyncFile, callback) {
+		function ret (val) {
+			return callback instanceof Function ? callback(true, ERRORS[this.id], DB[this.id].title, val) : val;
+		}
 		if (cloudSyncFile) {
 			if (typeof cloudSyncFile === "string") cloudSyncFile = JSON.parse(cloudSyncFile);
-			var title = VAL.toPropName(db[this.id].title);
-			if (!cloudSyncFile[title] && cloudSyncFile[title] !== 0 || parseInt(cloudSyncFile[title]) !== db[this.id].lastModified) {
+			var title = VAL.toPropName(DB[this.id].title);
+			if (!cloudSyncFile[title] && cloudSyncFile[title] !== 0 || parseInt(cloudSyncFile[title]) !== DB[this.id].lastModified) {
 				this.syncPending = true;
-				return callback instanceof Function ? callback(true, errors[this.id], db[this.id].title, true) : true;
+				return ret(true);
 			}
-			else return callback instanceof Function ? callback(true, errors[this.id], db[this.id].title, false) : false;
+			else return ret(false);
 		}
-		else return callback instanceof Function ? callback(true, errors[this.id], db[this.id].title, this.syncPending) : this.syncPending;
+		else return ret(this.syncPending);
 	};
-	/** options {
-	* forceSync: true, (false is default)
-	* key: a String,
-	* oldKey: a String,
-    * token: a String
-	* }
-	*/
 
+	/**
+	 * Synchronize with an external copy of the database.
+	 * @name APP.nyckelDB#sync
+	 * @function
+	 * @param {json} json nyckeldb json
+	 * @param {json} [options] {
+	 *	forceSync: true, (false is default)
+	 *	key: a String,
+	 *	oldKey: a String,
+     *	token: a String
+	 * }
+	 * @param {function} [callback] callback function
+	 * @return {object} this
+	 */
 	NyckelDBObj.prototype.sync = function (json, options, callback) {
+		function retError(msg) {
+			callback instanceof Function ? (callback(false, msg, DB[this.id].title, false), this) : this;
+		}		
+		function sync() {
+			function read(data, key, change) {
+				if (change) {
+					DB[this.id].lastModified = TIMESTAMP();
+					this.syncPending = true;
+				}
+				return Base64.read(data, key);
+			}
+			switch (json.signature) {
+				case Base64.hmac(json.data, readKey):
+					json = read.call(this,json.data, readKey, false);
+					break;
+				case Base64.hmac(json.data, options.initialKey):
+					json = read.call(this, json.data, options.initialKey, true);
+					break;
+				case Base64.hmac(json.data, null):
+					json = read.call(this, json.data, null, true);
+					break;
+				default:
+					//wrong key, put user through key update ui and try again
+					SYNC_ERROR = true;
+					SYNC_ERROR_TIME = new Date().getTime();
+					return retError("wrong key used");
+			}
+			return IMPORT_JSON.call(this, json, function (changes) {
+				if (changes || this.syncPending === true || forceSync === true) {
+					return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
+				}
+				else return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, false), this) : this;
+			}.bind(this));
+		}
 		options = options || {};
 		var forceSync = options.forceSync || false,
 			readKey = options.key || false,
 			writeKey = options.key || false,
-			codeBreak = 0;
+			wait = MAX_SYNC_FREQUENCY + DBX_SYNC_OBJ[DB[this.id].title] - TIMESTAMP();
 		if (options === true) forceSync = true;
 		if (options.oldKey !== undefined && options.key && options.oldKey !== options.key) {
 			readKey = options.oldKey;
-			db[this.id].lastModified = timestamp();
+			DB[this.id].lastModified = TIMESTAMP();
 			this.syncPending = true;
 		}
-		if (syncError && new Date().getTime() - syncErrorTime < 6e4) return callback instanceof Function ? (callback(false, "try again later", db[this.id].title, false), this) : this;
-		if (json) {
-			if (typeof json === "string") json = JSON.parse(json);
-			if (json.data && (json.version === this.Version + "_" + Base64.Version || json.version === this.Version + "." + Base64.Version)) {
-				switch (json.signature) {
-					case Base64.hmac(json.data, readKey):
-						json = Base64.read(json.data, readKey);
-						break;
-					case Base64.hmac(json.data, options.initialKey):
-						json = Base64.read(json.data, options.initialKey);
-						db[this.id].lastModified = timestamp();
-						this.syncPending = true;
-						break;
-					case Base64.hmac(json.data, null):
-						json = Base64.read(json.data, null);
-						db[this.id].lastModified = timestamp();
-						this.syncPending = true;
-						break;
-					default:
-						//wrong key, put user through key update ui and try again
-						syncError = true;
-						syncErrorTime = new Date().getTime();
-						return callback instanceof Function ? (callback(false, "wrong key used", db[this.id].title, false), this) : this;
-				}
-				return importJSON.call(this, json, function (changes) {
-					if (changes || this.syncPending === true || forceSync === true) {
-						return createBase64File.call(this, writeKey, options.token, callback);
-					}
-					else return callback instanceof Function ? (callback(true, errors[this.id], db[this.id].title, false), this) : this;
-				}.bind(this));
-			}
-			else return callback instanceof Function ? (callback(false, "unsupported version:" + json.version, db[this.id].title, false), this) : this;
+		if (wait > 0 && !forceSync) return retError("rate limited, try again in " + wait + " minutes");
+		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError("try again later");
+
+		if (!json) return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
+
+		if (typeof json === "string") json = JSON.parse(json);
+		if (!json.data || !(json.version === this.Version + "_" + Base64.Version || json.version === this.Version + "." + Base64.Version)) {
+			return retError("unsupported version:" + json.version);
 		}
-		else return createBase64File.call(this, writeKey, options.token, callback);
+		return sync.call(this);
 	};
+	/**
+	 * Get the timestamp of when the table was most recently changed
+	 * @name APP.nyckelDB#getLastModified
+	 * @function
+	 * @return {number} database lastModified timestamp
+	 */
 	NyckelDBObj.prototype.getLastModified = function () {
-		return db[this.id].lastModified;
+		return DB[this.id].lastModified;
 	};
+	/**
+	 * Get the 'type' that has been set on a particular column
+	 * @name APP.nyckelDB#getType
+	 * @function
+	 * @param {string} colName the name of the column
+	 * @return {string} a column type
+	 */
 	NyckelDBObj.prototype.getType = function (colName) {
-		if (colNameIsValid.call(this, colName)) return db[this.id].types[colName];
+		return GET_COL_PROP.call(this, colName, "type");
 	};
-	NyckelDBObj.prototype.setSyncCompleted = function (syncfile, callback) {
-		if (syncfile && this.isSyncPending(syncfile)) {
-			return callback instanceof Function ? callback(false, "syncfile supplied doesn't match lastModified time of the database: " + db[this.id].lastModified + JSON.stringify(syncfile), db[this.id].title, true) : false;
+	/**
+	 * Change the column's data validation 'type'
+	 *     Not complete
+	 * @name APP.nyckelDB#setType
+	 * @function
+	 * @param {string} colName is the column name from the table header
+	 * @param {string} type the type of data validation to set for the given column
+	 * @param {array} data updated column data that validates to the new type
+	 * @param {setCallback} [callback] callback function
+	 * @return {string} actual type set
+	 */
+	NyckelDBObj.prototype.setType = function (colName, type, data, callback) {
+		return SET_TYPE.call(this, colName, type, data, true, false, callback);		
+	};
+	/**
+	 * Same as isSyncPending but sets the value of syncPending to true if the cloudSyncFile validates
+	 * @name APP.nyckelDB#setSyncCompleted
+	 * @function
+	 * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
+	 * @param {successCallback} [callback] callback function
+	 * @returns {boolean} whether or not sync is needed
+	 */
+	NyckelDBObj.prototype.setSyncCompleted = function (cloudSyncFile, callback) {
+		if (cloudSyncFile && this.isSyncPending(cloudSyncFile)) {
+			if (callback instanceof Function) {
+				return callback(false, "syncfile supplied doesn't match lastModified time of the database: " + DB[this.id].lastModified + JSON.stringify(cloudSyncFile), DB[this.id].title, true);
+			}
+			else return false;
 		}
 		else {
 			this.syncPending = false;
-			return callback instanceof Function ? callback(true, false, db[this.id].title, false) : true;
+			return callback instanceof Function ? callback(true, false, DB[this.id].title, false) : true;
 		}
 	};
+	/**
+	 * Add a new column to the table
+	 * @name APP.nyckelDB#addColumn
+	 * @function
+	 * @param {string} colName new column name
+	 * @param {number} position insert new column before column number, ie 1 adds it before the 1st column. If 0 or not specified, adds to end of table
+	 * @param {string|object} [options] a String indicating data "type" that the column will accept or an Object of column properties: {
+	 *	type: String,
+	 *	initialValue: the initial value for every new cell in the new column,
+	 *	formula: String,
+	 *	search: Boolean whether to index column for searches
+	 * }
+	 * @param {function} [callback] callback function
+	 * @returns {boolean|string} success or errors
+	 * @since 0.4
+	 */
+	NyckelDBObj.prototype.addColumn = function (colName, position, options, callback) {
+		return ADD_COLUMN.call(this, colName, position, options, true, null, callback);
+	};
+	/**
+	 * Delete a column from the table
+	 * @name APP.nyckelDB#deleteColumn
+	 * @function
+	 * @param {string} colName the name of the column to delete
+	 * @param {function} [callback] callback
+	 * @returns {boolean} success
+	 * @since 0.4
+	 */
+	NyckelDBObj.prototype.deleteColumn = function (colName, callback) {
+		return DELETE_COLUMN.call(this, colName, true, null, callback);
+	};
+	/**
+	 * Change the name of a column
+	 *       Function not complete
+	 * @name APP.nyckelDB#renameColumn
+	 * @function
+	 * @param {string} colName is the current column name from the table header
+	 * @param {string} newName the new name to apply to the column
+	 * @param {setCallback} [callback] callback function
+	 * @returns {string} actual name set
+	 * @since 0.4
+	 */
+	NyckelDBObj.prototype.renameColumn = function (colName, newName, callback) {
+		colName = VAL.toPropName(colName);
+		newName = VAL.toPropName(newName);
+		//TODO check for other columns of the same name
+		//check for other columns exportAs name of the same name
+		//TODO change name in search index
+		return newName;
+	};
+	//TODO share function
 	return NyckelDBObj;
 }());
+
+
+/**
+ * This callback returns whether the function executed successfully as it's first parameter
+ * @callback successCallback
+ * @param {boolean} success function concluded successfully
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns search results as it's first parameter
+ * @callback searchCallback
+ * @param {string[]} searchResults array of ids that matched the searchQuery
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns search suggestions as it's first parameter
+ * @callback suggestionsCallback
+ * @param {string[]} searchSuggestions an array of possible searches that would return search results
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns a value as it's first parameter
+ * @callback getCallback
+ * @param {string|number|boolean} value a value from the database
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns the validated value set, or false if unsuccessful, as it's first parameter
+ * @callback setCallback
+ * @param {string|number|boolean} value actual value set after validation, or false if unsuccessful
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns an array of values as it's first parameter
+ * @callback getValsCallback
+ * @param {string[]|number[]|boolean[]} values an array of values from the database
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+/**
+ * This callback returns an object as it's first parameter
+ * @callback getRowCallback
+ * @param {object[]} values an array of objects containing values, types, and column names from the database
+ * @param {string|array} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
