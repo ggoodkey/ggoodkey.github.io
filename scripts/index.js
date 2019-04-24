@@ -1,4 +1,4 @@
-﻿var APP, VAL, Base64, appData = {}, Windows, cordova; //dependancies
+﻿var APP, VAL, Base64, appData = {}, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
 (function () {
 	"use strict";
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
@@ -332,6 +332,7 @@
 			"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department", "groupName"],
 		freshStateObj = function () {
 			return {//vue.js variables
+				cookieAgree: false,
 				version: APP_VERSION,
 				views: views,
 				backArrow: false,
@@ -388,7 +389,7 @@
 				addSearchToGroupDropdown: false,
 				groupSearchBox: "",
 				groups: []
-			};
+			}
 		};
 	var fileReaderInitiated = [],
 		backstack = [],
@@ -399,6 +400,7 @@
 			if (!loc || /^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://") return true;
 			else return false;
 		}(),
+		dbid = null,
 		trim = function (str) {
 			str = String(str);
 			while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
@@ -579,7 +581,7 @@
 		wwOnError = function (e) {
 			debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
 		},
-		defaultErrorHandler = function (success, errors, title, syncPending) {
+		defaultErrorHandler = function (success, errors) {
 			if (errors) {
 				if (errors === "wrong key used") {
 					app.notify("Wrong key used", true);
@@ -599,6 +601,11 @@
 			function doneInit() {
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded();
+				if (!app.cookieAgree) {
+					app.notify("By continuing to use this site, you agree to the use of first party, non-tracking cookies for personalised content", false);
+					app.cookieAgree = true;
+					app.storeState();
+				}
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
@@ -685,6 +692,44 @@
 					}
 				}
 			}
+			//use alternate icon stylesheet
+			function isFontAvailable(font) {
+				var width;
+				var body = document.body;
+
+				var container = document.createElement('span');
+				container.innerHTML = Array(100).join('wi');
+				container.style.cssText = [
+					'position:absolute',
+					'width:auto',
+					'font-size:128px',
+					'left:-99999px'
+				].join(' !important;');
+
+				var getWidth = function (fontFamily) {
+					container.style.fontFamily = fontFamily;
+
+					body.appendChild(container);
+					width = container.clientWidth;
+					body.removeChild(container);
+
+					return width;
+				};
+
+				// Pre compute the widths of monospace, serif & sans-serif
+				// to improve performance.
+				var monoWidth = getWidth('monospace');
+				var serifWidth = getWidth('serif');
+				var sansWidth = getWidth('sans-serif');
+				return monoWidth !== getWidth(font + ',monospace') ||
+					sansWidth !== getWidth(font + ',sans-serif') ||
+					serifWidth !== getWidth(font + ',serif');
+			}
+						
+			if (isFontAvailable('Segoe UI Symbol')) {
+				document.getElementById("segoe-icons").rel = 'stylesheet';
+				document.getElementById("default-icons").rel = 'alternate stylesheet';
+			}
 			if (Windows) {
 				//Windows specific code
 				var accentColor = uiSettings.getColorValue(Windows.UI.ViewManagement.UIColorType.accent),
@@ -718,7 +763,7 @@
 				windowsAccentColor = cssColorString;
 			}
 		},
-		updateWindowsLiveTile = function (content, image) {
+		updateWindowsLiveTile = function (content, imageurl) {
 			if (typeof Windows !== 'undefined' &&
 				typeof Windows.UI !== 'undefined' &&
 				typeof Windows.UI.Notifications !== 'undefined') {
@@ -736,7 +781,7 @@
 
 				var peekImage = tileContent.createElement("image");
 				peekImage.setAttribute("placement", "peek");
-				peekImage.setAttribute("src", "https://unsplash.it/150/150/?random");
+				peekImage.setAttribute("src", imageurl);
 				peekImage.setAttribute("alt", "Random demo image");
 				bindingMedium.appendChild(peekImage);
 
@@ -752,7 +797,7 @@
 				notifications.TileUpdateManager.createTileUpdaterForApplication().update(tileNotification);
 			}
 		},
-		sendWindowsNotification = function (message, icon) {
+		sendWindowsNotification = function (message, iconurl) {
 			if (typeof Windows !== 'undefined' &&
 				typeof Windows.UI !== 'undefined' &&
 				typeof Windows.UI.Notifications !== 'undefined') {
@@ -770,7 +815,7 @@
 
 				// Title text
 				var text = toastContent.createElement("text");
-				text.innerText = "This is the message for my toast";
+				text.innerText = message;
 				binding.appendChild(text);
 
 				// TODO: Add up to two more text elements
@@ -778,8 +823,8 @@
 				// Override the app logo
 				var appLogo = toastContent.createElement("image");
 				appLogo.setAttribute("placement", "appLogoOverride");
-				appLogo.setAttribute("src", "https://unsplash.it/150/150/?random");
-				appLogo.setAttribute("alt", "random graphic");
+				appLogo.setAttribute("src", iconurl);
+				appLogo.setAttribute("alt", message);
 				binding.appendChild(appLogo);
 
 				var notifications = Windows.UI.Notifications;
@@ -803,12 +848,12 @@
 					}
 					else debug(errors, "loading " + title);
 				}
-				template.options.syncKey = app.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : app.stoKey;
-				var cb = function (success, errors, title, requiresSync) {//default callback function for handling errors initialising NyckelDB
+				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
+				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
 					if (errors) handleErrors(errors);
 				};
 				if (numOfTables === dbNum + 1) {
-					cb = function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) handleErrors(errors);
 						if (window.navigator.onLine) {
 							app.syncAll();
@@ -1210,23 +1255,22 @@
 		},
 		methods: {
 			seeDetails: function (obj) {
-				var _this = this,
-					sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
+					var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
 				if (sortByRecent) {
 					this.list.unshift(obj);
 					this.list[0].sortBy = new Date().getTime();
 					this.list = this.list.slice(0, 20);
 				}
-				else _this.$emit("update-recently-viewed", obj);
+				else this.$emit("update-recently-viewed", obj);
 				getDetails(obj, function (detailsObj) {
 					if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
-						_this.$emit("update-details", detailsObj);
+						this.$emit("update-details", detailsObj);
 					}
 					else {
 						app.details = detailsObj;
 						app.navigate("details", null, detailsObj);
 					}
-				});
+				}.bind(this));
 			},
 			toggle: function (prop) {
 				if (this[prop] !== undefined) this[prop] = this[prop] ? false : true;
@@ -1289,43 +1333,45 @@
 				}
 				function getEmails(ids) {
 					var emailAddresses = [];
-					if (ids.length > 0) wwManager({ cmd: "getVals", title: "Contacts", args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value", "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type", "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]] }, function (vals, errors, title, syncPending) {
-						if (vals && !errors) {
-							var type, email, name, primary = false;
-							for (let a = 0, lenA = vals.length; a < lenA; a++) {
-								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
+					if (ids.length > 0) wwManager({
+						cmd: "getVals", title: "Contacts",
+						args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value",
+							"E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type",
+							"E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
+					}, function (vals, errors) {
+						if (!vals || errors) return debug(errors, "get email errors");
+						var type, email, name, primary = false;
+						for (let a = 0, lenA = vals.length; a < lenA; a++) {
+							name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
+							if (vals[a][6]) {
+								for (let b = 4; b < 17; b = b + 2) {//find primary email
+									if (/\*/.test(vals[a][b])) primary = b;
+								}
+							}
+							for (let b = 4; b < 17; b = b + 2) {
+								email = vals[a][b + 1];
+								if (!email) continue;
+								type = vals[a][b] || "";
 								if (vals[a][6]) {
-									for (let b = 4; b < 17; b = b + 2) {//find primary email
-										if (/\*/.test(vals[a][b])) primary = b;
-									}
+									if (/\'s Email/.test(type)) name = type.replace(/\'s Email/, " ") + vals[a][3];
+									name = name.replace(/\*/, "");
+									name = trim(name);
 								}
-								for (let b = 4; b < 17; b = b + 2) {
-									email = vals[a][b + 1];
-									if (email) {
-										type = vals[a][b] || "";
-										if (vals[a][6]) {
-											if (/\'s Email/.test(type)) name = type.replace(/\'s Email/, " ") + vals[a][3];
-											name = name.replace(/\*/, "");
-											name = trim(name);
-										}
-										if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
-									}
-								}
-							}
-							_this.emailLinks = [];
-							if (emailAddresses.length > 0) {
-								emailAddresses = emailAddresses.join(",");
-								buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu);
-								buildMailtoUri(APP.User && APP.User.email || "", emailAddresses, null, null, updateDropdownMenu);
-							}
-							else {
-								var link = {};
-								link.href = null;
-								link.text = "Selection contains no e-mail addresses";
-								_this.emailLinks.push(link);
+								if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
 							}
 						}
-						else debug(errors, "get email errors");
+						_this.emailLinks = [];
+						if (emailAddresses.length > 0) {
+							emailAddresses = emailAddresses.join(",");
+							buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu);
+							buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, updateDropdownMenu);
+						}
+						else {
+							var link = {};
+							link.href = null;
+							link.text = "Selection contains no e-mail addresses";
+							_this.emailLinks.push(link);
+						}
 					});
 					else {
 						_this.emailLinks = [{ text: "<Nothing selected>", href: null, disabled: true }];
@@ -1352,14 +1398,17 @@
 		data: function () {
 			return {
 				addItemToGroupDropdown: state.addItemToGroupDropdown,
-				groups: state.groups
+				groups: state.groups,
+				clipboard: function () {
+					return navigator.clipboard ? true : false;
+				}
 			};
 		},
 		methods: {
 			editDetails: function () {
 				app.navigate("edit");
 			},
-			toggleGroupsDropdown: function (e) {
+			toggleGroupsDropdown: function () {
 				initializeGroups(function () {
 					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
 				});
@@ -1369,7 +1418,7 @@
 				if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
 				else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
 				else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-				else if (type === "bcc") link = buildMailtoUri(APP.User && APP.User.email || "", String(text));
+				else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
 				else if (type === "www") link = text;
 				if (link) return link;
 				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
@@ -1414,7 +1463,19 @@
 					app.storeState();
 				});
 			},
-			addToNewGroup: addToNewGroup
+			addToNewGroup: addToNewGroup,
+			copyToClipboard: function (stringToCopy) {
+				if (navigator.clipboard) {
+					try {
+						navigator.clipboard.writeText(stringToCopy);
+						var str = stringToCopy.slice(0, 20),
+							ext = stringToCopy.length > 20 ? "..." : "";
+						app.notify("Copied '" + str + ext + "' to clipboard", true);
+					} catch (err) {
+						console.error('Failed to copy: ', err);
+					}
+				}
+			}
 		},
 		template: "#details-card"
 	});
@@ -1445,7 +1506,9 @@
 					editableDropdownOptions: [true, false],
 					protectDropdownOptions: [false, true, "to view", "to edit"],
 					searchableDropdownOptions: [true, false, 'optional'],
-					typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+					typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString",
+						"multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty",
+						"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
 
 					options: {
 						customProperties: {},
@@ -1486,7 +1549,8 @@
 				function createTempTable(JSON, template) {
 					template.options.importJSON = JSON;
 					app.notify("Building new table");
-					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] }, function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] },
+						function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors, title, requiresSync);
 						else app.notify("Done", true);
 					});
@@ -2105,7 +2169,7 @@
 			}
 		},
 		methods: {
-			updateCurrentView: function (to, from) {
+			updateCurrentView: function (to) {
 				to = to || { name: this.$route.name, query: this.$route.query };
 				var location = to.name;
 				if (location === "home") location = this.startView;
@@ -2194,20 +2258,22 @@
 				this.showSideNav = true;
 			},
 			storeState: function () {
-				var _this = this;
-				setTimeout(function () {
-					APP.Sto.setItem("state", {
-						version: _this.version,
-						darkTheme: _this.darkTheme,
-						useWindowsTheme: _this.useWindowsTheme,
-						windowsDarkTheme: _this.windowsDarkTheme,
-						recentlyViewed: _this.recentlyViewed,
-						backstack: backstack,
-						backIndex: backIndex,
-						stoKey: _this.stoKey,
-						time: new Date().getTime()
-					});
-				}, 1);
+				if (this.cookieAgree) {
+					setTimeout(function () {
+						APP.Sto.setItem("state", {
+							version: this.version,
+							darkTheme: this.darkTheme,
+							useWindowsTheme: this.useWindowsTheme,
+							windowsDarkTheme: this.windowsDarkTheme,
+							recentlyViewed: this.recentlyViewed,
+							backstack: backstack,
+							backIndex: backIndex,
+							stoKey: this.stoKey,
+							time: new Date().getTime(),
+							cookieAgree: this.cookieAgree
+						});
+					}.bind(this), 1);
+				}
 			},
 			search: function (event, optionalQuery) {
 				if (!this.showSearchBar) {
@@ -2500,9 +2566,8 @@
 				if (bool && this.confirmFunction instanceof Function) this.confirmFunction();
 			},
 			shakeConfirm: function () {
-				var _this = this;
 				this.confirmShake = true;
-				setTimeout(function () { _this.confirmShake = false; }, 600);
+				setTimeout(function () { this.confirmShake = false; }.bind(this), 600);
 			},
 			spin: function (active, msg) {
 				this.spinIndex = active ? this.spinIndex + 1 : this.spinIndex - 1;
@@ -2516,24 +2581,24 @@
 			login: function (callback) {
 				function login() {
 					function welcome(user) {
-						_this.notify("Successfully linked to " + APP.User.alias + "'s Dropbox account", true);
-						_this.dropboxUsername = APP.User.alias;
-						_this.dropboxEmail = APP.User.email;
-						_this.loggedIn = true;
-						_this.syncAll(null, { key: _this.stoKey === "unknown" && APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : _this.stoKey });
+						this.notify("Successfully linked to " + user.alias + "'s Dropbox account", true);
+						this.dropboxUsername = user.alias;
+						this.dropboxEmail = user.email;
+						dbid = user.dbid;
+						this.loggedIn = true;
+						this.syncAll(null, { key: this.stoKey === "unknown" && user ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
 						if (callback instanceof Function) callback(true);
 					}
 					function startScreen(error) {
 						debug(error, "login error");
-						_this.notify("Could not connect to Dropbox at the moment, please try again later", true);
+						this.notify("Could not connect to Dropbox at the moment, please try again later", true);
 						// TODO go back to app
 						if (callback instanceof Function) callback(false);
 					}
-					if (!APP.Dbx || !APP.Dbx.login) APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, _this.stoKey);
-					APP.Dbx.login(null, welcome, startScreen);//TODO login password ui
+					if (!APP.Dbx || !APP.Dbx.login) APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
+					APP.Dbx.login(null, welcome.bind(this), startScreen.bind(this));//TODO login password ui
 				}
-				var _this = this;
-				this.notify("Connecting to Dropbox, please wait...", false, login);
+				this.notify("Connecting to Dropbox, please wait...", false, login.bind(this));
 			},
 			logout: function (callback) {
 				function logout() {
@@ -2560,13 +2625,14 @@
 					else if (key.value === confirmKey.value) {
 						_this.stoKeyWarning = "";
 						var oldKey = _this.stoKey;
-						if (APP.User && APP.User.dbid) {
-							oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(APP.User.dbid);
-							_this.stoKey = Base64.hash(APP.User.dbid + key.value);
+						if (dbid) {
+							oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(dbid);
+							_this.stoKey = Base64.hash(dbid + key.value);
 						}
 						else {//temp until depricate APP.User.id
-							oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(APP.User.email);
-							_this.stoKey = Base64.hash(APP.User.email + key.value);
+							debug("use of dropboxEmail as a key has been depricated", "error");
+							//oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(_this.dropboxEmail);
+							//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
 						}
 						_this.storeState();
 						_this.syncAll(null, { oldKey: oldKey, key: _this.stoKey });
@@ -2590,10 +2656,10 @@
 				confirm("Please input your current password", function () {
 					checkDBLoaded(function (callback) {
 						var key = document.getElementById("updateStoKeyInput");
-						if (APP.User && APP.User.dbid) {
-							_this.stoKey = Base64.hash(APP.User.dbid + key.value);
+						if (dbid) {
+							_this.stoKey = Base64.hash(dbid + key.value);
 						}
-						else _this.stoKey = Base64.hash(APP.User.email + key.value);//temp until depricate APP.User.id
+						else debug("use of dropboxEmail as a key has been depricated", "error");//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
 						return storeKey(_this.stoKey, callback);
 					});
 				});
@@ -2666,7 +2732,7 @@
 						compSize = contents.length,
 						compression = Math.round((1 - compSize / origSize) * 100) + "%",
 						modified = details.lastModified || new Date().getTime(),
-						owner = APP.User && APP.User.email || "unknown",
+						owner = _this.dropboxEmail || "unknown",
 						hash = Base64.hash(Base64.hash(_this.stoKey));
 					name.pop();
 					name = name.join(".");
@@ -2679,7 +2745,7 @@
 					_this.notify("Importing data...", false, function () {
 						source = csv2json(source);
 						source.lastModified = new Date().getTime();
-						source.author = APP.User && APP.User.email || "unknown";
+						source.author = _this.dropboxEmail || "unknown";
 						//try get csv modified date and author from notes
 						if (source.Rows[0].Notes) {
 							source.Rows[0].Notes = source.Rows[0].Notes.replace(/\r\n|\r|\n/g, "\r\n");//normalize line breaks
@@ -2859,7 +2925,7 @@
 					syncfileNeedsUpdated = false;
 				checkDBLoaded(function (callback) {
 					options = options || {};
-					options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
+					options.initialKey = dbid ? Base64.hash(dbid) : _this.dropboxEmail ? Base64.hash(_this.dropboxEmail) : null;
 					options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
 					if (APP.Dbx && APP.Dbx.isAuthenticated) {
 						_this.spin(true, "Synchronising with Dropbox");
@@ -2868,7 +2934,7 @@
 						_this.login(function (success) {
 							if (success) {
 								//debug("login success");
-								options.initialKey = APP.User ? APP.User.dbid ? Base64.hash(APP.User.dbid) : Base64.hash(APP.User.email) : null;
+								options.initialKey = dbid ? Base64.hash(dbid) : _this.dropboxEmail ? Base64.hash(_this.dropboxEmail) : null;
 								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
 								_this.spin(true, "Synchronising with Dropbox");
 								APP.Dbx.open("/sync/lastSync", null, readSyncfile);

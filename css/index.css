@@ -832,11 +832,44 @@ html.tabl #app.sidenav_open #sidenav {
 	overflow-y: auto;
 	float: left;
 	will-change: width, opacity, transform;
-	-webkit-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
-	-moz-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
-	-o-transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
-	transition: width 0.45s cubic-bezier(.4, 0, .1, 1.4);
 	scrollbar-width: none;
+}
+@keyframes view-easeOutElastic {
+	0% {
+		width: 51%;
+	}
+
+	16% {
+		width: 14%;
+		/*transform: translateX(-132.27%);*/
+	}
+
+	30% {
+		width: 22.5%;
+		/*transform: translateX(-86.88%);*/
+	}
+
+	44% {
+		width: 18.75%;
+		/*transform: translateX(-104.63%);*/
+	}
+
+	59% {
+		width: 20.75%;
+		/*transform: translateX(-98.36%);*/
+	}
+	74% {
+		width: 19.8%;
+		/*transform: translateX(-100.58%);*/
+	}
+	88% {
+		width: 20.05%;
+		/*transform: translateX(-99.8%);*/
+	}
+	100% {
+		width: 20%;
+		/*transform: translateX(-100%);*/
+	}
 }
 
 .scroll-outer-container{
@@ -845,8 +878,8 @@ html.tabl #app.sidenav_open #sidenav {
 
 html.phon .view,
 html.tabl .view{
-	width: 54%; /*hide scrollbars hack*/
-	padding-right: 4%;
+	width: 60%; /*hide scrollbars hack*/
+	padding-right: 10%;
 }
 
 .view-container {
@@ -866,6 +899,7 @@ html.desk .splitViewLeft {
 	display: block;
 	float: left;
 	width: 20%;
+	animation: view-easeOutElastic 1.2s ease;
 }
 
 html.desk .splitViewRight {
@@ -894,13 +928,52 @@ html.tabl .searchBar_open .navButtons.tabl.desk {
 	overflow: hidden;
 	width: 0;
 	will-change: width;
-	-webkit-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	-moz-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	-o-transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
-	transition: width 0.4s cubic-bezier(.4, 0, .1, 1.4);
+	-webkit-transition: none;
+	-moz-transition: none;
+	-o-transition: none;
+	transition: none;
 	background-color: #fafafa;
 }
+@keyframes searchbar-easeOutElastic {
+	0% {
+		width: 0%;
+	}
 
+	16% {
+		width: 400px;
+		/*transform: translateX(-132.27%);*/
+	}
+
+	30% {
+		width: 260px;
+		/*transform: translateX(-86.88%);*/
+	}
+
+	44% {
+		width: 314px;
+		/*transform: translateX(-104.63%);*/
+	}
+
+	59% {
+		width: 295px;
+		/*transform: translateX(-98.36%);*/
+	}
+
+	74% {
+		width: 302px;
+		/*transform: translateX(-100.58%);*/
+	}
+
+	88% {
+		width: 299.5px;
+		/*transform: translateX(-99.8%);*/
+	}
+
+	100% {
+		width: 300px;
+		/*transform: translateX(-100%);*/
+	}
+}
 html.phon #searchBar {
 	position: absolute;
 	left: 400px;
@@ -910,12 +983,17 @@ html.phon #searchBar {
 	-moz-transition: left 0.2s ease-out;
 	-o-transition: left 0.2s ease-out;
 	transition: left 0.2s ease-out;
+	animation: none;
 }
 
 .searchBar_open #searchBar,
 html.tabl #searchSuggestions-container,
 html.desk #searchSuggestions-container {
 	width: 300px;
+}
+
+.searchBar_open #searchBar {
+	animation: searchbar-easeOutElastic 1s ease;
 }
 
 html.phon .searchBar_open #searchBar {

@@ -51,7 +51,8 @@
 
 	<!--css-->
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
-	<link rel="stylesheet" type="text/css" href="css/icons.css" />
+	<link rel="stylesheet" type="text/css" href="css/icons.css" id="default-icons"/>
+	<link rel="stylesheet alternate" type="text/css" href="css/icons-mdl2.css" id="segoe-icons"/>
 </head>
 <body>
 	<div id="loading"></div>
@@ -230,21 +231,23 @@
 									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 									<a v-bind:href="externalLink(line, item.column, 'bcc')">
 										<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
-									</a>
-								</template>
-								<template v-else-if="item.type === 'phoneNumber' && /home/i.test(item.label)">
-									<a v-bind:href="externalLink(line, item.column, 'phone')">
-										<span class="icon icon-phone-alt">
-										</span>&nbsp;&nbsp;{{ line }}
-									</a>
-								</template>
-								<template v-else-if="item.type === 'phoneNumber' && /mobile|cell/i.test(item.label)">
-									<a v-bind:href="externalLink(line, item.column, 'phone')">
-										<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
 									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-									<a v-bind:href="externalLink(line, item.column, 'sms')">
-										<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+								</template>
+								<template v-else-if="item.type === 'phoneNumber'">
+									<a v-bind:href="externalLink(line, item.column, 'phone')">
+										<span v-if="/home/i.test(item.label)" class="icon icon-phone-alt"></span>
+										<span v-else class="icon icon-phone"></span>
+										&nbsp;&nbsp;{{ line }}
 									</a>
+									<template v-if="/mobile|cell/i.test(item.label)">
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+										<a v-bind:href="externalLink(line, item.column, 'sms')">
+											<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+										</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									</template>
+									<template v-else>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									</template>
 								</template>
 								<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
 									<a v-bind:href="externalLink(line, item.column, 'address', details.data)">
@@ -253,7 +256,7 @@
 											{{ addressLine }}
 											<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 										</template>
-									</a>
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</template>
 								<template v-else-if="item.type === 'formattedAddress'">
 								</template>
@@ -265,12 +268,13 @@
 									<br />
 									<a v-bind:href="externalLink(line, item.column, 'gps')">
 										<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
-									</a>
+									</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</template>
 								<template v-else>
-									{{ line }}
+									{{ line }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</template>
 							</template>
+							<a v-if="clipboard" v-on:click="copyToClipboard(item.text.join('\r\n'))"><span class="icon icon-copy"></span>&nbsp;&nbsp;Copy</a>
 						</div>
 					</div>
 				</template>
@@ -628,7 +632,6 @@
 	<script type="text/javascript" src="scripts/winjs/base.min.js"></script>
 	<script type="text/javascript" src="scripts/lists.min.js"></script>
 	<script type="text/javascript" src="scripts/index.js"></script>
-	<script type="text/javascript" src="sw.js">
-	</script>
+	<script type="text/javascript" src="sw.js"></script>
 </body>
 </html>

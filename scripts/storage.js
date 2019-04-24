@@ -166,9 +166,9 @@ var APP = APP || {}, Base64;
 		};
 		DropboxSessionObj.prototype.getUserInfo = function (password, callback) {
 			function ret(alias, email, id, account_id) {
-				APP.User = { "alias": alias, "email": email, "id": id, "dbid": account_id };
-				console.log("returning user", APP.User);
-				return callback instanceof Function ? callback(APP.User) : APP.User;
+				var user = { "alias": alias, "email": email, "id": id, "dbid": account_id };
+				console.log("returning user", user);
+				return callback instanceof Function ? callback(user) : user;
 			}
 			function gotCachedUser(user) {
 				console.log("found cached user", user);
@@ -206,13 +206,7 @@ var APP = APP || {}, Base64;
 			if (WorkingOffline) return callback instanceof Function ? callback(false) : false;
 			else {
 				console.log("getting user");
-				if (APP.User && APP.User.alias && APP.User.email && APP.User.id && APP.User.dbid) {	//Found cached User
-					//sync cached user with localStorage user
-					console.log("found active user", APP.User);
-					APP.Sto.setItem(APP.Sto.LocalUserRef, JSON.stringify(APP.User));
-					return ret(APP.User.alias, APP.User.email, APP.User.id, APP.User.dbid);
-				}
-				else APP.Sto.getItem(APP.Sto.LocalUserRef, null, gotCachedUser, noCachedUser);
+				APP.Sto.getItem(APP.Sto.LocalUserRef, null, gotCachedUser, noCachedUser);
 			}
 		};
 		DropboxSessionObj.prototype.login = function (password, successCallback, failureCallback) {
@@ -240,7 +234,6 @@ var APP = APP || {}, Base64;
 		};
 		DropboxSessionObj.prototype.logout = function (callback) {
 			function resetApp() {
-				APP.User = {};
 				APP.Sto.deleteItem(APP.Sto.LocalUserRef);
 				_this.isAuthenticated = false;
 				return callback instanceof Function ? callback() : true;
