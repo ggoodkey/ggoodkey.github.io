@@ -218,6 +218,20 @@
 		testMethods("addRow", function (a) { return db[a].addRow(["hello", 2, false], "aaa"); }, true);
 		//addColumn(colName, position, options, callback)
 		testMethods("addColumn", function (a) { return db[a].addColumn("column 4", 4, { type: "string", initialValue: "hello, I'm new here", search: true }); }, true);
+		//setType(colName, type, data, callback)
+		testMethods("setType", function (a) {
+			return db[a].setType("column_2", "boolean", null, function (data, err) {
+				if (err === "cannot apply type to this row, please update data and try again" && data) {
+					for (let row in data.column_4) {
+						data.column_4[row] = true;
+					}
+					db[a].setType("column_2", "boolean", data, function (data, err) {
+						return data;
+					});
+				}
+				else return false;
+			});
+		}, true);
 		//deleteColumn(colName)
 		testMethods("deleteColumn", function (a) { return db[a].deleteColumn("column 4"); }, true);
 		//getLength()	DONE
@@ -258,7 +272,7 @@
 		//toCSV()
 		testMethods("toCSV", function (a) { return db[a].toCSV(); });
 		//toJSON_Array()
-		//testMethods("toJSON1", function (a) { return db[a].toJSON_Array(); });
+		testMethods("toJSON1", function (a) { return db[a].toJSON_Array(); });
 		//toJSON_KeyValuePairs()
 		testMethods("toJSON2", function (a) { return db[a].toJSON_KeyValuePairs(); });
 		//sync(forceSyncBool, callback)
