@@ -43,7 +43,7 @@
 
 
     <section>
-        <article><h1><img src="./images/firefox/firefox-general-32-32.png" alt="N">yckelDB Documentation</h1><h4>NyckelDB Version 0.4</h4><h5>April 19, 2019</h5><p>NyckelDB is a highly structured JavaScript data store. Any data that 
+        <article><h1><img src="./images/firefox/firefox-general-32-32.png" alt="N">yckelDB Documentation</h1><h4>NyckelDB Version 0.4</h4><h5>May 4, 2019</h5><p>NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
 according to data type, and data can be imported or exported as JSON or CSV (coming soon).</p>
@@ -72,32 +72,110 @@ according to data type, and data can be imported or exported as JSON or CSV (com
 </li>
 </ul>
 </li>
-<li><a href="#miscellaneous">Miscellaneous</a><ul>
 <li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#miscellaneous">Miscellaneous</a><ul>
 <li><a href="#database-structure">Database Structure</a></li>
-<li><a href="#null-and-undefined">Null and Undefined</a></li>
 <li><a href="#time-stamps">Time Stamps</a></li>
 </ul>
 </li>
 </ul>
-<h1>Overview</h1><p>Nyckel (nick-hell) is a Swedish word that means &quot;key&quot;. Keys are used for keeping things safe that are important to you. 
-Keys are small, light-weight, and handy, but not very flexible, which might be the very reason that you want to use one. Keys mean safety, responsibility, integrity, access.</p>
+<h1>Overview</h1><p>Nyckel (nick-ale) is a Swedish word that means &quot;key&quot;.</p>
 <p>NyckelDB uses keys in two ways:</p>
 <ol>
 <li>internally, each data store is isolated from other data stores by use of randomly generated keys</li>
 <li>data stores can be obfuscated if desired</li>
 </ol>
-<p>The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.
-NyckelDB uses Lawnchair as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistent storage. For a cloud solution,
-a compressed and obfuscated JSON object can be exported for you to send wherever you want it to go, and imported again and synchronized on another device.</p>
-<p>NyckelDB can be visualized as having a table-like structure, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
+<p>The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.</p>
+<p>NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
 This enables the database to behave like both an Array and an Object, where data is sortable like in an Array, but also highly performant like an Object for read, write, search and sync operations.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center"></th>
+<th style="text-align:center">COLUMN 0</th>
+<th>COLUMN 1</th>
+<th>COLUMN 2</th>
+<th>COLUMN 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center"><strong>HEADERS</strong></td>
+<td style="text-align:center"><strong>id</strong></td>
+<td><strong>Name</strong></td>
+<td><strong>Age</strong></td>
+<td><strong>Is Awesome</strong></td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>TYPES</strong></td>
+<td style="text-align:center"><strong>uniqueString</strong></td>
+<td><strong>string</strong></td>
+<td><strong>number</strong></td>
+<td><strong>boolean</strong></td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>ROW 0</strong></td>
+<td style="text-align:center"><strong>aaa</strong></td>
+<td>Bob</td>
+<td>42</td>
+<td>false</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>ROW 1</strong></td>
+<td style="text-align:center"><strong>aab</strong></td>
+<td>Jill</td>
+<td>21</td>
+<td>true</td>
+</tr>
+<tr>
+<td style="text-align:center"><strong>ROW 2</strong></td>
+<td style="text-align:center"><strong>aac</strong></td>
+<td>Anne</td>
+<td>88</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<p><em>Figure 1: Imagine NyckelDB as having a table-like structure</em></p>
+<pre class="prettyprint source lang-javascript"><code>{
+    title:&quot;Table Name&quot;,
+    created: 1234567,
+    lastModified: 1234567,
+    version: &quot;1.0_1.0&quot;,
+    table:[
+        [&quot;aaa&quot;,&quot;Bob&quot;,42,false],
+        [&quot;aab&quot;,&quot;Jill&quot;,21,true],
+        [&quot;aac&quot;,&quot;Anne&quot;,88,true]
+    ],
+    ids:{
+        aaa:[&lt;lastModified info>],
+        aab:[&lt;lastModified info>],
+        aac:[&lt;lastModified info>]
+    },
+    columns:{
+        $headers:[&quot;id&quot;,&quot;Name&quot;,&quot;Age&quot;,&quot;Is_Awesome&quot;],
+        $created:[&lt;columns created info>],
+        $modified:[&lt;columns lastModified info>],
+        Names:{type:[&quot;string&quot;, &lt;type modified info>]},
+        Age:{type:[&quot;number&quot;, &lt;type modified info>]},
+        Is_Awesome:{
+            type:[&quot;boolean&quot;, &lt;type modified info>],
+            exportAs:[&quot;Is Awesome&quot;, &lt;exportAs modified info>]
+        }
+    }
+    properties: {
+        &lt;custom properties>
+    }
+}
+</code></pre><p><em>Figure 2: What a NyckelDB table really looks like</em></p>
 <p>The data store can (and if possible should) be run in the background in a webWorker, and so as much computational work as possible is handled by the database including basic search, sort, filter, 
 and even very simple application specific custom formulas.</p>
-<p>LZString compression is used in localStorage so you can fit many MB of data in the very limited storage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.</p>
+<p>NyckelDB uses <a href="https://github.com/brianleroux/lawnchair/">Lawnchair</a> as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistent storage. For a cloud solution,
+a compressed and obfuscated JSON object can be exported for you to send wherever you want it to go, and imported again and synchronized on another device.</p>
+<p>LZString compression is used so you can fit many MB of data in the very limited localStorage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.</p>
 <p>All data written to the data store is automatically validated before being written, taking care of much of your form validation work for you such as names, email addresses and phone numbers. </p>
 <h1>Features</h1><p>Other than the basic read/write functionality that would be expected in any type of data storage solution, NyckelDB also contains the following features:</p>
-<h3>Sort, Shuffle and Filter</h3><p>Like a table, data can be sorted alphabetically and/or numerically by any column in the table, or conversely, shuffled to be completely random &ndash; useful if you want to create a playlist, or stack of flashcards.</p>
+<h3>Sort, Shuffle and Filter</h3><p>Like a table, data can be sorted alphabetically/numerically by any column in the table, or conversely, shuffled to be completely random &ndash; useful if you want to create a playlist, or stack of flashcards.</p>
 <p>The table can also be filtered by column, based on matching a given regular expression.</p>
 <h3>Search</h3><p>NyckelDB contains a basic search engine. Data is search indexed for fast search results based on whole, and multiple words,
 returning results in order of best match. 
@@ -105,25 +183,25 @@ Complex searches can be created with the + and - operators, which correspond to 
 Fuzzy matching can be used in some cases to return near matches, for example, common names or spelling mistakes.</p>
 <h3>Search Suggestions</h3><p>NyckelDB can aid, or hint to a user what they might be able to search for by returning search suggestions based on partial word matches.
 This is surprisingly fast and can be used to create an as-you-type experience to fill in a search box and/or the dropdown list under the search box.
-Recent searches are cached so these words can bubble to the top of the next search suggestion.</p>
-<h3>Sync and Share</h3><p>Made possible by use of two features:</p>
-<ul>
-<li>ID tagged rows - all &quot;rows&quot; are identified by a 3-5 digit id, making searches and synchronization much simpler</li>
-<li>LastModified - all data (in every single cell) is stored with accompanying LastModified attributes</li>
-</ul>
+Recent successful searches are cached and returned at the top of the next search suggestion, giving you search history as well (though
+this cache isn't saved anywhere so will be gone the next time you access the app/webpage).</p>
+<h3>Sync and Share</h3><p>Data can be exported as a JSON file which can be saved or transferred somewhere and reimported
+without worrying about overwriting more recent data because all data (in every single cell) is stored with accompanying LastModified attributes</p>
 <p>This means that data can be synchronized between local storage and cloud storage, devices, or even people.
 Conflict resolution follows the assumption that the most recent data in each cell is the data that you want to keep.</p>
 <p>Sharing data securely based on a Diffie-Hellman key exchange system coming soon... (maybe)</p>
 <h3>Data Validation</h3><p>Data that you input into a NyckelDB object is validated before it is saved, at a minimum, by verifying that it is either a String, Number, or Boolean value. 
-All data <em>must</em> fall into one of these three categories. Other types of data, such as Objects and Arrays are not allowed in a NyckelDB and will throw an error.
-The data type for each column in the table is specified on creation of the table.</p>
+All data <em>must</em> fall into one of these three categories. Other types of data, such as JavaScript Objects, Arrays or the values 'null' and 'undefined'
+are not allowed in a NyckelDB and will throw an error.</p>
 <p>Within these 3 general types of data are many more subtypes. 
 Additional data validation, and sometimes error correction can be done by specifying a subtype, i.e. streetAddress is a subtype of String. 
 Some subtypes fall into more than one category such as <em>postalZipCode</em> which can be a String or a Number. 
 <a href="#types">See Types below</a> for a complete list of all the different subtypes.</p>
 <p>If you want the most flexibility you can specify <em>any</em>, which will allow any type of data to be saved to that column in the table, as long as it is a String, Number or Boolean value.</p>
+<p>The data type for each column in the table is best specified on creation of the table, but can be changed afterwards.</p>
 <h3>Formulas</h3><p>Coming soon</p>
-<h1>Types</h1><h3>String types</h3><ul>
+<h1>Types</h1><p>The following types can be applied to any column:</p>
+<h3>String types</h3><ul>
 <li><strong>any</strong> is the default type if no type is specified. Use it if you want to accept input data that could be String, Number, or Boolean values</li>
 <li><strong>string</strong> accepts any String value</li>
 <li><strong>uniqueString</strong> can be used for things like ids or usernames. It wont accept a value if it already exists in that column of the table.</li>
@@ -161,37 +239,35 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
 <pre class="prettyprint source lang-javascript"><code>var title = &quot;Accounting Spreadsheet&quot;,
     headers = [&quot;Month&quot;, &quot;Monthly Income&quot;, &quot;Monthly Expenses&quot;, &quot;Balance&quot;],
     types = [&quot;date&quot;, &quot;posInteger&quot;, &quot;negInteger&quot;, &quot;integer&quot;],
-    options = { 
-        importData: myExistingNyckelDBData,
-        customProperties:{
-            &quot;FinalBalance&quot;: {
-                type: &quot;integer&quot;,
-                initialValue: 10000
-            },
-            &quot;ICanBuyMyGroceriesThisMonth&quot;: {
-                type: &quot;boolean&quot;,
-                initialValue: true
-            }
-        }            
+    options = {
+        //see 'The Options Parameter' below
     },
     callback = function(){ 
         //update UI to show newly created NyckelDB here
 };
+
 var myTable = new APP.NyckelDB(title, headers, types, options, callback);
-myTable.getLength(); //returns 0</code></pre><p>There is quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
+myTable.getLength(); //returns 0
+</code></pre><p>There is quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
 or you can pass types as an Object in the form:</p>
 <pre class="prettyprint source lang-javascript"><code>var types = { 
-    Month: &quot;date&quot;,
+    &quot;Month&quot;: &quot;date&quot;,
     &quot;Monthly Income&quot;: &quot;posInteger&quot;,
     &quot;Monthly Expenses&quot;: &quot;negInteger&quot;,
-    Balance: &quot;integer&quot;
+    &quot;Balance&quot;: &quot;integer&quot;
 }</code></pre><p>which might be an easier way to manage your code, especially if you have a large number of columns. </p>
 <p>If the order of the columns in your table is unimportant, you can pass this Object directly as the headers
 themselves in the first parameter instead of an Array, and the second parameter as null.</p>
+<blockquote>
+<p><strong>Q: When should you use an Array for your column headers? When would order matter?</strong></p>
+<p>A: If you want to display the data from an entire row all at once on the screen in a specific order, 
+or if you receive your data as an Array and want to pass it directly into a newly created row in your 
+table at once. You can work around this by reordering the output afterwards of course, but better to be aware of this in the beginning.</p>
+</blockquote>
 <p>Finally, additional metadata can be set such as whether a column should be indexed for searching, what it's initial value should be if nothing is
 specified, or even a <a href="#formulas">formula</a>, by passing Types in like this:</p>
 <pre class="prettyprint source lang-javascript"><code>var types = { 
-    Month: { 
+    &quot;Month&quot;: { 
         type: &quot;string&quot;, 
         search: true,
         initialValue: &quot;January&quot;
@@ -205,17 +281,11 @@ specified, or even a <a href="#formulas">formula</a>, by passing Types in like t
         type: &quot;negInteger&quot;,
         search: false
     },
-    Balance: {
+    &quot;Balance&quot;: {
         type: &quot;integer&quot;,
         formula: &quot;SUBTRACT('Monthly Income','Monthly Expenses')&quot;
     }
-}</code></pre><blockquote>
-<p><strong>Q: When should you use an Array for your column headers? When would order matter?</strong></p>
-<p>A: If you want to display the data from an entire row all at once on the screen in a specific order, 
-or if you receive your data as an Array and want to pass it directly into a newly created row in your 
-table at once. You can work around this by reordering the output afterwards of course, but better to be aware of this in the beginning.</p>
-</blockquote>
-<h3>The Options Parameter</h3><p>The 'options' parameter accepts an Object. It may contain data to import immediately after the database is
+}</code></pre><h3>The Options Parameter</h3><p>The 'options' parameter accepts an Object. It may contain data to import immediately after the database is
 created in the form of a CSV file (string), or JSON object, and custom properties that you would like to add to your table.</p>
 <pre class="prettyprint source lang-javascript"><code>var options = {
     importData: nyckelDBTable,
@@ -252,30 +322,34 @@ Custom properties can be given a type as well, but only &quot;string&quot;, &quo
         type: &quot;boolean&quot;,
         initialValue: true
     }
-}    </code></pre><h1>Miscellaneous</h1><p>The following information may be helpful to understanding how the database works, but is not key to being able to use it.</p>
-<h3>Dependencies</h3><ul>
+}    </code></pre><h1>Dependencies</h1><ul>
 <li>validate.js</li>
 <li>base64.js</li>
 <li>storage.js</li>
-<li>Lawnchair.js</li>
+<li>Lawnchair.js </li>
 </ul>
+<h1>Miscellaneous</h1><p>The following information may be helpful to understanding how the database works, but is not key to being able to use it.</p>
 <h3>Database Structure</h3><p>The NyckelDB JSON Object may contain some, but not all, of the following properties:</p>
 <ul>
-<li>title - table title</li>
-<li>created - created date</li>
-<li>lastModified - last modified date</li>
-<li>deleted - deleted date</li>
-<li>version - created by NyckelDB version</li>
-<li>headers - table headers Array</li>
-<li>types - table header types Array</li>
-<li>ids - Object of ids and their contents last modified metadata</li>
-<li>table - 2D Array of table data</li>
-<li>properties - optional custom properties Object</li>
-<li>data - a password protected database</li>
-<li>signature - a hash of the password and protected database</li>
+<li>title - (String) table title</li>
+<li>created - (Number) created timestamp</li>
+<li>lastModified - (Number) last modified timestamp</li>
+<li>deleted - (Number) deleted timestamp</li>
+<li>version - (String) created by NyckelDB version</li>
+<li>columns - (Object) table headers, types and other properties</li>
+<li>ids - (object) ids and their contents last modified metadata</li>
+<li>table - (Array) 2D Array of table data</li>
+<li>properties - (Object) optional custom properties</li>
+<li>data - (String) a password protected database</li>
+<li>signature - (String) a hash of the password and protected database</li>
 </ul>
-<h3>Null and Undefined</h3><p>Values of null or undefined cannot be added to the table. Attempting to do so will fail and throw an error.</p>
-<h3>Time Stamps</h3><p>The timestamps used for &quot;created&quot;, &quot;lastModified&quot; and &quot;deleted&quot; may look strange. Rather than the typical 13 digit UNIX time, which is the number of milliseconds since 1970, the NyckelDB uses the number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000. To the millisecond accuracy is not necessary, as synchronization is only permitted by NyckelDB, at maximum, every 5 minutes, so the entire database is made much smaller (and possibly slightly faster) by only recording changes to the nearest minute.</p></article>
+<h3>Time Stamps</h3><p>The timestamps used for &quot;created&quot;, &quot;lastModified&quot; and &quot;deleted&quot; may look strange. 
+Rather than the typical 13 digit UNIX time, which is the number of milliseconds 
+since the beginning of 1970, the NyckelDB uses the number of <em>minutes</em> since Fri 
+Jul 14 2017 02:40:00 GMT+0000 (which is 1 500 000 000 000 in UNIX time). To the millisecond accuracy is not necessary, as 
+synchronization is only permitted by NyckelDB, at maximum, every 5 minutes, so 
+the entire database is made much smaller (and possibly slightly faster) by only 
+recording changes to the nearest minute.</p></article>
     </section>
 
 
@@ -292,7 +366,7 @@ Custom properties can be given a type as well, but only &quot;string&quot;, &quo
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Apr 25 2019 21:42:32 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sat May 04 2019 20:28:03 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

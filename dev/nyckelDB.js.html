@@ -75,6 +75,7 @@ APP.nyckelDB = (function () {
 		date = null;
 		return year + month + day + hour + minute;
 	}
+	//add whitespace to JSON
 	function READABLE_JSON_STRING(str) {
 		function enter() {
 			out += "\r\n";
@@ -82,14 +83,39 @@ APP.nyckelDB = (function () {
 				out += "\t";
 			}
 		}
+		function getArrayDepth(position) {
+			//look ahead from 'position' to see how deep the array is
+			//if 2d or 3d array, add extra whitespace
+			position++;
+			for (let depth = 1, len = str.length; position &lt; len; position++) {
+				if (str[position] === "[") {
+					depth++;
+					if (depth > arrayDepth) arrayDepth = depth;
+				}
+				if (str[position] === "]") {
+					depth--;
+					if (depth === 0) {
+						//end of array
+						if (arrayDepth > 0) {
+							arrayEnd = position;//set the end of the array position
+							tabDepth++;
+							enter();
+						}
+						return arrayDepth;
+					}
+				}
+			}
+		}
 		var quote = false,
 			tabDepth = 0,
 			prevChar,
 			out = "",
 			a = 0,
-			array = 0;
+			array = 0,
+			arrayDepth = 0,
+			arrayEnd = 0;
 		for (let c = 0, len = str.length; c &lt; len; c++) {
-			if (str[c] === "}" &amp;&amp; !quote) {
+			if ((str[c] === "}" || str[c] === "]" &amp;&amp; c === arrayEnd) &amp;&amp; !quote) {
 				tabDepth--;
 				enter();
 			}
@@ -99,13 +125,19 @@ APP.nyckelDB = (function () {
 					if (prevChar !== "\\") quote = !quote;
 					break;
 				case ",":
-					if (!quote &amp;&amp; !array) enter();
+					if (!quote &amp;&amp; (array === 0 || array &lt; arrayDepth)) enter();
 					break;
 				case "[":
-					if (!quote) array++;
+					if (!quote) {
+						if(c > arrayEnd) getArrayDepth(c);
+						array++;
+					}
 					break;
 				case "]":
-					if (!quote) array--;
+					if (!quote) {
+						array--;
+						if (array === 0) arrayDepth = 0;
+					}
 					break;
 				case "{":
 					if (!quote) {
@@ -178,9 +210,9 @@ APP.nyckelDB = (function () {
 			return false;
 		}
 	}
-	function VALUE_IS_VALID(value, type) {
+	function VALUE_IS_VALID(value, type, ignoreErrors) {
 		if (value == null) {// eslint-disable-line eqeqeq
-			CACHE_ERROR.call(this, value, type + " value cannot be");
+			if(!ignoreErrors) CACHE_ERROR.call(this, value, type + " value cannot be");
 			return false;
 		}
 		else if (type === "any") return true;
@@ -188,9 +220,11 @@ APP.nyckelDB = (function () {
 		else if (IS_NUMERIC(value) &amp;&amp; type.match(VALID_NUMBER_TYPES)) return true;
 		else if (typeof value === "boolean" &amp;&amp; type === "boolean") return true;
 		else {
-			if (typeof type !== "string") CACHE_ERROR.call(this, type, "Type must be supplied as a string");
-			else if (!type.match(VALID_TYPES)) CACHE_ERROR.call(this, type, "Invalid data type");
-			else CACHE_ERROR.call(this, value + " is a " + typeof value + ", not a " + type, "invalid value");
+			if (!ignoreErrors) {
+				if (typeof type !== "string") CACHE_ERROR.call(this, type, "Type must be supplied as a string");
+				else if (!type.match(VALID_TYPES)) CACHE_ERROR.call(this, type, "Invalid data type");
+				else CACHE_ERROR.call(this, value + " is a " + typeof value + ", not a " + type, "invalid value");
+			}
 			return false;
 		}
 	}
@@ -1613,12 +1647,61 @@ APP.nyckelDB = (function () {
 		else return undefined;
 	}
 	function SET_TYPE(colName, type, data, storeBool, editTime, callback) {
-		//TODO check for data type conflicts in column
-		//TODO if conflicts, try soft massage data to fit type
-		//TODO check for data type conflicts in column
-		//TODO if data, recieve new data and validate
-		//TODO if valid, check modifed dates
-		//TODO if conflicts, or not most current, return error and data conflicts
+		function retError(err) {
+			if(data) CACHE_ERROR.call(this, err);
+			return callback instanceof Function ? callback(returnData, err, DB[this.id].title, this.syncPending) : err;	
+		}
+		function retSuccess(a,b,c,d) {
+			return callback instanceof Function ? callback(a,b,c,d) : a;
+		}
+		function checkRows(rowId, i) {
+			var value = data[colName][rowId] || DB[this.id].table[i][colIndex];
+			if (!VALUE_IS_VALID.call(this, value, type, true)) {
+				if (type.match(VALID_STRING_TYPES)) {
+					value = String(value);
+				}
+				else if (type.match(VALID_NUMBER_TYPES) &amp;&amp; IS_NUMERIC(value)) {
+					value = value * 1;
+				}
+				if (!VALUE_IS_VALID.call(this, value, type, true)) {
+					returnData[colName][rowId] = DB[this.id].table[i][colIndex];
+					can_do = false;
+				}
+				else data[colName][rowId] = value;
+			}
+		}
+		function setType() {
+			if(can_do) DB[this.id].columns[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
+		}
+		function applyData(rowId, i, total) {
+			if (can_do &amp;&amp; data[colName][rowId]) {
+				SET_VAL.call(this, rowId, colName, data[colName][rowId], i === total, editTime);
+				delete data[colName][rowId];
+			}
+		}
+		function checkSuccess(a, b, c, d) {
+			for (let id in data[colName]) {
+				if (data[colName].hasOwnProperty(id)) return retError.call(this, "data provided doesn't match table");
+			}
+			if (can_do) {
+				return retSuccess(a, b, c, d);
+			}
+			else return retError.call(this, "cannot apply type to this row, please update data and try again");
+		}
+		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+		if (colIndex === -1) return retError.call(this, "column does not exist in the table");
+		this.unhideRows(); //TODO iterate through hidden rows without unhiding them(?)
+		type = VALIDATE_TYPE.call(this, type);
+		colName = VAL.toPropName(colName);
+		editTime = editTime ? VALIDATE_EDIT_TIME.call(this, editTime, null, "column", null, "set type") : TIMESTAMP(DB[this.id].created);
+		var can_do = true,
+			returnData = {};
+		returnData[colName] = {};
+		if (!data) {
+			data = {};
+			data[colName] = {};
+		}
+		return this.forEachRow.call(this, checkRows.bind(this), setType.bind(this)).forEachRow.call(this, applyData.bind(this), checkSuccess.bind(this));
 		//TODO if no type conflics found and most current, apply data and update type
 	}
 	function MOVE_COLUMN(colName, position, storeBool) {
@@ -2101,34 +2184,48 @@ APP.nyckelDB = (function () {
 		}
 	};
 	/**
+	 * forEachRow funct
+	 * @callback eachRowCallback
+	 * @param {string} rowId the id of the current row
+	 * @param {number} is the position in the table of the current row
+	 * @param {number} of the total number of rows in the table (% complete = is/of)
+	 */
+
+	/**
 	 * Iterate through all (unhidden) rows in a table (in the current sorted order). Passes row ids to funct in sequence and executes funct
 	 * @function forEachRow
-	 * @param {function} funct the function to execute for each row in the table
+	 * @param {eachRowCallback} funct the function to execute for each row in the table, parameters: rowId, rowIndex, tableLength
 	 * @param {successCallback} [callback] callback function to execute when everything is finished
 	 * @returns {object} this
 	 */
 	NyckelDBObj.prototype.forEachRow = function (funct, callback) {
 		if (funct instanceof Function) {
-			for (var a = 0, len = this.getLength(); a &lt; len; a++) {
+			for (let a = 0, len = this.getLength(); a &lt; len; a++) {
 				funct(DB[this.id].table[a][0], a, len);
 			}
-			a = null; len = null;
 			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
 	};
 	/**
+	 * forEachCol funct, use parameters 'is' and 'of' to get progress
+	 * @callback eachColCallback
+	 * @param {string} colName the name of the current column
+	 * @param {number} index the position in the table of the current column
+	 * @param {number} numCols the total number of columns in the table (% complete = index/numCols)
+	 */
+
+	/**
 	 * Iterate through all columns in a table. Passes the column name to funct in sequence and executes funct
 	 * @function forEachCol
-	 * @param {function} funct the function to execute for each column in the table
+	 * @param {eachColCallback} funct the function to execute for each column in the table
 	 * @param {successCallback} [callback] callback function to execute after everything is finished
 	 * @returns {object} this
 	 */
 	NyckelDBObj.prototype.forEachCol = function (funct, callback) {
 		if (funct instanceof Function) {
-			for (var a = 1, headers = DB[this.id].columns.$headers, len = headers.length; a &lt; len; a++) {
+			for (let a = 1, headers = DB[this.id].columns.$headers, len = headers.length; a &lt; len; a++) {
 				funct(headers[a], a - 1, len - 1);
 			}
-			a = null; len = null;
 			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
 	};
@@ -2879,7 +2976,7 @@ APP.nyckelDB = (function () {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Apr 25 2019 21:42:32 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sat May 04 2019 20:28:03 GMT+0200 (W. Europe Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

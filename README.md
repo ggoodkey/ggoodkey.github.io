@@ -39,18 +39,53 @@ NyckelDB uses keys in two ways:
 
 The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.
 
-NyckelDB can be visualized as having a table-like structure, with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
+NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
 This enables the database to behave like both an Array and an Object, where data is sortable like in an Array, but also highly performant like an Object for read, write, search and sync operations.
 
-|           |ROW ID|Column1 |Column2 |Column3     |
-|-----------|------|--------|--------|------------|
-|**HEADERS**|-     |*Name*  |*Age*   |*Is Awesome*|
-|**TYPE**   |-     |*string*|*number*|*boolean*   |
-|**Row1**   |*aaa* |Bob     |42      |false       |
-|**Row2**   |*aab* |Jill    |21      |true        |
-|**Row3**   |*aac* |Anne    |88      |true        |
+|           |COLUMN 0        |COLUMN 1  |COLUMN 2  |COLUMN 3      |
+|:---------:|:--------------:|----------|----------|--------------|
+|**HEADERS**|**id**          |**Name**  |**Age**   |**Is Awesome**|
+|**TYPES**  |**uniqueString**|**string**|**number**|**boolean**   |
+|**ROW 0**  |**aaa**         |Bob       |42        |false         |
+|**ROW 1**  |**aab**         |Jill      |21        |true          |
+|**ROW 2**  |**aac**         |Anne      |88        |true          |
 
-**Figure 1:** NyckelDB table-like structure
+*Figure 1: Imagine NyckelDB as having a table-like structure*
+
+```javascript
+{
+    title:"Table Name",
+    created: 1234567,
+    lastModified: 1234567,
+    version: "1.0_1.0",
+    table:[
+        ["aaa","Bob",42,false],
+        ["aab","Jill",21,true],
+        ["aac","Anne",88,true]
+    ],
+    ids:{
+        aaa:[<lastModified info>],
+        aab:[<lastModified info>],
+        aac:[<lastModified info>]
+    },
+    columns:{
+        $headers:["id","Name","Age","Is_Awesome"],
+        $created:[<columns created info>],
+        $modified:[<columns lastModified info>],
+        Names:{type:["string", <type modified info>]},
+        Age:{type:["number", <type modified info>]},
+        Is_Awesome:{
+            type:["boolean", <type modified info>],
+            exportAs:["Is Awesome", <exportAs modified info>]
+        }
+    }
+    properties: {
+        <custom properties>
+    }
+}
+
+``` 
+*Figure 2: What a NyckelDB table really looks like*
 
 The data store can (and if possible should) be run in the background in a webWorker, and so as much computational work as possible is handled by the database including basic search, sort, filter, 
 and even very simple application specific custom formulas.
@@ -58,7 +93,7 @@ and even very simple application specific custom formulas.
 NyckelDB uses [Lawnchair](https://github.com/brianleroux/lawnchair/) as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistent storage. For a cloud solution,
 a compressed and obfuscated JSON object can be exported for you to send wherever you want it to go, and imported again and synchronized on another device.
 
-LZString compression is used in localStorage so you can fit many MB of data in the very limited storage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.
+LZString compression is used so you can fit many MB of data in the very limited localStorage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.
 
 All data written to the data store is automatically validated before being written, taking care of much of your form validation work for you such as names, email addresses and phone numbers. 
 
@@ -151,8 +186,8 @@ Setting up a new NyckelDB object is as simple as calling the constructor using t
 var title = "Accounting Spreadsheet",
     headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
     types = ["date", "posInteger", "negInteger", "integer"],
-    options = { 
-	//see The Options Parameter		
+    options = {
+        //see 'The Options Parameter' below
     },
     callback = function(){ 
         //update UI to show newly created NyckelDB here
@@ -264,6 +299,7 @@ customProperties:{
     }
 }	
 ```
+
 # Dependencies
 * validate.js
 * base64.js
@@ -275,18 +311,17 @@ The following information may be helpful to understanding how the database works
 
 ### Database Structure
 The NyckelDB JSON Object may contain some, but not all, of the following properties:
-* title - table title
-* created - created date
-* lastModified - last modified date
-* deleted - deleted date
-* version - created by NyckelDB version
-* headers - table headers Array
-* types - table header types Array
-* ids - Object of ids and their contents last modified metadata
-* table - 2D Array of table data
-* properties - optional custom properties Object
-* data - a password protected database
-* signature - a hash of the password and protected database
+* title - (String) table title
+* created - (Number) created timestamp
+* lastModified - (Number) last modified timestamp
+* deleted - (Number) deleted timestamp
+* version - (String) created by NyckelDB version
+* columns - (Object) table headers, types and other properties
+* ids - (object) ids and their contents last modified metadata
+* table - (Array) 2D Array of table data
+* properties - (Object) optional custom properties
+* data - (String) a password protected database
+* signature - (String) a hash of the password and protected database
 
 ### Time Stamps
 The timestamps used for "created", "lastModified" and "deleted" may look strange. 
