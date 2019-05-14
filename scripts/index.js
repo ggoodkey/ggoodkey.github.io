@@ -123,9 +123,12 @@
 					Phone8_Type: "string", Phone8_Value: "phoneNumber",
 					Phone9_Type: "string", Phone9_Value: "phoneNumber",
 					Phone10_Type: "string", Phone10_Value: "phoneNumber",
-					Address1_Type: "string", Address1_Formatted: "formattedAddress", Address1_Street: "streetAddress", Address1_City: "cityCounty", Address1_POBox: "mailAddress", Address1_Region: "provinceStateRegion", Address1_PostalCode: "postalZipCode", Address1_Country: "country", Address1_ExtendedAddress: "string",
-					Address2_Type: "string", Address2_Formatted: "formattedAddress", Address2_Street: "streetAddress", Address2_City: "cityCounty", Address2_POBox: "mailAddress", Address2_Region: "provinceStateRegion", Address2_PostalCode: "postalZipCode", Address2_Country: "country", Address2_ExtendedAddress: "string",
-					Organization1_Type: "string", Organization1_Name: "string", Organization1_YomiName: "string", Organization1_Title: "string", Organization1_Department: "string", Organization1_Symbol: "string", Organization1_Location: "geoLocation", Organization1_JobDescription: "string",
+					Address1_Type: "string", Address1_Formatted: "formattedAddress", Address1_Street: "streetAddress", Address1_City: "cityCounty", Address1_POBox: "mailAddress",
+					Address1_Region: "provinceStateRegion", Address1_PostalCode: "postalZipCode", Address1_Country: "country", Address1_ExtendedAddress: "string",
+					Address2_Type: "string", Address2_Formatted: "formattedAddress", Address2_Street: "streetAddress", Address2_City: "cityCounty", Address2_POBox: "mailAddress",
+					Address2_Region: "provinceStateRegion", Address2_PostalCode: "postalZipCode", Address2_Country: "country", Address2_ExtendedAddress: "string",
+					Organization1_Type: "string", Organization1_Name: "string", Organization1_YomiName: "string", Organization1_Title: "string", Organization1_Department: "string",
+					Organization1_Symbol: "string", Organization1_Location: "geoLocation", Organization1_JobDescription: "string",
 					Relation1_Type: "string", Relation1_Value: "string",
 					Relation2_Type: "string", Relation2_Value: "string",
 					Relation3_Type: "string", Relation3_Value: "string",
@@ -175,15 +178,22 @@
 						}
 					},
 					initialIndex: ["Name", "GivenName", "AdditionalName", "FamilyName", "Nickname", "ShortName", "MaidenName",
-						"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value", "E_mail6_Value", "E_mail7_Value", "E_mail8_Value", "E_mail9_Value", "E_mail10_Value", "Address1_City", "Address2_City",
-						"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department"],
+						"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value",
+						"E_mail6_Value", "E_mail7_Value", "E_mail8_Value", "E_mail9_Value", "E_mail10_Value",
+						"Address1_City", "Address2_City", "Address1_Region", "Address2_Region", "Organization1_Name",
+						"Organization1_Title", "Organization1_Department"],
 					doNotIndex: ["Photo",
-						"E_mail1_Type", "E_mail2_Type", "E_mail3_Type", "E_mail4_Type", "E_mail5_Type", "E_mail6_Type", "E_mail7_Type", "E_mail8_Type", "E_mail9_Type", "E_mail10_Type",
-						"IM1_Type", "IM1_Service", "IM2_Type", "IM2_Service", "IM3_Type", "IM3_Service", "IM4_Type", "IM4_Service", "IM5_Type", "IM5_Service", "IM6_Type", "IM6_Service", "IM7_Type", "IM7_Service", "IM8_Type", "IM8_Service", "IM9_Type", "IM9_Service", "IM10_Type", "IM10_Service",
-						"Phone1_Type", "Phone2_Type", "Phone3_Type", "Phone4_Type", "Phone5_Type", "Phone6_Type", "Phone7_Type", "Phone8_Type", "Phone9_Type", "Phone10_Type",
+						"E_mail1_Type", "E_mail2_Type", "E_mail3_Type", "E_mail4_Type", "E_mail5_Type",
+						"E_mail6_Type", "E_mail7_Type", "E_mail8_Type", "E_mail9_Type", "E_mail10_Type",
+						"IM1_Type", "IM1_Service", "IM2_Type", "IM2_Service", "IM3_Type", "IM3_Service", "IM4_Type", "IM4_Service", "IM5_Type", "IM5_Service",
+						"IM6_Type", "IM6_Service", "IM7_Type", "IM7_Service", "IM8_Type", "IM8_Service", "IM9_Type", "IM9_Service", "IM10_Type", "IM10_Service",
+						"Phone1_Type", "Phone2_Type", "Phone3_Type", "Phone4_Type", "Phone5_Type",
+						"Phone6_Type", "Phone7_Type", "Phone8_Type", "Phone9_Type", "Phone10_Type",
 						"Address1_Type", "Address2_Type",
-						"Relation1_Type", "Relation2_Type", "Relation3_Type", "Relation4_Type", "Relation5_Type", "Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
-						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type", "Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"]
+						"Relation1_Type", "Relation2_Type", "Relation3_Type", "Relation4_Type", "Relation5_Type",
+						"Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
+						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type",
+						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"]
 				},
 				display: {
 					listView: {
@@ -345,6 +355,7 @@
 				indicatorWidth: 0,
 				indicatorTop: 53,
 				showSearchBar: false,
+				hideSearchBar: false,
 				showSearchSuggestions: false,
 				showSideNav: false,
 				showSettings: false,
@@ -389,7 +400,7 @@
 				addSearchToGroupDropdown: false,
 				groupSearchBox: "",
 				groups: []
-			}
+			};
 		};
 	var fileReaderInitiated = [],
 		backstack = [],
@@ -470,11 +481,32 @@
 				webWorker.postMessage(arrBuffer, [arrBuffer]);
 				obj = null;
 			}
-			if (typeof Worker !== "undefined" && !localTestingMode) {
-				startWorker();
-			}
-			//no web workers available
-			else {
+			function noWebWorker() {
+				function applyCallback(callback) {
+					switch (obj.cmd) {
+						//these functions take a callback as their last argument
+						case "addColumn":
+						case "advancedSearch":
+						case "deleteColumn":
+						case "deleteTable":
+						case "getRow":
+						case "getSearchSuggestions":
+						case "getVals":
+						case "importJSON":
+						case "isSyncPending":
+						case "NUKEALL":
+						case "renameColumn":
+						case "search":
+						case "setSyncCompleted":
+						case "setTitle":
+						case "setType":
+						case "setVal":
+						case "sync":
+							return appData[title][obj.cmd].apply(appData[title], obj.args);
+						default:
+							return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
+					}
+				}
 				if (obj.args && callback) obj.args.push(callback);
 				if (obj.title && obj.cmd) {
 					var title = VAL.toPropName(obj.title);
@@ -488,24 +520,7 @@
 						return null;
 					}
 					else if (obj.cmd === "forEachCol" || obj.cmd === "forEachRow") appData[title][obj.cmd](callback, finalCallback);
-					else if (callback) {
-						switch (obj.cmd) {
-							//these functions take a callback as their last argument
-							case "deleteTable":
-							case "setTitle":
-							case "NUKEALL":
-							case "isSyncPending":
-							case "sync":
-							case "importJSON":
-							case "search":
-							case "getVals":
-							case "getRow":
-							case "getSearchSuggestions":
-								return appData[title][obj.cmd].apply(appData[title], obj.args);
-							default:
-								return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
-						}
-					}
+					else if (callback) return applyCallback(callback);
 					else return appData[title][obj.cmd].apply(appData[title], obj.args);
 				}
 				else if (obj.cmd) {
@@ -513,6 +528,8 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
+			if (typeof Worker !== "undefined" && !localTestingMode) startWorker();
+			else noWebWorker();
 		},
 		wwReadMessage = function (e) {
 			function ab2str(buffer) {
@@ -601,7 +618,7 @@
 			function doneInit() {
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded();
-				if (!app.cookieAgree) {
+				if (!cordova && !WinJS && !app.cookieAgree) {
 					app.notify("By continuing to use this site, you agree to the use of first party, non-tracking cookies for personalised content", false);
 					app.cookieAgree = true;
 					app.storeState();
@@ -763,75 +780,75 @@
 				windowsAccentColor = cssColorString;
 			}
 		},
-		updateWindowsLiveTile = function (content, imageurl) {
-			if (typeof Windows !== 'undefined' &&
-				typeof Windows.UI !== 'undefined' &&
-				typeof Windows.UI.Notifications !== 'undefined') {
-				var tileContent = new Windows.Data.Xml.Dom.XmlDocument();
+		//updateWindowsLiveTile = function (content, imageurl) {
+		//	if (typeof Windows !== 'undefined' &&
+		//		typeof Windows.UI !== 'undefined' &&
+		//		typeof Windows.UI.Notifications !== 'undefined') {
+		//		var tileContent = new Windows.Data.Xml.Dom.XmlDocument();
 
-				var tile = tileContent.createElement("tile");
-				tileContent.appendChild(tile);
+		//		var tile = tileContent.createElement("tile");
+		//		tileContent.appendChild(tile);
 
-				var visual = tileContent.createElement("visual");
-				tile.appendChild(visual);
+		//		var visual = tileContent.createElement("visual");
+		//		tile.appendChild(visual);
 
-				var bindingMedium = tileContent.createElement("binding");
-				bindingMedium.setAttribute("template", "TileMedium");
-				visual.appendChild(bindingMedium);
+		//		var bindingMedium = tileContent.createElement("binding");
+		//		bindingMedium.setAttribute("template", "TileMedium");
+		//		visual.appendChild(bindingMedium);
 
-				var peekImage = tileContent.createElement("image");
-				peekImage.setAttribute("placement", "peek");
-				peekImage.setAttribute("src", imageurl);
-				peekImage.setAttribute("alt", "Random demo image");
-				bindingMedium.appendChild(peekImage);
+		//		var peekImage = tileContent.createElement("image");
+		//		peekImage.setAttribute("placement", "peek");
+		//		peekImage.setAttribute("src", imageurl);
+		//		peekImage.setAttribute("alt", "Random demo image");
+		//		bindingMedium.appendChild(peekImage);
 
-				var text = tileContent.createElement("text");
-				text.setAttribute("hint-wrap", "true");
-				text.innerText = "Demo Message";
-				bindingMedium.appendChild(text);
+		//		var text = tileContent.createElement("text");
+		//		text.setAttribute("hint-wrap", "true");
+		//		text.innerText = "Demo Message";
+		//		bindingMedium.appendChild(text);
 
-				// TODO: Add other tile size bindings, like Wide and Large
+		//		// TODO: Add other tile size bindings, like Wide and Large
 
-				var notifications = Windows.UI.Notifications;
-				var tileNotification = new notifications.TileNotification(tileContent);
-				notifications.TileUpdateManager.createTileUpdaterForApplication().update(tileNotification);
-			}
-		},
-		sendWindowsNotification = function (message, iconurl) {
-			if (typeof Windows !== 'undefined' &&
-				typeof Windows.UI !== 'undefined' &&
-				typeof Windows.UI.Notifications !== 'undefined') {
-				var toastContent = new Windows.Data.Xml.Dom.XmlDocument();
+		//		var notifications = Windows.UI.Notifications;
+		//		var tileNotification = new notifications.TileNotification(tileContent);
+		//		notifications.TileUpdateManager.createTileUpdaterForApplication().update(tileNotification);
+		//	}
+		//},
+		//sendWindowsNotification = function (message, iconurl) {
+		//	if (typeof Windows !== 'undefined' &&
+		//		typeof Windows.UI !== 'undefined' &&
+		//		typeof Windows.UI.Notifications !== 'undefined') {
+		//		var toastContent = new Windows.Data.Xml.Dom.XmlDocument();
 
-				var toast = toastContent.createElement("toast");
-				toastContent.appendChild(toast);
+		//		var toast = toastContent.createElement("toast");
+		//		toastContent.appendChild(toast);
 
-				var visual = toastContent.createElement("visual");
-				toast.appendChild(visual);
+		//		var visual = toastContent.createElement("visual");
+		//		toast.appendChild(visual);
 
-				var binding = toastContent.createElement("binding");
-				binding.setAttribute("template", "ToastGeneric");
-				visual.appendChild(binding);
+		//		var binding = toastContent.createElement("binding");
+		//		binding.setAttribute("template", "ToastGeneric");
+		//		visual.appendChild(binding);
 
-				// Title text
-				var text = toastContent.createElement("text");
-				text.innerText = message;
-				binding.appendChild(text);
+		//		// Title text
+		//		var text = toastContent.createElement("text");
+		//		text.innerText = message;
+		//		binding.appendChild(text);
 
-				// TODO: Add up to two more text elements
+		//		// TODO: Add up to two more text elements
 
-				// Override the app logo
-				var appLogo = toastContent.createElement("image");
-				appLogo.setAttribute("placement", "appLogoOverride");
-				appLogo.setAttribute("src", iconurl);
-				appLogo.setAttribute("alt", message);
-				binding.appendChild(appLogo);
+		//		// Override the app logo
+		//		var appLogo = toastContent.createElement("image");
+		//		appLogo.setAttribute("placement", "appLogoOverride");
+		//		appLogo.setAttribute("src", iconurl);
+		//		appLogo.setAttribute("alt", message);
+		//		binding.appendChild(appLogo);
 
-				var notifications = Windows.UI.Notifications;
-				var notification = new notifications.ToastNotification(toastContent);
-				notifications.ToastNotificationManager.createToastNotifier().show(notification);
-			}
-		},
+		//		var notifications = Windows.UI.Notifications;
+		//		var notification = new notifications.ToastNotification(toastContent);
+		//		notifications.ToastNotificationManager.createToastNotifier().show(notification);
+		//	}
+		//},
 		//load NyckelDB databases
 		loadDB = true,
 		loadDBQueue = [],
@@ -870,7 +887,9 @@
 				var numOfTables = 0,
 					b = 0;
 				for (var template in dataTemplates) {
-					numOfTables++;
+					if (dataTemplates.hasOwnProperty(template)) {
+						numOfTables++;
+					}
 				}
 				for (var templateName in dataTemplates) {
 					if (dataTemplates.hasOwnProperty(templateName)) {
@@ -919,6 +938,33 @@
 				app.spin(true, "Loading contact data...");
 				app.storeState();
 				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
+					function applyLabel(a, b, lenB, e, lenE) {
+						var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
+						for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
+							if (typeof layout.mainContent[b] !== "string" && layout.mainContent[b].label) {
+								if (row[a].column === layout.mainContent[b].value) {
+									hide = false;
+									for (e = 0, lenE = row.length; e < lenE; e++) {
+										if (row[e].column === layout.mainContent[b].label) {
+											data[a].label = row[e].value;
+											break;
+										}
+									}
+								}
+							}
+						}
+						data[a].hidden = hide;
+					}
+					function applyTitle(a, c, lenC, d, lenD) {
+						for (c = 0, lenC = layout.titleH1.length; c < lenC; c++) {
+							if (layout.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
+						}
+						if (layout.subtitleH2) {
+							for (d = 0, lenD = layout.subtitleH2.length; d < lenD; d++) {
+								if (layout.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
+							}
+						}
+					}
 					var h1 = [],
 						h2 = [],
 						img,
@@ -926,8 +972,8 @@
 						layout = dataTemplates[obj.table].display.detailsView;
 					for (let a = 0, b = 0, c = 0, d = 0, e = 0, len = row.length, lenB, lenC, lenD, lenE; a < len; a++) {
 						data[a] = {
-							table: obj.table,
-							id: obj.id,
+							//table: obj.table, //redundant???
+							//id: obj.id, //redundant???
 							warning: "",
 							column: row[a].column,
 							type: row[a].type,
@@ -935,24 +981,7 @@
 							label: row[a].column
 						};
 						//find and apply the right label
-						if (layout.mainContent) {
-							var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
-							for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
-								if (typeof layout.mainContent[b] !== "string" && layout.mainContent[b].label) {
-									if (row[a].column === layout.mainContent[b].value) {
-										hide = false;
-										for (e = 0, lenE = row.length; e < lenE; e++) {
-											if (row[e].column === layout.mainContent[b].label) {
-												data[a].label = row[e].value;
-												break;
-											}
-										}
-
-									}
-								}
-							}
-							data[a].hidden = hide;
-						}
+						if (layout.mainContent) applyLabel(a, b, lenB, e, lenE);
 						//format multiline strings
 						if (/multilineString|formattedAddress/.test(data[a].type) && data[a].text) {
 							data[a].text = data[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
@@ -961,19 +990,8 @@
 						else if (typeof data[a].text === "string") data[a].text = layout.mainContentSplitter ? data[a].text.split(layout.mainContentSplitter) : data[a].text.split(" ::: ");
 						else data[a].text = [data[a].text];
 						//get h1 and h2 header values
-						if (layout.titleH1) {
-							for (c = 0, lenC = layout.titleH1.length; c < lenC; c++) {
-								if (layout.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
-							}
-							if (layout.subtitleH2) {
-								for (d = 0, lenD = layout.subtitleH2.length; d < lenD; d++) {
-									if (layout.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
-								}
-							}
-						}
-						if (layout.image && row[a].column === layout.image) {
-							img = row[a].value;
-						}
+						if (layout.titleH1) applyTitle(a, c, lenC, d, lenD);
+						if (layout.image && row[a].column === layout.image) img = row[a].value;
 					}
 					app.spin(false);
 					if (callback instanceof Function) callback({
@@ -988,34 +1006,34 @@
 				});
 			});
 		},
-		generateListItems = function (tableName, ids, sortByCol, selected, callback) {
-			function buildList(result, errors, title, requiresSync) {
+		generateListItems = function (tableName, ids, options, callback) {
+			function buildList(result, errors) {
 				var ret = [];
 				if (!errors && result && result.length > 0) {
 					for (var a = 0, len = result.length, sort; a < len; a++) {
 						sort = result[a].pop();
 						if (sort === "") sort = "*";
-						ret[a] = { table: tableName, id: result[a].shift(), sortBy: sort + "__" + result[a].join(joiner), text: result[a].join(joiner), selected: selected, type: "link" };
+						ret[a] = { table: tableName, id: result[a].shift(), sortBy: sort + "__" + result[a].join(joiner), text: result[a].join(joiner), selected: options.selected, type: "link" };
 					}
 				}
 				return callback instanceof Function ? callback(ret) : ret;
 			}
+			options = options || {};
 			var columns = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.text ? dataTemplates[tableName].display.listView.text.join("|||").split("|||") : [1],
 				joiner = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.joiner ? dataTemplates[tableName].display.listView.joiner : " ";
-			sortByCol = sortByCol || dataTemplates[tableName].display.listView.sortBy || columns[0];
-			columns.push(sortByCol);
+			columns.push(options.sortByCol || dataTemplates[tableName].display.listView.sortBy || columns[0]);
 			if (typeof ids === "string") ids = [ids];
 			wwManager({ "cmd": "getVals", "title": tableName, "args": [ids, columns] }, buildList);
 		},
-		generateList = function (dbTitle, ids, sortByCol, pageNumber, numberPerPage, selected, callback) {
-			function getIds(rowId, index, len) {
+		generateList = function (dbTitle, ids, options, callback) {
+			function getIds(rowId) {
 				ids.push(rowId);
 			}
 			function getData() {
-				if (numberPerPage && pageNumber && ids.length > numberPerPage) {
-					ids.slice(numberPerPage * (pageNumber - 1), numberPerPage * (pageNumber - 1) + numberPerPage);
+				if (options && options.numberPerPage && options.pageNumber && ids.length > options.numberPerPage) {
+					ids.slice(options.numberPerPage * (options.pageNumber - 1), options.numberPerPage * (options.pageNumber - 1) + options.numberPerPage);
 				}
-				return generateListItems(dbTitle, ids, sortByCol, selected, callback);
+				return generateListItems(dbTitle, ids, options, callback);
 			}
 			if (ids) getData();
 			else if (dbTitle) {
@@ -1039,7 +1057,7 @@
 		addToNewGroup = function (detailsObj, searchQuery) {
 			app.addItemToGroupDropdown = false;
 			app.addSearchToGroupDropdown = false;
-			if (detailsObj) generateListItems(detailsObj[0].table, detailsObj[0].id, null, true, function (list) {
+			if (detailsObj) generateListItems(detailsObj[0].table, detailsObj[0].id, { selected: true }, function (list) {
 				list[0].selected = true;
 				app.activeGroup = list;
 			});
@@ -1051,33 +1069,36 @@
 			app.showNewGroupUI = true;
 		},
 		initializeGroups = function (callback) {
-			if (app.groups.length === 0) {
-				checkDBLoaded(function (cb) {
-					wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
-						var ids = [];
-						for (var a = 0; a < length; a++) ids[a] = a;
-						wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals, errors, title, syncPending) {
-							for (var a = 0, len = vals.length; a < len; a++) {
-								app.groups[a] = vals[a][1];
-							}
-							if (cb instanceof Function) cb();
-							if (callback instanceof Function) return callback();
-						});
+			function getGroups (cb) {
+				wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
+					var ids = [];
+					for (var a = 0; a < length; a++) ids[a] = a;
+					wwManager({ "cmd": "getVals", "title": "Groups", "args": [ids, ["groupName"]] }, function (vals) {
+						for (var a = 0, len = vals.length; a < len; a++) {
+							app.groups[a] = vals[a][1];
+						}
+						if (cb instanceof Function) cb();
+						if (callback instanceof Function) return callback();
 					});
 				});
 			}
+			if (app.groups.length === 0) checkDBLoaded(getGroups);
 			else if (callback instanceof Function) return callback();
 		},
-		generateListView = function (tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected) {
+		generateListView = function (tableTitle, ids, options) {
+			function applyTitle(title) {
+				app.searchResultsTitle = title;
+			}
 			checkDBLoaded(function (callback) {
-				pageNumber = pageNumber || 1;
-				numberPerPage = numberPerPage || 100;
+				options = options || {};
+				options.pageNumber = options.pageNumber || 1;
+				options.numberPerPage = options.numberPerPage || 100;
 				tableTitle = VAL.toPropName(tableTitle);
 				if (dataTemplates[tableTitle]) {
 					app.searchResults = [];
-					generateList(tableTitle, ids, sortByCol, pageNumber, numberPerPage, selected, function (list) {
+					generateList(tableTitle, ids, options, function (list) {
 						app.searchResults = list;
-						wwManager({ "cmd": "getTitle", "title": tableTitle }, function (title) { app.searchResultsTitle = title; });
+						wwManager({ "cmd": "getTitle", "title": tableTitle }, applyTitle);
 						app.searchResultsError = list.length === 0 ? "Nothing to display" : "";
 						app.navigate("search", app.currentQuery);
 						if (callback instanceof Function) return callback();
@@ -1319,17 +1340,17 @@
 			},
 			updateEmailLinks: function (links) {
 				function newEmailLink() {
-					_this.emailDropdown = true;
+					this.emailDropdown = true;
 					var link = {};
 					link.href = null;
 					link.text = "Working...";
-					_this.emailLinks.push(link);
-					_this.emailDropdown = true;
+					this.emailLinks.push(link);
+					this.emailDropdown = true;
 					var bccIds = [];
 					for (let a = 0, len = links.length; a < len; a++) {
-						if (links[a].type === "link" && (_this.selected === false || links[a].selected === true)) bccIds.push(links[a].id);
+						if (links[a].type === "link" && (this.selected === false || links[a].selected === true)) bccIds.push(links[a].id);
 					}
-					getEmails(bccIds);
+					getEmails.call(this, bccIds);
 				}
 				function getEmails(ids) {
 					var emailAddresses = [];
@@ -1360,36 +1381,49 @@
 								if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
 							}
 						}
-						_this.emailLinks = [];
+						this.emailLinks = [];
 						if (emailAddresses.length > 0) {
 							emailAddresses = emailAddresses.join(",");
-							buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu);
-							buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, updateDropdownMenu);
+							buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu.bind(this));
+							buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, updateDropdownMenu.bind(this));
 						}
 						else {
 							var link = {};
 							link.href = null;
 							link.text = "Selection contains no e-mail addresses";
-							_this.emailLinks.push(link);
+							this.emailLinks.push(link);
 						}
 					});
 					else {
-						_this.emailLinks = [{ text: "<Nothing selected>", href: null, disabled: true }];
+						this.emailLinks = [{ text: "<Nothing selected>", href: null, disabled: true }];
 					}
 				}
 				function updateDropdownMenu(mailtoUri, bccBool) {
 					var link = {};
 					link.href = mailtoUri;
-					link.text = _this.selected ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
-					_this.emailLinks.push(link);
+					link.text = this.selected ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
+					this.emailLinks.push(link);
 				}
-				var _this = this;
 				this.emailLinks = [];
 				if (this.emailDropdown) this.emailDropdown = false;
-				else newEmailLink();
+				else newEmailLink.call(this);
 			}
 		},
 		template: "#jump-list"
+	});
+	Vue.component('edit-details-card', {
+		props: {
+			details: Object
+		},
+		methods: {
+			saveChanges: function () {
+				debug("saveChanges not done");
+			},
+			cancelChanges: function () {
+				debug("cancelChanges not done");
+			}
+		},
+		template: "#edit-details-card"
 	});
 	Vue.component('details-card', {
 		props: {
@@ -1406,6 +1440,7 @@
 		},
 		methods: {
 			editDetails: function () {
+				app.details = this.details;
 				app.navigate("edit");
 			},
 			toggleGroupsDropdown: function () {
@@ -1422,8 +1457,7 @@
 				else if (type === "www") link = text;
 				if (link) return link;
 				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-					var a = column.replace(/Type/, ""),
-						googlemaps = "http://maps.google.com/?q=",
+					var googlemaps = "http://maps.google.com/?q=",
 						bing = "http://www.bing.com/maps/?q=",
 						bingmaps = "bingmaps:?q=",
 						applemaps = "http://maps.apple.com/?q=",
@@ -1540,11 +1574,14 @@
 		methods: {
 			importNewTable: function () {
 				function matches(subsetArr, ofArr) {
-					var matches = true;
-					for (let a = 0, len = subsetArr.length; a < len; a++) {
-						if (ofArr.indexOf(subsetArr[a]) === -1) matches = false;
+					var ret = true;
+					if (ofArr && ofArr.constructor === Array) {						
+						for (let a = 0, len = subsetArr.length; a < len; a++) {
+							if (ofArr.constructor === Array && ofArr.indexOf(subsetArr[a]) === -1) ret = false;
+							else if (!ofArr[subsetArr[a]]) ret = false;
+						}
+						return ret;
 					}
-					return matches;
 				}
 				function createTempTable(JSON, template) {
 					template.options.importJSON = JSON;
@@ -1555,10 +1592,9 @@
 						else app.notify("Done", true);
 					});
 				}
-				var _this = this;
 				app.loadFile('hiddenCSVInput', 'csv', function (data) {
-					if (matches(data.Headers, _this.newTable.headers)) {
-						createTempTable(data, _this.newTable);
+					if (matches(data.Headers, this.newTable.headers)) {
+						createTempTable(data, this.newTable);
 					}
 					else {
 						app.notify("CSV Headers don't match");
@@ -1569,17 +1605,17 @@
 								tryHeaders.shift();
 							}
 							if (matches(data.Headers, tryHeaders)) {
-								(function (template) {
+								(function (self, template) {
 									confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
-										_this.template(template);
+										self.template(template);
 										app.notify("");
 										createTempTable(data, dataTemplates[template]);
 									});
-								})(template);
+								})(this, template);
 							}
 						}
 					}
-				});
+				}.bind(this));
 			},
 			template: function (templateName) {
 				if (dataTemplates[templateName]) {
@@ -1671,6 +1707,12 @@
 		},
 		template: "#new-table-page"
 	},
+		DetailsView = {
+			props: {
+				details: Object
+			},
+			template: '<details-card class="view-container" v-bind:details="details"></details-card>'	
+		},
 		Recent = {
 			data: function () {
 				return {
@@ -1682,11 +1724,17 @@
 						image: null,
 						titleH1: null,
 						subtitleH2: null
-					}
+					},
+					detailsView: "v-a"
 				};
+			},
+			components: {
+				"v-a": DetailsView,
+				"v-b": DetailsView
 			},
 			methods: {
 				onDetailsUpdate: function (newDetailsObj) {
+					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
 					this.recentDetails = newDetailsObj;
 				}
 			},
@@ -1719,8 +1767,6 @@
 						}
 						groupName = groupName.join(" ");
 						var i = 2,
-							existingNames = [],
-							_this = this,
 							title,
 							ids = {};
 						//get group ids
@@ -1733,25 +1779,24 @@
 						}
 						initializeGroups(function () {
 							//check for duplicate groupNames
-							if (_this.groups.indexOf(groupName) > -1) {
-								while (_this.groups.indexOf(groupName + " " + i) > -1) i++;
+							if (this.groups.indexOf(groupName) > -1) {
+								while (this.groups.indexOf(groupName + " " + i) > -1) i++;
 								groupName = groupName + " " + i;
 							}
 							//Save new group
 							wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
-								_this.updateGroup(groupName, ids, app.groupSearchBox);
-								_this.groups.push(groupName);
-								_this.activeGroup = [];
-								_this.showNewGroupUI = false;
+								this.updateGroup(groupName, ids, app.groupSearchBox);
+								this.groups.push(groupName);
+								this.activeGroup = [];
+								this.showNewGroupUI = false;
 								app.groupSearchBox = "";
 								app.groupName = "";
-							});
-						});
+							}.bind(this));
+						}.bind(this));
 					}
 					else app.notify("Group requires a name");
 				},
 				updateGroup: function (groupName, ids, searchTerms) {
-					var _this = this;
 					groupName = String(groupName);
 					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
 						if (ids) wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
@@ -1775,9 +1820,16 @@
 					}
 				},
 				groupInput: function (e) {
-					var value = e ? e.target.value : app.groupSearchBox,
-						_this = this;
-					checkDBLoaded(function (callback) {
+					function runSearch(table, find) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table) {
+							if (!errors && searchResults && searchResults.length > 0) {
+								generateList(table, searchResults, { selected: true }, function (list) {
+									this.activeGroup = this.activeGroup.concat(list);
+								});
+							}
+						});
+					}
+					function processInput (callback) {
 						if (value !== "") {
 							var find = String(value);
 							find = VAL.removeHTMLTags(find);
@@ -1785,24 +1837,18 @@
 							find = VAL.toEnglishAlphabet(find);
 							find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
 							find = trim(find);
-							_this.activeGroup = [];
+							this.activeGroup = [];
 							document.getElementById("app").focus();
 							for (let table in dataTemplates) {
 								if (dataTemplates.hasOwnProperty(table)) {
-									(function (table) {
-										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table, requiresSync) {
-											if (!errors && searchResults && searchResults.length > 0) {
-												generateList(table, searchResults, null, null, null, true, function (list) {
-													_this.activeGroup = _this.activeGroup.concat(list);
-												});
-											}
-										});
-									})(table);
+									runSearch.call(this, table, find);
 								}
 							}
 						}
 						if (callback instanceof Function) return callback();
-					});
+					}
+					var value = e ? e.target.value : app.groupSearchBox;
+					checkDBLoaded(processInput.bind(this));
 				},
 				groupKeyUp: function (e) {
 					var keyCode = e.which || e.keyCode || 0;
@@ -1835,12 +1881,14 @@
 								lenIds = 0,
 								b = 0;
 							for (let a in ids) {
-								lenIds++;
+								if (ids.hasOwnProperty(a)) {
+									lenIds++;
+								}					
 							}
 							for (let table in ids) {
 								if (ids.hasOwnProperty(table)) {
 									(function (table) {
-										generateListItems(table, ids[table], null, null, function (arr) {
+										generateListItems(table, ids[table], null, function (arr) {
 											list = list.concat(arr);
 											b++;
 											if (b === lenIds) {
@@ -1871,42 +1919,43 @@
 						app.searchResultsError = "";
 						app.navigate("search", app.currentQuery);
 					}
-					var list = [];
-					wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, function (group) {
+					function searchForMembers (table, group, lenTables, n) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title) {
+							if (!err) {
+								if (results) generateListItems(table, results, null, function (arr) {
+									list = list.concat(arr);
+									n++;
+									if (n === lenTables) add(group);
+								});
+								else {
+									n++;
+									if (n === lenTables) add(group);
+								}
+							}
+							else debug(err, title + " seeGroup error");
+						});
+					}
+					function showGroup(group) {
 						if (group[0][3] !== "") {
 							var lenTables = 0,
 								n = 0;
 							for (let a in dataTemplates) {
-								lenTables++;
+								if (dataTemplates.hasOwnProperty(a)) lenTables++;
 							}
 							for (let table in dataTemplates) {
 								if (dataTemplates.hasOwnProperty(table)) {
-									(function (table) {
-										wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title, sync) {
-											if (!err) {
-												if (results) generateListItems(table, results, null, null, function (arr) {
-													list = list.concat(arr);
-													n++;
-													if (n === lenTables) add(group);
-												});
-												else {
-													n++;
-													if (n === lenTables) add(group);
-												}
-											}
-											else debug(err, title + " seeGroup error");
-										});
-									})(table);
+									searchForMembers(table, group, lenTables, n);
 								}
 							}
 						}
 						else add(group);
-					});
+					}
+					var list = [];
+					wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, showGroup);//TODO use getRow instead of getVals
 				},
 				addToGroup: function (groupName, detailsObj, searchQuery) {
 					this.addItemToGroupDropdown = false;
 					this.addSearchToGroupDropdown = false;
-					var _this = this;
 					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
 						if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
 							ids = JSON.parse(ids);
@@ -1935,11 +1984,10 @@
 					});
 				},
 				showSelectGroupMembers: function () {
-					var _this = this;
 					for (let table in dataTemplates) {
-						generateList(table, null, null, null, null, false, function (list) {
-							_this.activeGroup = _this.activeGroup.concat(list);
-						});
+						generateList(table, null, null, function (list) {
+							this.activeGroup = this.activeGroup.concat(list);
+						}.bind(this));
 					}
 				},
 				resetGroups: function () {
@@ -1996,15 +2044,21 @@
 						titleH1: null,
 						subtitleH2: null
 					},
-					recentlyViewed: state.recentlyViewed
+					recentlyViewed: state.recentlyViewed,
+					detailsView: "v-a"
 				};
+			},
+			components: {
+				"v-a": DetailsView,
+				"v-b": DetailsView
 			},
 			methods: {
 				onDetailsUpdate: function (newDetailsObj) {
+					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
 					this.searchDetails = newDetailsObj;
 				},
 				onRecentlyViewedUpdate: addToRecentlyViewed,
-				toggleResultsGroupDropdown: function (e) {
+				toggleResultsGroupDropdown: function () {
 					initializeGroups(function () {
 						app.addSearchToGroupDropdown = app.addSearchToGroupDropdown ? false : true;
 					});
@@ -2014,14 +2068,11 @@
 			template: "#search-results-page"
 		},
 		Edit = {
-			methods: {
-				saveChanges: function () {
-					debug("saveChanges not done");
-				},
-				cancelChanges: function () {
-					debug("cancelChanges not done");
-				}
-			},
+			data: function () {
+				return {
+					details: state.details
+				};
+			},			
 			template: "#edit-details-page"
 		},
 		NotFound = {
@@ -2276,6 +2327,42 @@
 				}
 			},
 			search: function (event, optionalQuery) {
+				function resetApp() {
+					function clearUI () {
+						if (cordova || Windows && WinJS) {
+							wwManager({ "cmd": "stop" }, function () {
+								setTimeout(function () {
+									webWorker = new Worker("scripts/webworker.js");
+									webWorker.addEventListener('message', wwReadMessage, false);
+									webWorker.addEventListener('error', wwOnError, false);
+									appData = {};
+									backstack = [];
+									backIndex = 0;
+									state = freshStateObj();
+									this.storeState();
+									for (let s in state) {
+										if (this[s]) this[s] = state[s];
+									}
+									setTimeout(function () {
+										loadDB = true;
+										loadDBQueue = [];
+										loadingDB = false;
+										startApp();									
+									}, 1000);
+								}.bind(this), 1000);
+							}.bind(this));
+						}
+						else if (window.location) {
+							setTimeout(function () {
+								var loc = window.location;
+								window.location.href = [loc.protocol, '//', loc.host, loc.pathname].join('');
+							}, 2000);
+						}
+					}
+					document.getElementById("loading").className = "";
+					APP.Sto.nuke();
+					this.logout(clearUI.bind(this));
+				}
 				if (!this.showSearchBar) {
 					this.searchSuggestions = [];
 					document.getElementById("searchBox").focus();
@@ -2284,7 +2371,6 @@
 				this.showSearchBar = true;
 				if (this.showSideNav) this.showSideNav = false;
 				if (this.searchBox !== "" || optionalQuery) {
-					var _this = this;
 					if (this.searchBox === "debugmode") {
 						APP.setDebugMode(true);
 						debug("showing debugmode");
@@ -2294,104 +2380,72 @@
 						debug(navigator.userAgent, "navigator.userAgent");
 					}
 					else if (this.searchBox === "nukeapp") {
-						confirm("Are you sure you want to reset the app?", function () {
-							document.getElementById("loading").className = "";
-							APP.Sto.nuke();
-							_this.logout(function () {
-								if (cordova || Windows && WinJS) {
-									wwManager({ "cmd": "stop" }, function () {
-										setTimeout(function () {
-											webWorker = new Worker("scripts/webworker.js");
-											webWorker.addEventListener('message', wwReadMessage, false);
-											webWorker.addEventListener('error', wwOnError, false);
-											appData = {};
-											backstack = [];
-											backIndex = 0;
-											state = freshStateObj();
-											_this.storeState();
-											for (let s in state) {
-												if (_this[s]) _this[s] = state[s];
-											}
-											setTimeout(function () {
-												startApp();
-												loadDB = true;
-												loadDBQueue = [];
-												loadingDB = false;
-												checkDBLoaded(function (callback) {
-													if (callback instanceof Function) return callback();
-												});
-											}, 1000);
-										}, 1000);
-									});
-								}
-								else if (window.location && window.location.reload) {
-									setTimeout(function () {
-										window.location.reload(true);
-									}, 2000);
-								}
-							});
-						});
+						confirm("Are you sure you want to reset the app?", resetApp.bind(this));
 					}
 					else {
 						checkDBLoaded(function (callback) {
-							function displayResults(searchResults, errors, table, requiresSync) {
+							function displayResults(searchResults, errors, table) {
 								if (errors) debug(errors, "search error");
-								else if (searchResults) generateList(table, searchResults, null, null, null, null, function (list) {
+								else if (searchResults) generateList(table, searchResults, null, function (list) {
 									results = results.concat(list);
 									n++;
 									if (n === numOfSearches) {
-										_this.searchResults = results;
+										this.searchResults = results;
 										if (results.length > 0) {
-											_this.searchResultsTitle = 'Results for "' + _this.currentQuery + '"';
-											_this.searchResultsError = "";
+											this.searchResultsTitle = 'Results for "' + this.currentQuery + '"';
+											this.searchResultsError = "";
 										}
 										else {
 											wwManager({ cmd: "getLength", title: "Contacts" }, function (l) {
-												if (l > 0) _this.searchResultsError = 'No results found for "' + _this.currentQuery + '". Try searching for something else.';
-												else _this.searchResultsError = 'No data found';
-											});
+												if (l > 0) this.searchResultsError = 'No results found for "' + this.currentQuery + '". Try searching for something else.';
+												else this.searchResultsError = 'No data found';
+											}.bind(this));
 										}
-										_this.spin(false);
+										this.spin(false);
 										if (results.length === 1 && results[0].type === "link") {
-											_this.seeDetails(results[0]);
+											this.seeDetails(results[0]);
 											addToRecentlyViewed(results[0]);
 										}
 										else if (results.length === 2 && results[0].type === "jumplink") {
-											_this.seeDetails(results[1]);
+											this.seeDetails(results[1]);
 											addToRecentlyViewed(results[1]);
 										}
-										else _this.navigate("search", _this.currentQuery);
+										else this.navigate("search", this.currentQuery);
 										if (callback instanceof Function) return callback();
 									}
-								});
+								}.bind(this));
 							}
-							var find = optionalQuery ? optionalQuery : _this.searchAutoComplete === "" ? _this.searchBox : _this.searchAutoComplete,
+							var find = optionalQuery ? optionalQuery : this.searchAutoComplete === "" ? this.searchBox : this.searchAutoComplete,
 								results = [];
 							find = trim(find);
 							if (find) {
-								_this.currentQuery = find;
-								_this.resetSearch();
-								_this.showSearchBar = false;
-								_this.showSearchSuggestions = false;
+								this.currentQuery = find;
+								this.resetSearch();
+								this.hideSearchBar = true;
+								setTimeout(function () { this.hideSearchBar = false; }.bind(this), 1000);
+								this.showSearchBar = false;
+								this.showSearchSuggestions = false;
 								document.getElementById("app").focus();
 								var numOfSearches = 0,
 									n = 0;
-								_this.spin(true, "Searching...");
+								this.spin(true, "Searching...");
 								for (var t in dataTemplates) {
-									numOfSearches++;
+									if(dataTemplates.hasOwnProperty(t)) numOfSearches++;
 								}
 								for (let table in dataTemplates) {
-									(function (table) {
-										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, displayResults);
-									})(table);
+									(function (self, table) {
+										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, displayResults.bind(self));
+									})(this, table);
 								}
 							} else console.log("empty query field");
-						});
+						}.bind(this));
 					}
 				}
 			},
 			cancelSearch: function () {
 				this.toggle("showSearchBar");
+				this.hideSearchBar = true;
+				setTimeout(function () { this.hideSearchBar = false; }.bind(this), 200);
 				this.showSearchSuggestions = false;
 				this.resetSearch();
 			},
@@ -2414,17 +2468,16 @@
 					e.preventDefault();
 				} else {
 					this.searchPointer = -1;
-					var key = e.char || e.key;
 				}
 			},
 			searchInput: function (e) {
-				function displaySuggestions(arr, errors, table, requiresSync) {
+				function displaySuggestions(arr) {
 					n++;
 					suggestions = suggestions.concat(arr);
 					if (n === numOfTables) {
 						if (suggestions.length > 0) {
-							_this.searchAutoComplete = value.length < 21 && suggestions[0] ? suggestions[0] : "";
-							_this.searchSuggestions = suggestions;
+							this.searchAutoComplete = value.length < 21 && suggestions[0] ? suggestions[0] : "";
+							this.searchSuggestions = suggestions;
 							setTimeout(function () {
 								var listElem = document.getElementById("searchSuggestions");
 								if (listElem) {
@@ -2435,14 +2488,13 @@
 							}, 150);
 						}
 						else {
-							_this.searchPointer = -1;
-							_this.searchSuggestions = [];
-							_this.searchAutoComplete = "";
+							this.searchPointer = -1;
+							this.searchSuggestions = [];
+							this.searchAutoComplete = "";
 						}
 					}
 				}
-				var value = trim(e.target.value),
-					_this = this;
+				var value = trim(e.target.value);
 				if (value !== "") {
 					if (loadDB === false) {
 						var suggestions = [],
@@ -2456,10 +2508,10 @@
 						str = trim(str);
 
 						for (var t in dataTemplates) {
-							numOfTables++;
+							if(dataTemplates.hasOwnProperty(t)) numOfTables++;
 						}
 						for (var table in dataTemplates) {
-							wwManager({ "cmd": "getSearchSuggestions", "title": table, "args": [str, { colNames: searchableColumns }] }, displaySuggestions);
+							wwManager({ "cmd": "getSearchSuggestions", "title": table, "args": [str, { colNames: searchableColumns }] }, displaySuggestions.bind(this));
 						}
 					}
 					else checkDBLoaded(function (callback) {
@@ -2472,50 +2524,49 @@
 				}
 			},
 			searchKeyUp: function (e) {
-				var keyCode = e.which || e.keyCode || 0;
-				if (keyCode === 32) e.preventDefault();
-				if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) {
-					this.searchBox = this.searchBox.slice(-1) === " " ? trim(this.searchBox) + " " : trim(this.searchBox);
+				function movePointer() {
+					if (keyCode === 9 && e.shiftKey || e.keyCode === 38) {
+						if (this.searchPointer > 0) this.searchPointer--;
+					}
+					else if (this.searchPointer < this.searchSuggestions.length - 1) {
+						this.searchPointer++;
+					}
+					if (this.searchSuggestions.length > 0) {
+						this.searchBox = this.searchSuggestions[this.searchPointer];
+						this.searchAutoComplete = this.searchBox;
+					}
+					var listElem = document.getElementById("searchSuggestions");
+					if (listElem) {
+						for (var a = 0, len = listElem.children.length; a < len; a++) {
+							listElem.children[a].className = "link";
+						}
+						if (this.searchPointer > -1) listElem.children[this.searchPointer].className = "link selected";
+					}
 				}
-				switch (keyCode) {
-					case 8://backspace
-						if (this.searchBox === "") {
-							this.searchPointer = -1;
-							this.searchSuggestions = [];
-							this.searchAutoComplete = "";
-						}
-						break;
-					case 9:/*tab*/
-					case 38:/*up arrow*/
-					case 40://down arrow
-						if (keyCode === 9 && e.shiftKey || e.keyCode === 38) {
-							if (this.searchPointer > 0) this.searchPointer--;
-						}
-						else if (this.searchPointer < this.searchSuggestions.length - 1) {
-							this.searchPointer++;
-						}
-						if (this.searchSuggestions.length > 0) {
-							this.searchBox = this.searchSuggestions[this.searchPointer];
-							this.searchAutoComplete = this.searchBox;
-						}
-						var listElem = document.getElementById("searchSuggestions");
-						if (listElem) {
-							for (var a = 0, len = listElem.children.length; a < len; a++) {
-								listElem.children[a].className = "link";
-							}
-							if (this.searchPointer > -1) listElem.children[this.searchPointer].className = "link selected";
-						}
-						break;
-					case 13:/*enter key*/
-						this.search();
-						break;
-					case 27:/*escape key*/
-						this.cancelSearch();
-						break;
-					case 32: //space key
+				var keyCode = e.which || e.keyCode || 0;
+				if (keyCode === 8) {//backspace
+					if (this.searchBox === "") {
+						this.searchPointer = -1;
 						this.searchSuggestions = [];
 						this.searchAutoComplete = "";
-						break;
+					}
+				}
+				else if (keyCode === 9 || keyCode === 38 || keyCode === 40) { //tab, or up or down arrow
+					movePointer();
+				}
+				else if (keyCode === 32) {//space key
+					e.preventDefault();
+					this.searchSuggestions = [];
+					this.searchAutoComplete = "";
+				}
+				else {
+					this.searchBox = this.searchBox.slice(-1) === " " ? trim(this.searchBox) + " " : trim(this.searchBox);
+					if (keyCode === 13) {//enter key
+						this.search();
+					}
+					else if (keyCode === 27) {//escape key
+						this.cancelSearch();
+					}
 				}
 			},
 			searchKeyDown: function (e) {
@@ -2525,26 +2576,28 @@
 				}
 				if (keyCode === 32) {
 					if (this.searchBox !== "" && this.searchBox.slice(-1) !== " ") {
-						this.searchBox = this.searchSuggestions[0] ? this.searchPointer > -1 ? this.searchSuggestions[this.searchPointer] + " " : this.searchSuggestions[0] + " " : this.searchBox + " ";
+						this.searchBox = this.searchSuggestions[0] ?
+							this.searchPointer > -1 ?
+								this.searchSuggestions[this.searchPointer] + " " :
+								this.searchSuggestions[0] + " " :
+							this.searchBox + " ";
 					}
 				}
 			},
 			seeDetails: function (obj) {
-				var _this = this;
 				getDetails(obj, function (detailsObj) {
-					_this.details = detailsObj;
-					_this.navigate("details", null, detailsObj);
-				});
+					this.details = detailsObj;
+					this.navigate("details", null, detailsObj);
+				}.bind(this));
 			},
 			notify: function (msg, autoFade, callback) {
 				function clearMsg() {
-					_this.notifyMsg = "";
-					_this.showNotify = false;
+					this.notifyMsg = "";
+					this.showNotify = false;
 					if (callback instanceof Function) return callback();
 				}
 				//set timer between 1.5 - 5 seconds depending on the length of the message
-				var timer = msg.length * 55,
-					_this = this;
+				var timer = msg.length * 55;
 				timer = 1000 > timer ? 1000 : timer;
 				timer = 5000 < timer ? 5000 : timer;
 				if (msg !== "") {
@@ -2557,7 +2610,7 @@
 				if (autoFade || msg === "" || !msg) {
 					//hide message
 					if (msg === "" && new Date().getTime() - this.notifyActivated > timer) timer = 0;
-					setTimeout(clearMsg, timer);
+					setTimeout(clearMsg.bind(this), timer);
 				}
 			},
 			processConfirm: function (bool) {
@@ -2603,66 +2656,63 @@
 			logout: function (callback) {
 				function logout() {
 					APP.Dbx.logout(function () {
-						_this.loggedIn = false;
-						_this.dropboxUsername = "";
-						_this.dropboxEmail = "";
-						_this.notify("", true);
+						this.loggedIn = false;
+						this.dropboxUsername = "";
+						this.dropboxEmail = "";
+						this.notify("", true);
 						if (callback instanceof Function) return callback();
 					});
 				}
-				var _this = this;
-				if (APP.Dbx && APP.Dbx.isAuthenticated) this.notify("Disconnecting from Dropbox", false, logout);
+				if (APP.Dbx && APP.Dbx.isAuthenticated) this.notify("Disconnecting from Dropbox", false, logout.bind(this));
 				else if (callback instanceof Function) return callback();
 			},
 			newStoKey: function () {
 				var key = document.getElementById("stoKeyInput"),
-					confirmKey = document.getElementById("stoKeyInputConfirm"),
-					_this = this;
+					confirmKey = document.getElementById("stoKeyInputConfirm");
 				checkDBLoaded(function (callback) {
 					if (key.value === "") {
-						_this.stoKeyWarning = "Required";
+						this.stoKeyWarning = "Required";
 					}
 					else if (key.value === confirmKey.value) {
-						_this.stoKeyWarning = "";
-						var oldKey = _this.stoKey;
+						this.stoKeyWarning = "";
+						var oldKey = this.stoKey;
 						if (dbid) {
 							oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(dbid);
-							_this.stoKey = Base64.hash(dbid + key.value);
+							this.stoKey = Base64.hash(dbid + key.value);
 						}
 						else {//temp until depricate APP.User.id
 							debug("use of dropboxEmail as a key has been depricated", "error");
 							//oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(_this.dropboxEmail);
 							//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
 						}
-						_this.storeState();
-						_this.syncAll(null, { oldKey: oldKey, key: _this.stoKey });
-						_this.showStoKeyInput = false;
+						this.storeState();
+						this.syncAll(null, { oldKey: oldKey, key: this.stoKey });
+						this.showStoKeyInput = false;
 						oldKey = null;
 					}
 					else {
-						_this.stoKeyWarning = "Passwords don't match";
+						this.stoKeyWarning = "Passwords don't match";
 					}
 					if (callback instanceof Function) return callback();
-				});
+				}.bind(this));
 			},
 			updateStoKey: function () {
 				function storeKey(key, callback) {
-					_this.storeState(); //save cached state with new stoKey
-					_this.syncAll(null, { key: key, forceSync: true });
+					this.storeState(); //save cached state with new stoKey
+					this.syncAll(null, { key: key, forceSync: true });
 					if (callback instanceof Function) return callback();
 				}
 				this.showUpdateKey = true;
-				var _this = this;
 				confirm("Please input your current password", function () {
 					checkDBLoaded(function (callback) {
 						var key = document.getElementById("updateStoKeyInput");
 						if (dbid) {
-							_this.stoKey = Base64.hash(dbid + key.value);
+							this.stoKey = Base64.hash(dbid + key.value);
 						}
 						else debug("use of dropboxEmail as a key has been depricated", "error");//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
-						return storeKey(_this.stoKey, callback);
-					});
-				});
+						return storeKey.call(this, this.stoKey, callback);
+					}.bind(this));
+				}.bind(this));
 			},
 			/*
 			* formInputId is id of <input type="file" accept=".csv" id="browseButton1"/> (in this case it would be "browseButton1")
@@ -2683,17 +2733,17 @@
 							reader.onerror = function (evt) {
 								switch (evt.target.error.code) {
 									case evt.target.error.NOT_FOUND_ERR:
-										_this.notify('File Not Found!');
+										this.notify('File Not Found!');
 										break;
 									case evt.target.error.NOT_READABLE_ERR:
-										_this.notify('File is not readable');
+										this.notify('File is not readable');
 										break;
 									case evt.target.error.ABORT_ERR:
 										break; // noop
 									default:
-										_this.notify('An error occurred reading this file.');
+										this.notify('An error occurred reading this file.');
 								}
-							};
+							}.bind(this);
 							reader.onload = function () {
 								callback(reader.result, file);
 							};
@@ -2703,27 +2753,27 @@
 							else reader.readAsBinaryString(file);
 							fileReaderInitiated[fileInputId] = true;
 						}
-						else _this.notify("File type not supported! Expected " + fileExtension, false);
+						else this.notify("File type not supported! Expected " + fileExtension, false);
 					}
-					function notify() { _this.notify("Loading file...", false, init); }
-					function showError(e) { _this.notify("Error loading file: " + e); }
+					function notify() { this.notify("Loading file...", false, init.bind(this)); }
+					function showError(e) { this.notify("Error loading file: " + e); }
 					if (!fileReaderInitiated[fileInputId]) {
 						if (window.File && window.FileReader && window.FileList && window.Blob) {
-							fileInputElem.addEventListener('change', notify, false);
-							fileInputElem.addEventListener('error', showError, false);
+							fileInputElem.addEventListener('change', notify.bind(this), false);
+							fileInputElem.addEventListener('error', showError.bind(this), false);
 						}
-						else _this.notify('Failed to initiate the File Reader.', true);
+						else this.notify('Failed to initiate the File Reader.', true);
 					}
 				}
 				function init(cb) {
-					if (fileExtension && /csv/i.test(fileExtension)) initFileReader('text', parseCSV);
-					else if (fileExtension && /vcf/i.test(fileExtension)) initFileReader('text', parseVCF);
-					else if (fileExtension && /json/i.test(fileExtension)) initFileReader('text', parseJSON);
-					else initFileReader("binary", saveFile);
+					if (fileExtension && /csv/i.test(fileExtension)) initFileReader.call(this, 'text', parseCSV.bind(this));
+					else if (fileExtension && /vcf/i.test(fileExtension)) initFileReader.call(this, 'text', parseVCF.bind(this));
+					else if (fileExtension && /json/i.test(fileExtension)) initFileReader.call(this, 'text', parseJSON.bind(this));
+					else initFileReader.call(this, "binary", saveFile.bind(this));
 					return cb();
 				}
 				function saveFile(source, details) {
-					var contents = Base64.write(source, Base64.hash(_this.stoKey)),
+					var contents = Base64.write(source, Base64.hash(this.stoKey)),
 						displayName = details.name,
 						extension = /(?:\.([^.]+))?$/.exec(details.name)[1] || "No file extension",
 						name = details.name.split("."),
@@ -2732,8 +2782,8 @@
 						compSize = contents.length,
 						compression = Math.round((1 - compSize / origSize) * 100) + "%",
 						modified = details.lastModified || new Date().getTime(),
-						owner = _this.dropboxEmail || "unknown",
-						hash = Base64.hash(Base64.hash(_this.stoKey));
+						owner = this.dropboxEmail || "unknown",
+						hash = Base64.hash(Base64.hash(this.stoKey));
 					name.pop();
 					name = name.join(".");
 					modified = typeof modified === "number" ? modified : new Date(modified).getTime();
@@ -2742,10 +2792,10 @@
 					else return ret;
 				}
 				function parseCSV(source) {
-					_this.notify("Importing data...", false, function () {
+					this.notify("Importing data...", false, function () {
 						source = csv2json(source);
 						source.lastModified = new Date().getTime();
-						source.author = _this.dropboxEmail || "unknown";
+						source.author = this.dropboxEmail || "unknown";
 						//try get csv modified date and author from notes
 						if (source.Rows[0].Notes) {
 							source.Rows[0].Notes = source.Rows[0].Notes.replace(/\r\n|\r|\n/g, "\r\n");//normalize line breaks
@@ -2772,24 +2822,21 @@
 						source.identifierCol = "Name";
 						if (callback instanceof Function) return callback(source);
 						else return source;
-					});
+					}.bind(this));
 				}
 				function parseVCF(input) {
-					//var importedVCF = new importvCard().initialize(input);
 					debug("parseVCF not done");
 				}
 				function parseJSON(input) {
-					//APP.ADDRESSBOOK.mergeBooks(input, replaceExisting, finish);
 					debug("parseJSON not done");
 				}
 				function click(callback) {
 					document.getElementById(fileInputId).click();
 					if (callback instanceof Function) return callback();
 				}
-				var _this = this;
 				checkDBLoaded(function (callback) {
-					init(function () { click(callback); });
-				});
+					init.call(this, function () { click(callback); });
+				}.bind(this));
 			},
 			/*options = {
 				see NyckelDBObj.prototype.sync options
@@ -2798,26 +2845,26 @@
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
 					function done(success, errors, title, obj) {
-						_this.spin(false);
+						this.spin(false);
 						if (err) {
-							_this.notify("Please try again later", true);
+							this.notify("Please try again later", true);
 							return;
 						}
 						else if (!obj && errors) {
 							if (/unsupported version/.test(errors)) {
-								_this.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
+								this.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
 							}
 							else {
 								switch (errors) {
 									case "wrong key used":
 										err = true;//break until right key input and try again
-										_this.updateStoKey();
+										this.updateStoKey();
 										break;
 									case "try again later":
-										_this.notify("Wrong password used. Please try again later", true);
+										this.notify("Wrong password used. Please try again later", true);
 										break;
 									default:
-										_this.notify("Unknown error");
+										this.notify("Unknown error");
 										debug(errors, "sync errors");
 								}
 							}
@@ -2825,7 +2872,7 @@
 						else if (success && obj && obj.file) {
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title, syncPending) {
+								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title) {
 									if (!success) debug(error, title + " setSyncComplete error");
 									else console.log("sync complete");
 								});
@@ -2838,18 +2885,23 @@
 					}
 					function readFile(title, json, error) {
 						if (json && !error) {
-							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, done);
+							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, done.bind(this));
 						}
 						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
 							console.log(error, "offline");
 							options.forceSync = true;
-							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, done);
+							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, done.bind(this));
 						}
 						else {
 							debug(error, "couldn't sync " + title);
-							_this.spin(false);
-							_this.notify("Sync did not complete successfully");
+							this.spin(false);
+							this.notify("Sync did not complete successfully");
 						}
+					}
+					function download (title) {
+						APP.Dbx.open("/data/" + title, null, function (json, error) {
+							readFile.call(this, title, json, error);
+						});
 					}
 					syncfile = syncfile || {};
 					//add templates to syncfile
@@ -2869,37 +2921,33 @@
 							wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (success, errors, title, requiresSync) {
 								if (success && !errors) {
 									if (requiresSync === true) {
-										(function (title) {//capture title here
-											APP.Dbx.open("/data/" + title, null, function (json, error) {
-												readFile(title, json, error);
-											});
-										})(title);
+										download.call(this, title);
 									}
 									else if (a === count) return b++ , cb(syncfile);
 									else b++;
 									a++;
 								}
 								else {
-									_this.spin(false);
+									this.spin(false);
 									debug(errors, "problem syncing " + title);
-									_this.notify("Sync did not complete successfully");
+									this.notify("Sync did not complete successfully");
 								}
-							});
+							}.bind(this));
 						}
 					}
 				}
 				function saveSyncfile(syncfile) {
 					function failed() {
-						_this.notify("Sync did not complete successfully");
-						_this.spin(false);
+						this.notify("Sync did not complete successfully");
+						this.spin(false);
 					}
 					function success() {
-						_this.spin(false);
+						this.spin(false);
 					}
 					if (syncfileNeedsUpdated) {
-						APP.Dbx.save("/sync/lastSync", syncfile, null, success, failed);
+						APP.Dbx.save("/sync/lastSync", syncfile, null, success.bind(this), failed.bind(this));
 					}
-					else return success();
+					else return success.call(this, );
 				}
 				function readSyncfile(syncfile, error) {
 					if (error === undefined || error === "data not found" || error.match(/^path\/not_found/)) {
@@ -2907,51 +2955,49 @@
 							syncfile = JSON && JSON.parse(syncfile) || $.parseJSON(syncfile);
 						}
 						else console.log("no syncfile found " + error);
-						sync(syncfile, saveSyncfile);
+						sync.call(this, syncfile, saveSyncfile.bind(this));
 					}
 					else if (error === "") {
 						console.log("Sync failed, you are offline");
-						_this.spin(false);
+						this.spin(false);
 					}
 					else {
-						_this.notify("Unhandled sync error: " + error);
-						_this.spin(false);
+						this.notify("Unhandled sync error: " + error);
+						this.spin(false);
 					}
 				}
-				var _this = this,
-					err = false,
+				var err = false,
 					count = 0,
-					syncFile,
 					syncfileNeedsUpdated = false;
 				checkDBLoaded(function (callback) {
 					options = options || {};
-					options.initialKey = dbid ? Base64.hash(dbid) : _this.dropboxEmail ? Base64.hash(_this.dropboxEmail) : null;
-					options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
+					options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
+					options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
 					if (APP.Dbx && APP.Dbx.isAuthenticated) {
-						_this.spin(true, "Synchronising with Dropbox");
-						APP.Dbx.open("/sync/lastSync", null, readSyncfile);
+						this.spin(true, "Synchronising with Dropbox");
+						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					} else if (window.location.hash.match(/^#access_token=/)) {
-						_this.login(function (success) {
+						this.login(function (success) {
 							if (success) {
 								//debug("login success");
-								options.initialKey = dbid ? Base64.hash(dbid) : _this.dropboxEmail ? Base64.hash(_this.dropboxEmail) : null;
-								options.key = options.key || _this.stoKey === "unknown" ? options.initialKey : _this.stoKey;
-								_this.spin(true, "Synchronising with Dropbox");
-								APP.Dbx.open("/sync/lastSync", null, readSyncfile);
+								options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
+								options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
+								this.spin(true, "Synchronising with Dropbox");
+								APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 							}
 							else {
 								debug("login fail");
 								console.log("cannot sync to Dropbox now");
-								_this.spin(false);
+								this.spin(false);
 							}
-						});
+						}.bind(this));
 					}
 					else {
 						console.log("cannot sync to Dropbox now");
-						_this.spin(false);
+						this.spin(false);
 					}
 					if (callback instanceof Function) return callback();
-				});
+				}.bind(this));
 			}
 		}
 	});
@@ -2972,7 +3018,6 @@
 		var uiSettings = new Windows.UI.ViewManagement.UISettings();
 		var onVisibilityChanged = function (args) {
 			if (!document.hidden) {
-				// TODO: The app just became visible. This may be a good time to refresh the view.
 				layout();
 			}
 		};
@@ -3045,7 +3090,5 @@
 		};
 		document.addEventListener('deviceready', onDeviceReady.bind(this), false);
 	}
-	else {
-		startApp();//and... GO!
-	}
+	else startApp();//and... GO!
 })();

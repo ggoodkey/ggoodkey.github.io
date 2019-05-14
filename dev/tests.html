@@ -22,6 +22,7 @@
 </head>
 <body>
 	<h1>NyckelDB tests</h1>
+
 	<button onclick="javascript: APP.Sto.nuke(); if (window.location && window.location.reload) window.location.reload(true);">Clear localStorage Cache</button>
 	<table id="testTable">
 		<thead>
@@ -255,7 +256,7 @@
 		//advancedSearch(searchTerms, options)
 		testMethods("advancedSearch", function (a, callback) { return db[a].advancedSearch("hello", null, callback); }, false, true);
 		//forEach(funct, callback)
-		testMethods("forEachRow", function (a) { return db[a].forEachRow(function (id) { return db[a].getVal(id, "column_2"); }, function (a, b) { console.log("a", a); if(b) console.log("error", b); }); });
+		testMethods("forEachRow", function (a) { return db[a].forEachRow(function (id) { return db[a].getVal(id, "column_2"); }, function (a, b) { console.log("a", a); if (b) console.log("error", b); }); });
 		//shuffle()
 		testMethods("shuffle", function (a) { return db[a].shuffle(); });
 		//hideRow(rowId)
@@ -279,8 +280,8 @@
 		testMethods("sync", function (a) { return db[a].sync(true, callback); }, true);
 		//setTitle(newTitle, callback)
 		testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
-		//deleteTable(callback)
-		//testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
+			//deleteTable(callback)
+			//testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
 	</script>
 </body>
 </html>

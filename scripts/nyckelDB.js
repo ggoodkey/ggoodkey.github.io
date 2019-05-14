@@ -2693,11 +2693,11 @@ APP.nyckelDB = (function () {
 			var title = VAL.toPropName(DB[this.id].title);
 			if (!cloudSyncFile[title] && cloudSyncFile[title] !== 0 || parseInt(cloudSyncFile[title]) !== DB[this.id].lastModified) {
 				this.syncPending = true;
-				return ret(true);
+				return ret.call(this, true);
 			}
-			else return ret(false);
+			else return ret.call(this, false);
 		}
-		else return ret(this.syncPending);
+		else return ret.call(this, this.syncPending);
 	};
 
 	/**

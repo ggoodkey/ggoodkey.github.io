@@ -57,7 +57,7 @@
 <body>
 	<div id="loading"></div>
 	<div id="app" v-bind:class="{'sidenav_open': showSideNav, 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme }">
-		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar}">
+		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
 			<div id="currentView"> {{ currentView.name }}</div>
 			<!--right buttons (reverse order)-->
@@ -66,7 +66,6 @@
 			<div id="search" class="navlink right" v-on:click="search" tabindex="11"><span class="icon icon-search"></span></div>
 			<form id="searchBar" class="right">
 				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
-				<!--<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />-->
 				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
 				<div id="searchAutoComplete"> {{ searchAutoComplete }}</div>
 				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
@@ -218,7 +217,7 @@
 				</div>
 				<br />
 				<template v-for="(item, index) in details.data">
-					<div class="clear" v-if="item.text[0] && ! item.hidden">
+					<div class="clear" v-if="item.text[0] && !item.hidden">
 						<label class="itemLabel">{{ item.label }}</label>
 						<div class="itemText">
 							<template v-for="(line, lineIndex) in item.text">
@@ -279,7 +278,39 @@
 					</div>
 				</template>
 			</div>
-			<div v-else align="center">Nothing here<br /><a v-on:click="detailsViewHelp">Help</a></div>
+		</div>
+	</script>
+
+	<!--Edit Details Card Template-->
+	<script id="edit-details-card" type="text/x-template">
+		<div>
+			<h1>Edit</h1>
+			<div v-for="item in details.data">
+				<label class="itemLabel">{{ item.column.replace(/_/g," ") }}</label>
+				<input v-if="item.type === 'number'" type="number" v-bind:value="item.text" class="textbox" />
+				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="item.text" class="textbox" />
+				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="item.text" class="textbox" />
+				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="item.text" class="textbox" />
+				<div v-else-if="item.type === 'boolean'" class="switch right">
+					<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text" />
+					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item)"></label>
+				</div>
+				<input v-else-if="item.type === 'date'" type="date" v-bind:value="item.text" class="textbox" />
+				<input v-else-if="item.type === 'email'" type="email" v-bind:value="item.text" class="textbox" />
+				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="item.text" class="textbox" />
+				<div v-else-if="item.type === 'dropdown'">
+					<button v-on:click="item.showDropdown = true">{{ item.text }}</button>
+					<div v-show="item.showDropdown">
+						<ul v-for="option in item.options">
+							<li v-on:click="setItem(item, option)">{{ option }}</li>
+						</ul>
+					</div>
+				</div>
+				<input v-else type="text" v-bind:value="item.text" class="textbox" />
+				<div class="alert">{{ item.warning }}</div>
+			</div>
+			<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
+			<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
 		</div>
 	</script>
 
@@ -435,7 +466,9 @@
 			</div>
 			<div class="scroll-outer-container">
 				<div class="view splitViewRight">
-					<details-card class="view-container" v-bind:details="recentDetails"></details-card>
+					<transition name="forward" mode="out-in">
+						<component v-bind:is="detailsView" v-bind:details="recentDetails"></component>
+					</transition>
 				</div>
 			</div>
 		</div>
@@ -574,7 +607,9 @@
 			</div>
 			<div class="scroll-outer-container">
 				<div class="view splitViewRight">
-					<details-card class="view-container" v-bind:details="searchDetails"></details-card>
+					<transition name="forward" mode="out-in">
+						<component v-bind:is="detailsView" v-bind:details="searchDetails"></component>
+					</transition>
 				</div>
 			</div>
 		</div>
@@ -584,33 +619,7 @@
 	<script type="text/x-template" id="edit-details-page">
 		<div class="view">
 			<div class="view-container">
-				<h1>Edit</h1>
-				<div v-for="item in details.data">
-					<label class="itemLabel">{{ item.column.replace(/_/g," ") }}</label>
-					<input v-if="item.type === 'number'" type="number" v-bind:value="item.text" class="textbox" />
-					<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="item.text" class="textbox" />
-					<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="item.text" class="textbox" />
-					<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="item.text" class="textbox" />
-					<div v-else-if="item.type === 'boolean'" class="switch right">
-						<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text" />
-						<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item)"></label>
-					</div>
-					<input v-else-if="item.type === 'date'" type="date" v-bind:value="item.text" class="textbox" />
-					<input v-else-if="item.type === 'email'" type="email" v-bind:value="item.text" class="textbox" />
-					<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="item.text" class="textbox" />
-					<div v-else-if="item.type === 'dropdown'">
-						<button v-on:click="item.showDropdown = true">{{ item.text }}</button>
-						<div v-show="item.showDropdown">
-							<ul v-for="option in item.options">
-								<li v-on:click="setItem(item, option)">{{ option }}</li>
-							</ul>
-						</div>
-					</div>
-					<input v-else type="text" v-bind:value="item.text" class="textbox" />
-					<div class="alert">{{ item.warning }}</div>
-				</div>
-				<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
-				<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
+				<edit-details-card v-bind:details="details"></edit-details-card>
 			</div>
 		</div>
 	</script>
