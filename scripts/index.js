@@ -2916,7 +2916,7 @@
 							this.notify("Sync did not complete successfully");
 						}
 					}
-					function download (title) {
+					function download(title) {
 						APP.Dbx.open("/data/" + title, null, function (json, error) {
 							readFile.call(this, title, json, error);
 						}.bind(this));

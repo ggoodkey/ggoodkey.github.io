@@ -2766,7 +2766,10 @@ APP.nyckelDB = (function () {
 		if (!json) return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
 
 		if (typeof json === "string") json = JSON.parse(json);
-		if (!json.data || !(json.version === this.Version + "_" + Base64.Version || json.version === this.Version + "." + Base64.Version)) {
+		if (!json.data || !(
+			json.version === "0.3_1.1" && this.Version === 0.4 ||//sync takes into account all changes from v0.3 to 0.4
+			json.version === this.Version + "_" + Base64.Version ||
+			json.version === this.Version + "." + Base64.Version)) {
 			return retError.call(this, "unsupported version:" + json.version);
 		}
 		return sync.call(this);
