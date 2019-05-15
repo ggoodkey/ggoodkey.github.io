@@ -18,7 +18,7 @@
 	function isObject(x, type) { return toString.call(x) === '[object Object]'; }
 	function paramsFromUrlHash(hash) {
 		hash = hash || window.location.hash;
-		return hash.replace(/^#/, '').split('&').reduce(function (o, entry) { if (entry === '') return o; entry = entry.split('='); o[decodeURIComponent(entry[0])] = decodeURIComponent(entry[1]); return o; }, {});
+		return hash.replace(/^#/, '').replace(/^\//,'').split('&').reduce(function (o, entry) { if (entry === '') return o; entry = entry.split('='); o[decodeURIComponent(entry[0])] = decodeURIComponent(entry[1]); return o; }, {});
 	}
 	var api = 'https://api.dropboxapi.com/2/',
 		content = 'https://content.dropboxapi.com/2/',
