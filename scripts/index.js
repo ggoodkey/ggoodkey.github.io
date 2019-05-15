@@ -2919,7 +2919,7 @@
 					function download (title) {
 						APP.Dbx.open("/data/" + title, null, function (json, error) {
 							readFile.call(this, title, json, error);
-						});
+						}.bind(this));
 					}
 					syncfile = syncfile || {};
 					//add templates to syncfile
