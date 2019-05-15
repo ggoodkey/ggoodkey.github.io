@@ -2994,7 +2994,7 @@
 					if (APP.Dbx && APP.Dbx.isAuthenticated) {
 						this.spin(true, "Synchronising with Dropbox");
 						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-					} else if (window.location.hash.match(/^#access_token=/)) {
+					} else if (window.location.hash.match(/^#\/access_token=/)) {
 						this.login(function (success) {
 							if (success) {
 								//debug("login success");
