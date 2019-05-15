@@ -2223,8 +2223,8 @@
 		methods: {
 			updateCurrentView: function (to) {
 				console.log(window.location.hash, "updateCurrentView");
-				//if (window.location.hash.match(/^#access_token=/)) {
-			//	this.login(function (success) {
+				if (window.location.hash.match(/^#\/access_token=/)) {
+				this.login(function (success) {
 			//		if (success) {
 			//			//debug("login success");
 			//			options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
@@ -2237,8 +2237,8 @@
 			//			console.log("cannot sync to Dropbox now");
 			//			this.spin(false);
 			//		}
-			//	}.bind(this));
-			//}
+				}.bind(this));
+			}
 				to = to || { name: this.$route.name, query: this.$route.query };
 				var location = to.name;
 				if (location === "home") location = this.startView;
