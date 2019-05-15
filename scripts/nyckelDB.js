@@ -2289,6 +2289,7 @@ APP.nyckelDB = (function () {
 		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex > 0) {
 			options.reverse ? DB[this.id].table.reverse(sortFunction) : DB[this.id].table.sort(sortFunction);
+			ROW_INDEX_CACHE[this.id] = {};
 			colIndex = null;
 			return this;
 		}
@@ -2739,7 +2740,7 @@ APP.nyckelDB = (function () {
 					//wrong key, put user through key update ui and try again
 					SYNC_ERROR = true;
 					SYNC_ERROR_TIME = new Date().getTime();
-					return retError("wrong key used");
+					return retError.call(this, "wrong key used");
 			}
 			return IMPORT_JSON.call(this, json, function (changes) {
 				if (changes || this.syncPending === true || forceSync === true) {
@@ -2759,14 +2760,14 @@ APP.nyckelDB = (function () {
 			DB[this.id].lastModified = TIMESTAMP();
 			this.syncPending = true;
 		}
-		if (wait > 0 && !forceSync) return retError("rate limited, try again in " + wait + " minutes");
-		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError("try again later");
+		if (wait > 0 && !forceSync) return retError.call(this, "rate limited, try again in " + wait + " minutes");
+		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError.call(this, "try again later");
 
 		if (!json) return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
 
 		if (typeof json === "string") json = JSON.parse(json);
 		if (!json.data || !(json.version === this.Version + "_" + Base64.Version || json.version === this.Version + "." + Base64.Version)) {
-			return retError("unsupported version:" + json.version);
+			return retError.call(this, "unsupported version:" + json.version);
 		}
 		return sync.call(this);
 	};
