@@ -2201,7 +2201,7 @@
 		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
-				debug(window.location.hash, "beforeEach");
+				console.log(window.location.hash, "beforeEach");
 				// This goes through the matched routes from last to first, finding the closest route with a title.
 				// eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
 				const nearestWithTitle = to.matched.slice().reverse().find(function (r) { r.meta && r.meta.title; });
@@ -2214,7 +2214,7 @@
 		},
 		watch: {
 			'$route'(to, from) {
-				debug(window.location.hash, "watch");
+				console.log(window.location.hash, "watch");
 				const toDepth = to.query.page || 0;
 				const fromDepth = from.query.page || 0;
 				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
@@ -2222,7 +2222,7 @@
 		},
 		methods: {
 			updateCurrentView: function (to) {
-				debug(window.location.hash, "updateCurrentView");
+				console.log(window.location.hash, "updateCurrentView");
 				//if (window.location.hash.match(/^#access_token=/)) {
 			//	this.login(function (success) {
 			//		if (success) {
