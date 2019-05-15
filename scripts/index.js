@@ -2201,7 +2201,7 @@
 		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
-				debug(to, "beforeEach");
+				debug(window.location.hash, "beforeEach");
 				// This goes through the matched routes from last to first, finding the closest route with a title.
 				// eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
 				const nearestWithTitle = to.matched.slice().reverse().find(function (r) { r.meta && r.meta.title; });
@@ -2214,7 +2214,7 @@
 		},
 		watch: {
 			'$route'(to, from) {
-				debug(to, "watch");
+				debug(window.location.hash, "watch");
 				const toDepth = to.query.page || 0;
 				const fromDepth = from.query.page || 0;
 				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
@@ -2222,7 +2222,23 @@
 		},
 		methods: {
 			updateCurrentView: function (to) {
-				debug(to, "updateCurrentView");
+				debug(window.location.hash, "updateCurrentView");
+				//if (window.location.hash.match(/^#access_token=/)) {
+			//	this.login(function (success) {
+			//		if (success) {
+			//			//debug("login success");
+			//			options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
+			//			options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
+			//			this.spin(true, "Synchronising with Dropbox");
+			//			APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+			//		}
+			//		else {
+			//			debug("login fail");
+			//			console.log("cannot sync to Dropbox now");
+			//			this.spin(false);
+			//		}
+			//	}.bind(this));
+			//}
 				to = to || { name: this.$route.name, query: this.$route.query };
 				var location = to.name;
 				if (location === "home") location = this.startView;
