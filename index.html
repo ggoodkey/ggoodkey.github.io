@@ -164,31 +164,54 @@
 
 
 	<!--VUE JS TEMPLATES-->
+	<!-- Dropdown Button -->
+	<script type="text/x-template" id="dropdown-button">
+		<div class="dropdown-container">
+			<button v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
+				<span class="icon" v-bind:class="icon"></span>
+				<template v-if="text !== ''">
+					&nbsp;&nbsp;{{ text }}
+				</template>
+			</button>
+			<div v-show="open" class="dropdown" v-bind:class="align">		
+				<a class="link" v-for="link in links" v-on:click="action(link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
+					<span class="icon left" v-bind:class="link.icon"></span>
+					<div v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
+						{{ link.text }}
+					</div>
+				</a>
+			</div>
+			<div class="closeDropdown" v-show="open" v-on:click="close"></div>
+		</div>
+	</script>
 	<!--Jump-list (search results, recently veiwed items) Template-->
 	<script type="text/x-template" id="jump-list">
 		<div v-if="list.length > 0">
 			<div align="left">
-				<button v-show="selected === false" v-on:click="toggleSelect"><span class="icon icon-check"></span> Select</button>
-				<button v-show="selected && selectAll === false" v-on:click="toggleSelectAll"><span class="icon icon-unchecked"></span> Select All</button>
-				<button v-show="selected && selectAll" v-on:click="toggleSelectAll"><span class="icon icon-check"></span> Deselect All</button>
-				<button v-show="selected" v-on:click="toggleSelect"><span class="icon icon-cancel"></span> Cancel Select</button>
-				<button v-on:click="toggle('collapsed')" v-show="collapsed === false"><span class="icon icon-th"></span> Button View</button>
-				<button v-on:click="toggle('collapsed')" v-show="collapsed"><span class="icon icon-th-list"></span> List View</button>
-				<div class="dropdown-container right">
-					<button v-on:click="updateEmailLinks(list)"> <span class="icon icon-mail"></span> E-mail</button>
-					<div v-show="emailDropdown" class="dropdown">
-						<a v-for="item in emailLinks" class="link" v-on:click="toggle('emailDropdown')" v-bind:href="item.href">{{ item.text }}</a>
-					</div>
-				</div>
+				<button v-show="selected === false" v-on:click="toggleSelect" class="left"><span class="icon icon-check"></span> Select</button>
+				<button v-show="selected && selectAll === false" v-on:click="toggleSelectAll" class="left"><span class="icon icon-unchecked"></span> Select All</button>
+				<button v-show="selected && selectAll" v-on:click="toggleSelectAll" class="left"><span class="icon icon-check"></span> Deselect All</button>
+				<button v-show="selected" v-on:click="toggleSelect" class="left"><span class="icon icon-cancel"></span> Cancel Select</button>
+				<button v-show="selected === false && collapsed === false" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-th"></span> Button View</button>
+				<button v-show="selected === false && collapsed" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-list"></span> List View</button>
+				<dropdown-button v-on:dropdown-action="moreDropdownActions"
+								 v-on:dropdown-open="updateDropdownLinks"
+								 v-bind:links="moreDropdownLinks"
+								 icon="icon-more"
+								 class="left"
+								 title="Actions"
+								 align="right">
+				</dropdown-button>
 			</div>
-			<ul class="links" v-bind:collapsed="collapsed">
+			<ul class="links clear" v-bind:collapsed="collapsed">
 				<li v-for="link in list" v-bind:id="link.id" v-show="showIf(link, collapsed)" v-on:click="action(link, scrolldiv, collapsed)" v-bind:class="{
 					'link': link.type === 'link',
 					'jumplink': link.type === 'jumplink',
 					'jumplink-button': link.type === 'jumplink' && collapsed === true,
 					'icon': selected && link.type === 'link',
 					'icon-unchecked': selected && link.selected === false,
-					'icon-check selected': selected && link.selected
+					'icon-check': selected && link.selected,
+					'selected': selected && link.selected
 					}">
 					{{ link.text }}
 				</li>
@@ -207,14 +230,16 @@
 						<h3 v-if="details.subtitleH2">{{ details.subtitleH2 }}</h3>
 					</div>
 				</div>
-				<div class="dropdown-container clear">
-					<button v-on:click="editDetails" v-bind:title="'Edit ' + details.data[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
-					<button id="groupsDropdownButton" v-on:click="toggleGroupsDropdown" v-bind:title="'Add ' + details.data[0].text + ' to Group'"><span class="icon icon-people"></span>&nbsp;&nbsp;Add to Group</button>
-					<ul v-show="addItemToGroupDropdown" class="dropdown">
-						<li v-for="groupName in groups" v-on:click="addToGroup(groupName, details.data)" class="link">{{ groupName }}</li>
-						<li v-on:click="addToNewGroup(details.data)" class="link">Create new group</li>
-					</ul>
-				</div>
+				<button v-on:click="editDetails" v-bind:title="'Edit ' + details.data[0].text"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
+				<dropdown-button 
+					class="left" 
+					v-bind:links="groupsDropdownLinks" 
+					v-bind:title="'Add ' + details.data[0].text + ' to Group'" 
+					icon="icon-people" 
+					text="Add to Group" 
+					v-on:dropdown-action="groupsDropdownActions" 
+					v-on:dropdown-open="initializeGroups">
+				</dropdown-button>
 				<br />
 				<template v-for="(item, index) in details.data">
 					<div class="clear" v-if="item.text[0] && !item.hidden">
@@ -285,29 +310,31 @@
 	<script id="edit-details-card" type="text/x-template">
 		<div>
 			<h1>Edit</h1>
-			<div v-for="item in details.data">
-				<label class="itemLabel">{{ item.column.replace(/_/g," ") }}</label>
-				<input v-if="item.type === 'number'" type="number" v-bind:value="item.text" class="textbox" />
-				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="item.text" class="textbox" />
-				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="item.text" class="textbox" />
-				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="item.text" class="textbox" />
-				<div v-else-if="item.type === 'boolean'" class="switch right">
-					<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text" />
-					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item)"></label>
-				</div>
-				<input v-else-if="item.type === 'date'" type="date" v-bind:value="item.text" class="textbox" />
-				<input v-else-if="item.type === 'email'" type="email" v-bind:value="item.text" class="textbox" />
-				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="item.text" class="textbox" />
-				<div v-else-if="item.type === 'dropdown'">
-					<button v-on:click="item.showDropdown = true">{{ item.text }}</button>
-					<div v-show="item.showDropdown">
-						<ul v-for="option in item.options">
-							<li v-on:click="setItem(item, option)">{{ option }}</li>
-						</ul>
+			<div v-for="(item, index) in details.data">
+				<template v-if="!item.readonly">
+					<label class="itemLabel">{{ item.column.replace(/_/g," ") }}</label>
+					<input v-if="item.type === 'number'" type="number" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="item.text" class="textbox" />
+					<div v-else-if="item.type === 'boolean'" class="switch right">
+						<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text" />
+						<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item)"></label>
 					</div>
-				</div>
-				<input v-else type="text" v-bind:value="item.text" class="textbox" />
-				<div class="alert">{{ item.warning }}</div>
+					<input v-else-if="item.type === 'date'" type="date" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'email'" type="email" v-bind:value="item.text" class="textbox" />
+					<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="item.text" class="textbox" />
+					<div v-else-if="item.type === 'dropdown'">
+						<button v-on:click="item.showDropdown = true">{{ item.text }}</button>
+						<div v-show="item.showDropdown">
+							<ul v-for="option in item.options">
+								<li v-on:click="setItem(item, option)">{{ option }}</li>
+							</ul>
+						</div>
+					</div>
+					<input v-else type="text" v-bind:value="item.text" class="textbox" />
+					<div class="alert">{{ item.warning }}</div>
+				</template>
 			</div>
 			<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
 			<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
@@ -444,7 +471,7 @@
 					<h1>Nyckel <sup><small><small>(beta)</small></small></sup></h1>
 					<h3>Store, search, view, share and sync data across devices using the cloud.</h3>
 					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>
-					<p>You can read the nyckelDB API documentation <a href="dev/index.html">here</a></p>
+					<p>You can read the nyckelDB API documentation <a href="dev/index.html" target="_blank">here</a></p>
 					<!--<p>
 						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
 						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
@@ -459,7 +486,7 @@
 						<span class="icon icon-alert"></span>
 						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
 						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser
-						data, deleting all files saved to Dropbox (in Dropbox\Apps\Nyckel\) and typing the command 'nukeapp' into the search bar and pressing RETURN.
+						data, deleting all files saved to Dropbox (in Dropbox\Apps\Nyckel\) and typing the command 'nukeapp' into this app's search bar and pressing RETURN.
 					</p>
 					<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>
 				</div>
@@ -586,21 +613,15 @@
 				<div class="view-container">
 					<div v-if="searchResults.length > 0">
 						<h2>{{ searchResultsTitle }}</h2>
-						<div align="left">
-							<div class="dropdown-container right">
-								<button id="searchResultsGroupDropdown" v-on:click="toggleResultsGroupDropdown" v-bind:title="'Add ' + currentQuery + ' to Group'"><span class="icon icon-people"></span> Add Search to Group</button>
-								<ul v-show="addSearchToGroupDropdown" class="dropdown">
-									<li v-for="groupName in groups" v-on:click="addToGroup(groupName, null, currentQuery)" class="link">{{ groupName }}</li>
-									<li v-on:click="addToNewGroup(null, currentQuery)" class="link">Create new group</li>
-								</ul>
-							</div>
-							<a id="hiddenEmailLink" class="hidden" href=""></a>
-							<button class="right"><span class="icon icon-filter"></span> Filter</button>
-							<button class="right"><span class="icon icon-sort"></span> Sort</button>
-							<button v-show="selectSearchResults"><span class="icon icon-favorite-star"></span> Add Selected to Favorites</button>
-							<button v-show="selectSearchResults"><span class="icon icon-mail"></span> E-mail Selected</button>
-						</div>
-						<jump-list v-bind:links="searchResults" v-bind:select="selectSearchResults" scrolldiv="searchResultsView" v-bind:details="searchDetails" v-on:update-details="onDetailsUpdate" v-on:update-recently-viewed="onRecentlyViewedUpdate"></jump-list>
+						<jump-list 
+								   v-bind:links="searchResults" 
+								   v-bind:select="selectSearchResults" 
+								   scrolldiv="searchResultsView" 
+								   v-bind:details="searchDetails"
+								   v-bind:currentQuery="currentQuery"
+								   v-on:update-details="onDetailsUpdate" 
+								   v-on:update-recently-viewed="onRecentlyViewedUpdate">
+						</jump-list>
 					</div>
 					<h4>{{ searchResultsError }}</h4>
 				</div>

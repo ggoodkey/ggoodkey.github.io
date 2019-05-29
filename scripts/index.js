@@ -207,79 +207,250 @@
 						subtitleH2: ["Organization1_Name", "Organization1_Title", "Organization1_Department"],
 						subtitleH2Joiner: ", ", //joins subtitleH2 together with these charactors
 						mainContent: [//displays the following content in the following order
-							"Nickname",//the value of Nickname is the value and "Nickname" is the label (because label is unspecified)
+							"Nickname",//here, because label is unspecified, the value of Nickname is the value and "Nickname" is the label
 							"ShortName",
 							"MaidenName",
-							"Birthday",
-							{ value: "Event1_Value", label: "Event1_Type" },//the value of Event1_Value is the value and the value of Event1_Type is 
-							{ value: "Event2_Value", label: "Event2_Type" },//the label when value and label are specified 
-							{ value: "Event3_Value", label: "Event3_Type" },
-							{ value: "Event4_Value", label: "Event4_Type" },
-							{ value: "Event5_Value", label: "Event5_Type" },
-							{ value: "Event6_Value", label: "Event6_Type" },
-							{ value: "Event7_Value", label: "Event7_Type" },
-							{ value: "Event8_Value", label: "Event8_Type" },
-							{ value: "Event9_Value", label: "Event9_Type" },
-							{ value: "Event10_Value", label: "Event10_Type" },
+							{
+								groupHeading: "Events",
+								group: [
+									"Birthday",
+									{ value: "Event1_Value", label: "Event1_Type" },//here, the value of Event1_Value is the value and the value of Event1_Type is 
+									{ value: "Event2_Value", label: "Event2_Type" },//the label when value and label are specified 
+									{ value: "Event3_Value", label: "Event3_Type" },
+									{ value: "Event4_Value", label: "Event4_Type" },
+									{ value: "Event5_Value", label: "Event5_Type" },
+									{ value: "Event6_Value", label: "Event6_Type" },
+									{ value: "Event7_Value", label: "Event7_Type" },
+									{ value: "Event8_Value", label: "Event8_Type" },
+									{ value: "Event9_Value", label: "Event9_Type" },
+									{ value: "Event10_Value", label: "Event10_Type" }
+								]
+							},
 							"Gender",
 							"Location",
-							{ value: "E_mail1_Value", label: "E_mail1_Type" },
-							{ value: "E_mail2_Value", label: "E_mail2_Type" },
-							{ value: "E_mail3_Value", label: "E_mail3_Type" },
-							{ value: "E_mail4_Value", label: "E_mail4_Type" },
-							{ value: "E_mail5_Value", label: "E_mail5_Type" },
-							{ value: "E_mail6_Value", label: "E_mail6_Type" },
-							{ value: "E_mail7_Value", label: "E_mail7_Type" },
-							{ value: "E_mail8_Value", label: "E_mail8_Type" },
-							{ value: "E_mail9_Value", label: "E_mail9_Type" },
-							{ value: "E_mail10_Value", label: "E_mail10_Type" },
-							{ value: "Phone1_Value", label: "Phone1_Type" },
-							{ value: "Phone2_Value", label: "Phone2_Type" },
-							{ value: "Phone3_Value", label: "Phone3_Type" },
-							{ value: "Phone4_Value", label: "Phone4_Type" },
-							{ value: "Phone5_Value", label: "Phone5_Type" },
-							{ value: "Phone6_Value", label: "Phone6_Type" },
-							{ value: "Phone7_Value", label: "Phone7_Type" },
-							{ value: "Phone8_Value", label: "Phone8_Type" },
-							{ value: "Phone9_Value", label: "Phone9_Type" },
-							{ value: "Phone10_Value", label: "Phone10_Type" },
+							{
+								groupHeading: "E-mail Addresses",
+								group: [
+									{ value: "E_mail1_Value", label: "E_mail1_Type" },
+									{ value: "E_mail2_Value", label: "E_mail2_Type" },
+									{ value: "E_mail3_Value", label: "E_mail3_Type" },
+									{ value: "E_mail4_Value", label: "E_mail4_Type" },
+									{ value: "E_mail5_Value", label: "E_mail5_Type" },
+									{ value: "E_mail6_Value", label: "E_mail6_Type" },
+									{ value: "E_mail7_Value", label: "E_mail7_Type" },
+									{ value: "E_mail8_Value", label: "E_mail8_Type" },
+									{ value: "E_mail9_Value", label: "E_mail9_Type" },
+									{ value: "E_mail10_Value", label: "E_mail10_Type" }
+								]
+							},
+							{
+								groupHeading: "Phone Numbers",
+								group: [
+									{ value: "Phone1_Value", label: "Phone1_Type" },
+									{ value: "Phone2_Value", label: "Phone2_Type" },
+									{ value: "Phone3_Value", label: "Phone3_Type" },
+									{ value: "Phone4_Value", label: "Phone4_Type" },
+									{ value: "Phone5_Value", label: "Phone5_Type" },
+									{ value: "Phone6_Value", label: "Phone6_Type" },
+									{ value: "Phone7_Value", label: "Phone7_Type" },
+									{ value: "Phone8_Value", label: "Phone8_Type" },
+									{ value: "Phone9_Value", label: "Phone9_Type" },
+									{ value: "Phone10_Value", label: "Phone10_Type" }
+								]
+							},
 							{ value: "Address1_Formatted", label: "Address1_Type" },
 							{ value: "Address2_Formatted", label: "Address2_Type" },
-							{ value: "Relation1_Value", label: "Relation1_Type" },
-							{ value: "Relation2_Value", label: "Relation2_Type" },
-							{ value: "Relation3_Value", label: "Relation3_Type" },
-							{ value: "Relation4_Value", label: "Relation4_Type" },
-							{ value: "Relation5_Value", label: "Relation5_Type" },
-							{ value: "Relation6_Value", label: "Relation6_Type" },
-							{ value: "Relation7_Value", label: "Relation7_Type" },
-							{ value: "Relation8_Value", label: "Relation8_Type" },
-							{ value: "Relation9_Value", label: "Relation9_Type" },
-							{ value: "Relation10_Value", label: "Relation10_Type" },
-							{ value: "Website1_Value", label: "Website1_Type" },
-							{ value: "Website2_Value", label: "Website2_Type" },
-							{ value: "Website3_Value", label: "Website3_Type" },
-							{ value: "Website4_Value", label: "Website4_Type" },
-							{ value: "Website5_Value", label: "Website5_Type" },
-							{ value: "Website6_Value", label: "Website6_Type" },
-							{ value: "Website7_Value", label: "Website7_Type" },
-							{ value: "Website8_Value", label: "Website8_Type" },
-							{ value: "Website9_Value", label: "Website9_Type" },
-							{ value: "Website10_Value", label: "Website10_Type" },
-							{ value: "CustomField1_Value", label: "CustomField1_Type" },
-							{ value: "CustomField2_Value", label: "CustomField2_Type" },
-							{ value: "CustomField3_Value", label: "CustomField3_Type" },
-							{ value: "CustomField4_Value", label: "CustomField4_Type" },
-							{ value: "CustomField5_Value", label: "CustomField5_Type" },
-							{ value: "CustomField6_Value", label: "CustomField6_Type" },
-							{ value: "CustomField7_Value", label: "CustomField7_Type" },
-							{ value: "CustomField8_Value", label: "CustomField8_Type" },
-							{ value: "CustomField9_Value", label: "CustomField9_Type" },
-							{ value: "CustomField10_Value", label: "CustomField10_Type" },
+							{
+								groupHeading: "Family",
+								group: [
+									{ value: "Relation1_Value", label: "Relation1_Type" },
+									{ value: "Relation2_Value", label: "Relation2_Type" },
+									{ value: "Relation3_Value", label: "Relation3_Type" },
+									{ value: "Relation4_Value", label: "Relation4_Type" },
+									{ value: "Relation5_Value", label: "Relation5_Type" },
+									{ value: "Relation6_Value", label: "Relation6_Type" },
+									{ value: "Relation7_Value", label: "Relation7_Type" },
+									{ value: "Relation8_Value", label: "Relation8_Type" },
+									{ value: "Relation9_Value", label: "Relation9_Type" },
+									{ value: "Relation10_Value", label: "Relation10_Type" }
+								]
+							},
+							{
+								groupHeading: "Websites",
+								group: [
+									{ value: "Website1_Value", label: "Website1_Type" },
+									{ value: "Website2_Value", label: "Website2_Type" },
+									{ value: "Website3_Value", label: "Website3_Type" },
+									{ value: "Website4_Value", label: "Website4_Type" },
+									{ value: "Website5_Value", label: "Website5_Type" },
+									{ value: "Website6_Value", label: "Website6_Type" },
+									{ value: "Website7_Value", label: "Website7_Type" },
+									{ value: "Website8_Value", label: "Website8_Type" },
+									{ value: "Website9_Value", label: "Website9_Type" },
+									{ value: "Website10_Value", label: "Website10_Type" }
+								]
+							},
+							{
+								groupHeading: "Other",
+								group: [
+									{ value: "CustomField1_Value", label: "CustomField1_Type" },
+									{ value: "CustomField2_Value", label: "CustomField2_Type" },
+									{ value: "CustomField3_Value", label: "CustomField3_Type" },
+									{ value: "CustomField4_Value", label: "CustomField4_Type" },
+									{ value: "CustomField5_Value", label: "CustomField5_Type" },
+									{ value: "CustomField6_Value", label: "CustomField6_Type" },
+									{ value: "CustomField7_Value", label: "CustomField7_Type" },
+									{ value: "CustomField8_Value", label: "CustomField8_Type" },
+									{ value: "CustomField9_Value", label: "CustomField9_Type" },
+									{ value: "CustomField10_Value", label: "CustomField10_Type" }
+								]
+							},
 							"Notes"
 						],
 						mainContentSplitter: " ::: " //splits mainContent into separate line items at these charactors
 					},
-					editView: {}
+					editView: {
+						layout: [
+							{
+								group: ["Photo",
+									"GivenName",
+									"FamilyName",
+									["Name", "AdditionalName", "YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi",
+										"NamePrefix", "NameSuffix", "Initials", "Nickname", "ShortName", "MaidenName"],//name
+									["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
+										"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],//organisation
+									"GroupMembership"
+								]
+							},
+							//phone
+							{
+								groupHeading: "Phone",
+								collapse: true,
+								group: ["Phone1_Type", "Phone1_Value",
+									"Phone2_Type", "Phone2_Value",
+									"Phone3_Type", "Phone3_Value",
+									"Phone4_Type", "Phone4_Value",
+									"Phone5_Type", "Phone5_Value",
+									"Phone6_Type", "Phone6_Value",
+									"Phone7_Type", "Phone7_Value",
+									"Phone8_Type", "Phone8_Value",
+									"Phone9_Type", "Phone9_Value",
+									"Phone10_Type", "Phone10_Value"
+								]
+							},
+							//email
+							{
+								groupHeading: "E-mail",
+								collapse: true,
+								group: ["E_mail1_Type", "E_mail1_Value",
+									"E_mail2_Type", "E_mail2_Value",
+									"E_mail3_Type", "E_mail3_Value",
+									"E_mail4_Type", "E_mail4_Value",
+									"E_mail5_Type", "E_mail5_Value",
+									"E_mail6_Type", "E_mail6_Value",
+									"E_mail7_Type", "E_mail7_Value",
+									"E_mail8_Type", "E_mail8_Value",
+									"E_mail9_Type", "E_mail9_Value",
+									"E_mail10_Type", "E_mail10_Value"
+								]
+							},
+							//addresses
+							{
+								groupHeading: "Address",
+								collapse: true,
+								group: ["Address1_Type", "Address1_Formatted", "Address1_Street", "Address1_City", "Address1_POBox",
+									"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress",
+									["Address2_Type", "Address2_Formatted", "Address2_Street", "Address2_City", "Address2_POBox",
+										"Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"]
+								]
+							},
+							//notes
+							"Notes",
+							//other
+							{
+								groupHeading: "Events",
+								collapse: true,
+								group: ["Birthday", //events
+									"Event1_Type", "Event1_Value",
+									"Event2_Type", "Event2_Value",
+									"Event3_Type", "Event3_Value",
+									"Event4_Type", "Event4_Value",
+									"Event5_Type", "Event5_Value",
+									"Event6_Type", "Event6_Value",
+									"Event7_Type", "Event7_Value",
+									"Event8_Type", "Event8_Value",
+									"Event9_Type", "Event9_Value",
+									"Event10_Type", "Event10_Value"
+								]
+							},
+							//relations
+							{
+								groupHeading: "Relationships",
+								collapse: true,
+								group: ["Relation1_Type", "Relation1_Value",
+									"Relation2_Type", "Relation2_Value",
+									"Relation3_Type", "Relation3_Value",
+									"Relation4_Type", "Relation4_Value",
+									"Relation5_Type", "Relation5_Value",
+									"Relation6_Type", "Relation6_Value",
+									"Relation7_Type", "Relation7_Value",
+									"Relation8_Type", "Relation8_Value",
+									"Relation9_Type", "Relation9_Value",
+									"Relation10_Type", "Relation10_Value"
+								]
+							},
+							"Gender", "Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
+							"Priority", "Subject", "Language",
+							//web
+							{
+								groupHeading: "Relationships",
+								collapse: true,
+								group: ["Website1_Type", "Website1_Value",
+									"Website2_Type", "Website2_Value",
+									"Website3_Type", "Website3_Value",
+									"Website4_Type", "Website4_Value",
+									"Website5_Type", "Website5_Value",
+									"Website6_Type", "Website6_Value",
+									"Website7_Type", "Website7_Value",
+									"Website8_Type", "Website8_Value",
+									"Website9_Type", "Website9_Value",
+									"Website10_Type", "Website10_Value"
+								]
+							},
+							//IM
+							{
+								groupHeading: "Instant Messaging",
+								collapse: true,
+								group: ["IM1_Type", "IM1_Service", "IM1_Value",
+									"IM2_Type", "IM2_Service", "IM2_Value",
+									"IM3_Type", "IM3_Service", "IM3_Value",
+									"IM4_Type", "IM4_Service", "IM4_Value",
+									"IM5_Type", "IM5_Service", "IM5_Value",
+									"IM6_Type", "IM6_Service", "IM6_Value",
+									"IM7_Type", "IM7_Service", "IM7_Value",
+									"IM8_Type", "IM8_Service", "IM8_Value",
+									"IM9_Type", "IM9_Service", "IM9_Value",
+									"IM10_Type", "IM10_Service", "IM10_Value"
+								]
+							},
+							//custom
+							{
+								groupHeading: "Custom Fields",
+								collapse: true,
+								group: ["CustomField1_Type", "CustomField1_Value",
+									"CustomField2_Type", "CustomField2_Value",
+									"CustomField3_Type", "CustomField3_Value",
+									"CustomField4_Type", "CustomField4_Value",
+									"CustomField5_Type", "CustomField5_Value",
+									"CustomField6_Type", "CustomField6_Value",
+									"CustomField7_Type", "CustomField7_Value",
+									"CustomField8_Type", "CustomField8_Value",
+									"CustomField9_Type", "CustomField9_Value",
+									"CustomField10_Type", "CustomField10_Value"
+								]
+							}
+						]
+					}
 				}
 			},
 			Passwords: {
@@ -397,7 +568,7 @@
 				recentlyViewed: [],
 				showUpdateKey: false,
 				addItemToGroupDropdown: false,
-				addSearchToGroupDropdown: false,
+				groupDropdown: false,
 				groupSearchBox: "",
 				groups: []
 			};
@@ -426,7 +597,7 @@
 				htmlTag = document.getElementsByTagName("html")[0];
 			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
-			if (height < width && width > 360) orientation = " land ";
+			if (height < width && width > 640) orientation = " land ";
 			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
@@ -618,7 +789,7 @@
 			function doneInit() {
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded();
-				if (!cordova && !WinJS && !app.cookieAgree) {
+				if (!cordova && !app.cookieAgree) {
 					app.notify("By continuing to use this site, you agree to the use of first party, non-tracking cookies for personalised content", false);
 					app.cookieAgree = true;
 					app.storeState();
@@ -918,40 +1089,57 @@
 				function sortFunction(a, b) {
 					return sortOrder.indexOf(a.column) === sortOrder.indexOf(b.column) ? 0 : sortOrder.indexOf(a.column) < sortOrder.indexOf(b.column) ? -1 : 1;
 				}
+				function getLayoutOrder (obj) {
+					for (let a = 0, len = obj.length; a < len; a++) {
+						if (typeof obj[a] === "string") sortOrder.push(obj[a]);
+						else {
+							if (obj[a].group) {
+								getLayoutOrder(obj[a].group);
+							}
+							else {
+								if (obj[a].label) sortOrder.push(obj[a].label);
+								if (obj[a].value) sortOrder.push(obj[a].value);
+							}
+						}
+					}
+				}
 				var sortOrder = [],
 					layout = dataTemplates[obj.table].display.detailsView;
 				if (layout.image) sortOrder.push(layout.image);
 				if (layout.titleH1) sortOrder.push(layout.titleH1);
 				if (layout.subtitleH2) sortOrder.push(layout.subtitleH2);
-				if (layout.mainContent) {
-					for (let a = 0, len = layout.mainContent.length; a < len; a++) {
-						if (typeof layout.mainContent[a] === "string") sortOrder.push(layout.mainContent[a]);
-						else {
-							if (layout.mainContent[a].label) sortOrder.push(layout.mainContent[a].label);
-							if (layout.mainContent[a].value) sortOrder.push(layout.mainContent[a].value);
-						}
-					}
-				}
+				if (layout.mainContent) getLayoutOrder(layout.mainContent);
 				return detailsObj.sort(sortFunction);
 			}
 			checkDBLoaded(function (cb) {
 				app.spin(true, "Loading contact data...");
 				app.storeState();
-				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
-					function applyLabel(a, b, lenB, e, lenE) {
-						var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
-						for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
-							if (typeof layout.mainContent[b] !== "string" && layout.mainContent[b].label) {
-								if (row[a].column === layout.mainContent[b].value) {
-									hide = false;
-									for (e = 0, lenE = row.length; e < lenE; e++) {
-										if (row[e].column === layout.mainContent[b].label) {
-											data[a].label = row[e].value;
-											break;
+				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {					
+					function applyLabel(a, b, lenB) {
+						function getLabel(obj) {
+							if (typeof obj !== "string") {
+								if (obj.label) {
+									if (row[a].column === obj.value) {
+										hide = false;
+										for (let e = 0, lenE = row.length; e < lenE; e++) {
+											if (row[e].column === obj.label) {
+												data[a].label = row[e].value;
+												break;
+											}
 										}
 									}
 								}
+								else if (obj.group) {
+									for (let f = 0, lenF = obj.group.length; f < lenF; f++) {
+										getLabel(obj.group[f]);
+									}
+									
+								}
 							}
+						}
+						var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
+						for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
+							getLabel(layout.mainContent[b]);
 						}
 						data[a].hidden = hide;
 					}
@@ -972,8 +1160,6 @@
 						layout = dataTemplates[obj.table].display.detailsView;
 					for (let a = 0, b = 0, c = 0, d = 0, e = 0, len = row.length, lenB, lenC, lenD, lenE; a < len; a++) {
 						data[a] = {
-							//table: obj.table, //redundant???
-							//id: obj.id, //redundant???
 							warning: "",
 							column: row[a].column,
 							type: row[a].type,
@@ -1054,9 +1240,37 @@
 			if (callback instanceof Function) callback("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
 			else return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
 		},
+		addToGroup = function (groupName, detailsObj, searchQuery) {
+			wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+				if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
+					ids = JSON.parse(ids);
+					if (ids instanceof Array) {//convert old array data to object
+						var obj = {};
+						for (let a = 0, len = ids.length; a < len; a++) {
+							if (!obj[ids[a].table]) obj[ids[a].table] = [];
+							obj[ids[a].table].push(ids[a].id);
+						}
+						ids = obj;
+					}
+					for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
+						if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
+						if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
+							ids[detailsObj[b].table].push(detailsObj[b].id);
+						}
+					}
+					wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+					app.notify("Added 1 item to " + groupName, true);
+				});
+				if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
+					query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
+					wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
+					app.notify("Added '" + searchQuery + "' to " + groupName, true);
+				});
+			});
+		},
 		addToNewGroup = function (detailsObj, searchQuery) {
 			app.addItemToGroupDropdown = false;
-			app.addSearchToGroupDropdown = false;
+			app.groupDropdown = false;
 			if (detailsObj) generateListItems(detailsObj[0].table, detailsObj[0].id, { selected: true }, function (list) {
 				list[0].selected = true;
 				app.activeGroup = list;
@@ -1156,6 +1370,43 @@
 			app.confirmFunction = callback;
 		};
 	//Components
+	Vue.component('dropdown-button', {
+		props: {
+			text: {
+				type: String,
+				default: ""
+			},
+			icon: {
+				type: String,
+				default: ""
+			},
+			align: {
+				type: String,
+				default: "left"
+			},
+			links: Array,
+			title: String
+		},
+		data: function() {
+			return {
+				open: false
+			};
+		},
+		methods: {
+			close: function () {
+				this.open = false;
+			},
+			toggle: function () {
+				if(!this.open) this.$emit("dropdown-open");
+				this.open = this.open ? false : true;
+			},
+			action(linkId) {
+				this.close();
+				this.$emit("dropdown-action", linkId);
+			}
+		},
+		template: "#dropdown-button"
+	});
 	Vue.component('jump-list', {
 		props: {
 			details: Object,
@@ -1172,15 +1423,44 @@
 			collapse: {
 				type: Boolean,
 				default: false
+			},
+			currentQuery: {
+				type: String,
+				default: ""
 			}
 		},
 		data: function () {
 			return {
-				emailDropdown: false,
-				emailLinks: [],
+				moreDropdownLinks: [
+					{
+						text: "Sort List",
+						icon: "icon-sort",
+						action: "sort"
+					},
+					{
+						text: "Filter List",
+						icon: "icon-filter",
+						action: "filter"
+					},
+					{
+						text: "List View",
+						icon: "icon-list",
+						action: "view"
+					},
+					{
+						text: "Add All to Favorites",
+						icon: "icon-favorite-star",
+						action: "favorite"
+					},
+					{
+						text: "E-mail All",
+						icon: "icon-mail",
+						action: "email"
+					}
+				],
 				selectAll: this.selectall,
 				selected: this.select,
-				collapsed: this.collapse
+				collapsed: this.collapse				
 			};
 		},
 		computed: {
@@ -1270,11 +1550,40 @@
 					return sortList(this.links);
 				},
 				set: function (newValue) {
-					app.links = newValue;
+					return newValue;
 				}
 			}
 		},
 		methods: {
+			moreDropdownActions: function (action) {
+				switch (action) {
+					case "sort":
+						break;
+					case "filter":
+						break;
+					case "favorite":
+						break;
+					case "view":
+						this.toggle('collapsed');
+						this.moreDropdownLinks[2] = {
+							text: this.collapsed ? "List View" : "Button View",
+							icon: this.collapsed ? "icon-list" : "icon-th",
+							action: "view"
+						};
+						break;
+					case "email":
+						break;
+					case "_create_new_group":
+						addToNewGroup(null, this.currentQuery);
+						break;
+					default:
+						if (/^_add_to_group_/.test(action)) {
+							var groupName = action.replace(/_add_to_group_/, "");
+							addToGroup(groupName, null, this.currentQuery);
+						}
+						else debug(action, "no such button action found");
+				}
+			},
 			seeDetails: function (obj) {
 					var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
 				if (sortByRecent) {
@@ -1298,7 +1607,6 @@
 				else debug(prop, "prop doesn't exist in jump-list");
 			},
 			toggleSelect: function (link) {
-				this.emailDropdown = false;
 				for (var a = 0, len = this.list.length; a < len; a++) {
 					if (this.list[a].type === "link") this.list[a].selected = false;
 				}
@@ -1306,19 +1614,19 @@
 				this.collapsed = false;
 				this.toggle('selected');
 				if (link) link.selected = true;
+				Vue.nextTick(this.updateDropdownLinks);
 			},
 			toggleSelectAll: function () {
-				this.emailDropdown = false;
 				this.toggle('selectAll');
 				for (var a = 0, len = this.list.length; a < len; a++) {
 					if (this.list[a].type === "link") this.list[a].selected = this.selectAll ? true : false;
 				}
+				Vue.nextTick(this.updateDropdownLinks);
 			},
 			showIf: function (link, collapse) {
 				return link.type === "jumplink" || collapse === false;
 			},
 			action: function (link, div, collapse) {
-				this.emailDropdown = false;
 				if (link.type === "jumplink") {
 					var el = document.getElementById(div);
 					this.collapsed = collapse ? false : true;
@@ -1337,18 +1645,13 @@
 				else {
 					this.seeDetails(link);
 				}
+				Vue.nextTick(this.updateDropdownLinks);
 			},
-			updateEmailLinks: function (links) {
+			updateDropdownLinks: function () {
 				function newEmailLink() {
-					this.emailDropdown = true;
-					var link = {};
-					link.href = null;
-					link.text = "Working...";
-					this.emailLinks.push(link);
-					this.emailDropdown = true;
 					var bccIds = [];
-					for (let a = 0, len = links.length; a < len; a++) {
-						if (links[a].type === "link" && (this.selected === false || links[a].selected === true)) bccIds.push(links[a].id);
+					for (let a = 0, len = this.list.length; a < len; a++) {
+						if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true)) bccIds.push(this.list[a].id);
 					}
 					getEmails.call(this, bccIds);
 				}
@@ -1381,32 +1684,63 @@
 								if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
 							}
 						}
-						this.emailLinks = [];
 						if (emailAddresses.length > 0) {
 							emailAddresses = emailAddresses.join(",");
-							buildMailtoUri(emailAddresses, null, null, null, updateDropdownMenu.bind(this));
-							buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, updateDropdownMenu.bind(this));
+							if (emailAddresses.length === 1) buildMailtoUri(emailAddresses, null, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
+							else buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
 						}
-						else {
-							var link = {};
-							link.href = null;
-							link.text = "Selection contains no e-mail addresses";
-							this.emailLinks.push(link);
+						else updateLinks.call(this);
+						}.bind(this));
+					else updateLinks.call(this);
+				}
+				function updateLinks(mailtoUri, ids) {
+					var len = ids ? ids.length : 0;
+					this.moreDropdownLinks = [
+						{
+							text: "Sort List",
+							icon: "icon-sort",
+							action: "sort"
+						},
+						{
+							text: "Filter List",
+							icon: "icon-filter",
+							action: "filter"
+						},
+						{
+							text: this.collapsed ? "List View" : "Button View",
+							icon: this.collapsed ? "icon-list" : "icon-th",
+							action: "view"
+						},
+						{
+							text: this.selected ? "Add Selected to Favorites" : "Add All to Favorites",
+							icon: "icon-favorite-star",
+							action: "favorite",
+							disabled: this.selected && len === 0 ? true : false
+						},
+						{
+							text: this.selected ? "E-mail Selected" : "E-mail All",
+							icon: "icon-mail",
+							action: "email",
+							href: mailtoUri,
+							disabled: this.selected && !mailtoUri ? true : false
 						}
-					});
-					else {
-						this.emailLinks = [{ text: "<Nothing selected>", href: null, disabled: true }];
+					];
+					for (let a = 0, len = app.groups.length; a < len; a++) {
+						this.moreDropdownLinks[a + 4] = {
+							text: this.selected ? "Add Selected to " + app.groups[a] + " Group" : "Add to " + app.groups[a] + " Group",
+							icon: "icon-people",
+							action: "_add_to_group_" + app.groups[a],
+							disabled: this.selected && len === 0 ? true : false
+						};
 					}
+					this.moreDropdownLinks.push({
+						text: this.selected ? "Save Selected to New Group" : "Save Search as New Group",
+						icon: "icon-plus",
+						action: "_create_new_group",
+						disabled: this.selected && len === 0 ? true : false
+					});
 				}
-				function updateDropdownMenu(mailtoUri, bccBool) {
-					var link = {};
-					link.href = mailtoUri;
-					link.text = this.selected ? bccBool ? "E-mail Selected (BCC)" : "E-mail Selected" : bccBool ? "Email All (BCC)" : "Email All";
-					this.emailLinks.push(link);
-				}
-				this.emailLinks = [];
-				if (this.emailDropdown) this.emailDropdown = false;
-				else newEmailLink.call(this);
+				initializeGroups(newEmailLink.bind(this));
 			}
 		},
 		template: "#jump-list"
@@ -1435,18 +1769,47 @@
 				groups: state.groups,
 				clipboard: function () {
 					return navigator.clipboard ? true : false;
-				}
+				},
+				groupsDropdownLinks: [
+					{
+						text: "Loading Groups...",
+						action: "_loading",
+						disabled: true
+					}, {
+						text: "Create a new group",
+						icon: "icon-plus",
+						action: "_create_new_group"
+					}
+				]
 			};
 		},
 		methods: {
+			initializeGroups: function () {
+				initializeGroups(function () {
+					this.groupsDropdownLinks = [];
+					for (let a = 0, len = app.groups.length; a < len; a++) {
+						this.groupsDropdownLinks[a] = {
+							text: app.groups[a],
+							icon: "icon-people",
+							action: app.groups[a]
+						};
+					}
+					this.groupsDropdownLinks.push({
+						text: "Create a new group",
+						icon: "icon-plus",
+						action: "_create_new_group"
+					});
+				}.bind(this));
+			},
+			groupsDropdownActions: function (action) {
+				if (action === "_create_new_group") {
+					this.addToNewGroup();
+				}
+				else if(action !== "_loading") this.addToGroup(action, this.details.data);
+			},
 			editDetails: function () {
 				app.details = this.details;
 				app.navigate("edit");
-			},
-			toggleGroupsDropdown: function () {
-				initializeGroups(function () {
-					app.addItemToGroupDropdown = app.addItemToGroupDropdown ? false : true;
-				});
 			},
 			externalLink: function (text, column, type, details) {
 				var link;
@@ -1498,6 +1861,7 @@
 				});
 			},
 			addToNewGroup: addToNewGroup,
+			addToGroup: addToGroup,
 			copyToClipboard: function (stringToCopy) {
 				if (navigator.clipboard) {
 					try {
@@ -1876,8 +2240,8 @@
 				},
 				seeGroup: function (index) {
 					function add(group) {
-						if (group[0][2] !== "" && group[0][2] !== "[]") {
-							var ids = JSON.parse(group[0][2]),
+						if (group[1].value !== "" && group[1].value !== "[]") {
+							var ids = JSON.parse(group[1].value),
 								lenIds = 0,
 								b = 0;
 							for (let a in ids) {
@@ -1902,8 +2266,8 @@
 						else remove(group);
 					}
 					function remove(group) {
-						if (group[0][4] && group[0][4] !== "" && group[0][4] !== "[]") {
-							var removeIds = JSON.parse(group[0][4]);
+						if (group[3] && group[3].value && group[3].value !== "" && group[3].value !== "[]") {
+							var removeIds = JSON.parse(group[3].value);
 							for (let table in removeIds) {
 								for (let a = 0, lenA = list.length; a < lenA; a++) {
 									if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
@@ -1915,12 +2279,12 @@
 							}
 						}
 						app.searchResults = list;
-						app.searchResultsTitle = group[0][1];
+						app.searchResultsTitle = group[0].value;
 						app.searchResultsError = "";
 						app.navigate("search", app.currentQuery);
 					}
 					function searchForMembers (table, group, lenTables, n) {
-						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[0][3], { colNames: searchableColumns }] }, function (results, err, title) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[2].value, { colNames: searchableColumns }] }, function (results, err, title) {
 							if (!err) {
 								if (results) generateListItems(table, results, null, function (arr) {
 									list = list.concat(arr);
@@ -1935,8 +2299,10 @@
 							else debug(err, title + " seeGroup error");
 						});
 					}
-					function showGroup(group) {
-						if (group[0][3] !== "") {
+					function showGroup(group, error) {
+						debug(group);
+						if(!group && error) debug(error);
+						else if (group[2].value !== "") {
 							var lenTables = 0,
 								n = 0;
 							for (let a in dataTemplates) {
@@ -1951,37 +2317,12 @@
 						else add(group);
 					}
 					var list = [];
-					wwManager({ "cmd": "getVals", "title": "Groups", "args": [[index], dataTemplates.Groups.headers] }, showGroup);//TODO use getRow instead of getVals
+					wwManager({ "cmd": "getRow", "title": "Groups", "args": [index] }, showGroup);
 				},
 				addToGroup: function (groupName, detailsObj, searchQuery) {
 					this.addItemToGroupDropdown = false;
-					this.addSearchToGroupDropdown = false;
-					wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-						if (detailsObj) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
-							ids = JSON.parse(ids);
-							if (ids instanceof Array) {//convert old array data to object
-								var obj = {};
-								for (let a = 0, len = ids.length; a < len; a++) {
-									if (!obj[ids[a].table]) obj[ids[a].table] = [];
-									obj[ids[a].table].push(ids[a].id);
-								}
-								ids = obj;
-							}
-							for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
-								if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
-								if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
-									ids[detailsObj[b].table].push(detailsObj[b].id);
-								}
-							}
-							wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
-							app.notify("Added 1 item to " + groupName, true);
-						});
-						if (searchQuery) wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "searchTerms"] }, function (query) {
-							query = query && query !== "" ? query + " +" + searchQuery : searchQuery;
-							wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", query] }, defaultErrorHandler);
-							app.notify("Added '" + searchQuery + "' to " + groupName, true);
-						});
-					});
+					this.groupDropdown = false;
+					addToGroup(groupName, detailsObj, searchQuery);
 				},
 				showSelectGroupMembers: function () {
 					for (let table in dataTemplates) {
@@ -2033,7 +2374,7 @@
 					searchResults: state.searchResults,
 					searchResultsTitle: state.searchResultsTitle,
 					searchResultsError: state.searchResultsError,
-					addSearchToGroupDropdown: state.addSearchToGroupDropdown,
+					groupDropdown: state.groupDropdown,
 					groups: state.groups,
 					selectSearchResults: false,
 					searchDetails: {
@@ -2058,11 +2399,6 @@
 					this.searchDetails = newDetailsObj;
 				},
 				onRecentlyViewedUpdate: addToRecentlyViewed,
-				toggleResultsGroupDropdown: function () {
-					initializeGroups(function () {
-						app.addSearchToGroupDropdown = app.addSearchToGroupDropdown ? false : true;
-					});
-				},
 				addToNewGroup: addToNewGroup
 			},
 			template: "#search-results-page"
@@ -2201,7 +2537,6 @@
 		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
-				console.log(window.location.hash, "beforeEach");
 				// This goes through the matched routes from last to first, finding the closest route with a title.
 				// eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
 				const nearestWithTitle = to.matched.slice().reverse().find(function (r) { r.meta && r.meta.title; });
@@ -2214,7 +2549,6 @@
 		},
 		watch: {
 			'$route'(to, from) {
-				console.log(window.location.hash, "watch");
 				const toDepth = to.query.page || 0;
 				const fromDepth = from.query.page || 0;
 				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
@@ -2222,23 +2556,9 @@
 		},
 		methods: {
 			updateCurrentView: function (to) {
-				console.log(window.location.hash, "updateCurrentView");
 				if (window.location.hash.match(/^#\/access_token=/)) {
-				this.login(function (success) {
-			//		if (success) {
-			//			//debug("login success");
-			//			options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
-			//			options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-			//			this.spin(true, "Synchronising with Dropbox");
-			//			APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-			//		}
-			//		else {
-			//			debug("login fail");
-			//			console.log("cannot sync to Dropbox now");
-			//			this.spin(false);
-			//		}
-				}.bind(this));
-			}
+					this.login();
+				}
 				to = to || { name: this.$route.name, query: this.$route.query };
 				var location = to.name;
 				if (location === "home") location = this.startView;
@@ -2327,7 +2647,7 @@
 				this.showSideNav = true;
 			},
 			storeState: function () {
-				if (this.cookieAgree) {
+				if (cordova || this.cookieAgree) {
 					setTimeout(function () {
 						APP.Sto.setItem("state", {
 							version: this.version,
@@ -2661,7 +2981,7 @@
 						if (callback instanceof Function) callback(true);
 					}
 					function startScreen(error) {
-						debug(error, "login error");
+						console.log(error);
 						this.notify("Could not connect to Dropbox at the moment, please try again later", true);
 						// TODO go back to app
 						if (callback instanceof Function) callback(false);
@@ -2994,21 +3314,6 @@
 					if (APP.Dbx && APP.Dbx.isAuthenticated) {
 						this.spin(true, "Synchronising with Dropbox");
 						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-					} else if (window.location.hash.match(/^#\/access_token=/)) {
-						this.login(function (success) {
-							if (success) {
-								//debug("login success");
-								options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
-								options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-								this.spin(true, "Synchronising with Dropbox");
-								APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-							}
-							else {
-								debug("login fail");
-								console.log("cannot sync to Dropbox now");
-								this.spin(false);
-							}
-						}.bind(this));
 					}
 					else {
 						console.log("cannot sync to Dropbox now");

@@ -1680,7 +1680,7 @@ APP.nyckelDB = (function () {
 		//TODO
 	}
 	/**
-	 * Initialise a new instance of nyckelDB
+	 * Initialise a new instance of nyckelDB. Note: part of the APP namespace, so use "new APP.nyckelDB(...);"
 	 * @constructs APP.nyckelDB
 	 * @param {string} tableTitle the name of the new database
 	 * @param {string[]|object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties

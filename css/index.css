@@ -9,10 +9,10 @@
 	color: white; /*nav panel*/
 	color: #eee; /*page color*/
 	color: lightgray; /*dark-theme main text color*/
-	color: #AAA; /*disabled text grey*/
+	color: #AAA; /*link visited link disabled*/
 	color: #888; /*light and dark theme medium grey*/
 	color: rgba(120, 120, 120, 0.75); /*light and dark theme medium grey*/
-	color: #555; /*dark-theme link visited*/
+	color: #555; /*dark-theme link visited link disabled*/
 	color: #1f1f1f; /*dark-theme nav panel*/
 	color: #111; /*dark-theme page color*/
 	color: black; /*main text color*/
@@ -216,7 +216,7 @@ table, th, td {
 	width: 100%;
 	overflow: scroll;
 	background-color: #eee;
-	z-index: 1;
+	z-index: 3;
 	padding: 12px;
 }
 
@@ -525,12 +525,17 @@ html.desk #closeSidenav {
 		background-color: #5498e7; /*accent blue 10% lighter*/
 	}
 
-:visited {
-	color: #AAA; /*disabled text grey*/
+:visited,
+.disabled {
+	color: #AAA; /*link visited link disabled*/
 }
 
 .dark-theme :visited {
 	color: #555; /*dark-theme link visited*/
+}
+
+.disabled{
+	pointer-events: none;
 }
 
 .left {
@@ -592,6 +597,8 @@ nav,
 nav .switch label,
 #searchSuggestions-container,
 #sidenav button,
+.dropdown-container button.selected,
+html.desk .dropdown-container button.selected:hover,
 .dropdown {
 	background-color: white; /*nav panel*/
 }
@@ -600,6 +607,8 @@ nav .switch label,
 .dark-theme nav .switch label,
 .dark-theme #searchSuggestions-container,
 .dark-theme #sidenav button,
+.dark-theme .dropdown-container button.selected,
+html.desk .dark-theme .dropdown-container button.selected:hover,
 .dark-theme .dropdown {
 	background-color: #1f1f1f; /*dark-theme nav panel*/
 }
@@ -1051,7 +1060,7 @@ html.phon #searchSuggestions-container {
 	top: 54px;
 	bottom: 0;
 	left: 0;
-	z-index: 1;
+	z-index: 4;
 	box-shadow: none;
 	width: 106%; /*hide scrollbar hack*/
 	padding-right: 6%;
@@ -1234,7 +1243,7 @@ html.desk .dark-theme .link:hover,
 }
 
 .switch:after {
-	color: #AAA; /*disabled text grey*/
+	color: #AAA; /*link visited link disabled*/
 }
 
 .dark-theme .switch:after {
@@ -1499,6 +1508,7 @@ html.desk .link:hover,
 }
 html.desk a:focus,
 html.desk button:focus,
+html.desk button.selected,
 html.desk .addressLink:focus {
 	outline: 1px dotted #478cdb; /*accent blue*/
 }
@@ -1510,7 +1520,8 @@ html.desk .switch label:focus {
 .link:hover:active,
 html.desk .link:hover:active,
 button:hover:active,
-html.desk button:hover:active {
+button.selected,
+html.desk button:hover:active{
 	background-color: #f5f5f5;
 	color: #5498e7; /*accent blue 10% lighter*/
 }
@@ -1560,11 +1571,27 @@ html.desk .dark-theme .jumplink-button:hover,
 
 .dropdown {
 	position: absolute;
-	z-index: 1;
+	z-index: 2;
 }
 
-.right .dropdown {
+.closeDropdown{
+	z-index: 1;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
+
+.right.dropdown {
 	right: 0;
+}
+
+.dropdownlink-text {
+	width: 92%;
+	padding-left: 8px;
+	float: left;
 }
 .editbox {
 	max-height: 500px;
@@ -1583,15 +1610,16 @@ html.desk .dark-theme .jumplink-button:hover,
 button[disabled="disabled"],
 html.desk button[disabled="disabled"]:hover,
 button[disabled="disabled"]:active,
-button[disabled="disabled"]:focus {
+button[disabled="disabled"]:focus{
 	background: none;
 	border: none;
-	color: #AAA;
-	cursor:not-allowed;
+	color: #AAA; /*link visited link disabled*/
+	cursor: not-allowed;
 }
 
-.dark-theme button[disabled="disabled"] {
-	color: #555;
+.dark-theme button[disabled="disabled"],
+.dark-theme a.disabled {
+	color: #555; /*dark-theme link visited link disabled*/
 }
 
 ::-webkit-scrollbar {
