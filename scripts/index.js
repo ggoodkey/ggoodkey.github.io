@@ -59,6 +59,16 @@
 		},
 		startView = "recent", //set the view to start at by default		
 		debug = APP.debug,//shortform access to APP.debug
+		contactsTemplateIMServiceOptions = {
+			dropdownList: ["WhatsApp", "Viber", "Facebook Messenger", "WeChat", "QQ Mobile", "Line", "Skype", "Snapchat",
+				"Twitter", "Telegram", "Google Talk", "KakaoTalk", "Kik Messenger", "Tango", "Yahoo", "AIM", "MSN",
+				"Nimbuzz", "Hike", "Jabber", "ICQ", "MessageMe"],
+			customLabel: true
+		},
+		contactsTemplateIMLabelOptions = {
+			dropdownList: ["Personal", "Work", "Other"],
+			customLabel: true
+		},
 		dataTemplates = {//add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, passwords, files and groups NyckelDB databases
 			Contacts: {
 				//these column headers are setup as an object where the property name is the column header name and the property value is the column header type
@@ -201,17 +211,37 @@
 						joiner: ", ",
 						sortBy: "FamilyName"
 					},
-					detailsView: {
+					heading: {
 						image: "Photo",
-						titleH1: ["Name"],
-						subtitleH2: ["Organization1_Name", "Organization1_Title", "Organization1_Department"],
-						subtitleH2Joiner: ", ", //joins subtitleH2 together with these charactors
-						mainContent: [//displays the following content in the following order
-							"Nickname",//here, because label is unspecified, the value of Nickname is the value and "Nickname" is the label
-							"ShortName",
-							"MaidenName",
+						title: "Name",
+						subtitle: {
+							value: ["Organization1_Name", "Organization1_Title", "Organization1_Department"],
+							joiner: ", "
+						}
+					},
+					detailsView: [//displays the following content in the following order
+							{ value: "Photo", hidden: true, readonly: true },
+							{
+								groupHeading: "Name",
+								group: ["NamePrefix", "GivenName", "AdditionalName", "FamilyName", "NameSuffix"],
+								hidden: true
+							},
+							{
+								groupHeading: "Additional Name Information",
+								group: ["Initials", "Nickname", "ShortName", "MaidenName",
+									"YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi"],
+								hidden: true
+							},
+							{
+								groupHeading: "Organization",
+								group: ["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
+									"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],
+								hidden: true
+							},
+							{ value: "GroupMembership", hidden: true, readonly: true },						
 							{
 								groupHeading: "Events",
+								collapse: true,
 								group: [
 									"Birthday",
 									{ value: "Event1_Value", label: "Event1_Type" },//here, the value of Event1_Value is the value and the value of Event1_Type is 
@@ -224,12 +254,16 @@
 									{ value: "Event8_Value", label: "Event8_Type" },
 									{ value: "Event9_Value", label: "Event9_Type" },
 									{ value: "Event10_Value", label: "Event10_Type" }
-								]
+								],
+								splitter: " ::: ",
+								labelOptions: {
+									dropdownList: ["Anniversary", "Other"],
+									customLabel: true
+								}
 							},
-							"Gender",
-							"Location",
 							{
 								groupHeading: "E-mail Addresses",
+								collapse: true,
 								group: [
 									{ value: "E_mail1_Value", label: "E_mail1_Type" },
 									{ value: "E_mail2_Value", label: "E_mail2_Type" },
@@ -241,10 +275,17 @@
 									{ value: "E_mail8_Value", label: "E_mail8_Type" },
 									{ value: "E_mail9_Value", label: "E_mail9_Type" },
 									{ value: "E_mail10_Value", label: "E_mail10_Type" }
-								]
+								],
+								splitter: " ::: ",
+								labelOptions: {
+									dropdownList: ["Personal Email", "Work Email", "Other Email"],
+									customLabel: true,
+									default: "Email"
+								}
 							},
 							{
 								groupHeading: "Phone Numbers",
+								collapse: true,
 								group: [
 									{ value: "Phone1_Value", label: "Phone1_Type" },
 									{ value: "Phone2_Value", label: "Phone2_Type" },
@@ -256,12 +297,60 @@
 									{ value: "Phone8_Value", label: "Phone8_Type" },
 									{ value: "Phone9_Value", label: "Phone9_Type" },
 									{ value: "Phone10_Value", label: "Phone10_Type" }
-								]
+								],
+								splitter: " ::: ",
+								labelOptions: {
+									dropdownList: ["Mobile Phone", "Home Phone", "Work Phone", "Company Phone",
+										"Other Phone", "Main Phone", "Pager", "Home Fax", "Work Fax"],
+									customLabel: true,
+									default: "Mobile Phone"
+								}
 							},
-							{ value: "Address1_Formatted", label: "Address1_Type" },
-							{ value: "Address2_Formatted", label: "Address2_Type" },
+							//IM
 							{
-								groupHeading: "Family",
+								groupHeading: "Instant Messaging",
+								collapse: 2,
+								group: [
+									{ value: "IM1_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM1_Value", label: "IM1_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM2_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM2_Value", label: "IM2_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM3_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM3_Value", label: "IM3_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM4_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM4_Value", label: "IM4_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM5_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM5_Value", label: "IM5_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM6_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM6_Value", label: "IM6_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM7_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM7_Value", label: "IM7_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM8_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM8_Value", label: "IM8_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM9_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM9_Value", label: "IM9_Type", labelOptions: contactsTemplateIMLabelOptions },
+									{ value: "IM10_Service", options: contactsTemplateIMServiceOptions },
+									{ value: "IM10_Value", label: "IM10_Type", labelOptions: contactsTemplateIMLabelOptions }
+								],
+								splitter: " ::: "
+							},
+							{ value: "Address1_Formatted", label: "Address1_Type", readonly: true },
+							{
+								groupHeading: "Address 1",
+								group: ["Address1_Type", "Address1_Street", "Address1_City", "Address1_POBox",
+									"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress"],
+								hidden: true
+							},
+							{ value: "Address2_Formatted", label: "Address2_Type", readonly: true },
+							{
+								groupHeading: "Address 2",
+								group: ["Address2_Type", "Address2_Street", "Address2_City", "Address2_POBox",
+									"Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"],
+								hidden: true
+							},
+							{
+								groupHeading: "Family and Relationships",
+								collapse: true,
 								group: [
 									{ value: "Relation1_Value", label: "Relation1_Type" },
 									{ value: "Relation2_Value", label: "Relation2_Type" },
@@ -273,10 +362,17 @@
 									{ value: "Relation8_Value", label: "Relation8_Type" },
 									{ value: "Relation9_Value", label: "Relation9_Type" },
 									{ value: "Relation10_Value", label: "Relation10_Type" }
-								]
+								],
+								splitter: " ::: ",
+								labelOptions: {
+									dropdownList: ["Spouse", "Child", "Mother", "Father", "Parent", "Brother", "Sister", "Friend", "Relative",
+										"Manager", "Assistant", "Partner", "Coworker", "Reference", "Significant Other", "Other Relationship"],
+									customLabel: false
+								}
 							},
 							{
 								groupHeading: "Websites",
+								collapse: true,
 								group: [
 									{ value: "Website1_Value", label: "Website1_Type" },
 									{ value: "Website2_Value", label: "Website2_Type" },
@@ -288,169 +384,43 @@
 									{ value: "Website8_Value", label: "Website8_Type" },
 									{ value: "Website9_Value", label: "Website9_Type" },
 									{ value: "Website10_Value", label: "Website10_Type" }
-								]
+								],
+								splitter: " ::: ",
+								labelOptions: {
+									dropdownList: ["Profile", "Blog", "Google Maps", "Home Page", "Work Website"],
+									customLabel: true,
+									default: "Website"
+								}
 							},
 							{
-								groupHeading: "Other",
-								group: [
-									{ value: "CustomField1_Value", label: "CustomField1_Type" },
-									{ value: "CustomField2_Value", label: "CustomField2_Type" },
-									{ value: "CustomField3_Value", label: "CustomField3_Type" },
-									{ value: "CustomField4_Value", label: "CustomField4_Type" },
-									{ value: "CustomField5_Value", label: "CustomField5_Type" },
-									{ value: "CustomField6_Value", label: "CustomField6_Type" },
-									{ value: "CustomField7_Value", label: "CustomField7_Type" },
-									{ value: "CustomField8_Value", label: "CustomField8_Type" },
-									{ value: "CustomField9_Value", label: "CustomField9_Type" },
-									{ value: "CustomField10_Value", label: "CustomField10_Type" }
-								]
+								groupHeading: "Other Information",
+								group: ["Gender", "Location","BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
+									"Priority", "Subject", "Language"]
 							},
-							"Notes"
-						],
-						mainContentSplitter: " ::: " //splits mainContent into separate line items at these charactors
-					},
-					editView: {
-						layout: [
-							{
-								group: ["Photo",
-									"GivenName",
-									"FamilyName",
-									["Name", "AdditionalName", "YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi",
-										"NamePrefix", "NameSuffix", "Initials", "Nickname", "ShortName", "MaidenName"],//name
-									["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
-										"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],//organisation
-									"GroupMembership"
-								]
-							},
-							//phone
-							{
-								groupHeading: "Phone",
-								collapse: true,
-								group: ["Phone1_Type", "Phone1_Value",
-									"Phone2_Type", "Phone2_Value",
-									"Phone3_Type", "Phone3_Value",
-									"Phone4_Type", "Phone4_Value",
-									"Phone5_Type", "Phone5_Value",
-									"Phone6_Type", "Phone6_Value",
-									"Phone7_Type", "Phone7_Value",
-									"Phone8_Type", "Phone8_Value",
-									"Phone9_Type", "Phone9_Value",
-									"Phone10_Type", "Phone10_Value"
-								]
-							},
-							//email
-							{
-								groupHeading: "E-mail",
-								collapse: true,
-								group: ["E_mail1_Type", "E_mail1_Value",
-									"E_mail2_Type", "E_mail2_Value",
-									"E_mail3_Type", "E_mail3_Value",
-									"E_mail4_Type", "E_mail4_Value",
-									"E_mail5_Type", "E_mail5_Value",
-									"E_mail6_Type", "E_mail6_Value",
-									"E_mail7_Type", "E_mail7_Value",
-									"E_mail8_Type", "E_mail8_Value",
-									"E_mail9_Type", "E_mail9_Value",
-									"E_mail10_Type", "E_mail10_Value"
-								]
-							},
-							//addresses
-							{
-								groupHeading: "Address",
-								collapse: true,
-								group: ["Address1_Type", "Address1_Formatted", "Address1_Street", "Address1_City", "Address1_POBox",
-									"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress",
-									["Address2_Type", "Address2_Formatted", "Address2_Street", "Address2_City", "Address2_POBox",
-										"Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"]
-								]
-							},
-							//notes
-							"Notes",
-							//other
-							{
-								groupHeading: "Events",
-								collapse: true,
-								group: ["Birthday", //events
-									"Event1_Type", "Event1_Value",
-									"Event2_Type", "Event2_Value",
-									"Event3_Type", "Event3_Value",
-									"Event4_Type", "Event4_Value",
-									"Event5_Type", "Event5_Value",
-									"Event6_Type", "Event6_Value",
-									"Event7_Type", "Event7_Value",
-									"Event8_Type", "Event8_Value",
-									"Event9_Type", "Event9_Value",
-									"Event10_Type", "Event10_Value"
-								]
-							},
-							//relations
-							{
-								groupHeading: "Relationships",
-								collapse: true,
-								group: ["Relation1_Type", "Relation1_Value",
-									"Relation2_Type", "Relation2_Value",
-									"Relation3_Type", "Relation3_Value",
-									"Relation4_Type", "Relation4_Value",
-									"Relation5_Type", "Relation5_Value",
-									"Relation6_Type", "Relation6_Value",
-									"Relation7_Type", "Relation7_Value",
-									"Relation8_Type", "Relation8_Value",
-									"Relation9_Type", "Relation9_Value",
-									"Relation10_Type", "Relation10_Value"
-								]
-							},
-							"Gender", "Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
-							"Priority", "Subject", "Language",
-							//web
-							{
-								groupHeading: "Relationships",
-								collapse: true,
-								group: ["Website1_Type", "Website1_Value",
-									"Website2_Type", "Website2_Value",
-									"Website3_Type", "Website3_Value",
-									"Website4_Type", "Website4_Value",
-									"Website5_Type", "Website5_Value",
-									"Website6_Type", "Website6_Value",
-									"Website7_Type", "Website7_Value",
-									"Website8_Type", "Website8_Value",
-									"Website9_Type", "Website9_Value",
-									"Website10_Type", "Website10_Value"
-								]
-							},
-							//IM
-							{
-								groupHeading: "Instant Messaging",
-								collapse: true,
-								group: ["IM1_Type", "IM1_Service", "IM1_Value",
-									"IM2_Type", "IM2_Service", "IM2_Value",
-									"IM3_Type", "IM3_Service", "IM3_Value",
-									"IM4_Type", "IM4_Service", "IM4_Value",
-									"IM5_Type", "IM5_Service", "IM5_Value",
-									"IM6_Type", "IM6_Service", "IM6_Value",
-									"IM7_Type", "IM7_Service", "IM7_Value",
-									"IM8_Type", "IM8_Service", "IM8_Value",
-									"IM9_Type", "IM9_Service", "IM9_Value",
-									"IM10_Type", "IM10_Service", "IM10_Value"
-								]
-							},
-							//custom
 							{
 								groupHeading: "Custom Fields",
-								collapse: true,
-								group: ["CustomField1_Type", "CustomField1_Value",
-									"CustomField2_Type", "CustomField2_Value",
-									"CustomField3_Type", "CustomField3_Value",
-									"CustomField4_Type", "CustomField4_Value",
-									"CustomField5_Type", "CustomField5_Value",
-									"CustomField6_Type", "CustomField6_Value",
-									"CustomField7_Type", "CustomField7_Value",
-									"CustomField8_Type", "CustomField8_Value",
-									"CustomField9_Type", "CustomField9_Value",
-									"CustomField10_Type", "CustomField10_Value"
-								]
+								collapse: 2,
+								group: [
+									"CustomField1_Type", { value: "CustomField1_Value", label: "CustomField1_Type" },
+									"CustomField2_Type", { value: "CustomField2_Value", label: "CustomField2_Type" },
+									"CustomField3_Type", { value: "CustomField3_Value", label: "CustomField3_Type" },
+									"CustomField4_Type", { value: "CustomField4_Value", label: "CustomField4_Type" },
+									"CustomField5_Type", { value: "CustomField5_Value", label: "CustomField5_Type" }, 
+									"CustomField6_Type", { value: "CustomField6_Value", label: "CustomField6_Type" },
+									"CustomField7_Type", { value: "CustomField7_Value", label: "CustomField7_Type" },
+									"CustomField8_Type", { value: "CustomField8_Value", label: "CustomField8_Type" },
+									"CustomField9_Type", { value: "CustomField9_Value", label: "CustomField9_Type" },
+									"CustomField10_Type", { value: "CustomField10_Value", label: "CustomField10_Type" }
+								],
+								splitter: " ::: "
+							},
+							{
+								groupHeading: "Notes",
+								collapse: false,
+								group:["Notes"]
+
 							}
 						]
-					}
 				}
 			},
 			Passwords: {
@@ -468,8 +438,7 @@
 						joiner: ": ",
 						sortBy: "Site"
 					},
-					detailsView: {},
-					editView: {}
+					detailsView: {}
 				}
 			},
 			Files: {
@@ -485,8 +454,7 @@
 					listView: {
 						text: ["Display Name"]
 					},
-					detailsView: {},
-					editView: {}
+					detailsView: {}
 				}
 			},
 			Groups: {
@@ -502,8 +470,7 @@
 					listView: {
 						text: ["groupName"]
 					},
-					detailsView: {},
-					editView: {}
+					detailsView: {}
 				}
 			}
 		},
@@ -1085,108 +1052,134 @@
 		},
 		//application functions
 		getDetails = function (obj, callback) {
-			function sortDetailsObj(detailsObj) {
-				function sortFunction(a, b) {
-					return sortOrder.indexOf(a.column) === sortOrder.indexOf(b.column) ? 0 : sortOrder.indexOf(a.column) < sortOrder.indexOf(b.column) ? -1 : 1;
-				}
-				function getLayoutOrder (obj) {
-					for (let a = 0, len = obj.length; a < len; a++) {
-						if (typeof obj[a] === "string") sortOrder.push(obj[a]);
-						else {
-							if (obj[a].group) {
-								getLayoutOrder(obj[a].group);
-							}
-							else {
-								if (obj[a].label) sortOrder.push(obj[a].label);
-								if (obj[a].value) sortOrder.push(obj[a].value);
-							}
-						}
-					}
-				}
-				var sortOrder = [],
-					layout = dataTemplates[obj.table].display.detailsView;
-				if (layout.image) sortOrder.push(layout.image);
-				if (layout.titleH1) sortOrder.push(layout.titleH1);
-				if (layout.subtitleH2) sortOrder.push(layout.subtitleH2);
-				if (layout.mainContent) getLayoutOrder(layout.mainContent);
-				return detailsObj.sort(sortFunction);
-			}
 			checkDBLoaded(function (cb) {
 				app.spin(true, "Loading contact data...");
 				app.storeState();
-				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {					
-					function applyLabel(a, b, lenB) {
-						function getLabel(obj) {
-							if (typeof obj !== "string") {
-								if (obj.label) {
-									if (row[a].column === obj.value) {
-										hide = false;
-										for (let e = 0, lenE = row.length; e < lenE; e++) {
-											if (row[e].column === obj.label) {
-												data[a].label = row[e].value;
-												break;
-											}
-										}
-									}
+				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
+					function getValue(template, splitter, hidden, labelOptions) {
+						function getDropdownList(optionsObj) {
+							var options = [];
+							for (let a = 0, lenA = optionsObj.dropdownList.length; a < lenA; a++) {
+									options[a] = {
+										text: optionsObj.dropdownList[a],
+										action: optionsObj.dropdownList[a]
+									};
 								}
-								else if (obj.group) {
-									for (let f = 0, lenF = obj.group.length; f < lenF; f++) {
-										getLabel(obj.group[f]);
-									}
-									
-								}
+							return options;
+						}
+						function applyValueStr() {
+							obj = row[template];
+							obj.value = formatValue(obj.value, obj.type, splitter);
+						}
+						function applyValueArr() {
+							obj.value = [];
+							for (let a = 0, lenA = template.value.length; a < lenA; a++) {
+								if (row[template.value[a]].value) obj.value[a] = row[template.value[a]].value;
+							}
+							obj.value = obj.value.join(template.joiner || " ");
+							obj.readonly = true;
+						}
+						function applyValueObj() {
+							obj = {
+								type: row[template.value].type,
+								column: row[template.value].column,
+								value: row[template.value].value
+							};
+							if (template.options) {
+								if (template.options.dropdownList) obj.options = getDropdownList(template.options);
+								if (template.options.customLabel) obj.customize = true;
+								if (template.options.default) obj.value = obj.value || template.options.default;
 							}
 						}
-						var hide = layout.mainContent.indexOf(row[a].column) > -1 ? false : true;
-						for (b = 0, lenB = layout.mainContent.length; b < lenB; b++) {
-							getLabel(layout.mainContent[b]);
-						}
-						data[a].hidden = hide;
-					}
-					function applyTitle(a, c, lenC, d, lenD) {
-						for (c = 0, lenC = layout.titleH1.length; c < lenC; c++) {
-							if (layout.titleH1[c] === row[a].column && row[a].value !== "") h1 = h1.concat(row[a].value);
-						}
-						if (layout.subtitleH2) {
-							for (d = 0, lenD = layout.subtitleH2.length; d < lenD; d++) {
-								if (layout.subtitleH2[d] === row[a].column && row[a].value !== "") h2 = h2.concat(row[a].value);
+						function applyLabel() {
+							obj.label = {
+								value: row[template.label].value,
+								column: template.label
+							};
+							if (labelOptions) {
+								if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
+								if (labelOptions.customLabel) obj.label.customize = true;
+								if (labelOptions.default) obj.label.value = obj.label.value || labelOptions.default;
 							}
+							if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
 						}
+						var obj = {};
+						labelOptions = labelOptions || template.labelOptions;
+						if (typeof template === "string") applyValueStr();
+						else if (template.value) {
+							if (template.value.constructor === Array) applyValueArr();
+							else applyValueObj();
+							if (template.label) applyLabel();
+							if (template.readonly) obj.readonly = true;
+							obj.value = formatValue(obj.value, obj.type, splitter);
+						}
+						if (hidden) obj.hidden = true;
+						return obj;
 					}
-					var h1 = [],
-						h2 = [],
-						img,
-						data = [],
-						layout = dataTemplates[obj.table].display.detailsView;
-					for (let a = 0, b = 0, c = 0, d = 0, e = 0, len = row.length, lenB, lenC, lenD, lenE; a < len; a++) {
-						data[a] = {
-							warning: "",
-							column: row[a].column,
-							type: row[a].type,
-							text: row[a].value,
-							label: row[a].column
-						};
-						//find and apply the right label
-						if (layout.mainContent) applyLabel(a, b, lenB, e, lenE);
+					function formatValue(value, type, splitter) {
 						//format multiline strings
-						if (/multilineString|formattedAddress/.test(data[a].type) && data[a].text) {
-							data[a].text = data[a].text.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+						if (/multilineString|formattedAddress/.test(type) && value) {
+							value = value.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
 						}
 						//split out multiple values in one cell
-						else if (typeof data[a].text === "string") data[a].text = layout.mainContentSplitter ? data[a].text.split(layout.mainContentSplitter) : data[a].text.split(" ::: ");
-						else data[a].text = [data[a].text];
-						//get h1 and h2 header values
-						if (layout.titleH1) applyTitle(a, c, lenC, d, lenD);
-						if (layout.image && row[a].column === layout.image) img = row[a].value;
+						else if (typeof value === "string") value = splitter ? value.split(splitter) : value.split(" ::: ");
+						else value = [value];
+						return value;
+					}
+					function getHeading(template) {
+						var ret;
+						if (typeof template === "string") ret = row[template].value;
+						else if (template.value) {
+							ret = [];
+							for (let a = 0, lenA = template.value.length; a < lenA; a++) {
+								if (row[template.value[a]].value) ret[a] = row[template.value[a]].value;
+							}
+							ret = ret.join(template.joiner || " ");
+						}
+						return ret;
+					}
+					var data = [],
+						b = 0,
+						display = dataTemplates[obj.table].display,
+						title = "",
+						subtitle = "",
+						image = "";
+					if (display.heading) {
+						if (display.heading.title) title = getHeading(display.heading.title);
+						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
+						if (display.heading.image) image = row[display.heading.image].value;
+					}
+					for (let a = 0, lenA = display.detailsView.length, c, lenC, d, lenD; a < lenA; a++) {
+						if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
+							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter, display.detailsView[a].hidden);
+							b++;
+						}
+						else if (display.detailsView[a].group) {
+							data[b] = {
+								group: [],
+								collapse: display.detailsView[a].collapse || false,
+								show: 0
+							};
+							for (c = 0, lenC = display.detailsView[a].group.length; c < lenC; c++) {
+								data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].hidden, display.detailsView[a].labelOptions);
+								for (d = 0, lenD = data[b].group[c].value.length; d < lenD; d++) {
+									if (data[b].group[c].value[d] !== "") data[b].show = c + 1;
+								}
+							}
+							if (display.detailsView[a].groupHeading) {
+								data[b].groupHeading = display.detailsView[a].groupHeading;
+							}
+							b++;
+						}
 					}
 					app.spin(false);
 					if (callback instanceof Function) callback({
 						id: obj.id,
 						table: obj.table,
-						data: sortDetailsObj(data),
-						image: img,
-						titleH1: layout.titleH1 ? h1.join(layout.titleH1Joiner || "") : null,
-						subtitleH2: layout.subtitleH2 ? h2.join(layout.subtitleH2Joiner || "") : null
+						title: title,
+						subtitle: subtitle,
+						image: image,
+						data: data
 					});
 					if (cb instanceof Function) return cb();
 				});
@@ -1370,7 +1363,7 @@
 			app.confirmFunction = callback;
 		};
 	//Components
-	Vue.component('dropdown-button', {
+	const dropdown_button = {
 		props: {
 			text: {
 				type: String,
@@ -1385,317 +1378,84 @@
 				default: "left"
 			},
 			links: Array,
-			title: String
-		},
-		data: function() {
-			return {
-				open: false
-			};
-		},
-		methods: {
-			close: function () {
-				this.open = false;
-			},
-			toggle: function () {
-				if(!this.open) this.$emit("dropdown-open");
-				this.open = this.open ? false : true;
-			},
-			action(linkId) {
-				this.close();
-				this.$emit("dropdown-action", linkId);
-			}
-		},
-		template: "#dropdown-button"
-	});
-	Vue.component('jump-list', {
-		props: {
-			details: Object,
-			links: Array,
-			select: {
+			title: String,
+			noarrow: {
 				type: Boolean,
 				default: false
 			},
-			selectall: {
+			custominput: {
 				type: Boolean,
 				default: false
-			},
-			scrolldiv: String,
-			collapse: {
-				type: Boolean,
-				default: false
-			},
-			currentQuery: {
-				type: String,
-				default: ""
 			}
 		},
 		data: function () {
 			return {
-				moreDropdownLinks: [
-					{
-						text: "Sort List",
-						icon: "icon-sort",
-						action: "sort"
-					},
-					{
-						text: "Filter List",
-						icon: "icon-filter",
-						action: "filter"
-					},
-					{
-						text: "List View",
-						icon: "icon-list",
-						action: "view"
-					},
-					{
-						text: "Add All to Favorites",
-						icon: "icon-favorite-star",
-						action: "favorite"
-					},
-					{
-						text: "E-mail All",
-						icon: "icon-mail",
-						action: "email"
-					}
-				],
-				selectAll: this.selectall,
-				selected: this.select,
-				collapsed: this.collapse				
+				open: false,
+				buttonValue: this.text,
+				clickOutside: null
 			};
 		},
-		computed: {
-			list: {
-				get: function () {
-					function sortList(list) {
-						function sortFunction(a, b) {
-							//try to compare items as numbers
-							if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
-								a.sortBy = a.sortBy * 1;
-								b.sortBy = b.sortBy * 1;
-							}
-							if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
-							if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
-							return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
-						}
-						function deleteDuplicates(arr) {
-							for (var x = 0, len = arr.length; x < len - 1; x++) {
-								for (var y = x + 1; y < len; y++) {
-									if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
-										arr.splice(y, 1);
-										len--;
-										y--;
-									}
+		methods: {
+			toggle: function (open) {
+				var app = document.getElementById("app"),
+					_this = this; // eslint-disable-line
+				if (open === true || open === false) this.open = open;
+				else this.open = !this.open;
+				if (this.open) {
+					if (!this.clickOutside) {
+						this.clickOutside = function clickOutside(e) {
+							var outsideClick = !_this.$el.contains(e.target),
+								a = e.path.length;
+							if (_this.$el.id && outsideClick) while (a--) {
+								if (e.path[a].id === _this.$el.id) {
+									outsideClick = false;
+									break;
 								}
 							}
-							return arr;
-						}
-						//generate headers
-						var alphabetHeaders = [],
-							b = 0,
-							nameHeaders = [],
-							c = 0,
-							date = new Date(),
-							now = date.getTime(),
-							time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
-							diff = 0,
-							recentHeaders = {
-								"Older": 2592e6,
-								"In the Past 30 Days": 6048e5,
-								"In the Past 7 Days": 1728e5 - time,
-								"Yesterday": 864e5 - time,
-								"Earlier Today": 36e5,
-								"In the Past Hour": 3e5,
-								"Just Now": 0
-							};
-						for (var a = 0, len = list.length, letter, name; a < len; a++) {
-							if (list[a].type === "jumplink") {//strip out old headers
-								list.splice(a, 1);
-								a--;
-								len--;
-							}
-							//by most recent
-							else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
-								diff = now - list[a].sortBy;
-								for (var header in recentHeaders) {
-									if (diff >= recentHeaders[header]) {
-										name = header;
-										break;
-									}
-								}
-								if (a === 0 || name !== nameHeaders[c - 1].text) {
-									nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
-									c++;
-								}
-							}
-							// by alphabetic
-							else {
-								name = list[a].sortBy.split("__")[0];
-								letter = name.charAt(0);
-								if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
-									alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
-									b++;
-								}
-								if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
-									nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
-									c++;
-								}
-							}
-						}
-						if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
-						else list = alphabetHeaders.concat(list);
-						list = deleteDuplicates(list);
-						list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
-						return list;
+							if (outsideClick) _this.toggle(false);
+						};
 					}
-					return sortList(this.links);
-				},
-				set: function (newValue) {
-					return newValue;
+					app.addEventListener("click", this.clickOutside);
+					this.$emit("dropdown-open");
 				}
+				else app.removeEventListener("click", this.clickOutside);
+			},
+			action: function (event, value) {
+				if (value) this.buttonValue = value.replace(/<[^>]+>/g, "");
+				this.toggle(false);
+				this.$emit("dropdown-action", this.buttonValue);
 			}
 		},
-		methods: {
-			moreDropdownActions: function (action) {
-				switch (action) {
-					case "sort":
-						break;
-					case "filter":
-						break;
-					case "favorite":
-						break;
-					case "view":
-						this.toggle('collapsed');
-						this.moreDropdownLinks[2] = {
-							text: this.collapsed ? "List View" : "Button View",
-							icon: this.collapsed ? "icon-list" : "icon-th",
-							action: "view"
-						};
-						break;
-					case "email":
-						break;
-					case "_create_new_group":
-						addToNewGroup(null, this.currentQuery);
-						break;
-					default:
-						if (/^_add_to_group_/.test(action)) {
-							var groupName = action.replace(/_add_to_group_/, "");
-							addToGroup(groupName, null, this.currentQuery);
-						}
-						else debug(action, "no such button action found");
+		template: "#dropdown-button"
+	},
+		jump_list = {
+			props: {
+				details: Object,
+				links: Array,
+				select: {
+					type: Boolean,
+					default: false
+				},
+				selectall: {
+					type: Boolean,
+					default: false
+				},
+				scrolldiv: String,
+				collapse: {
+					type: Boolean,
+					default: false
+				},
+				currentQuery: {
+					type: String,
+					default: ""
 				}
 			},
-			seeDetails: function (obj) {
-					var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
-				if (sortByRecent) {
-					this.list.unshift(obj);
-					this.list[0].sortBy = new Date().getTime();
-					this.list = this.list.slice(0, 20);
-				}
-				else this.$emit("update-recently-viewed", obj);
-				getDetails(obj, function (detailsObj) {
-					if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
-						this.$emit("update-details", detailsObj);
-					}
-					else {
-						app.details = detailsObj;
-						app.navigate("details", null, detailsObj);
-					}
-				}.bind(this));
+			components: {
+				"dropdown-button": dropdown_button
 			},
-			toggle: function (prop) {
-				if (this[prop] !== undefined) this[prop] = this[prop] ? false : true;
-				else debug(prop, "prop doesn't exist in jump-list");
-			},
-			toggleSelect: function (link) {
-				for (var a = 0, len = this.list.length; a < len; a++) {
-					if (this.list[a].type === "link") this.list[a].selected = false;
-				}
-				this.selectAll = false;
-				this.collapsed = false;
-				this.toggle('selected');
-				if (link) link.selected = true;
-				Vue.nextTick(this.updateDropdownLinks);
-			},
-			toggleSelectAll: function () {
-				this.toggle('selectAll');
-				for (var a = 0, len = this.list.length; a < len; a++) {
-					if (this.list[a].type === "link") this.list[a].selected = this.selectAll ? true : false;
-				}
-				Vue.nextTick(this.updateDropdownLinks);
-			},
-			showIf: function (link, collapse) {
-				return link.type === "jumplink" || collapse === false;
-			},
-			action: function (link, div, collapse) {
-				if (link.type === "jumplink") {
-					var el = document.getElementById(div);
-					this.collapsed = collapse ? false : true;
-					if (collapse) {
-						Vue.nextTick(function () {
-							var pos = document.getElementById(link.id).offsetTop;
-							el.scrollTop = pos;
-						});
-					}
-					else el.scrollTop = 0;
-				}
-				else if (this.selected) {
-					link.selected = link.selected ? false : true;
-					this.selectAll = false;
-				}
-				else {
-					this.seeDetails(link);
-				}
-				Vue.nextTick(this.updateDropdownLinks);
-			},
-			updateDropdownLinks: function () {
-				function newEmailLink() {
-					var bccIds = [];
-					for (let a = 0, len = this.list.length; a < len; a++) {
-						if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true)) bccIds.push(this.list[a].id);
-					}
-					getEmails.call(this, bccIds);
-				}
-				function getEmails(ids) {
-					var emailAddresses = [];
-					if (ids.length > 0) wwManager({
-						cmd: "getVals", title: "Contacts",
-						args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value",
-							"E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type",
-							"E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
-					}, function (vals, errors) {
-						if (!vals || errors) return debug(errors, "get email errors");
-						var type, email, name, primary = false;
-						for (let a = 0, lenA = vals.length; a < lenA; a++) {
-							name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
-							if (vals[a][6]) {
-								for (let b = 4; b < 17; b = b + 2) {//find primary email
-									if (/\*/.test(vals[a][b])) primary = b;
-								}
-							}
-							for (let b = 4; b < 17; b = b + 2) {
-								email = vals[a][b + 1];
-								if (!email) continue;
-								type = vals[a][b] || "";
-								if (vals[a][6]) {
-									if (/\'s Email/.test(type)) name = type.replace(/\'s Email/, " ") + vals[a][3];
-									name = name.replace(/\*/, "");
-									name = trim(name);
-								}
-								if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
-							}
-						}
-						if (emailAddresses.length > 0) {
-							emailAddresses = emailAddresses.join(",");
-							if (emailAddresses.length === 1) buildMailtoUri(emailAddresses, null, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
-							else buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
-						}
-						else updateLinks.call(this);
-						}.bind(this));
-					else updateLinks.call(this);
-				}
-				function updateLinks(mailtoUri, ids) {
-					var len = ids ? ids.length : 0;
-					this.moreDropdownLinks = [
+			data: function () {
+				return {
+					moreDropdownLinks: [
 						{
 							text: "Sort List",
 							icon: "icon-sort",
@@ -1707,377 +1467,733 @@
 							action: "filter"
 						},
 						{
-							text: this.collapsed ? "List View" : "Button View",
-							icon: this.collapsed ? "icon-list" : "icon-th",
+							text: "List View",
+							icon: "icon-list",
 							action: "view"
 						},
 						{
-							text: this.selected ? "Add Selected to Favorites" : "Add All to Favorites",
+							text: "Add All to Favorites",
 							icon: "icon-favorite-star",
-							action: "favorite",
-							disabled: this.selected && len === 0 ? true : false
+							action: "favorite"
 						},
 						{
-							text: this.selected ? "E-mail Selected" : "E-mail All",
+							text: "E-mail All",
 							icon: "icon-mail",
-							action: "email",
-							href: mailtoUri,
-							disabled: this.selected && !mailtoUri ? true : false
+							action: "email"
 						}
-					];
-					for (let a = 0, len = app.groups.length; a < len; a++) {
-						this.moreDropdownLinks[a + 4] = {
-							text: this.selected ? "Add Selected to " + app.groups[a] + " Group" : "Add to " + app.groups[a] + " Group",
-							icon: "icon-people",
-							action: "_add_to_group_" + app.groups[a],
-							disabled: this.selected && len === 0 ? true : false
-						};
-					}
-					this.moreDropdownLinks.push({
-						text: this.selected ? "Save Selected to New Group" : "Save Search as New Group",
-						icon: "icon-plus",
-						action: "_create_new_group",
-						disabled: this.selected && len === 0 ? true : false
-					});
-				}
-				initializeGroups(newEmailLink.bind(this));
-			}
-		},
-		template: "#jump-list"
-	});
-	Vue.component('edit-details-card', {
-		props: {
-			details: Object
-		},
-		methods: {
-			saveChanges: function () {
-				debug("saveChanges not done");
+					],
+					selectAll: this.selectall,
+					selected: this.select,
+					collapsed: this.collapse
+				};
 			},
-			cancelChanges: function () {
-				debug("cancelChanges not done");
-			}
-		},
-		template: "#edit-details-card"
-	});
-	Vue.component('details-card', {
-		props: {
-			details: Object
-		},
-		data: function () {
-			return {
-				addItemToGroupDropdown: state.addItemToGroupDropdown,
-				groups: state.groups,
-				clipboard: function () {
-					return navigator.clipboard ? true : false;
+			computed: {
+				list: {
+					get: function () {
+						function sortList(list) {
+							function sortFunction(a, b) {
+								//try to compare items as numbers
+								if (!isNaN(a.sortBy * 1) && !isNaN(b.sortBy * 1)) {
+									a.sortBy = a.sortBy * 1;
+									b.sortBy = b.sortBy * 1;
+								}
+								if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink') return 1;
+								if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink') return -1;
+								return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
+							}
+							function deleteDuplicates(arr) {
+								for (var x = 0, len = arr.length; x < len - 1; x++) {
+									for (var y = x + 1; y < len; y++) {
+										if (JSON.stringify(arr[x]) === JSON.stringify(arr[y])) {
+											arr.splice(y, 1);
+											len--;
+											y--;
+										}
+									}
+								}
+								return arr;
+							}
+							//generate headers
+							var alphabetHeaders = [],
+								b = 0,
+								nameHeaders = [],
+								c = 0,
+								date = new Date(),
+								now = date.getTime(),
+								time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
+								diff = 0,
+								recentHeaders = {
+									"Older": 2592e6,
+									"In the Past 30 Days": 6048e5,
+									"In the Past 7 Days": 1728e5 - time,
+									"Yesterday": 864e5 - time,
+									"Earlier Today": 36e5,
+									"In the Past Hour": 3e5,
+									"Just Now": 0
+								};
+							for (var a = 0, len = list.length, letter, name; a < len; a++) {
+								if (list[a].type === "jumplink") {//strip out old headers
+									list.splice(a, 1);
+									a--;
+									len--;
+								}
+								//by most recent
+								else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
+									diff = now - list[a].sortBy;
+									for (var header in recentHeaders) {
+										if (diff >= recentHeaders[header]) {
+											name = header;
+											break;
+										}
+									}
+									if (a === 0 || name !== nameHeaders[c - 1].text) {
+										nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
+										c++;
+									}
+								}
+								// by alphabetic
+								else {
+									name = list[a].sortBy.split("__")[0];
+									letter = name.charAt(0);
+									if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
+										alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
+										b++;
+									}
+									if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
+										nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
+										c++;
+									}
+								}
+							}
+							if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
+							else list = alphabetHeaders.concat(list);
+							list = deleteDuplicates(list);
+							list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
+							return list;
+						}
+						return sortList(this.links);
+					},
+					set: function (newValue) {
+						return newValue;
+					}
+				}
+			},
+			methods: {
+				moreDropdownActions: function (action) {
+					switch (action) {
+						case "sort":
+							break;
+						case "filter":
+							break;
+						case "favorite":
+							break;
+						case "view":
+							this.toggle('collapsed');
+							this.moreDropdownLinks[2] = {
+								text: this.collapsed ? "List View" : "Button View",
+								icon: this.collapsed ? "icon-list" : "icon-th",
+								action: "view"
+							};
+							break;
+						case "email":
+							break;
+						case "_create_new_group":
+							addToNewGroup(null, this.currentQuery);
+							break;
+						default:
+							if (/^_add_to_group_/.test(action)) {
+								var groupName = action.replace(/_add_to_group_/, "");
+								addToGroup(groupName, null, this.currentQuery);
+							}
+							else debug(action, "no such button action found");
+					}
 				},
-				groupsDropdownLinks: [
-					{
-						text: "Loading Groups...",
-						action: "_loading",
-						disabled: true
-					}, {
-						text: "Create a new group",
-						icon: "icon-plus",
-						action: "_create_new_group"
+				seeDetails: function (obj) {
+					var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
+					if (sortByRecent) {
+						this.list.unshift(obj);
+						this.list[0].sortBy = new Date().getTime();
+						this.list = this.list.slice(0, 20);
 					}
-				]
-			};
-		},
-		methods: {
-			initializeGroups: function () {
-				initializeGroups(function () {
-					this.groupsDropdownLinks = [];
-					for (let a = 0, len = app.groups.length; a < len; a++) {
-						this.groupsDropdownLinks[a] = {
-							text: app.groups[a],
-							icon: "icon-people",
-							action: app.groups[a]
-						};
+					else this.$emit("update-recently-viewed", obj);
+					getDetails(obj, function (detailsObj) {
+						if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
+							this.$emit("update-details", detailsObj);
+						}
+						else {
+							app.details = detailsObj;
+							app.navigate("details", null, detailsObj);
+						}
+					}.bind(this));
+				},
+				toggle: function (prop) {
+					if (this[prop] !== undefined) this[prop] = this[prop] ? false : true;
+					else debug(prop, "prop doesn't exist in jump-list");
+				},
+				toggleSelect: function (link) {
+					for (var a = 0, len = this.list.length; a < len; a++) {
+						if (this.list[a].type === "link") this.list[a].selected = false;
 					}
-					this.groupsDropdownLinks.push({
-						text: "Create a new group",
-						icon: "icon-plus",
-						action: "_create_new_group"
-					});
-				}.bind(this));
-			},
-			groupsDropdownActions: function (action) {
-				if (action === "_create_new_group") {
-					this.addToNewGroup();
-				}
-				else if(action !== "_loading") this.addToGroup(action, this.details.data);
-			},
-			editDetails: function () {
-				app.details = this.details;
-				app.navigate("edit");
-			},
-			externalLink: function (text, column, type, details) {
-				var link;
-				if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-				else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-				else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-				else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
-				else if (type === "www") link = text;
-				if (link) return link;
-				else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-					var googlemaps = "http://maps.google.com/?q=",
-						bing = "http://www.bing.com/maps/?q=",
-						bingmaps = "bingmaps:?q=",
-						applemaps = "http://maps.apple.com/?q=",
-						userAgent = navigator.userAgent;
-					if (type === "gps") {
-						link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+					this.selectAll = false;
+					this.collapsed = false;
+					this.toggle('selected');
+					if (link) link.selected = true;
+					Vue.nextTick(this.updateDropdownLinks);
+				},
+				toggleSelectAll: function () {
+					this.toggle('selectAll');
+					for (var a = 0, len = this.list.length; a < len; a++) {
+						if (this.list[a].type === "link") this.list[a].selected = this.selectAll ? true : false;
+					}
+					Vue.nextTick(this.updateDropdownLinks);
+				},
+				showIf: function (link, collapse) {
+					return link.type === "jumplink" || collapse === false;
+				},
+				action: function (link, div, collapse) {
+					if (link.type === "jumplink") {
+						var el = document.getElementById(div);
+						this.collapsed = collapse ? false : true;
+						if (collapse) {
+							Vue.nextTick(function () {
+								var pos = document.getElementById(link.id).offsetTop;
+								el.scrollTop = pos;
+							});
+						}
+						else el.scrollTop = 0;
+					}
+					else if (this.selected) {
+						link.selected = link.selected ? false : true;
+						this.selectAll = false;
 					}
 					else {
-						for (var i = 0, length = details.length; i < length; i++) {
-							if (details[i].column === column) {
-								link = details[i].text.join(" ");
-								break;
-							}
-						}
+						this.seeDetails(link);
 					}
-					if (/\d/.test(link)) {
-						link = encodeURIComponent(trim(link));
-						if (/Windows/.test(userAgent)) {
-							if (/NT|Phone 10/.test(userAgent)) {
-								link = bingmaps + link;
+					Vue.nextTick(this.updateDropdownLinks);
+				},
+				updateDropdownLinks: function () {
+					function newEmailLink() {
+						var bccIds = [];
+						for (let a = 0, len = this.list.length; a < len; a++) {
+							if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true)) bccIds.push(this.list[a].id);
+						}
+						getEmails.call(this, bccIds);
+					}
+					function getEmails(ids) {
+						var emailAddresses = [];
+						if (ids.length > 0) wwManager({
+							cmd: "getVals", title: "Contacts",
+							args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value",
+								"E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type",
+								"E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
+						}, function (vals, errors) {
+							if (!vals || errors) return debug(errors, "get email errors");
+							var type, email, name, primary = false;
+							for (let a = 0, lenA = vals.length; a < lenA; a++) {
+								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
+								if (vals[a][6]) {
+									for (let b = 4; b < 17; b = b + 2) {//find primary email
+										if (/\*/.test(vals[a][b])) primary = b;
+									}
+								}
+								for (let b = 4; b < 17; b = b + 2) {
+									email = vals[a][b + 1];
+									if (!email) continue;
+									type = vals[a][b] || "";
+									if (vals[a][6]) {
+										if (/\'s Email/.test(type)) name = type.replace(/\'s Email/, " ") + vals[a][3];
+										name = name.replace(/\*/, "");
+										name = trim(name);
+									}
+									if (primary === false || primary === b) emailAddresses.push(name + " <" + email.replace(/,/g, ">,<") + ">");
+								}
 							}
-							else link = bing + link;
+							if (emailAddresses.length > 0) {
+								emailAddresses = emailAddresses.join(",");
+								if (emailAddresses.length === 1) buildMailtoUri(emailAddresses, null, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
+								else buildMailtoUri(app.dropboxEmail || "", emailAddresses, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
+							}
+							else updateLinks.call(this);
+						}.bind(this));
+						else updateLinks.call(this);
+					}
+					function updateLinks(mailtoUri, ids) {
+						var len = ids ? ids.length : 0;
+						this.moreDropdownLinks = [
+							{
+								text: "Sort List",
+								icon: "icon-sort",
+								action: "sort"
+							},
+							{
+								text: "Filter List",
+								icon: "icon-filter",
+								action: "filter"
+							},
+							{
+								text: this.collapsed ? "List View" : "Button View",
+								icon: this.collapsed ? "icon-list" : "icon-th",
+								action: "view"
+							},
+							{
+								text: this.selected ? "Add Selected to Favorites" : "Add All to Favorites",
+								icon: "icon-favorite-star",
+								action: "favorite",
+								disabled: this.selected && len === 0 ? true : false
+							},
+							{
+								text: this.selected ? "E-mail Selected" : "E-mail All",
+								icon: "icon-mail",
+								action: "email",
+								href: mailtoUri,
+								disabled: this.selected && !mailtoUri ? true : false
+							}
+						];
+						for (let a = 0, len = app.groups.length; a < len; a++) {
+							this.moreDropdownLinks[a + 4] = {
+								text: this.selected ? "Add Selected to " + app.groups[a] + " Group" : "Add to " + app.groups[a] + " Group",
+								icon: "icon-people",
+								action: "_add_to_group_" + app.groups[a],
+								disabled: this.selected && len === 0 ? true : false
+							};
 						}
-						else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
-							link = applemaps + link;
+						this.moreDropdownLinks.push({
+							text: this.selected ? "Save Selected to New Group" : "Save Search as New Group",
+							icon: "icon-plus",
+							action: "_create_new_group",
+							disabled: this.selected && len === 0 ? true : false
+						});
+					}
+					initializeGroups(newEmailLink.bind(this));
+				}
+			},
+			template: "#jump-list"
+		},
+		details_line_item = {
+			props: {
+				item: Object
+			},
+			data: function () {
+				return {
+					clipboard: function () {
+						return navigator.clipboard ? true : false;
+					}
+				};
+			},
+			methods: {
+				externalLink: function (text, column, type, multilineText) {
+					var link;
+					if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+					else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+					else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
+					else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
+					else if (type === "www") link = text;
+					if (link) return link;
+					else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
+						var googlemaps = "http://maps.google.com/?q=",
+							bing = "http://www.bing.com/maps/?q=",
+							bingmaps = "bingmaps:?q=",
+							applemaps = "http://maps.apple.com/?q=",
+							userAgent = navigator.userAgent;
+						if (type === "gps") {
+							link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
 						}
-						else link = googlemaps + link;
-						return link;
+						else if (multilineText) link = multilineText.join(" ");
+						else link = text;
+						if (/\d/.test(link)) {
+							link = encodeURIComponent(trim(link));
+							if (/Windows/.test(userAgent)) {
+								if (/NT|Phone 10/.test(userAgent)) {
+									link = bingmaps + link;
+								}
+								else link = bing + link;
+							}
+							else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
+								link = applemaps + link;
+							}
+							else link = googlemaps + link;
+							return link;
+						}
+						else return false;
 					}
 					else return false;
-				}
-				else return false;
-			},
-			detailsViewHelp: function () {
-				confirm("Item not found. Would you like to remove this listing?", function () {
-					app.recentlyViewed.splice(1, 1);
-					app.storeState();
-				});
-			},
-			addToNewGroup: addToNewGroup,
-			addToGroup: addToGroup,
-			copyToClipboard: function (stringToCopy) {
-				if (navigator.clipboard) {
-					try {
-						navigator.clipboard.writeText(stringToCopy);
-						var str = stringToCopy.slice(0, 20),
-							ext = stringToCopy.length > 20 ? "..." : "";
-						app.notify("Copied '" + str + ext + "' to clipboard", true);
-					} catch (err) {
-						console.error('Failed to copy: ', err);
+				},
+				copyToClipboard: function (stringToCopy) {
+					if (navigator.clipboard) {
+						try {
+							navigator.clipboard.writeText(stringToCopy);
+							var str = stringToCopy.slice(0, 20),
+								ext = stringToCopy.length > 20 ? "..." : "";
+							app.notify("Copied '" + str + ext + "' to clipboard", true);
+						} catch (err) {
+							console.error('Failed to copy: ', err);
+						}
 					}
 				}
-			}
+			},
+			template: "#details-line-item"
 		},
-		template: "#details-card"
-	});
-	const New = {
-		data: function () {
-			return {
-				newTable: {
-					title: "",
-
-					headers: ["Column 1", "Column 2", "Column 3"],
-					types: ["string", "string", "string"],
-
-					acceptedValuesDropdown: -1,
-					editableDropdown: -1,
-					labelColDropdown: -1,
-					protectDropdown: -1,
-					searchableDropdown: -1,
-					typesDropdown: -1,
-
-					acceptedValuesDefault: 'any',
-					editableDefault: true,
-					labelColDefault: false,
-					protectDefault: false,
-					searchableDefault: true,
-					typesDefault: 'string',
-
-					acceptedValuesDropdownOptions: ['any'],
-					editableDropdownOptions: [true, false],
-					protectDropdownOptions: [false, true, "to view", "to edit"],
-					searchableDropdownOptions: [true, false, 'optional'],
-					typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString",
-						"multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty",
-						"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
-
-					options: {
-						customProperties: {},
-						doNotIndex: [],
-						initialIndex: [],
-						searchable: [true, true, true]
-					},
-					display: {
-						listView: {
-							text: [],
-							joiner: " ",
-							sortBy: ""
-						},
-						detailsView: {
-							hidden: [],
-							labelCol: [false, false, false]
-						},
-						editView: {
-							protect: [false, false, false],
-							editable: [true, true, true],
-							acceptedValues: ["any", "any", "any"]
-						}
-					},
-					optionsDropdown: -1,
-					fullscreen: false
+		edit_details_line_item = {
+			props: { item: Object },
+			components: {
+				"dropdown-button": dropdown_button
+			},
+			methods: {
+				toggleItem: function (item, index) {
+					item.value[index] = item.value[index] === true ? false : true;
+					//TODO
+				},
+				setLabel: function (label) {
+					this.$emit("set-label", label);
+				},
+				setValue: function (value) {
+					this.$emit("set-value", value);
+				},
+				deleteValue: function (value) {
+					this.$emit("delete-value", value);
 				}
-			};
+			},
+			template: "#edit-details-line-item"
 		},
-		methods: {
-			importNewTable: function () {
-				function matches(subsetArr, ofArr) {
-					var ret = true;
-					if (ofArr && ofArr.constructor === Array) {						
-						for (let a = 0, len = subsetArr.length; a < len; a++) {
-							if (ofArr.constructor === Array && ofArr.indexOf(subsetArr[a]) === -1) ret = false;
-							else if (!ofArr[subsetArr[a]]) ret = false;
-						}
-						return ret;
-					}
-				}
-				function createTempTable(JSON, template) {
-					template.options.importJSON = JSON;
-					app.notify("Building new table");
-					wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] },
-						function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
-						if (errors) defaultErrorHandler(success, errors, title, requiresSync);
-						else app.notify("Done", true);
-					});
-				}
-				app.loadFile('hiddenCSVInput', 'csv', function (data) {
-					if (matches(data.Headers, this.newTable.headers)) {
-						createTempTable(data, this.newTable);
-					}
-					else {
-						app.notify("CSV Headers don't match");
-						for (var template in dataTemplates) {
-							var tryHeaders = dataTemplates[template].headers;
-							if (dataTemplates[template].headers[0] === "id") {
-								tryHeaders = dataTemplates[template].headers.join("||").split("||");
-								tryHeaders.shift();
-							}
-							if (matches(data.Headers, tryHeaders)) {
-								(function (self, template) {
-									confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
-										self.template(template);
-										app.notify("");
-										createTempTable(data, dataTemplates[template]);
-									});
-								})(this, template);
-							}
-						}
-					}
-				}.bind(this));
-			},
-			template: function (templateName) {
-				if (dataTemplates[templateName]) {
-					this.newTable.title = templateName;
-					this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
-					if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
-					this.newTable.types = dataTemplates[templateName].types;
-					this.newTable.options = dataTemplates[templateName].options;
-					this.newTable.display = dataTemplates[templateName].display;
-					this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
-					this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
-					this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
-					this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
-					this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
-				}
-				else {
-					this.newTable.title = "";
-					this.newTable.headers = ["", "", ""];
-					this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
-					this.newTable.options = {
-						customProperties: {},
-						doNotIndex: [],
-						initialIndex: [],
-						searchable: []
-					};
-					this.newTable.display = {
-						listView: {
-							text: [],
-							joiner: " ",
-							sortBy: ""
-						},
-						detailsView: {
-						},
-						editView: {
-							acceptedValues: [],
-							editable: [],
-							protect: []
-						}
-					};
-				}
-				for (let a = 0, len = this.newTable.types.length; a < len; a++) {
-					this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
-					this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
-					this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
-					this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
-					this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
+		edit_details_collapse = {
+			props: {
+				item: Object,
+				collapse: {
+					type: [Boolean, Number],
+					default: false
+				},
+				show: {
+					type: Number,
+					default: 1
 				}
 			},
-			toggleDropdown: function (rowName, colIndex) {
-				if (this.newTable[rowName] !== undefined) {
-					this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
-				}
-				else debug(rowName, "no such row in table");
+			components: {
+				"edit-details-line-item": edit_details_line_item
 			},
-			sortbyColumn: function (index) {
+			data: function () {
+				return {
+					isCollapsed: this.show === 0,
+					numShown: typeof this.collapse === "number" ? this.collapse : this.show
+				};
+			},
+			methods: {
+				toggleCollapse: function () {
+					this.isCollapsed = this.isCollapsed ? false : true;
+					if (this.numShown === 0) this.numShown = 1;
+				},
+				showNext: function (num) {
+					if (num && num !== true && num > 1) this.numShown = this.numShown + num;
+					else this.numShown++;
+				},
+				setValue: function () {
 
-			},
-			deleteColumn: function (index) {
-				this.newTable.headers.splice(index, 1);
-				this.newTable.types.splice(index, 1);
-				this.newTable.display.editView.protect.splice(index, 1);
-				this.newTable.display.editView.acceptedValues.splice(index, 1);
-				this.newTable.display.editView.editable.splice(index, 1);
-				this.newTable.options.searchable.splice(index, 1);
-				this.newTable.display.detailsView.labelCol.splice(index, 1);
-				this.newTable.optionsDropdown = -1;
-			},
-			insertColumn: function (index) {
-				if (!index) {
-					this.newTable.headers.push("");
-					this.newTable.types.push(this.newTable.typesDefault);
-					this.newTable.display.editView.protect.push(this.newTable.protectDefault);
-					this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
-					this.newTable.display.editView.editable.push(this.newTable.editableDefault);
-					this.newTable.options.searchable.push(this.newTable.searchableDefault);
-					this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
+				},
+				setLabel: function () {
+
+				},
+				deleteValue: function () {
+
 				}
-				else {
-					this.newTable.headers.splice(index, 0, "");
-					this.newTable.types.splice(index, 0, this.newTable.typesDefault);
-					this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
-					this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
-					this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
-					this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
-					this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
-				}
-				this.newTable.optionsDropdown = -1;
-			}
+			},
+			template: "#edit-details-collapse"
 		},
-		template: "#new-table-page"
-	},
-		DetailsView = {
+		edit_details_card = {
 			props: {
 				details: Object
 			},
-			template: '<details-card class="view-container" v-bind:details="details"></details-card>'	
+			components: {
+				"dropdown-button": dropdown_button,
+				"edit-details-line-item": edit_details_line_item,
+				"edit-details-collapse": edit_details_collapse
+			},
+			methods: {
+				saveChanges: function () {
+					debug("saveChanges not done");
+				},
+				cancelChanges: function () {
+					debug("cancelChanges not done");
+				}
+			},
+			template: "#edit-details-card"
 		},
-		Recent = {
+		details_card = {
+			props: {
+				details: Object
+			},
+			components: {
+				"details-line-item": details_line_item,
+				"dropdown-button": dropdown_button
+			},
+			data: function () {
+				return {
+					addItemToGroupDropdown: state.addItemToGroupDropdown,
+					groups: state.groups,
+					groupsDropdownLinks: [
+						{
+							text: "Loading Groups...",
+							action: "_loading",
+							disabled: true
+						}, {
+							text: "Create a new group",
+							icon: "icon-plus",
+							action: "_create_new_group"
+						}
+					]
+				};
+			},
+			methods: {
+				initializeGroups: function () {
+					initializeGroups(function () {
+						this.groupsDropdownLinks = [];
+						for (let a = 0, len = app.groups.length; a < len; a++) {
+							this.groupsDropdownLinks[a] = {
+								text: app.groups[a],
+								icon: "icon-people",
+								action: app.groups[a]
+							};
+						}
+						this.groupsDropdownLinks.push({
+							text: "Create a new group",
+							icon: "icon-plus",
+							action: "_create_new_group"
+						});
+					}.bind(this));
+				},
+				groupsDropdownActions: function (action) {
+					if (action === "_create_new_group") {
+						this.addToNewGroup();
+					}
+					else if (action !== "_loading") this.addToGroup(action, this.details.data);
+				},
+				editDetails: function () {
+					app.details = this.details;
+					//debug(this.details);
+					app.navigate("edit");
+				},
+
+				detailsViewHelp: function () {
+					confirm("Item not found. Would you like to remove this listing?", function () {
+						app.recentlyViewed.splice(1, 1);
+						app.storeState();
+					});
+				},
+				addToNewGroup: addToNewGroup,
+				addToGroup: addToGroup
+			},
+			template: "#details-card"
+		},
+		new_table_page = {
+			components: {
+				"dropdown-button": dropdown_button
+			},
+			data: function () {
+				return {
+					newTable: {
+						title: "",
+
+						headers: ["Column 1", "Column 2", "Column 3"],
+						types: ["string", "string", "string"],
+
+						acceptedValuesDropdown: -1,
+						editableDropdown: -1,
+						labelColDropdown: -1,
+						protectDropdown: -1,
+						searchableDropdown: -1,
+						typesDropdown: -1,
+
+						acceptedValuesDefault: 'any',
+						editableDefault: true,
+						labelColDefault: false,
+						protectDefault: false,
+						searchableDefault: true,
+						typesDefault: 'string',
+
+						acceptedValuesDropdownOptions: ['any'],
+						editableDropdownOptions: [true, false],
+						protectDropdownOptions: [false, true, "to view", "to edit"],
+						searchableDropdownOptions: [true, false, 'optional'],
+						typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString",
+							"multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty",
+							"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
+
+						options: {
+							customProperties: {},
+							doNotIndex: [],
+							initialIndex: [],
+							searchable: [true, true, true]
+						},
+						display: {
+							listView: {
+								text: [],
+								joiner: " ",
+								sortBy: ""
+							},
+							detailsView: {
+								hidden: [],
+								labelCol: [false, false, false]
+							},
+							editView: {
+								protect: [false, false, false],
+								editable: [true, true, true],
+								acceptedValues: ["any", "any", "any"]
+							}
+						},
+						optionsDropdown: -1,
+						fullscreen: false
+					}
+				};
+			},
+			methods: {
+				importNewTable: function () {
+					function matches(subsetArr, ofArr) {
+						var ret = true;
+						if (ofArr && ofArr.constructor === Array) {
+							for (let a = 0, len = subsetArr.length; a < len; a++) {
+								if (ofArr.constructor === Array && ofArr.indexOf(subsetArr[a]) === -1) ret = false;
+								else if (!ofArr[subsetArr[a]]) ret = false;
+							}
+							return ret;
+						}
+					}
+					function createTempTable(JSON, template) {
+						template.options.importJSON = JSON;
+						app.notify("Building new table");
+						wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] },
+							function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
+								if (errors) defaultErrorHandler(success, errors, title, requiresSync);
+								else app.notify("Done", true);
+							});
+					}
+					app.loadFile('hiddenCSVInput', 'csv', function (data) {
+						if (matches(data.Headers, this.newTable.headers)) {
+							createTempTable(data, this.newTable);
+						}
+						else {
+							app.notify("CSV Headers don't match");
+							for (var template in dataTemplates) {
+								var tryHeaders = dataTemplates[template].headers;
+								if (dataTemplates[template].headers[0] === "id") {
+									tryHeaders = dataTemplates[template].headers.join("||").split("||");
+									tryHeaders.shift();
+								}
+								if (matches(data.Headers, tryHeaders)) {
+									(function (self, template) {
+										confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
+											self.template(template);
+											app.notify("");
+											createTempTable(data, dataTemplates[template]);
+										});
+									})(this, template);
+								}
+							}
+						}
+					}.bind(this));
+				},
+				template: function (templateName) {
+					if (dataTemplates[templateName]) {
+						this.newTable.title = templateName;
+						this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+						if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
+						this.newTable.types = dataTemplates[templateName].types;
+						this.newTable.options = dataTemplates[templateName].options;
+						this.newTable.display = dataTemplates[templateName].display;
+						this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
+						this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
+						this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
+						this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
+						this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
+					}
+					else {
+						this.newTable.title = "";
+						this.newTable.headers = ["", "", ""];
+						this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
+						this.newTable.options = {
+							customProperties: {},
+							doNotIndex: [],
+							initialIndex: [],
+							searchable: []
+						};
+						this.newTable.display = {
+							listView: {
+								text: [],
+								joiner: " ",
+								sortBy: ""
+							},
+							detailsView: {
+							},
+							editView: {
+								acceptedValues: [],
+								editable: [],
+								protect: []
+							}
+						};
+					}
+					for (let a = 0, len = this.newTable.types.length; a < len; a++) {
+						this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
+						this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
+						this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
+						this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
+						this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
+					}
+				},
+				toggleDropdown: function (rowName, colIndex) {
+					if (this.newTable[rowName] !== undefined) {
+						this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
+					}
+					else debug(rowName, "no such row in table");
+				},
+				sortbyColumn: function (index) {
+
+				},
+				deleteColumn: function (index) {
+					this.newTable.headers.splice(index, 1);
+					this.newTable.types.splice(index, 1);
+					this.newTable.display.editView.protect.splice(index, 1);
+					this.newTable.display.editView.acceptedValues.splice(index, 1);
+					this.newTable.display.editView.editable.splice(index, 1);
+					this.newTable.options.searchable.splice(index, 1);
+					this.newTable.display.detailsView.labelCol.splice(index, 1);
+					this.newTable.optionsDropdown = -1;
+				},
+				insertColumn: function (index) {
+					if (!index) {
+						this.newTable.headers.push("");
+						this.newTable.types.push(this.newTable.typesDefault);
+						this.newTable.display.editView.protect.push(this.newTable.protectDefault);
+						this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
+						this.newTable.display.editView.editable.push(this.newTable.editableDefault);
+						this.newTable.options.searchable.push(this.newTable.searchableDefault);
+						this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
+					}
+					else {
+						this.newTable.headers.splice(index, 0, "");
+						this.newTable.types.splice(index, 0, this.newTable.typesDefault);
+						this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
+						this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
+						this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
+						this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
+						this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
+					}
+					this.newTable.optionsDropdown = -1;
+				}
+			},
+			template: "#new-table-page"
+		},
+		details_view_container = {
+			props: {
+				details: Object
+			},
+			components: {
+				"details-card": details_card
+			},
+			template: '<details-card class="view-container" v-bind:details="details"></details-card>'
+		},
+		recent_page = {
+			components: {
+				"jump-list": jump_list,
+				"v-a": details_view_container,
+				"v-b": details_view_container
+			},
 			data: function () {
 				return {
 					recentlyViewed: state.recentlyViewed,
@@ -2092,10 +2208,6 @@
 					detailsView: "v-a"
 				};
 			},
-			components: {
-				"v-a": DetailsView,
-				"v-b": DetailsView
-			},
 			methods: {
 				onDetailsUpdate: function (newDetailsObj) {
 					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
@@ -2104,7 +2216,7 @@
 			},
 			template: "#recent-page"
 		},
-		Groups = {
+		groups_page = {
 			data: function () {
 				return {
 					groups: state.groups,
@@ -2193,7 +2305,7 @@
 							}
 						});
 					}
-					function processInput (callback) {
+					function processInput(callback) {
 						if (value !== "") {
 							var find = String(value);
 							find = VAL.removeHTMLTags(find);
@@ -2247,7 +2359,7 @@
 							for (let a in ids) {
 								if (ids.hasOwnProperty(a)) {
 									lenIds++;
-								}					
+								}
 							}
 							for (let table in ids) {
 								if (ids.hasOwnProperty(table)) {
@@ -2283,7 +2395,7 @@
 						app.searchResultsError = "";
 						app.navigate("search", app.currentQuery);
 					}
-					function searchForMembers (table, group, lenTables, n) {
+					function searchForMembers(table, group, lenTables, n) {
 						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[2].value, { colNames: searchableColumns }] }, function (results, err, title) {
 							if (!err) {
 								if (results) generateListItems(table, results, null, function (arr) {
@@ -2301,7 +2413,7 @@
 					}
 					function showGroup(group, error) {
 						debug(group);
-						if(!group && error) debug(error);
+						if (!group && error) debug(error);
 						else if (group[2].value !== "") {
 							var lenTables = 0,
 								n = 0;
@@ -2342,24 +2454,27 @@
 			},
 			template: "#groups-page"
 		},
-		View1 = {
+		view1_page = {
 			methods: {
 				generateListView: generateListView,
 				importFile: importFile
 			},
 			template: "#view1-page"
 		},
-		View2 = {
+		view2_page = {
 			template: "#view2-page"
 		},
-		View3 = {
+		view3_page = {
 			methods: {
 				generateListView: generateListView,
 				importFile: importFile
 			},
 			template: "#view3-page"
 		},
-		Details = {
+		details_page = {
+			components: {
+				"details-card": details_card
+			},
 			data: function () {
 				return {
 					details: state.details
@@ -2367,7 +2482,12 @@
 			},
 			template: "#details-page"
 		},
-		Search = {
+		search_results_page = {
+			components: {
+				"jump-list": jump_list,
+				"v-a": details_view_container,
+				"v-b": details_view_container		
+			},
 			data: function () {
 				return {
 					currentQuery: state.currentQuery,
@@ -2389,10 +2509,6 @@
 					detailsView: "v-a"
 				};
 			},
-			components: {
-				"v-a": DetailsView,
-				"v-b": DetailsView
-			},
 			methods: {
 				onDetailsUpdate: function (newDetailsObj) {
 					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
@@ -2403,15 +2519,18 @@
 			},
 			template: "#search-results-page"
 		},
-		Edit = {
+		edit_details_page = {
+			components: {
+				"edit-details-card": edit_details_card
+			},
 			data: function () {
 				return {
 					details: state.details
 				};
-			},			
+			},
 			template: "#edit-details-page"
 		},
-		NotFound = {
+		page_not_found_page = {
 			template: "<div class=\"view\"><div class=\"view-container\"><h1>Page Not Found :´(</h1><h3>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h3></div></div>"
 		},
 		routes = [
@@ -2419,7 +2538,7 @@
 				path: '/',
 				name: "home",
 				components: {
-					default: Recent
+					default: recent_page
 				},
 				meta: {
 					title: 'Home page - Nyckel (Beta)'
@@ -2429,7 +2548,7 @@
 				path: '/new',
 				name: "new",
 				components: {
-					default: New
+					default: new_table_page
 				},
 				meta: {
 					title: 'Create a new table - Nyckel (Beta)'
@@ -2439,7 +2558,7 @@
 				path: '/recent',
 				name: "recent",
 				components: {
-					default: Recent
+					default: recent_page
 				},
 				meta: {
 					title: 'Recent - Nyckel (Beta)'
@@ -2449,7 +2568,7 @@
 				path: '/groups',
 				name: "groups",
 				components: {
-					default: Groups
+					default: groups_page
 				},
 				meta: {
 					title: 'Groups - Nyckel (Beta)'
@@ -2459,7 +2578,7 @@
 				path: '/view1',
 				name: "view1",
 				components: {
-					default: View1
+					default: view1_page
 				},
 				meta: {
 					title: 'Contacts - Nyckel (Beta)'
@@ -2469,7 +2588,7 @@
 				path: '/view2',
 				name: "view2",
 				components: {
-					default: View2
+					default: view2_page
 				},
 				meta: {
 					title: 'Passwords - Nyckel (Beta)'
@@ -2479,7 +2598,7 @@
 				path: '/view3',
 				name: "view3",
 				components: {
-					default: View3
+					default: view3_page
 				},
 				meta: {
 					title: 'Files - Nyckel (Beta)'
@@ -2489,7 +2608,7 @@
 				path: '/search',
 				name: "search",
 				components: {
-					default: Search
+					default: search_results_page
 				},
 				meta: {
 					title: 'Search Results - Nyckel (Beta)'
@@ -2499,7 +2618,7 @@
 				path: '/edit',
 				name: "edit",
 				components: {
-					default: Edit
+					default: edit_details_page
 				},
 				meta: {
 					title: 'Edit - Nyckel (Beta)'
@@ -2509,7 +2628,7 @@
 				path: '/details',
 				name: "details",
 				components: {
-					default: Details
+					default: details_page
 				},
 				meta: {
 					title: 'Details - Nyckel (Beta)'
@@ -2519,7 +2638,7 @@
 				path: '*',
 				name: "notfound",
 				components: {
-					default: NotFound
+					default: page_not_found_page
 				},
 				meta: {
 					title: 'Page not found :( - Nyckel (Beta)'

@@ -2348,7 +2348,7 @@ APP.nyckelDB = (function () {
 		return callback instanceof Function ? callback(ret, ERRORS[this.id], DB[this.id].title, this.syncPending) : ret;
 	};
 	/**
-	 * Get an entire row from the table including column name, column type, and values
+	 * Get an entire row from the table as JSON arranged by column name. Returns column name, column type and value
 	 * @function getRow
 	 * @param {string|number} rowId the row's id, or its current index
 	 * @param {getRowCallback} [callback] callback
@@ -2356,15 +2356,15 @@ APP.nyckelDB = (function () {
 	 */
 	NyckelDBObj.prototype.getRow = function (rowId, callback) {
 		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
-			ret = [];
+			ret = {};
 		if (rowIndex > -1) {
 			this.forEachCol(function (colName, is) {
-				ret[is] = {
-					value: DB[this.id].table[rowIndex][is + 1],
+				ret[colName] = {
+					column: colName,
 					type: DB[this.id].columns[colName].type[0],
-					column: colName
+					value: DB[this.id].table[rowIndex][is + 1]
 				};
-				if (DB[this.id].columns[colName].exportAs) ret[is].name = DB[this.id].columns[colName].exportAs[0];
+				if (DB[this.id].columns[colName].exportAs) ret[colName].column = DB[this.id].columns[colName].exportAs[0];
 			}.bind(this), function (success, errors, title, syncPending) {
 				return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
 			});			

@@ -69,7 +69,7 @@ a {
 	margin: 0;
 }
 
-a, button, .link, .navlink, .addressLink, .jumplink {
+a, button, .link, .navlink, .addressLink, .jumplink, .textboxHeading {
 	cursor: pointer;
 	background-color: transparent;
 	text-decoration: none;
@@ -107,9 +107,12 @@ img {
 
 .roundImage {
 	border-radius: 50%;
-	height: 64px;
+	/*height: 64px;
 	width: 64px;
-	margin: 0 12px;
+	margin: 0 12px;*/
+	height: 132px;
+	width: 132px;
+	margin-right: 16px;
 }
 
 h1 {
@@ -136,7 +139,8 @@ h4 {
 	font-weight: 300;
 }
 
-h5 {
+h5,
+.textboxHeading{
 	font-size: 18px;
 	line-height: 22px;
 	font-weight: 300;
@@ -162,7 +166,7 @@ th{
 	overflow-x: auto;
 }
 
-.phon .table-container {
+html.phon .table-container {
 	width: 100%;
 }
 
@@ -315,11 +319,13 @@ html.desk #notification {
 	left: 0;
 	right: 0;
 	z-index: 20;
+}
+#confirmContainer{
 	background-color: white;
 	background-color: rgba(255,255,255,0.5);
 }
 
-.dark-theme #confirmContainer {
+.dark-theme #confirmContainer{
 	background-color: black;
 	background-color: rgba(0,0,0,0.5);
 }
@@ -499,14 +505,14 @@ html.phon #searchSuggestions-container,
 	position: fixed;
 	bottom: 0;
 	left: 0;
-	background-color: transparent;
 	z-index: 8;
+	background-color: transparent;
 	pointer-events: none;
 }
 
 html.tabl #closeSidenav,
 html.phon #closeSidenav {
-	top: 0;
+	top: 54px;
 	right: 54px;
 }
 
@@ -1091,11 +1097,7 @@ form.find,
 .textbox,
 .textbox.valid,
 html.desk .textbox.valid:hover,
-.textbox.invalid:focus,
-textarea,
-textarea.valid,
-html.desk textarea.valid:hover,
-textarea.invalid:focus {
+.textbox.invalid:focus {
 	border-color: #e1e1e1 white white #e1e1e1;
 	border-color: rgba(128, 128, 128, 0.1) white white rgba(128, 128, 128, 0.1);
 	box-shadow: rgba(128, 128, 128, 0.5) 1px 1px 3px inset;
@@ -1107,57 +1109,59 @@ textarea.invalid:focus {
 .dark-theme .textbox,
 .dark-theme .textbox.valid,
 html.desk .dark-theme .textbox.valid:hover,
-.dark-theme .textbox.invalid:focus,
-.dark-theme textarea,
-.dark-theme textarea.valid,
-html.desk .dark-theme textarea.valid:hover,
-.dark-theme textarea.invalid:focus {
+.dark-theme .textbox.invalid:focus {
 	border-color: black #2c2c2c #2c2c2c black;
 	box-shadow: rgba(0, 0, 0, 0.15) 1px 1px 3px inset;
 }
 
 .checkbox label:before,
 .switch,
-.textbox,
-textarea{
+.textbox {
 	background-color: #888;
 	background-color: rgba(255, 255, 255, 0.4);
 }
 
 .dark-theme .checkbox label:before,
 .dark-theme .switch,
-.dark-theme .textbox,
-.dark-theme textarea{
+.dark-theme .textbox {
 	background-color: #333;
 	background-color: rgba(128, 128, 128, 0.25);
 }
 
-.textbox.invalid,
-textarea.invalid {
+.textbox.invalid {
 	color: red;
 	box-shadow: rgba(255, 0, 0, 0.8) 0 0 4px inset;
 }
 
-.dark-theme .textbox.invalid,
-.dark-theme textarea.invalid{
+.dark-theme .textbox.invalid {
 	color: #700000;
 	box-shadow: rgba(255, 0, 0, 0.5) 0 0 4px inset;
 }
 
 .textbox.valid,
-.textbox.invalid:focus,
-textarea.valid,
-textarea.invalid:focus {
+.textbox.invalid:focus {
 	color: #0f992d; /*text green*/
 }
 
 .dark-theme .textbox.valid,
 html.desk.dark-theme .textbox:hover,
-.dark-theme .textbox.invalid:focus,
-.dark-theme textarea.valid,
-html.desk.dark-theme textarea:hover,
-.dark-theme textarea.invalid:focus {
+.dark-theme .textbox.invalid:focus {
 	color: #238c3a; /*dark-theme text green*/
+}
+
+.switch label,
+html.desk button:hover,
+html.desk .link:hover,
+html.desk .jumplink:hover,
+html.desk .textboxHeading:hover,
+button:active,
+.link:active,
+.jumplink:active,
+.textboxHeading:active {
+	background: #eee; /* Old browsers */
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
 }
 
 .switch label,
@@ -1166,11 +1170,7 @@ html.desk .link:hover,
 html.desk .jumplink:hover,
 button:active,
 .link:active,
-.jumplink:active {
-	background: #eee; /* Old browsers */
-	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
-	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
+.jumplink:active{
 	border-right: 1px solid #f1f1f1;
 	border-top: 1px solid white;
 	border-left: 1px solid #f1f1f1;
@@ -1188,13 +1188,24 @@ button:active,
 html.desk .dark-theme button:hover,
 html.desk .dark-theme .link:hover,
 html.desk .dark-theme .jumplink:hover,
+html.desk .dark-theme .textboxHeading:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
-.dark-theme .jumplink:active {
+.dark-theme .jumplink:active,
+.dark-theme .textboxHeading:active {
 	background: #222;
 	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
 	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
 	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+.dark-theme .switch label,
+html.desk .dark-theme button:hover,
+html.desk .dark-theme .link:hover,
+html.desk .dark-theme .jumplink:hover,
+.dark-theme button:active,
+.dark-theme .link:active,
+.dark-theme .jumplink:active{
 	border-right: 1px solid #1c1c1c;
 	border-top: 1px solid #2c2c2c;
 	border-left: 1px solid #1c1c1c;
@@ -1301,12 +1312,6 @@ html.desk .dark-theme .link:hover,
 		left: 30px;
 	}
 
-.detailsHeader img {
-	height: 132px;
-	width: 132px;
-	margin-right: 16px;
-}
-
 .itemLabel {
 	text-transform: uppercase;
 	float: left;
@@ -1320,6 +1325,10 @@ html.phon .itemLabel {
 	width: 100%;
 }
 
+html.phon .dropdown-container.itemLabel {
+	height: 52px;
+}
+
 html.tabl .itemLabel,
 html.desk .itemLabel {
 	text-align: right;
@@ -1327,6 +1336,17 @@ html.desk .itemLabel {
 	padding-top: 8px;
 	width: 27%;
 	clear: both;
+}
+
+html.tabl .dropdown-container.itemLabel,
+html.desk .dropdown-container.itemLabel {
+	padding: 0;
+}
+
+html.tabl .itemLabel button,
+html.desk .itemLabel button {
+	position: relative;
+	bottom: 6px;
 }
 
 .itemText,
@@ -1345,14 +1365,13 @@ html.desk .addressLink {
 }
 
 .textbox, 
-textarea, 
-.editbox{
+.editbox {
 	width: 100%;
 	padding: 3px 8px;
 	margin-bottom: 16px;
 }
-.textbox,
-textarea {
+
+.textbox {
 	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 	line-height: 1.2;
 	border-width: 1px;
@@ -1360,19 +1379,59 @@ textarea {
 	border-radius: 2px;
 }
 
-.textbox {
+input.textbox {
 	height: 33px;
 }
 
 textarea {
 	resize: none;
+	height: 250px;
 }
 
 html.tabl .textbox,
-html.desk .textbox,
-html.tabl .editbox,
-html.desk .editbox{
-	width: 73%;
+html.desk .textbox {
+	width: 64%;
+}
+
+.dropdown-container .textbox{
+	width: 100%;
+	margin: 0;
+}
+
+.textboxHeading {
+	display: block;
+	padding: 12px 0;
+}
+
+.editGroup {
+	border-left: 2px solid lightgray;
+	padding: 12px 0 0 0;
+	margin-bottom: 12px;
+}
+
+html.phon .editGroup {
+	padding: 12px 0 0 12px;
+}
+
+.dark-theme .editGroup {
+	border-left: 2px solid #333;
+}
+
+.lineItem {
+	clear: both;
+	position: relative;
+}
+
+html.desk button.lineItem,
+html.tabl button.lineItem{
+	position: relative;
+	left: 22%;
+}
+
+.cancelButton {
+	position: absolute;
+	right: 0;
+	bottom: 8px;
 }
 
 .link,
@@ -1409,7 +1468,7 @@ ul.links {
 }
 
 .link,
-.jumplink {
+.jumplink{
 	min-height: 42px;
 	padding: 13px 16px;
 	text-align: left;
@@ -1428,7 +1487,7 @@ ul.links {
 }
 
 .dark-theme .link,
-.dark-theme .jumplink {
+.dark-theme .jumplink{
 	border-top: 1px solid #2c2c2c;
 }
 
@@ -1466,7 +1525,8 @@ button,
 #searchAutoComplete,
 html.desk .link:hover,
 .addressLink,
-.jumplink {
+.jumplink,
+.textboxHeading {
 	color: #478cdb; /*accent blue*/
 }
 
@@ -1477,7 +1537,9 @@ html.desk .link:hover,
 	.addressLink:active,
 	html.desk .addressLink:hover,
 	.jumplink:focus,
-	html.desk .jumplink:hover {
+	html.desk .jumplink:hover,
+	.textboxHeading:focus,
+	html.desk .textboxHeading:hover {
 		color: #5498e7; /*accent blue 10% lighter*/
 	}
 
@@ -1500,10 +1562,10 @@ html.desk .link:hover,
 	border: 1px solid #478cdb; /*accent blue*/
 	background-color: transparent;
 }
-.textbox:focus{
+.textbox:focus {
 	background-color: white;
 }
-.dark-theme .textbox:focus{
+.dark-theme .textbox:focus {
 	background-color:black;
 }
 html.desk a:focus,
@@ -1571,17 +1633,8 @@ html.desk .dark-theme .jumplink-button:hover,
 
 .dropdown {
 	position: absolute;
-	z-index: 2;
-}
-
-.closeDropdown{
+	max-height: 300px;
 	z-index: 1;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: transparent;
 }
 
 .right.dropdown {
