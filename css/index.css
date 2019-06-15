@@ -58,9 +58,11 @@ body {
 }
 
 body, input {
-	font-family: 'Segoe UI', 'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
-	font-size: 15px;
-	line-height: 21px;
+	font-family: 'Segoe UI', Roboto, Selawik, 'HelveticaNeue-Light', HelveticaNeue, Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 20px;
+	font-weight: 400;
+	letter-spacing: 0.03125rem;
 }
 
 a {
@@ -69,15 +71,11 @@ a {
 	margin: 0;
 }
 
-a, button, .link, .navlink, .addressLink, .jumplink, .textboxHeading {
+a, button, .link, .navlink, .jumplink {
 	cursor: pointer;
 	background-color: transparent;
 	text-decoration: none;
 }
-
-	.addressLink.itemText {
-		cursor: default;
-	}
 
 	a:active,
 	a:hover,
@@ -95,10 +93,23 @@ a, button, .link, .navlink, .addressLink, .jumplink, .textboxHeading {
 	}
 
 button {
-	font-size: 16px;
+	font-size: 14px;
 	border: 1px solid transparent;
 	padding: 12px;
 	border-radius: 2px;
+	-webkit-appearance: button;
+	-webkit-writing-mode: horizontal-tb !important;
+	text-rendering: auto;
+	letter-spacing: normal;
+	word-spacing: normal;
+	text-transform: uppercase;
+	text-indent: 0px;
+	text-shadow: none;
+	display: inline-block;
+	text-align: center;
+	align-items: flex-start;
+	box-sizing: border-box;
+	margin: 0em;
 }
 
 img {
@@ -116,40 +127,68 @@ img {
 }
 
 h1 {
-	font-size: 46px;
-	line-height: 56px;
-	font-weight: 500;
+	font-size: 96px;
+	line-height: 112px;
+	font-weight: 100;
+	letter-spacing: -0.015625rem;
 }
 
 h2 {
-	font-size: 36px;
-	line-height: 40px;
-	font-weight: 500;
+	font-size: 60px;
+	line-height: 72px;
+	font-weight: 100;
+	letter-spacing: -0.008333rem;
 }
 
 h3 {
-	font-size: 24px;
-	line-height: 28px;
+	font-size: 48px;
+	line-height: 56px;
 	font-weight: 200;
+	letter-spacing: 0rem;
 }
 
 h4 {
-	font-size: 20px;
-	line-height: 24px;
-	font-weight: 300;
+	font-size: 34px;
+	line-height: 40px;
+	font-weight: 200;
+	letter-spacing: 0.007353rem;
 }
 
 h5,
-.textboxHeading{
-	font-size: 18px;
-	line-height: 22px;
+title {
+	font-size: 24px;
+	line-height: 28px;
 	font-weight: 300;
+	letter-spacing: 0rem;
 }
 
-h6 {
-	font-size: 15px;
-	line-height: 20px;
+h6,
+.cardHeading {
+	font-size: 20px;
+	line-height: 24px;
 	font-weight: 400;
+	letter-spacing: 0.0075rem;
+}
+
+base {
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	letter-spacing: 0.010714rem;
+}
+
+caption {
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: 400;
+	letter-spacing: 0.033333rem;
+}
+
+overline {
+	font-size: 10px;
+	font-weight: 400;
+	text-transform: uppercase;
+	letter-spacing: 0.015rem;
 }
 
 table {
@@ -564,11 +603,7 @@ html.desk #closeSidenav {
 #searchResults,
 #currentView,
 #stoKeyInput,
-#stoKeyInputConfirm,
-.addressLink.itemText,
-.addressLink.itemText:hover,
-.addressLink.itemText:active,
-.addressLink.itemText:focus {
+#stoKeyInputConfirm {
 	color: black; /*main text color*/
 }
 
@@ -581,13 +616,13 @@ html.desk #closeSidenav {
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm,
 	.dark-theme #searchBox,
-	.dark-theme .textbox,
-	.dark-theme .addressLink.itemText,
-	.dark-theme .addressLink.itemText:hover,
-	.dark-theme .addressLink.itemText:focus,
-	.dark-theme .addressLink.itemText :active{
+	.dark-theme .textbox {
 		color: lightgray; /*dark-theme main text color*/
 	}
+
+nav {
+	font-size: 16px;
+}
 
 #navbar {
 	position: fixed;
@@ -609,6 +644,10 @@ html.desk .dropdown-container button.selected:hover,
 	background-color: white; /*nav panel*/
 }
 
+.view .dropdown {
+	background-color: #fbfbfb;
+}
+
 .dark-theme nav,
 .dark-theme nav .switch label,
 .dark-theme #searchSuggestions-container,
@@ -617,6 +656,10 @@ html.desk .dropdown-container button.selected:hover,
 html.desk .dark-theme .dropdown-container button.selected:hover,
 .dark-theme .dropdown {
 	background-color: #1f1f1f; /*dark-theme nav panel*/
+}
+
+.dark-theme .view .dropdown {
+	background-color: #1c1c1c;
 }
 
 .dark-theme #navbar,
@@ -665,13 +708,6 @@ html.desk .dark-theme #searchSuggestions-container,
 
 #navbar .navButtons {
 	height: 100%;
-}
-
-.dark-theme .link:hover:active,
-html.desk .dark-theme .link:hover:active,
-.dark-theme button:hover:active,
-html.desk .dark-theme button:hover:active {
-	background-color: #070707;
 }
 
 #currentView {
@@ -862,11 +898,14 @@ html.tabl .view{
 
 .view-container {
 	width: 100%;
-	padding-top: 24px;
-	padding-right: 16px;
-	padding-left: 16px;
+	padding: 8px 16px 8px 16px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+html.phon .view-container {
+	padding-left: 8px;
+	padding-right: 8px;
 }
 
 .splitViewLeft {
@@ -882,7 +921,7 @@ html.desk .splitViewLeft {
 
 html.desk .splitViewRight {
 	width: 35%;
-	padding-right: 3%;
+	padding-right: 4%;
 	position: relative;
 	right: 25px;
 	border-left: 2px solid lightgray;
@@ -1110,15 +1149,14 @@ html.desk .textbox.valid:hover,
 .dark-theme .textbox.valid,
 html.desk .dark-theme .textbox.valid:hover,
 .dark-theme .textbox.invalid:focus {
-	border-color: black #2c2c2c #2c2c2c black;
+	border-color: black #252525	#252525 black;
 	box-shadow: rgba(0, 0, 0, 0.15) 1px 1px 3px inset;
 }
 
 .checkbox label:before,
 .switch,
 .textbox {
-	background-color: #888;
-	background-color: rgba(255, 255, 255, 0.4);
+	background-color: white;
 }
 
 .dark-theme .checkbox label:before,
@@ -1153,11 +1191,9 @@ html.desk.dark-theme .textbox:hover,
 html.desk button:hover,
 html.desk .link:hover,
 html.desk .jumplink:hover,
-html.desk .textboxHeading:hover,
 button:active,
 .link:active,
-.jumplink:active,
-.textboxHeading:active {
+.jumplink:active {
 	background: #eee; /* Old browsers */
 	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
 	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
@@ -1169,18 +1205,33 @@ html.desk button:hover,
 html.desk .link:hover,
 html.desk .jumplink:hover,
 button:active,
+.link,
+.jumplink,
 .link:active,
-.jumplink:active{
-	border-right: 1px solid #f1f1f1;
+.jumplink:active/*,
+.cardHeading,
+.cardBody*/ {
 	border-top: 1px solid white;
+}
+.switch label,
+html.desk button:hover,
+html.desk .link:hover,
+html.desk .jumplink:hover,
+button:active,
+.link:active,
+.jumplink:active/*,
+.card*/ {
 	border-left: 1px solid #f1f1f1;
+	border-right: 1px solid #f1f1f1;
 }
 
 .switch label,
 html.desk button:hover,
 html.desk .link:hover,
 button:active,
-.link:active {
+.link:active/*,
+.cardHeading,
+.cardBody*/ {
 	border-bottom: 1px solid #e1e1e1;
 }
 
@@ -1188,15 +1239,13 @@ button:active,
 html.desk .dark-theme button:hover,
 html.desk .dark-theme .link:hover,
 html.desk .dark-theme .jumplink:hover,
-html.desk .dark-theme .textboxHeading:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
-.dark-theme .jumplink:active,
-.dark-theme .textboxHeading:active {
+.dark-theme .jumplink:active {
 	background: #222;
-	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
-	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
-	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, rgba(150, 150, 150, 0.1) 50%, rgba(0, 0, 0, 0.1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.02) 0%, rgba(150, 150, 150, 0.02) 50%, rgba(0, 0, 0, 0.2) 100%);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.02) 0%, rgba(150, 150, 150, 0.02) 50%, rgba(0, 0, 0, 0.2) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 0%, rgba(150, 150, 150, 0.02) 50%, rgba(0, 0, 0, 0.2) 100%);
 }
 
 .dark-theme .switch label,
@@ -1205,9 +1254,24 @@ html.desk .dark-theme .link:hover,
 html.desk .dark-theme .jumplink:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
-.dark-theme .jumplink:active{
+.dark-theme .jumplink:active,
+/*.dark-theme .cardHeading,
+.dark-theme .cardBody,*/
+.dark-theme .link,
+.dark-theme .jumplink/*,
+.dark-theme .cardBody*/ {
+	border-top: 1px solid #252525;
+}
+
+.dark-theme .switch label,
+html.desk .dark-theme button:hover,
+html.desk .dark-theme .link:hover,
+html.desk .dark-theme .jumplink:hover,
+.dark-theme button:active,
+.dark-theme .link:active,
+.dark-theme .jumplink:active/*,
+.dark-theme .card*/ {
 	border-right: 1px solid #1c1c1c;
-	border-top: 1px solid #2c2c2c;
 	border-left: 1px solid #1c1c1c;
 }
 
@@ -1215,7 +1279,9 @@ html.desk .dark-theme .jumplink:hover,
 html.desk .dark-theme button:hover,
 html.desk .dark-theme .link:hover,
 .dark-theme button:active,
-.dark-theme .link:active {
+.dark-theme .link:active/*,
+.dark-theme .cardHeading,
+.dark-theme .cardBody*/ {
 	border-bottom: 1px solid black;
 }
 
@@ -1314,7 +1380,6 @@ html.desk .dark-theme .link:hover,
 
 .itemLabel {
 	text-transform: uppercase;
-	float: left;
 	color: #888; /*light and dark theme medium grey*/
 	color: rgba(120, 120, 120, 0.85); /*light and dark theme medium grey*/
 	font-size: 14px;
@@ -1331,6 +1396,7 @@ html.phon .dropdown-container.itemLabel {
 
 html.tabl .itemLabel,
 html.desk .itemLabel {
+	float: left;
 	text-align: right;
 	padding-right: 12px;
 	padding-top: 8px;
@@ -1349,19 +1415,26 @@ html.desk .itemLabel button {
 	bottom: 6px;
 }
 
-.itemText,
-.addressLink {
-	padding-bottom: 20px;
-	padding-top: 8px;
+.itemText {
+	padding: 12px;
 	-ms-word-wrap: break-word;
 	word-wrap: break-word;
+	position: relative;
+}
+
+.itemText div {
+	padding-left: 12px;
 }
 
 html.tabl .itemText,
-html.desk .itemText,
-html.tabl .addressLink,
-html.desk .addressLink {
-	padding-left: 27%;
+html.desk .itemText {
+	border-left: 1px solid #e8e8e8;
+	margin-left: 27%;
+}
+
+html.tabl .dark-theme .itemText,
+html.desk .dark-theme .itemText {
+	border-left: 1px solid #232323;
 }
 
 .textbox, 
@@ -1391,30 +1464,43 @@ textarea {
 html.tabl .textbox,
 html.desk .textbox {
 	width: 64%;
+	margin-left: 8px;
 }
 
-.dropdown-container .textbox{
+.dropdown-container .textbox {
+	margin: 0 0 3px 0;
+}
+
+html.tabl .dropdown-container .textbox,
+html.desk .dropdown-container .textbox {
 	width: 100%;
-	margin: 0;
+	margin: 0 0 3px 0;
 }
 
-.textboxHeading {
+.card {
+	clear: both;
+	/*margin-top: 12px;
+	box-shadow: 1px 0px 10px rgba(0, 0, 0, 0.05);
+	border-radius: 3px;
+	background-color: #f2f2f2;*/
+}
+
+.dark-theme .card {
+	/*box-shadow: 1px 0px 10px black;
+	background-color: #151515;*/
+}
+
+.cardHeading {
 	display: block;
-	padding: 12px 0;
+	/*padding: 12px;
+	border-radius: 3px;*/
 }
 
-.editGroup {
-	border-left: 2px solid lightgray;
-	padding: 12px 0 0 0;
-	margin-bottom: 12px;
-}
-
-html.phon .editGroup {
-	padding: 12px 0 0 12px;
-}
-
-.dark-theme .editGroup {
-	border-left: 2px solid #333;
+.cardExpand {
+	/*padding: 12px;
+	margin-bottom: 12px;*/
+	max-height: 600px;
+	overflow: auto;
 }
 
 .lineItem {
@@ -1464,7 +1550,7 @@ ul.links {
 
 .dark-theme ul.links {
 	border-top: 1px solid black;
-	border-bottom: 1px solid #2c2c2c;
+	border-bottom: 1px solid #252525;
 }
 
 .link,
@@ -1475,7 +1561,6 @@ ul.links {
 	overflow: hidden;
 	border-right: 1px solid transparent;
 	border-left: 1px solid transparent;
-	border-top: 1px solid white;
 }
 
 .jumplink {
@@ -1484,11 +1569,6 @@ ul.links {
 
 .link {
 	border-bottom: 1px solid #e1e1e1;
-}
-
-.dark-theme .link,
-.dark-theme .jumplink{
-	border-top: 1px solid #2c2c2c;
 }
 
 .jumplink-button,
@@ -1523,25 +1603,9 @@ html.desk .navlink:hover,
 a,
 button,
 #searchAutoComplete,
-html.desk .link:hover,
-.addressLink,
-.jumplink,
-.textboxHeading {
+.jumplink {
 	color: #478cdb; /*accent blue*/
 }
-
-	a:focus,
-	a:active,
-	html.desk a:hover,
-	.addressLink:focus,
-	.addressLink:active,
-	html.desk .addressLink:hover,
-	.jumplink:focus,
-	html.desk .jumplink:hover,
-	.textboxHeading:focus,
-	html.desk .textboxHeading:hover {
-		color: #5498e7; /*accent blue 10% lighter*/
-	}
 
 	.jumplink,
 	.jumplink:active,
@@ -1550,6 +1614,25 @@ html.desk .link:hover,
 	html.desk .dark-theme .jumplink:hover {
 		border-bottom: 1px solid #478cdb; /*accent blue*/
 	}
+
+html.desk .link:hover{
+	color: #444;
+}
+
+.link:hover:active,
+html.desk .link:hover:active {
+	color: #666;
+}
+
+
+html.desk .dark-theme .link:hover{
+	color: #eee;
+}
+
+.dark-theme .link:hover:active,
+html.desk .dark-theme .link:hover:active {
+	color: white;
+}
 
 #searchBox:focus,
 #stoKeyInput:focus,
@@ -1568,23 +1651,28 @@ html.desk .link:hover,
 .dark-theme .textbox:focus {
 	background-color:black;
 }
-html.desk a:focus,
-html.desk button:focus,
-html.desk button.selected,
-html.desk .addressLink:focus {
-	outline: 1px dotted #478cdb; /*accent blue*/
-}
 
 html.desk .switch label:focus {
 	border: 1px dotted #478cdb; /*accent blue*/
 }
 
-.link:hover:active,
-html.desk .link:hover:active,
+a:active,
+a:focus,
+a.link:hover:active,
+.dark-theme a.link:hover:active,
 button:hover:active,
 button.selected,
-html.desk button:hover:active{
-	background-color: #f5f5f5;
+.jumplink:focus,
+html.desk a:focus,
+html.desk a:hover,
+html.desk a.link:hover,
+html.desk a.link:hover:active,
+html.desk .dark-theme a.link:hover,
+html.desk .dark-theme a.link:hover:active,
+html.desk button:hover:active,
+html.desk button:focus,
+html.desk button.selected,
+html.desk .jumplink:hover {
 	color: #5498e7; /*accent blue 10% lighter*/
 }
 
@@ -1634,6 +1722,7 @@ html.desk .dark-theme .jumplink-button:hover,
 .dropdown {
 	position: absolute;
 	max-height: 300px;
+	min-width: 100%;
 	z-index: 1;
 }
 
@@ -1646,6 +1735,7 @@ html.desk .dark-theme .jumplink-button:hover,
 	padding-left: 8px;
 	float: left;
 }
+
 .editbox {
 	max-height: 500px;
 	overflow-y: auto;
@@ -1743,4 +1833,24 @@ html.desk .back-enter {
 
 html.desk .back-leave-to {
 	transform: translateX(300px);
+}
+
+.expand-enter-active {
+	overflow: hidden;
+	transition: max-height 0.3s cubic-bezier(0.8, 0, 0.2, 1), overflow 0s linear 0.3s;
+}
+
+.expand-leave-active {
+	overflow: hidden;
+	transition: max-height 0.15s cubic-bezier(0.8, 0, 0.2, 1), overflow 0s linear 0.2s;
+}
+
+.expand-enter {
+	max-height: 0;
+	overflow: auto;
+}
+
+.expand-leave-to {
+	max-height: 0;
+	overflow: hidden;
 }

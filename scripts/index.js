@@ -333,15 +333,21 @@
 									{ value: "IM10_Value", label: "IM10_Type", labelOptions: contactsTemplateIMLabelOptions }
 								],
 								splitter: " ::: "
+							}, {
+								groupHeading: "Addresses",
+								group: [
+									{ value: "Address1_Formatted", label: "Address1_Type"},
+									{ value: "Address2_Formatted", label: "Address2_Type" }
+								],
+								readonly: true
 							},
-							{ value: "Address1_Formatted", label: "Address1_Type", readonly: true },
 							{
 								groupHeading: "Address 1",
 								group: ["Address1_Type", "Address1_Street", "Address1_City", "Address1_POBox",
 									"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress"],
 								hidden: true
 							},
-							{ value: "Address2_Formatted", label: "Address2_Type", readonly: true },
+							
 							{
 								groupHeading: "Address 2",
 								group: ["Address2_Type", "Address2_Street", "Address2_City", "Address2_POBox",
@@ -1056,7 +1062,7 @@
 				app.spin(true, "Loading contact data...");
 				app.storeState();
 				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
-					function getValue(template, splitter, hidden, labelOptions) {
+					function getValue(template, splitter, labelOptions) {
 						function getDropdownList(optionsObj) {
 							var options = [];
 							for (let a = 0, lenA = optionsObj.dropdownList.length; a < lenA; a++) {
@@ -1101,7 +1107,7 @@
 								if (labelOptions.customLabel) obj.label.customize = true;
 								if (labelOptions.default) obj.label.value = obj.label.value || labelOptions.default;
 							}
-							if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
+							//if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
 						}
 						var obj = {};
 						labelOptions = labelOptions || template.labelOptions;
@@ -1111,9 +1117,9 @@
 							else applyValueObj();
 							if (template.label) applyLabel();
 							if (template.readonly) obj.readonly = true;
+							if (template.hidden) obj.hidden = true;
 							obj.value = formatValue(obj.value, obj.type, splitter);
 						}
-						if (hidden) obj.hidden = true;
 						return obj;
 					}
 					function formatValue(value, type, splitter) {
@@ -1151,7 +1157,7 @@
 					}
 					for (let a = 0, lenA = display.detailsView.length, c, lenC, d, lenD; a < lenA; a++) {
 						if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
-							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter, display.detailsView[a].hidden);
+							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
 							b++;
 						}
 						else if (display.detailsView[a].group) {
@@ -1161,7 +1167,7 @@
 								show: 0
 							};
 							for (c = 0, lenC = display.detailsView[a].group.length; c < lenC; c++) {
-								data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].hidden, display.detailsView[a].labelOptions);
+								data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].labelOptions);
 								for (d = 0, lenD = data[b].group[c].value.length; d < lenD; d++) {
 									if (data[b].group[c].value[d] !== "") data[b].show = c + 1;
 								}
@@ -1169,6 +1175,8 @@
 							if (display.detailsView[a].groupHeading) {
 								data[b].groupHeading = display.detailsView[a].groupHeading;
 							}
+							if (display.detailsView[a].hidden) data[b].hidden = true;
+							if (display.detailsView[a].readonly) data[b].readonly = true;
 							b++;
 						}
 					}
@@ -1369,6 +1377,10 @@
 				type: String,
 				default: ""
 			},
+			nothingselectedtext: {
+				type: String,
+				default: ""
+			},
 			icon: {
 				type: String,
 				default: ""
@@ -1404,12 +1416,18 @@
 				if (this.open) {
 					if (!this.clickOutside) {
 						this.clickOutside = function clickOutside(e) {
-							var outsideClick = !_this.$el.contains(e.target),
-								a = e.path.length;
-							if (_this.$el.id && outsideClick) while (a--) {
-								if (e.path[a].id === _this.$el.id) {
-									outsideClick = false;
-									break;
+							var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
+							if (e.path) {
+								//for non UWP
+								//check to see if it is exactly the same button that was clicked, 
+								//or another dropdown button
+								outsideClick = !_this.$el.contains(e.target);
+								var a = e.path.length || 0;
+								if (_this.$el.id && outsideClick) while (a--) {
+									if (e.path[a].id === _this.$el.id) {
+										outsideClick = false;
+										break;
+									}
 								}
 							}
 							if (outsideClick) _this.toggle(false);
@@ -1417,6 +1435,9 @@
 					}
 					app.addEventListener("click", this.clickOutside);
 					this.$emit("dropdown-open");
+					if (this.custominput) Vue.nextTick(function () {
+						this.$refs.input.focus();
+					}.bind(this));
 				}
 				else app.removeEventListener("click", this.clickOutside);
 			},
