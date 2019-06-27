@@ -57,7 +57,7 @@ body {
 	user-select: none;
 }
 
-body, input {
+body, input, button {
 	font-family: 'Segoe UI', Roboto, Selawik, 'HelveticaNeue-Light', HelveticaNeue, Helvetica, Arial, sans-serif;
 	font-size: 16px;
 	line-height: 20px;
@@ -71,7 +71,7 @@ a {
 	margin: 0;
 }
 
-a, button, .link, .navlink, .jumplink {
+a, button, .link, .navlink, .jumplink, .cardHeading {
 	cursor: pointer;
 	background-color: transparent;
 	text-decoration: none;
@@ -118,12 +118,14 @@ img {
 
 .roundImage {
 	border-radius: 50%;
-	/*height: 64px;
-	width: 64px;
-	margin: 0 12px;*/
 	height: 132px;
 	width: 132px;
 	margin-right: 16px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin-block-start: 1em;
+	margin-block-end: 0.4em;
 }
 
 h1 {
@@ -603,7 +605,8 @@ html.desk #closeSidenav {
 #searchResults,
 #currentView,
 #stoKeyInput,
-#stoKeyInputConfirm {
+#stoKeyInputConfirm,
+.cancelButton{
 	color: black; /*main text color*/
 }
 
@@ -616,7 +619,8 @@ html.desk #closeSidenav {
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm,
 	.dark-theme #searchBox,
-	.dark-theme .textbox {
+	.dark-theme .textbox,
+	.dark-theme .cancelButton {
 		color: lightgray; /*dark-theme main text color*/
 	}
 
@@ -893,7 +897,7 @@ html.tabl #app.sidenav_open #sidenav {
 html.phon .view,
 html.tabl .view{
 	width: 60%; /*hide scrollbars hack*/
-	padding-right: 10%;
+	padding-right: 9%;
 }
 
 .view-container {
@@ -903,9 +907,10 @@ html.tabl .view{
 	margin-right: auto;
 }
 
-html.phon .view-container {
+html.phon .view-container,
+html.tabl .view-container {
 	padding-left: 8px;
-	padding-right: 8px;
+	padding-right: 20px;
 }
 
 .splitViewLeft {
@@ -915,12 +920,12 @@ html.phon .view-container {
 html.desk .splitViewLeft {
 	display: block;
 	float: left;
-	width: 20%;
+	width: 18%;
 	transition: width cubic-bezier(0.1, 0.9, 0.2, 1) 0.3s;
 }
 
 html.desk .splitViewRight {
-	width: 35%;
+	width: 37%;
 	padding-right: 4%;
 	position: relative;
 	right: 25px;
@@ -1083,7 +1088,8 @@ html.desk .searchBar_open #searchReset {
 	padding: 0;
 	text-indent: 0;
 	text-align: left;
-	overflow: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 html.desk #searchSuggestions-container,
@@ -1193,7 +1199,8 @@ html.desk .link:hover,
 html.desk .jumplink:hover,
 button:active,
 .link:active,
-.jumplink:active {
+.jumplink:active,
+html.phon .cardHeading:active {
 	background: #eee; /* Old browsers */
 	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
 	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.4) 0%, rgba(230, 230, 230, 0.1) 50%, rgba(0, 0, 0, 0.02) 100%);
@@ -1202,15 +1209,10 @@ button:active,
 
 .switch label,
 html.desk button:hover,
-html.desk .link:hover,
-html.desk .jumplink:hover,
 button:active,
 .link,
 .jumplink,
-.link:active,
-.jumplink:active/*,
-.cardHeading,
-.cardBody*/ {
+html.phon .cardHeading {
 	border-top: 1px solid white;
 }
 .switch label,
@@ -1219,19 +1221,16 @@ html.desk .link:hover,
 html.desk .jumplink:hover,
 button:active,
 .link:active,
-.jumplink:active/*,
-.card*/ {
+.jumplink:active {
 	border-left: 1px solid #f1f1f1;
 	border-right: 1px solid #f1f1f1;
 }
 
 .switch label,
 html.desk button:hover,
-html.desk .link:hover,
 button:active,
-.link:active/*,
-.cardHeading,
-.cardBody*/ {
+.link,
+html.phon .card {
 	border-bottom: 1px solid #e1e1e1;
 }
 
@@ -1241,7 +1240,8 @@ html.desk .dark-theme .link:hover,
 html.desk .dark-theme .jumplink:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
-.dark-theme .jumplink:active {
+.dark-theme .jumplink:active,
+html.phon .dark-theme .cardHeading:active {
 	background: #222;
 	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.02) 0%, rgba(150, 150, 150, 0.02) 50%, rgba(0, 0, 0, 0.2) 100%);
 	background: -moz-linear-gradient(top, rgba(255, 255, 255, 0.02) 0%, rgba(150, 150, 150, 0.02) 50%, rgba(0, 0, 0, 0.2) 100%);
@@ -1250,16 +1250,10 @@ html.desk .dark-theme .jumplink:hover,
 
 .dark-theme .switch label,
 html.desk .dark-theme button:hover,
-html.desk .dark-theme .link:hover,
-html.desk .dark-theme .jumplink:hover,
 .dark-theme button:active,
-.dark-theme .link:active,
-.dark-theme .jumplink:active,
-/*.dark-theme .cardHeading,
-.dark-theme .cardBody,*/
 .dark-theme .link,
-.dark-theme .jumplink/*,
-.dark-theme .cardBody*/ {
+.dark-theme .jumplink,
+html.phon .dark-theme .cardHeading {
 	border-top: 1px solid #252525;
 }
 
@@ -1269,19 +1263,16 @@ html.desk .dark-theme .link:hover,
 html.desk .dark-theme .jumplink:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
-.dark-theme .jumplink:active/*,
-.dark-theme .card*/ {
+.dark-theme .jumplink:active {
 	border-right: 1px solid #1c1c1c;
 	border-left: 1px solid #1c1c1c;
 }
 
 .dark-theme .switch label,
 html.desk .dark-theme button:hover,
-html.desk .dark-theme .link:hover,
 .dark-theme button:active,
-.dark-theme .link:active/*,
-.dark-theme .cardHeading,
-.dark-theme .cardBody*/ {
+html.phon .dark-theme .card,
+.dark-theme .link {
 	border-bottom: 1px solid black;
 }
 
@@ -1398,8 +1389,7 @@ html.tabl .itemLabel,
 html.desk .itemLabel {
 	float: left;
 	text-align: right;
-	padding-right: 12px;
-	padding-top: 8px;
+	padding: 8px 12px;
 	width: 27%;
 	clear: both;
 }
@@ -1416,10 +1406,11 @@ html.desk .itemLabel button {
 }
 
 .itemText {
-	padding: 12px;
+	padding: 8px 12px;
 	-ms-word-wrap: break-word;
 	word-wrap: break-word;
 	position: relative;
+	height: 100%;
 }
 
 .itemText div {
@@ -1428,7 +1419,7 @@ html.desk .itemLabel button {
 
 html.tabl .itemText,
 html.desk .itemText {
-	border-left: 1px solid #e8e8e8;
+	border-left: 1px solid #e2e2e2;
 	margin-left: 27%;
 }
 
@@ -1441,7 +1432,7 @@ html.desk .dark-theme .itemText {
 .editbox {
 	width: 100%;
 	padding: 3px 8px;
-	margin-bottom: 16px;
+	margin: 4px 0 12px 0;
 }
 
 .textbox {
@@ -1463,7 +1454,7 @@ textarea {
 
 html.tabl .textbox,
 html.desk .textbox {
-	width: 64%;
+	width: 71%;
 	margin-left: 8px;
 }
 
@@ -1477,30 +1468,30 @@ html.desk .dropdown-container .textbox {
 	margin: 0 0 3px 0;
 }
 
-.card {
-	clear: both;
-	/*margin-top: 12px;
-	box-shadow: 1px 0px 10px rgba(0, 0, 0, 0.05);
-	border-radius: 3px;
-	background-color: #f2f2f2;*/
-}
-
-.dark-theme .card {
-	/*box-shadow: 1px 0px 10px black;
-	background-color: #151515;*/
-}
-
 .cardHeading {
 	display: block;
-	/*padding: 12px;
-	border-radius: 3px;*/
+	min-height: 42px;
+	padding: 13px 8px 13px 0;
 }
 
 .cardExpand {
-	/*padding: 12px;
-	margin-bottom: 12px;*/
-	max-height: 600px;
-	overflow: auto;
+	max-height: 1500px;
+	overflow: unset;
+}
+
+html.desk .cardExpand,
+html.tabl .cardExpand {
+	border-left: 1px solid #e2e2e2;
+	margin-left: 8px;
+}
+
+html.desk .dark-theme .cardExpand,
+html.tabl .dark-theme .cardExpand {
+	border-left: 1px solid #232323;
+}
+
+html .phon .cardExpand .lineItem {
+	padding: 8px;
 }
 
 .lineItem {
@@ -1516,8 +1507,8 @@ html.tabl button.lineItem{
 
 .cancelButton {
 	position: absolute;
-	right: 0;
-	bottom: 8px;
+	right: 2%;
+	bottom: 17px;
 }
 
 .link,
@@ -1531,30 +1522,34 @@ html.tabl button.lineItem{
 
 html.tabl .link,
 html.tabl .jumplink,
-html.tabl .view-container {
+html.tabl .view-container,
+html.tabl .card {
 	max-width: 800px;
 }
 
 html.desk .link,
 html.desk .jumplink,
-html.desk .view-container {
+html.desk .view-container,
+html.desk .card {
 	max-width: 1000px;
 }
 
-ul.links {
+ul.links,
+html.phon .cards {
 	padding: 0;
 	margin: 0;
 	border-top: 1px solid #e1e1e1;
 	border-bottom: 1px solid white;
 }
 
-.dark-theme ul.links {
+.dark-theme ul.links,
+html.phon .dark-theme .cards {
 	border-top: 1px solid black;
 	border-bottom: 1px solid #252525;
 }
 
 .link,
-.jumplink{
+.jumplink {
 	min-height: 42px;
 	padding: 13px 16px;
 	text-align: left;
@@ -1567,10 +1562,6 @@ ul.links {
 	font-weight: bold;
 }
 
-.link {
-	border-bottom: 1px solid #e1e1e1;
-}
-
 .jumplink-button,
 html.desk .jumplink-button:hover {
 	float: left;
@@ -1578,10 +1569,6 @@ html.desk .jumplink-button:hover {
 	min-height: 48px;
 	padding: 13px 19px;
 	margin: 8px;
-}
-
-.dark-theme .link {
-	border-bottom: 1px solid black;
 }
 
 li.link {
@@ -1603,7 +1590,8 @@ html.desk .navlink:hover,
 a,
 button,
 #searchAutoComplete,
-.jumplink {
+.jumplink,
+.cardHeading {
 	color: #478cdb; /*accent blue*/
 }
 
@@ -1672,7 +1660,11 @@ html.desk .dark-theme a.link:hover:active,
 html.desk button:hover:active,
 html.desk button:focus,
 html.desk button.selected,
-html.desk .jumplink:hover {
+html.desk .jumplink:hover,
+.cardHeading:focus,
+.cardHeading:active,
+html.desk .cardHeading:hover,
+html.desk .cardHeading:hover:active {
 	color: #5498e7; /*accent blue 10% lighter*/
 }
 
@@ -1722,7 +1714,7 @@ html.desk .dark-theme .jumplink-button:hover,
 .dropdown {
 	position: absolute;
 	max-height: 300px;
-	min-width: 100%;
+	min-width: 250px;
 	z-index: 1;
 }
 
@@ -1837,20 +1829,15 @@ html.desk .back-leave-to {
 
 .expand-enter-active {
 	overflow: hidden;
-	transition: max-height 0.3s cubic-bezier(0.8, 0, 0.2, 1), overflow 0s linear 0.3s;
+	transition: max-height 0.6s cubic-bezier(0.8, 0, 0.2, 1) /*, overflow 0s linear 0.6s*/;
 }
 
 .expand-leave-active {
 	overflow: hidden;
-	transition: max-height 0.15s cubic-bezier(0.8, 0, 0.2, 1), overflow 0s linear 0.2s;
+	transition: max-height 0.3s cubic-bezier(0.8, 0, 0.2, 1) /*, overflow 0s linear 0.3s*/;
 }
 
-.expand-enter {
-	max-height: 0;
-	overflow: auto;
-}
-
+.expand-enter,
 .expand-leave-to {
 	max-height: 0;
-	overflow: hidden;
 }

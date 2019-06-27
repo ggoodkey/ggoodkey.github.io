@@ -270,7 +270,7 @@ APP.nyckelDB = (function () {
 		function save() {
 			if (typeof changes === "undefined" || changes === true) {
 				//check for and surface hidden values before save				
-				APP.Sto.setItem(DB[this.id].title, EXPORT_DB.call(this)); //TODO temp commented out while making changes
+				APP.Sto.setItem(DB[this.id].title, EXPORT_DB.call(this));
 			}
 			ERRORS[this.id] = null;
 		}

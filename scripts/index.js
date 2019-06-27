@@ -4,11 +4,11 @@
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.0.1",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
-		views = {
+		views = {//views creates new pages in the app
 			new: {
 				name: "Tables",
-				icon: "icon-plus",
-				level: 1,
+				icon: "icon-plus",//icon shows up in the nav button
+				level: 1,//level 1 creates a button at the top/side of the screen for quick navigation to this page
 				path: "/new"
 			},
 			recent: {
@@ -57,7 +57,7 @@
 				path: "/edit"
 			}
 		},
-		startView = "recent", //set the view to start at by default		
+		startView = "recent", //set the view (from views listed above) to start at by default		
 		debug = APP.debug,//shortform access to APP.debug
 		contactsTemplateIMServiceOptions = {
 			dropdownList: ["WhatsApp", "Viber", "Facebook Messenger", "WeChat", "QQ Mobile", "Line", "Skype", "Snapchat",
@@ -575,7 +575,7 @@
 		},
 		setNavLinkIndicatorPosition = function (location) {
 			location = location ? location.replace(/\//, "") : startView;
-			if (app.views[location] && app.views[location].level === 1) {
+			if (app.views[location] && app.views[location].level === 1) {//show indicator and move to correct position
 				var sidenavlink = document.getElementById("sidenavlink_" + location).getBoundingClientRect(),
 					topnavlink = document.getElementById("topnavlink_" + location).getBoundingClientRect(),
 					views = document.getElementById("topnav-container").getBoundingClientRect(),
@@ -585,7 +585,10 @@
 				app.indicatorWidth = topnavlink.right - topnavlink.left;
 				app.indicatorRight = getWidth() - topnavlink.left - extra;
 			}
-			//else debug(location, "not top level nav");
+			else {//hide indicator
+				app.indicatorRight = app.indicatorRight - app.indicatorWidth * 0.66;
+				app.indicatorWidth = 0;
+			}
 		},
 		//web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
 		//and offline senarios where web workers are not available
@@ -760,6 +763,7 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneInit() {
+				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded();
 				if (!cordova && !app.cookieAgree) {
@@ -785,6 +789,7 @@
 						if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
 						if (s.version === app.version) {
 							for (var prop in state) {
+								if (prop === "recentlyViewed" && app[prop].length > 0) continue;//don't overwrite
 								if (s[prop] !== undefined) {
 									app[prop] = s[prop];
 								}
@@ -825,8 +830,7 @@
 			}
 			matchWindowsTheme();
 			layout();
-			app.updateCurrentView();
-			getLocal();			
+			getLocal();
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
@@ -1019,7 +1023,7 @@
 						if (window.navigator.onLine) {
 							app.syncAll();
 						}
-						app.spin(false);
+						app.spin(false, "Loading data...");
 						loadDB = false;
 						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
 						else loadDBQueue.pop()(cb);
@@ -1180,7 +1184,8 @@
 							b++;
 						}
 					}
-					app.spin(false);
+					//debug(data);
+					app.spin(false, "Loading contact data...");
 					if (callback instanceof Function) callback({
 						id: obj.id,
 						table: obj.table,
@@ -1304,6 +1309,7 @@
 			function applyTitle(title) {
 				app.searchResultsTitle = title;
 			}
+			app.spin(true, "Generating list...");
 			checkDBLoaded(function (callback) {
 				options = options || {};
 				options.pageNumber = options.pageNumber || 1;
@@ -1316,10 +1322,12 @@
 						wwManager({ "cmd": "getTitle", "title": tableTitle }, applyTitle);
 						app.searchResultsError = list.length === 0 ? "Nothing to display" : "";
 						app.navigate("search", app.currentQuery);
+						app.spin(false, "Generating list...");
 						if (callback instanceof Function) return callback();
 					});
 				}
 				else {
+					app.spin(false, "Generating list...");
 					debug(tableTitle, "error generating list view");
 					if (callback instanceof Function) return callback();
 				}
@@ -1342,6 +1350,7 @@
 			}
 			//add this item to top of list
 			app.recentlyViewed = recent;
+			app.storeState();
 		},
 		importFile = function (toTable) {
 			function done(success, errors, title, syncPending) {
@@ -1574,7 +1583,7 @@
 								}
 								// by alphabetic
 								else {
-									name = list[a].sortBy.split("__")[0];
+									name = list[a].sortBy && list[a].sortBy.split("__")[0] || "A";
 									letter = name.charAt(0);
 									if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
 										alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
@@ -1790,219 +1799,6 @@
 			},
 			template: "#jump-list"
 		},
-		details_line_item = {
-			props: {
-				item: Object
-			},
-			data: function () {
-				return {
-					clipboard: function () {
-						return navigator.clipboard ? true : false;
-					}
-				};
-			},
-			methods: {
-				externalLink: function (text, column, type, multilineText) {
-					var link;
-					if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-					else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-					else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-					else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
-					else if (type === "www") link = text;
-					if (link) return link;
-					else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-						var googlemaps = "http://maps.google.com/?q=",
-							bing = "http://www.bing.com/maps/?q=",
-							bingmaps = "bingmaps:?q=",
-							applemaps = "http://maps.apple.com/?q=",
-							userAgent = navigator.userAgent;
-						if (type === "gps") {
-							link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
-						}
-						else if (multilineText) link = multilineText.join(" ");
-						else link = text;
-						if (/\d/.test(link)) {
-							link = encodeURIComponent(trim(link));
-							if (/Windows/.test(userAgent)) {
-								if (/NT|Phone 10/.test(userAgent)) {
-									link = bingmaps + link;
-								}
-								else link = bing + link;
-							}
-							else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
-								link = applemaps + link;
-							}
-							else link = googlemaps + link;
-							return link;
-						}
-						else return false;
-					}
-					else return false;
-				},
-				copyToClipboard: function (stringToCopy) {
-					if (navigator.clipboard) {
-						try {
-							navigator.clipboard.writeText(stringToCopy);
-							var str = stringToCopy.slice(0, 20),
-								ext = stringToCopy.length > 20 ? "..." : "";
-							app.notify("Copied '" + str + ext + "' to clipboard", true);
-						} catch (err) {
-							console.error('Failed to copy: ', err);
-						}
-					}
-				}
-			},
-			template: "#details-line-item"
-		},
-		edit_details_line_item = {
-			props: { item: Object },
-			components: {
-				"dropdown-button": dropdown_button
-			},
-			methods: {
-				toggleItem: function (item, index) {
-					item.value[index] = item.value[index] === true ? false : true;
-					//TODO
-				},
-				setLabel: function (label) {
-					this.$emit("set-label", label);
-				},
-				setValue: function (value) {
-					this.$emit("set-value", value);
-				},
-				deleteValue: function (value) {
-					this.$emit("delete-value", value);
-				}
-			},
-			template: "#edit-details-line-item"
-		},
-		edit_details_collapse = {
-			props: {
-				item: Object,
-				collapse: {
-					type: [Boolean, Number],
-					default: false
-				},
-				show: {
-					type: Number,
-					default: 1
-				}
-			},
-			components: {
-				"edit-details-line-item": edit_details_line_item
-			},
-			data: function () {
-				return {
-					isCollapsed: this.show === 0,
-					numShown: typeof this.collapse === "number" ? this.collapse : this.show
-				};
-			},
-			methods: {
-				toggleCollapse: function () {
-					this.isCollapsed = this.isCollapsed ? false : true;
-					if (this.numShown === 0) this.numShown = 1;
-				},
-				showNext: function (num) {
-					if (num && num !== true && num > 1) this.numShown = this.numShown + num;
-					else this.numShown++;
-				},
-				setValue: function () {
-
-				},
-				setLabel: function () {
-
-				},
-				deleteValue: function () {
-
-				}
-			},
-			template: "#edit-details-collapse"
-		},
-		edit_details_card = {
-			props: {
-				details: Object
-			},
-			components: {
-				"dropdown-button": dropdown_button,
-				"edit-details-line-item": edit_details_line_item,
-				"edit-details-collapse": edit_details_collapse
-			},
-			methods: {
-				saveChanges: function () {
-					debug("saveChanges not done");
-				},
-				cancelChanges: function () {
-					debug("cancelChanges not done");
-				}
-			},
-			template: "#edit-details-card"
-		},
-		details_card = {
-			props: {
-				details: Object
-			},
-			components: {
-				"details-line-item": details_line_item,
-				"dropdown-button": dropdown_button
-			},
-			data: function () {
-				return {
-					addItemToGroupDropdown: state.addItemToGroupDropdown,
-					groups: state.groups,
-					groupsDropdownLinks: [
-						{
-							text: "Loading Groups...",
-							action: "_loading",
-							disabled: true
-						}, {
-							text: "Create a new group",
-							icon: "icon-plus",
-							action: "_create_new_group"
-						}
-					]
-				};
-			},
-			methods: {
-				initializeGroups: function () {
-					initializeGroups(function () {
-						this.groupsDropdownLinks = [];
-						for (let a = 0, len = app.groups.length; a < len; a++) {
-							this.groupsDropdownLinks[a] = {
-								text: app.groups[a],
-								icon: "icon-people",
-								action: app.groups[a]
-							};
-						}
-						this.groupsDropdownLinks.push({
-							text: "Create a new group",
-							icon: "icon-plus",
-							action: "_create_new_group"
-						});
-					}.bind(this));
-				},
-				groupsDropdownActions: function (action) {
-					if (action === "_create_new_group") {
-						this.addToNewGroup();
-					}
-					else if (action !== "_loading") this.addToGroup(action, this.details.data);
-				},
-				editDetails: function () {
-					app.details = this.details;
-					//debug(this.details);
-					app.navigate("edit");
-				},
-
-				detailsViewHelp: function () {
-					confirm("Item not found. Would you like to remove this listing?", function () {
-						app.recentlyViewed.splice(1, 1);
-						app.storeState();
-					});
-				},
-				addToNewGroup: addToNewGroup,
-				addToGroup: addToGroup
-			},
-			template: "#details-card"
-		},
 		new_table_page = {
 			components: {
 				"dropdown-button": dropdown_button
@@ -2199,43 +1995,6 @@
 				}
 			},
 			template: "#new-table-page"
-		},
-		details_view_container = {
-			props: {
-				details: Object
-			},
-			components: {
-				"details-card": details_card
-			},
-			template: '<details-card class="view-container" v-bind:details="details"></details-card>'
-		},
-		recent_page = {
-			components: {
-				"jump-list": jump_list,
-				"v-a": details_view_container,
-				"v-b": details_view_container
-			},
-			data: function () {
-				return {
-					recentlyViewed: state.recentlyViewed,
-					recentDetails: {
-						id: null,
-						table: null,
-						data: [],
-						image: null,
-						titleH1: null,
-						subtitleH2: null
-					},
-					detailsView: "v-a"
-				};
-			},
-			methods: {
-				onDetailsUpdate: function (newDetailsObj) {
-					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
-					this.recentDetails = newDetailsObj;
-				}
-			},
-			template: "#recent-page"
 		},
 		groups_page = {
 			data: function () {
@@ -2492,6 +2251,145 @@
 			},
 			template: "#view3-page"
 		},
+		details_card_lineitem = {
+			props: {
+				item: Object
+			},
+			data: function () {
+				return {
+					clipboard: function () {
+						return navigator.clipboard ? true : false;
+					}
+				};
+			},
+			methods: {
+				externalLink: function (text, column, type, multilineText) {
+					var link;
+					if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+					else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+					else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
+					else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
+					else if (type === "www") link = text;
+					if (link) return link;
+					else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
+						var googlemaps = "http://maps.google.com/?q=",
+							bing = "http://www.bing.com/maps/?q=",
+							bingmaps = "bingmaps:?q=",
+							applemaps = "http://maps.apple.com/?q=",
+							userAgent = navigator.userAgent;
+						if (type === "gps") {
+							link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+						}
+						else if (multilineText) link = multilineText.join(" ");
+						else link = text;
+						if (/\d/.test(link)) {
+							link = encodeURIComponent(trim(link));
+							if (/Windows/.test(userAgent)) {
+								if (/NT|Phone 10/.test(userAgent)) {
+									link = bingmaps + link;
+								}
+								else link = bing + link;
+							}
+							else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
+								link = applemaps + link;
+							}
+							else link = googlemaps + link;
+							return link;
+						}
+						else return false;
+					}
+					else return false;
+				},
+				copyToClipboard: function (stringToCopy) {
+					if (navigator.clipboard) {
+						try {
+							navigator.clipboard.writeText(stringToCopy);
+							var str = stringToCopy.slice(0, 20),
+								ext = stringToCopy.length > 20 ? "..." : "";
+							app.notify("Copied '" + str + ext + "' to clipboard", true);
+						} catch (err) {
+							console.error('Failed to copy: ', err);
+						}
+					}
+				}
+			},
+			template: "#details-card-lineitem"
+		},
+		details_card = {
+			props: {
+				details: Object
+			},
+			components: {
+				"details-card-lineitem": details_card_lineitem,
+				"dropdown-button": dropdown_button
+			},
+			data: function () {
+				return {
+					addItemToGroupDropdown: state.addItemToGroupDropdown,
+					groups: state.groups,
+					groupsDropdownLinks: [
+						{
+							text: "Loading Groups...",
+							action: "_loading",
+							disabled: true
+						}, {
+							text: "Create a new group",
+							icon: "icon-plus",
+							action: "_create_new_group"
+						}
+					]
+				};
+			},
+			methods: {
+				initializeGroups: function () {
+					initializeGroups(function () {
+						this.groupsDropdownLinks = [];
+						for (let a = 0, len = app.groups.length; a < len; a++) {
+							this.groupsDropdownLinks[a] = {
+								text: app.groups[a],
+								icon: "icon-people",
+								action: app.groups[a]
+							};
+						}
+						this.groupsDropdownLinks.push({
+							text: "Create a new group",
+							icon: "icon-plus",
+							action: "_create_new_group"
+						});
+					}.bind(this));
+				},
+				groupsDropdownActions: function (action) {
+					if (action === "_create_new_group") {
+						this.addToNewGroup();
+					}
+					else if (action !== "_loading") this.addToGroup(action, this.details.data);
+				},
+				editDetails: function () {
+					app.details = this.details;
+					//debug(this.details);
+					app.navigate("edit");
+				},
+
+				detailsViewHelp: function () {
+					confirm("Item not found. Would you like to remove this listing?", function () {
+						app.recentlyViewed.splice(1, 1);
+						app.storeState();
+					});
+				},
+				addToNewGroup: addToNewGroup,
+				addToGroup: addToGroup
+			},
+			template: "#details-card"
+		},
+		details_view_container = {
+			props: {
+				details: Object
+			},
+			components: {
+				"details-card": details_card
+			},
+			template: '<details-card class="view-container" v-bind:details="details"></details-card>'
+		},
 		details_page = {
 			components: {
 				"details-card": details_card
@@ -2502,6 +2400,65 @@
 				};
 			},
 			template: "#details-page"
+		},
+		recent_page = {
+			components: {
+				"jump-list": jump_list,
+				"v-a": details_view_container,
+				"v-b": details_view_container
+			},
+			data: function () {
+				return {
+					loading: false,
+					recentlyViewed: state.recentlyViewed,
+					recentDetails: {
+						id: null,
+						table: null,
+						data: [],
+						image: null,
+						titleH1: null,
+						subtitleH2: null
+					},
+					detailsView: "v-a"
+				};
+			},
+			created () {
+				// fetch the data when the view is created and the data is
+				// already being observed
+				this.fetchData();
+			},
+			watch: {
+				// call again the method if the route changes
+				'$route': 'fetchData'
+			},
+			methods: {
+				onDetailsUpdate: function (newDetailsObj) {
+					this.detailsView = this.detailsView === "v-a" ? "v-b" : "v-a";
+					this.recentDetails = newDetailsObj;
+				},
+				onRecentlyViewedUpdate: addToRecentlyViewed,
+				addToNewGroup: addToNewGroup,
+				fetchData: function () {
+					function error(err) {
+						this.loading = false;
+						if(err) console.log(err);
+					}
+					if (this.recentlyViewed.length === 0) {
+						this.loading = true;
+						APP.Sto.getItem("state", null, function (s, error) {
+							this.loading = false;
+							if (s) {
+								if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
+								if (s.recentlyViewed) {
+									this.recentlyViewed = s.recentlyViewed;
+									state.recentlyViewed = this.recentlyViewed;
+								}
+							} else error.call(this, error);
+						}.bind(this), error.bind(this));
+					}
+				}
+			},
+			template: "#recent-page"
 		},
 		search_results_page = {
 			components: {
@@ -2540,6 +2497,89 @@
 			},
 			template: "#search-results-page"
 		},
+		edit_details_card_lineitem = {
+			props: { item: Object },
+			components: {
+				"dropdown-button": dropdown_button
+			},
+			methods: {
+				toggleItem: function (item, index) {
+					item.value[index] = item.value[index] === true ? false : true;
+					//TODO
+				},
+				setLabel: function (label) {
+					this.$emit("set-label", label);
+				},
+				setValue: function (value) {
+					this.$emit("set-value", value);
+				},
+				deleteValue: function (value) {
+					this.$emit("delete-value", value);
+				}
+			},
+			template: "#edit-details-card-lineitem"
+		},
+		edit_details_card_collapse = {
+			props: {
+				item: Object,
+				collapse: {
+					type: [Boolean, Number],
+					default: false
+				},
+				show: {
+					type: Number,
+					default: 1
+				}
+			},
+			components: {
+				"edit-details-card-lineitem": edit_details_card_lineitem
+			},
+			data: function () {
+				return {
+					isCollapsed: this.show === 0,
+					numShown: typeof this.collapse === "number" ? this.collapse : this.show
+				};
+			},
+			methods: {
+				toggleCollapse: function () {
+					this.isCollapsed = this.isCollapsed ? false : true;
+					if (this.numShown === 0) this.numShown = 1;
+				},
+				showNext: function (num) {
+					if (num && num !== true && num > 1) this.numShown = this.numShown + num;
+					else this.numShown++;
+				},
+				setValue: function () {
+
+				},
+				setLabel: function () {
+
+				},
+				deleteValue: function () {
+
+				}
+			},
+			template: "#edit-details-card-collapse"
+		},
+		edit_details_card = {
+			props: {
+				details: Object
+			},
+			components: {
+				"dropdown-button": dropdown_button,
+				"edit-details-card-lineitem": edit_details_card_lineitem,
+				"edit-details-card-collapse": edit_details_card_collapse
+			},
+			methods: {
+				saveChanges: function () {
+					debug("saveChanges not done");
+				},
+				cancelChanges: function () {
+					debug("cancelChanges not done");
+				}
+			},
+			template: "#edit-details-card"
+		},
 		edit_details_page = {
 			components: {
 				"edit-details-card": edit_details_card
@@ -2552,19 +2592,9 @@
 			template: "#edit-details-page"
 		},
 		page_not_found_page = {
-			template: "<div class=\"view\"><div class=\"view-container\"><h1>Page Not Found :´(</h1><h3>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h3></div></div>"
+			template: "#page-not-found"
 		},
 		routes = [
-			{
-				path: '/',
-				name: "home",
-				components: {
-					default: recent_page
-				},
-				meta: {
-					title: 'Home page - Nyckel (Beta)'
-				}
-			},
 			{
 				path: '/new',
 				name: "new",
@@ -2573,6 +2603,16 @@
 				},
 				meta: {
 					title: 'Create a new table - Nyckel (Beta)'
+				}
+			},
+			{
+				path: '/',
+				name: "home",
+				components: {
+					default: recent_page
+				},
+				meta: {
+					title: 'Recent - Nyckel (Beta)'
 				}
 			},
 			{
@@ -2696,29 +2736,33 @@
 		},
 		methods: {
 			updateCurrentView: function (to) {
-				if (window.location.hash.match(/^#\/access_token=/)) {
-					this.login();
-				}
-				to = to || { name: this.$route.name, query: this.$route.query };
-				var location = to.name;
-				if (location === "home") location = this.startView;
-				if (location === "details") {
-					if (to.query && (to.query.id !== this.details.id || to.query.table !== this.details.table))
+				function seeDetails() {
+					if (to.query && to.query.id && to.query.table && (to.query.id !== this.details.id || to.query.table !== this.details.table)) {
 						this.seeDetails({ table: to.query.table, id: to.query.id });
+					}
 				}
-				this.currentView = this.views[location] || this.views[startView];
-				setNavLinkIndicatorPosition(location);
-				if (location === "groups") initializeGroups();
-				if (to.query && to.query.search && to.query.search !== encodeURIComponent(this.currentQuery)) {
-					this.currentQuery = to.query.search;
-					this.search(null, to.query.search);
+				function search() {
+					if (to.query.search !== encodeURIComponent(this.currentQuery)) {
+						this.currentQuery = to.query.search;
+						this.search(null, to.query.search);
+					}
 				}
-				if (to.query && to.query.page !== undefined) {
+				function setPage() {
 					if (parseInt(to.query.page) !== backIndex) backIndex = parseInt(to.query.page);
 					else backIndex++;
 					location = location || backstack[backIndex];
 					backstack[backIndex - 1] = location;
 				}
+				if (window.location.hash.match(/^#\/access_token=/)) this.login();
+				to = to || { name: this.$route.name, query: this.$route.query };
+				var location = to.name;
+				if (location === "home") location = this.startView;
+				if (location === "details") seeDetails.call(this);
+				this.currentView = this.views[location] || this.views[startView];
+				setNavLinkIndicatorPosition(location);
+				if (location === "groups") initializeGroups();
+				if (to.query && to.query.search) search.call(this);
+				if (to.query && to.query.page !== undefined) setPage();
 				else backIndex = 0;
 
 				//show hide back arrow
@@ -2861,6 +2905,7 @@
 						confirm("Are you sure you want to reset the app?", resetApp.bind(this));
 					}
 					else {
+						this.spin(true, "Searching...");
 						checkDBLoaded(function (callback) {
 							function displayResults(searchResults, errors, table) {
 								if (errors) debug(errors, "search error");
@@ -2879,7 +2924,7 @@
 												else this.searchResultsError = 'No data found';
 											}.bind(this));
 										}
-										this.spin(false);
+										this.spin(false, "Searching...");
 										if (results.length === 1 && results[0].type === "link") {
 											this.seeDetails(results[0]);
 											addToRecentlyViewed(results[0]);
@@ -2906,7 +2951,6 @@
 								document.getElementById("app").focus();
 								var numOfSearches = 0,
 									n = 0;
-								this.spin(true, "Searching...");
 								for (var t in dataTemplates) {
 									if(dataTemplates.hasOwnProperty(t)) numOfSearches++;
 								}
@@ -3323,7 +3367,7 @@
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
 					function done(success, errors, title, obj) {
-						this.spin(false);
+						this.spin(false, "Synchronising with Dropbox");
 						if (err) {
 							this.notify("Please try again later", true);
 							return;
@@ -3372,7 +3416,7 @@
 						}
 						else {
 							debug(error, "couldn't sync " + title);
-							this.spin(false);
+							this.spin(false, "Synchronising with Dropbox");
 							this.notify("Sync did not complete successfully");
 						}
 					}
@@ -3406,7 +3450,7 @@
 									a++;
 								}
 								else {
-									this.spin(false);
+									this.spin(false, "Synchronising with Dropbox");
 									debug(errors, "problem syncing " + title);
 									this.notify("Sync did not complete successfully");
 								}
@@ -3417,10 +3461,10 @@
 				function saveSyncfile(syncfile) {
 					function failed() {
 						this.notify("Sync did not complete successfully");
-						this.spin(false);
+						this.spin(false, "Synchronising with Dropbox");
 					}
 					function success() {
-						this.spin(false);
+						this.spin(false, "Synchronising with Dropbox");
 					}
 					if (syncfileNeedsUpdated) {
 						APP.Dbx.save("/sync/lastSync", syncfile, null, success.bind(this), failed.bind(this));
@@ -3437,11 +3481,11 @@
 					}
 					else if (error === "") {
 						console.log("Sync failed, you are offline");
-						this.spin(false);
+						this.spin(false, "Synchronising with Dropbox");
 					}
 					else {
 						this.notify("Unhandled sync error: " + error);
-						this.spin(false);
+						this.spin(false, "Synchronising with Dropbox");
 					}
 				}
 				var err = false,
@@ -3455,10 +3499,7 @@
 						this.spin(true, "Synchronising with Dropbox");
 						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					}
-					else {
-						console.log("cannot sync to Dropbox now");
-						this.spin(false);
-					}
+					else console.log("cannot sync to Dropbox now");
 					if (callback instanceof Function) return callback();
 				}.bind(this));
 			}

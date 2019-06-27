@@ -58,7 +58,7 @@
 	<div id="loading"></div>
 	<div id="app" v-bind:class="{
 		 'sidenav_open': showSideNav,
-		 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme 
+		 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme
 		 }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
@@ -164,28 +164,36 @@
 		<input type="file" class="hidden" id="hiddenCSVInput" />
 	</div>
 
-
-
-	<!--VUE JS TEMPLATES-->
-	<!-- Dropdown Button -->
+	<!-- Vue.js Templates -->
 	<script type="text/x-template" id="dropdown-button">
 		<div class="dropdownButton dropdown-container">
 			<button class="dropdownButton" v-if="custominput && open === false || custominput === false" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
-				<template v-if="icon"><span class="dropdownButton icon" v-bind:class="icon"></span><template v-if="nothingselectedtext || buttonValue !== '' || noarrow === false">&nbsp;&nbsp;</template></template><template v-if="nothingselectedtext || buttonValue !== ''">{{ buttonValue || nothingselectedtext }}</template><template v-if="noarrow === false">&nbsp;<span v-show="open" class="icon icon-collapse-up"></span><span v-show="open === false" class="icon icon-collapse-down"></span></template>
+				<template v-if="icon">
+					<span class="dropdownButton icon" v-bind:class="icon"></span>
+					<template v-if="nothingselectedtext || buttonValue !== '' || noarrow === false">
+						&nbsp;&nbsp;
+					</template>
+				</template>
+				<template v-if="nothingselectedtext || buttonValue !== ''">
+					{{ buttonValue || nothingselectedtext }}
+				</template>
+				<template v-if="noarrow === false">
+					&nbsp;
+					<span v-show="open" class="icon icon-collapse-up"></span>
+					<span v-show="open === false" class="icon icon-collapse-down"></span>
+				</template>
 			</button>
-			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)"/>
-				<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
-					<a class="dropdownButton link" v-for="link in links" v-on:click="action($event, link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
-						<span class="dropdownButton icon left" v-bind:class="link.icon"></span>
-						<div class="dropdownButton" v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
-							{{ link.text }}
-						</div>
-					</a>
-				</div>
+			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" />
+			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
+				<a class="dropdownButton link" v-for="link in links" v-on:click="action($event, link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
+					<span class="dropdownButton icon left" v-bind:class="link.icon"></span>
+					<div class="dropdownButton" v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
+						{{ link.text }}
+					</div>
+				</a>
+			</div>
 		</div>
 	</script>
-
-	<!--Jump-list (search results, recently veiwed items) Template-->
 	<script type="text/x-template" id="jump-list">
 		<div v-if="list.length > 0">
 			<div align="left">
@@ -195,14 +203,11 @@
 				<button v-show="selected" v-on:click="toggleSelect" class="left"><span class="icon icon-cancel"></span>&nbsp;&nbsp;Cancel Select</button>
 				<button v-show="selected === false && collapsed === false" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-th"></span>&nbsp;&nbsp;Button View</button>
 				<button v-show="selected === false && collapsed" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-list"></span>&nbsp;&nbsp;List View</button>
-				<dropdown-button v-on:dropdown-action="moreDropdownActions"
+				<dropdown-button icon="icon-more" class="left" title="Actions" align="right"
+								 v-on:dropdown-action="moreDropdownActions"
 								 v-on:dropdown-open="updateDropdownLinks"
 								 v-bind:links="moreDropdownLinks"
-								 icon="icon-more"
-								 class="left"
-								 title="Actions"
-								 align="right"
-								v-bind:noarrow="true">
+								 v-bind:noarrow="true">
 				</dropdown-button>
 			</div>
 			<ul class="links clear" v-bind:collapsed="collapsed">
@@ -213,207 +218,13 @@
 					'icon': selected && link.type === 'link',
 					'icon-unchecked': selected && link.selected === false,
 					'icon-check': selected && link.selected,
-					'selected': selected && link.selected
-					}">
+					'selected': selected && link.selected }">
 					{{ link.text }}
 				</li>
 			</ul>
 		</div>
 	</script>
 
-	<!--Details Card Line Item Template-->
-	<script type="text/x-template" id="details-line-item">
-		<div v-if="item.value[0] && !item.hidden" class="clear">
-			<label v-if="item.label" class="itemLabel">{{ item.label.value }}</label>
-			<label v-else class="itemLabel">{{ item.column }}</label>
-			<div class="itemText">
-				<template v-for="(line, lineIndex) in item.value">
-					<template v-if="lineIndex > 0 && item.type !== 'formattedAddress'">
-						<br />
-					</template>
-					<template v-if="item.type === 'email'">
-						<a v-bind:href="externalLink(line, item.column, 'email')">
-							<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
-						</a>
-					</template>
-					<template v-else-if="item.type === 'phoneNumber'">
-						<a v-bind:href="externalLink(line, item.column, 'phone')">
-							<span v-if="/home/i.test(item.label)" class="icon icon-phone-alt"></span>
-							<span v-else class="icon icon-phone"></span>
-							&nbsp;&nbsp;{{ line }}
-						</a>
-					</template>
-					<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
-						<a v-bind:href="externalLink(line, item.column, 'address', item.value)">
-							<span class="icon icon-mappin"></span>&nbsp;&nbsp;
-							<template v-for="(addressLine, addressLineIndex) in item.value">
-								<template v-if="addressLineIndex > 0">
-									<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-								</template>
-								{{ addressLine }}
-							</template>
-						</a>
-					</template>
-					<template v-else-if="item.type === 'formattedAddress'">
-						<!--skip additional formattedAddress lines-->
-					</template>
-					<template v-else-if="item.label === 'GPS'">
-						<a v-bind:href="externalLink(line, item.column, 'www')">
-							<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
-						</a>
-					</template>
-					<template v-else-if="item.type === 'multilineString' && /^===\s.*\s===$/.test(line)">
-						<b><i>{{line.replace(/^===|===$/g,'')}}</i></b>
-						<br />
-					</template>
-					<template v-else-if="item.type === 'multilineString' && /^\*\*\*\s.*\s\*\*\*$/.test(line)">
-						<b>{{line.replace(/^\*\*\*|\*\*\*$/g,'')}}</b>
-					</template>
-					<template v-else-if="item.type === 'multilineString' && /^-\s/.test(line)">
-						&nbsp;&nbsp;&nbsp;{{line.replace(/^-\s/g,'')}}
-					</template>
-					<template v-else>
-						{{ line }}
-					</template>
-					<div class="right" v-if="lineIndex === 0">
-						<template v-if="item.type === 'email'">
-							<button v-bind:href="externalLink(line, item.column, 'bcc')">
-								<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
-							</button>&nbsp;
-						</template>
-						<template v-else-if="item.type === 'phoneNumber'">
-							<button v-bind:href="externalLink(line, item.column, 'sms')">
-								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
-							</button>&nbsp;
-						</template>
-						<template v-else-if="item.label === 'GPS'">
-							<button v-bind:href="externalLink(line, item.column, 'gps')">
-								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
-							</button>&nbsp;
-						</template>
-						<button v-if="clipboard" v-on:click="copyToClipboard(item.value.join('\r\n'))"><span class="icon icon-copy"></span>&nbsp;&nbsp;Copy</button>
-					</div>
-				</template>
-			</div>
-		</div>
-	</script>
-
-	<!--Details Card Template-->
-	<script type="text/x-template" id="details-card">
-		<div>
-			<div v-if="details.data.length > 0">
-				<div>
-					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
-					<div>
-						<h3>{{ details.title }}</h3>
-						<h4 v-if="details.subtitle">{{ details.subtitle }}</h4>
-					</div>
-				</div>
-				<button v-on:click="editDetails" v-bind:title="'Edit ' + details.title"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
-				<dropdown-button class="left"
-								 v-bind:links="groupsDropdownLinks"
-								 v-bind:title="'Add ' + details.title + ' to Group'"
-								 icon="icon-people"
-								 text="Add to Group"
-								 v-on:dropdown-action="groupsDropdownActions"
-								 v-on:dropdown-open="initializeGroups">
-				</dropdown-button>
-				<br />
-				<template v-for="(item, index) in details.data">
-					<details-line-item v-if="item.value" v-bind:item="item" v-bind:key="'lineitem_' + index"></details-line-item>
-					<div class="card" v-else-if="item.group && item.show !== 0 && item.hidden !== true">
-						<div class="cardBody">
-							<details-line-item v-for="(groupItem, groupIndex) in item.group" v-bind:item="groupItem" v-bind:key="'lineitem_' + index + '_' + groupIndex"></details-line-item>
-						</div>
-					</div>
-				</template>
-			</div>
-		</div>
-	</script>
-
-	<!--Edit Details Card Line Item Template-->
-	<script type="text/x-template" id="edit-details-line-item">
-		<div v-if="!item.readonly" class="lineItem">
-			<dropdown-button v-if="item.label && item.label.options"
-							 class="itemLabel"
-							 v-bind:nothingselectedtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-							 v-bind:custominput="item.label.customize"
-							 v-bind:text="item.label.value"
-							 v-bind:links="item.label.options"
-							 v-on:dropdown-action="setLabel"
-							 v-bind:id="item.column + '_label'">
-			</dropdown-button>
-			<template v-else-if="item.label">
-				<label class="itemLabel">{{ item.label.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
-				<input type="text" v-bind:value="item.label.value" class="textbox" />
-			</template>
-			<label v-else-if="item.column" class="itemLabel">{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
-			<textarea v-if="item.type === 'multilineString'" v-bind:value="item.value.join('\r\n')" class="textbox"></textarea>
-			<template v-else v-for="(value, i) in item.value">
-				<input v-if="item.type === 'number'" type="number" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="value" class="textbox" />
-				<div v-else-if="item.type === 'boolean'" class="switch right">
-					<input type="checkbox" v-bind:id="'switch_' + item.column" v-bind:value="value" />
-					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item, i)"></label>
-				</div>
-				<input v-else-if="item.type === 'date'" type="date" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'email'" type="email" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="value" class="textbox" />
-				<dropdown-button v-else-if="item.options"
-								 align="left"
-								 class="left"
-								 v-bind:nothingselectedtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-								 v-bind:custominput="item.customize"
-								 v-bind:text="item.value[i]"
-								 v-bind:links="item.options"
-								 v-on:dropdown-action="setValue"
-								 v-bind:id="item.column + '_dropdown' + i">
-				</dropdown-button>
-				<input v-else type="text" v-bind:value="value" class="textbox" />
-				<button v-on:click="deleteValue" class="cancelButton"><span class="icon icon-cancel"></span></button>
-				<div class="alert">{{ item.warning }}</div>
-			</template>
-		</div>
-	</script>
-
-	<!--Edit Details Collapseable Group Template-->
-	<script id="edit-details-collapse" type="text/x-template">
-		<div class="card" v-if="item.readonly !== true">
-			<div v-if="item.groupHeading" class="cardHeading link" v-on:click="toggleCollapse">
-				{{ item.groupHeading }}
-				<span v-show="isCollapsed" class="icon icon-menu-down right"></span>
-				<span v-show="isCollapsed === false" class="icon icon-menu-up right"></span>
-			</div>
-			<transition name="expand">
-				<div v-show="isCollapsed === false" class="cardExpand">
-					<template v-for="(groupItem, index) in item.group">
-						<edit-details-line-item v-show="item.collapse === false || index < numShown" v-bind:item="groupItem" v-bind:key="'edit_' + groupItem.column"
-												v-on:set-value="setValue(groupItem)"
-												v-on:set-label="setLabel(groupItem)"
-												v-on:delete-value="deleteValue(groupItem)"></edit-details-line-item>
-						<button v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1" v-on:click="showNext(item.collapse)" class="lineItem"><span class="icon icon-plus"></span></button>
-					</template>
-				</div>
-			</transition>
-		</div>
-	</script>
-
-	<!--Edit Details Card Template-->
-	<script id="edit-details-card" type="text/x-template">
-		<div>
-			<h3>Edit<template v-if="details.title">: <i>{{ details.title }}</i></template></h3>
-			<template v-for="(item, index) in details.data">			
-				<edit-details-line-item v-if="item.value" v-bind:item="item"></edit-details-line-item>
-				<edit-details-collapse  v-else-if="item.group" v-bind:item="item" v-bind:collapse="item.collapse" v-bind:show="item.show"></edit-details-collapse>
-			</template>
-			<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
-			<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
-		</div>
-	</script>
-
-	<!--New Table Page Template-->
 	<script type="text/x-template" id="new-table-page">
 		<div class="view">
 			<div class="view-container">
@@ -531,29 +342,31 @@
 		</div>
 	</script>
 
-	<!--Recent Page Template-->
 	<script type="text/x-template" id="recent-page">
 		<div class="views">
 			<div id="recentView" class="view" v-bind:class="{splitViewLeft: recentDetails.data.length > 0}">
-				<div v-if="recentlyViewed.length > 0" class="view-container">
+				<div v-if="loading" class="view-container">
+					<h5>Loading...</h5>
+				</div>
+				<div v-else-if="recentlyViewed.length > 0" class="view-container">
 					<h3>Recently Viewed</h3>
-					<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView" v-bind:details="recentDetails" v-on:update-details="onDetailsUpdate"></jump-list>
+					<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView" v-bind:details="recentDetails" v-on:update-details="onDetailsUpdate" v-on:update-recently-viewed="onRecentlyViewedUpdate"></jump-list>
 				</div>
 				<div v-else class="view-container">
 					<h3>Nyckel <sup><small><small>(beta)</small></small></sup></h3>
-					<h4>Store, search, view, share and sync data across devices using the cloud.</h4>
+					<h5>Store, search, view, share and sync data across devices using the cloud.</h5>
 					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>
 					<p>You can read the nyckelDB API documentation <a href="dev/index.html" target="_blank">here</a></p>
 					<!--<p>
-				NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
-				stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
-				in the form of a table, NyckelDB can handle it.
-			</p>
-			<p>
-				Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,
-				sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
-				<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
-			</p>-->
+						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
+						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
+						in the form of a table, NyckelDB can handle it.
+					</p>
+					<p>
+						Though not a fully featured database, NyckelDB does contain some very useful functions such as a fairly useable search engine, data validation,
+						sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
+						<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
+					</p>-->
 					<p class="alert">
 						<span class="icon icon-alert"></span>
 						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
@@ -573,7 +386,6 @@
 		</div>
 	</script>
 
-	<!--Groups Page Template-->
 	<script type="text/x-template" id="groups-page">
 		<div class="view">
 			<div class="view-container">
@@ -633,7 +445,6 @@
 		</div>
 	</script>
 
-	<!--View1 Page Template-->
 	<script type="text/x-template" id="view1-page">
 		<div class="view">
 			<div class="view-container">
@@ -646,7 +457,6 @@
 		</div>
 	</script>
 
-	<!--View2 Page Template-->
 	<script type="text/x-template" id="view2-page">
 		<div class="view">
 			<div class="view-container">
@@ -655,7 +465,6 @@
 		</div>
 	</script>
 
-	<!--View3 Page Template-->
 	<script type="text/x-template" id="view3-page">
 		<div class="view">
 			<div class="view-container">
@@ -669,7 +478,6 @@
 		</div>
 	</script>
 
-	<!--Details Page Template-->
 	<script type="text/x-template" id="details-page">
 		<div class="view">
 			<div class="view-container">
@@ -678,7 +486,113 @@
 		</div>
 	</script>
 
-	<!--Search Results Page Template-->
+	<script type="text/x-template" id="details-card">
+		<div>
+			<div v-if="details.data.length > 0">
+				<div>
+					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
+					<div>
+						<h3>{{ details.title }}</h3>
+						<h5 v-if="details.subtitle">{{ details.subtitle }}</h5>
+					</div>
+				</div>
+				<br />
+				<button v-on:click="editDetails" v-bind:title="'Edit ' + details.title"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
+				<dropdown-button class="left"
+								 v-bind:links="groupsDropdownLinks"
+								 v-bind:title="'Add ' + details.title + ' to Group'"
+								 icon="icon-people"
+								 text="Add to Group"
+								 v-on:dropdown-action="groupsDropdownActions"
+								 v-on:dropdown-open="initializeGroups">
+				</dropdown-button>
+				<br />
+				<template v-for="(item, index) in details.data">
+					<details-card-lineitem v-if="item.value" v-bind:item="item" v-bind:key="'lineitem_' + index"></details-card-lineitem>
+					<div class="clear" v-else-if="item.group && item.show !== 0 && item.hidden !== true">
+						<details-card-lineitem v-for="(groupItem, groupIndex) in item.group" v-bind:item="groupItem" v-bind:key="'lineitem_' + index + '_' + groupIndex"></details-card-lineitem>
+					</div>
+				</template>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/x-template" id="details-card-lineitem">
+		<div v-if="item.value[0] && !item.hidden" class="lineItem">
+			<label v-if="item.label" class="itemLabel">{{ item.label.value }}</label>
+			<label v-else class="itemLabel">{{ item.column }}</label>
+			<div class="itemText">
+				<template v-for="(line, lineIndex) in item.value">
+					<template v-if="lineIndex > 0 && item.type !== 'formattedAddress'">
+						<br />
+					</template>
+					<template v-if="item.type === 'email'">
+						<a v-bind:href="externalLink(line, item.column, 'email')">
+							<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
+						</a>
+					</template>
+					<template v-else-if="item.type === 'phoneNumber'">
+						<a v-bind:href="externalLink(line, item.column, 'phone')">
+							<span v-if="item.label && /home/i.test(item.label.value)" class="icon icon-phone-alt"></span>
+							<span v-else class="icon icon-phone"></span>
+							&nbsp;&nbsp;{{ line }}
+						</a>
+					</template>
+					<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
+						<a v-bind:href="externalLink(line, item.column, 'address', item.value)">
+							<span class="icon icon-mappin"></span>&nbsp;&nbsp;
+							<template v-for="(addressLine, addressLineIndex) in item.value">
+								<template v-if="addressLineIndex > 0">
+									<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								</template>
+								{{ addressLine }}
+							</template>
+						</a>
+					</template>
+					<template v-else-if="item.type === 'formattedAddress'">
+						<!--skip additional formattedAddress lines-->
+					</template>
+					<template v-else-if="item.label && item.label.value === 'GPS'">
+						<a v-bind:href="externalLink(line, item.column, 'www')">
+							<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
+						</a>
+					</template>
+					<template v-else-if="item.type === 'multilineString' && /^===\s.*\s===$/.test(line)">
+						<b><i>{{line.replace(/^===|===$/g,'')}}</i></b>
+						<br />
+					</template>
+					<template v-else-if="item.type === 'multilineString' && /^\*\*\*\s.*\s\*\*\*$/.test(line)">
+						<b>{{line.replace(/^\*\*\*|\*\*\*$/g,'')}}</b>
+					</template>
+					<template v-else-if="item.type === 'multilineString' && /^-\s/.test(line)">
+						&nbsp;&nbsp;&nbsp;{{line.replace(/^-\s/g,'')}}
+					</template>
+					<template v-else>
+						{{ line }}
+					</template>
+					<template v-if="lineIndex === 0">
+						<template v-if="item.type === 'email'">
+							<a v-bind:href="externalLink(line, item.column, 'bcc')" class="right">
+								<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
+							</a>
+						</template>
+						<template v-else-if="item.type === 'phoneNumber' && (item.label === undefined || item.label && !/home/i.test(item.label.value))">
+							<a v-bind:href="externalLink(line, item.column, 'sms')" class="right">
+								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+							</a>
+						</template>
+						<template v-else-if="item.label && item.label.value === 'GPS'">
+							<a v-bind:href="externalLink(line, item.column, 'gps')" class="right">
+								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
+							</a>
+						</template>
+						<a v-if="clipboard" v-on:click="copyToClipboard(item.value.join('\r\n'))" class="right"><span class="icon icon-copy"></span>&nbsp;&nbsp;Copy</a>
+					</template>
+				</template>
+			</div>
+		</div>
+	</script>
+
 	<script type="text/x-template" id="search-results-page">
 		<div class="views">
 			<div id="searchResultsView" class="view" v-bind:class="{splitViewLeft: searchDetails.data.length > 0}">
@@ -707,7 +621,6 @@
 		</div>
 	</script>
 
-	<!--Edit Details Page Template-->
 	<script type="text/x-template" id="edit-details-page">
 		<div class="view">
 			<div class="view-container">
@@ -716,6 +629,100 @@
 		</div>
 	</script>
 
+	<script type="text/x-template" id="edit-details-card">
+		<div>
+			<h3 v-if="details.title">Edit: <i>{{ details.title }}</i></h3>
+			<h3 v-else>Edit</h3>
+			<div class="cards">
+				<template v-for="(item, index) in details.data">
+					<edit-details-card-lineitem v-if="item.value" v-bind:item="item"></edit-details-card-lineitem>
+					<edit-details-card-collapse v-else-if="item.group" v-bind:item="item" v-bind:collapse="item.collapse" v-bind:show="item.show"></edit-details-card-collapse>
+				</template>
+			</div>
+			<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
+			<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
+		</div>
+	</script>
+
+	<script type="text/x-template" id="edit-details-card-lineitem">
+		<div v-if="!item.readonly" class="lineItem">
+			<dropdown-button v-if="item.label && item.label.options"
+							 class="itemLabel"
+							 v-bind:nothingselectedtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+							 v-bind:custominput="item.label.customize"
+							 v-bind:text="item.label.value"
+							 v-bind:links="item.label.options"
+							 v-on:dropdown-action="setLabel"
+							 v-bind:id="item.column + '_label'">
+			</dropdown-button>
+			<template v-else-if="item.label">
+				<label class="itemLabel">{{ item.label.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
+				<input type="text" v-bind:value="item.label.value" class="textbox" />
+			</template>
+			<label v-else-if="item.column" class="itemLabel">{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
+			<textarea v-if="item.type === 'multilineString'" v-bind:value="item.value.join('\r\n')" class="textbox"></textarea>
+			<template v-else v-for="(value, i) in item.value">
+				<input v-if="item.type === 'number'" type="number" v-bind:value="value" class="textbox" />
+				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="value" class="textbox" />
+				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="value" class="textbox" />
+				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="value" class="textbox" />
+				<div v-else-if="item.type === 'boolean'" class="switch right">
+					<input type="checkbox" v-bind:id="'switch_' + item.column" v-bind:value="value" />
+					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item, i)"></label>
+				</div>
+				<input v-else-if="item.type === 'date'" type="date" v-bind:value="value" class="textbox" />
+				<input v-else-if="item.type === 'email'" type="email" v-bind:value="value" class="textbox" />
+				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="value" class="textbox" />
+				<dropdown-button v-else-if="item.options"
+								 align="left"
+								 class="left"
+								 v-bind:nothingselectedtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+								 v-bind:custominput="item.customize"
+								 v-bind:text="item.value[i]"
+								 v-bind:links="item.options"
+								 v-on:dropdown-action="setValue"
+								 v-bind:id="item.column + '_dropdown' + i">
+				</dropdown-button>
+				<input v-else type="text" v-bind:value="value" class="textbox" />
+				<a class="cancelButton" v-on:click="deleteValue"><span class="icon icon-cancel"></span></a>
+				<div class="alert">{{ item.warning }}</div>
+			</template>
+		</div>
+	</script>
+
+	<script type="text/x-template" id="edit-details-card-collapse">
+		<div class="card" v-if="item.readonly !== true">
+			<div v-if="item.groupHeading" class="cardHeading" v-on:click="toggleCollapse">
+				<span v-show="isCollapsed" class="desk tabl icon icon-menu-right left"></span>
+				<span v-show="isCollapsed === false" class="desk tabl icon icon-menu-down left"></span>
+				<span class="desk tabl left">&nbsp;&nbsp;</span>{{ item.groupHeading }}
+				<span v-show="isCollapsed" class="phon icon icon-menu-down right"></span>
+				<span v-show="isCollapsed === false" class="phon icon icon-menu-up right"></span>
+			</div>
+			<transition name="expand">
+				<div v-show="isCollapsed === false" class="cardExpand">
+					<template v-for="(groupItem, index) in item.group">
+						<edit-details-card-lineitem v-show="item.collapse === false || index < numShown" v-bind:item="groupItem" v-bind:key="'edit_' + groupItem.column"
+													v-on:set-value="setValue(groupItem)"
+													v-on:set-label="setLabel(groupItem)"
+													v-on:delete-value="deleteValue(groupItem)"></edit-details-card-lineitem>
+						<button v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1" v-on:click="showNext(item.collapse)" class="lineItem"><span class="icon icon-plus"></span></button>
+					</template>
+				</div>
+			</transition>
+		</div>
+	</script>
+
+	<script type="x-template" id="page-not-found">
+		<div class="view">
+			<div class="view-container">
+				<h3>Page Not Found :´(</h3>
+				<h5>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h5>
+			</div>
+		</div>
+	</script>
+
+	<!-- JavaScript files -->
 	<script type="text/javascript" src="scripts/vue.js"></script>
 	<script type="text/javascript" src="scripts/vue-router.js"></script>
 	<script type="text/javascript" src="scripts/debugmode.min.js"></script>
