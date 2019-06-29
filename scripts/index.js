@@ -1210,6 +1210,7 @@
 				}
 				return callback instanceof Function ? callback(ret) : ret;
 			}
+			debug(tableName);
 			options = options || {};
 			var columns = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.text ? dataTemplates[tableName].display.listView.text.join("|||").split("|||") : [1],
 				joiner = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.joiner ? dataTemplates[tableName].display.listView.joiner : " ";
@@ -1382,11 +1383,7 @@
 	//Components
 	const dropdown_button = {
 		props: {
-			text: {
-				type: String,
-				default: ""
-			},
-			nothingselectedtext: {
+			buttontext: {
 				type: String,
 				default: ""
 			},
@@ -1407,12 +1404,21 @@
 			custominput: {
 				type: Boolean,
 				default: false
+			},
+			noinputtext: {
+				type: String,
+				default: ""
+			},
+			select: {
+				type: Boolean,
+				default: false
 			}
 		},
 		data: function () {
 			return {
 				open: false,
-				buttonValue: this.text,
+				inputValue: this.noinputtext,
+				buttonValue: this.buttontext,
 				clickOutside: null
 			};
 		},
@@ -1451,9 +1457,9 @@
 				else app.removeEventListener("click", this.clickOutside);
 			},
 			action: function (event, value) {
-				if (value) this.buttonValue = value.replace(/<[^>]+>/g, "");
+				if (this.select || this.custominput && value) this.buttonValue = value.replace(/<[^>]+>/g, "");
 				this.toggle(false);
-				this.$emit("dropdown-action", this.buttonValue);
+				this.$emit("dropdown-action", value);
 			}
 		},
 		template: "#dropdown-button"
@@ -1946,11 +1952,16 @@
 						};
 					}
 					for (let a = 0, len = this.newTable.types.length; a < len; a++) {
-						this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] || this.newTable.protectDefault;
-						this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] || this.newTable.acceptedValuesDefault;
-						this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ? this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
-						this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ? this.newTable.options.searchable[a] : this.newTable.searchableDefault;
-						this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] || this.newTable.labelColDefault;
+						this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] ||
+							this.newTable.protectDefault;
+						this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] ||
+							this.newTable.acceptedValuesDefault;
+						this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ?
+							this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
+						this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ?
+							this.newTable.options.searchable[a] : this.newTable.searchableDefault;
+						this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] ||
+							this.newTable.labelColDefault;
 					}
 				},
 				toggleDropdown: function (rowName, colIndex) {
@@ -1960,7 +1971,7 @@
 					else debug(rowName, "no such row in table");
 				},
 				sortbyColumn: function (index) {
-
+					debug(index, "sortByColumn function not done");
 				},
 				deleteColumn: function (index) {
 					this.newTable.headers.splice(index, 1);
@@ -1997,6 +2008,9 @@
 			template: "#new-table-page"
 		},
 		groups_page = {
+			components: {
+				"jump-list": jump_list
+			},
 			data: function () {
 				return {
 					groups: state.groups,
@@ -2051,6 +2065,7 @@
 						}.bind(this));
 					}
 					else app.notify("Group requires a name");
+					debug(callback, "newGroup callback not done");
 				},
 				updateGroup: function (groupName, ids, searchTerms) {
 					groupName = String(groupName);
@@ -2081,9 +2096,9 @@
 							if (!errors && searchResults && searchResults.length > 0) {
 								generateList(table, searchResults, { selected: true }, function (list) {
 									this.activeGroup = this.activeGroup.concat(list);
-								});
+								}.bind(this));
 							}
-						});
+						}.bind(this));
 					}
 					function processInput(callback) {
 						if (value !== "") {
@@ -2132,8 +2147,8 @@
 				},
 				seeGroup: function (index) {
 					function add(group) {
-						if (group[1].value !== "" && group[1].value !== "[]") {
-							var ids = JSON.parse(group[1].value),
+						if (group.groupIds.value !== "" && group.groupIds.value !== "[]") {
+							var ids = JSON.parse(group.groupIds.value),
 								lenIds = 0,
 								b = 0;
 							for (let a in ids) {
@@ -2158,8 +2173,8 @@
 						else remove(group);
 					}
 					function remove(group) {
-						if (group[3] && group[3].value && group[3].value !== "" && group[3].value !== "[]") {
-							var removeIds = JSON.parse(group[3].value);
+						if (group.excludeIds && group.excludeIds.value && group.excludeIds.value !== "" && group.excludeIds.value !== "[]") {
+							var removeIds = JSON.parse(group.excludeIds.value);
 							for (let table in removeIds) {
 								for (let a = 0, lenA = list.length; a < lenA; a++) {
 									if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
@@ -2171,12 +2186,12 @@
 							}
 						}
 						app.searchResults = list;
-						app.searchResultsTitle = group[0].value;
+						app.searchResultsTitle = group.groupName.value;
 						app.searchResultsError = "";
 						app.navigate("search", app.currentQuery);
 					}
-					function searchForMembers(table, group, lenTables, n) {
-						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group[2].value, { colNames: searchableColumns }] }, function (results, err, title) {
+					function searchForMembers(table, group, lenTables) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group.searchTerms.value, { colNames: searchableColumns }] }, function (results, err, title) {
 							if (!err) {
 								if (results) generateListItems(table, results, null, function (arr) {
 									list = list.concat(arr);
@@ -2193,22 +2208,22 @@
 					}
 					function showGroup(group, error) {
 						debug(group);
-						if (!group && error) debug(error);
-						else if (group[2].value !== "") {
-							var lenTables = 0,
-								n = 0;
+						if (!group || error) debug(error);
+						else if (group.searchTerms.value !== "") {
 							for (let a in dataTemplates) {
 								if (dataTemplates.hasOwnProperty(a)) lenTables++;
 							}
 							for (let table in dataTemplates) {
 								if (dataTemplates.hasOwnProperty(table)) {
-									searchForMembers(table, group, lenTables, n);
+									searchForMembers(table, group, lenTables);
 								}
 							}
 						}
 						else add(group);
 					}
-					var list = [];
+					var list = [],
+						lenTables = 0,
+						n = 0;
 					wwManager({ "cmd": "getRow", "title": "Groups", "args": [index] }, showGroup);
 				},
 				addToGroup: function (groupName, detailsObj, searchQuery) {
@@ -2230,6 +2245,10 @@
 					app.activeGroup = [];
 					if (app.groups.length === 0) app.goBack();
 					else app.toggle('showNewGroupUI');
+				},
+				toggle: function (prop) {
+					if (this[prop] === undefined) return debug(prop, "prop does not exist");
+					else this[prop] = !this[prop];
 				}
 			},
 			template: "#groups-page"
@@ -2299,18 +2318,6 @@
 						else return false;
 					}
 					else return false;
-				},
-				copyToClipboard: function (stringToCopy) {
-					if (navigator.clipboard) {
-						try {
-							navigator.clipboard.writeText(stringToCopy);
-							var str = stringToCopy.slice(0, 20),
-								ext = stringToCopy.length > 20 ? "..." : "";
-							app.notify("Copied '" + str + ext + "' to clipboard", true);
-						} catch (err) {
-							console.error('Failed to copy: ', err);
-						}
-					}
 				}
 			},
 			template: "#details-card-lineitem"
@@ -2337,7 +2344,8 @@
 							icon: "icon-plus",
 							action: "_create_new_group"
 						}
-					]
+					],
+					copyDropdownLinks:[]
 				};
 			},
 			methods: {
@@ -2364,12 +2372,44 @@
 					}
 					else if (action !== "_loading") this.addToGroup(action, this.details.data);
 				},
+				initializeCopyActions: function () {
+					function addToCopyLinks(item) {
+						if (item.value && item.value[0] && !item.hidden) {
+							this.copyDropdownLinks[b] = {
+								text: item.value.join('\r\n'),
+								action: item.value.join('\r\n')
+							};
+							if (this.copyDropdownLinks[b].text.length > 50) this.copyDropdownLinks[b].text = this.copyDropdownLinks[b].text.slice(0, 50) + "...";
+							b++;
+						}
+					}
+					var b = 0;
+					for (let a = 0, len = this.details.data.length; a < len; a++) {
+						if (this.details.data[a].group && !this.details.data[a].hidden) {
+							for (let c = 0, lenC = this.details.data[a].group.length; c < lenC; c++) {
+								addToCopyLinks.call(this, this.details.data[a].group[c], this.details.data[a].groupHeading);
+							}
+						}
+						else addToCopyLinks.call(this, this.details.data[a]);
+					}
+				},
+				copyToClipboard: function (stringToCopy) {
+					if (navigator.clipboard) {
+						try {
+							navigator.clipboard.writeText(stringToCopy);
+							var str = stringToCopy.slice(0, 20),
+								ext = stringToCopy.length > 20 ? "..." : "";
+							app.notify("Copied '" + str + ext + "' to clipboard", true);
+						} catch (err) {
+							console.error('Failed to copy: ', err);
+						}
+					}
+				},
 				editDetails: function () {
 					app.details = this.details;
 					//debug(this.details);
 					app.navigate("edit");
 				},
-
 				detailsViewHelp: function () {
 					confirm("Item not found. Would you like to remove this listing?", function () {
 						app.recentlyViewed.splice(1, 1);
@@ -3347,10 +3387,10 @@
 					}.bind(this));
 				}
 				function parseVCF(input) {
-					debug("parseVCF not done");
+					debug(input, "parseVCF not done");
 				}
 				function parseJSON(input) {
-					debug("parseJSON not done");
+					debug(input, "parseJSON not done");
 				}
 				function click(callback) {
 					document.getElementById(fileInputId).click();
@@ -3520,7 +3560,7 @@
 		var activation = Windows.ApplicationModel.Activation;
 		var isFirstActivation = true;
 		var uiSettings = new Windows.UI.ViewManagement.UISettings();
-		var onVisibilityChanged = function (args) {
+		var onVisibilityChanged = function (/*args*/) {
 			if (!document.hidden) {
 				layout();
 			}
@@ -3564,11 +3604,8 @@
 
 			isFirstActivation = false;
 		};
-		winApp.oncheckpoint = function (args) {
+		winApp.oncheckpoint = function (/*args*/) {
 			app.storeState();
-			// TODO: This application is about to be suspended. Save any state that needs to persist across suspensions here.
-			// You might use the WinJS.Application.sessionState object, which is automatically saved and restored across suspension.
-			// If you need to complete an asynchronous operation before your application is suspended, call args.setPromise().
 		};
 		winApp.start();
 	}

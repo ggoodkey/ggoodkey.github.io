@@ -1389,8 +1389,8 @@ html.tabl .itemLabel,
 html.desk .itemLabel {
 	float: left;
 	text-align: right;
-	padding: 8px 12px;
-	width: 27%;
+	padding: 16px;
+	width: 38%;
 	clear: both;
 }
 
@@ -1406,7 +1406,7 @@ html.desk .itemLabel button {
 }
 
 .itemText {
-	padding: 8px 12px;
+	padding: 16px;
 	-ms-word-wrap: break-word;
 	word-wrap: break-word;
 	position: relative;
@@ -1420,7 +1420,11 @@ html.desk .itemLabel button {
 html.tabl .itemText,
 html.desk .itemText {
 	border-left: 1px solid #e2e2e2;
-	margin-left: 27%;
+	margin-left: 38%;
+}
+
+html.phon .itemText {
+	padding: 8px 0 24px 0;
 }
 
 html.tabl .dark-theme .itemText,
@@ -1432,7 +1436,12 @@ html.desk .dark-theme .itemText {
 .editbox {
 	width: 100%;
 	padding: 3px 8px;
-	margin: 4px 0 12px 0;
+	margin: 10px 0;
+}
+
+html.phon .textbox,
+html.phon .editbox {
+	margin: 4px 0 16px 0;
 }
 
 .textbox {
@@ -1454,7 +1463,7 @@ textarea {
 
 html.tabl .textbox,
 html.desk .textbox {
-	width: 71%;
+	width: 60%;
 	margin-left: 8px;
 }
 
@@ -1485,16 +1494,25 @@ html.tabl .cardExpand {
 	margin-left: 8px;
 }
 
+html.phon .cardExpand {
+	border-top: 1px solid #e2e2e2;
+}
+
 html.desk .dark-theme .cardExpand,
 html.tabl .dark-theme .cardExpand {
 	border-left: 1px solid #232323;
+}
+
+html.phon .dark-theme .cardExpand {
+	border-top: 1px solid #1b1b1b;
 }
 
 html .phon .cardExpand .lineItem {
 	padding: 8px;
 }
 
-.lineItem {
+.lineItem, 
+.card {
 	clear: both;
 	position: relative;
 }
@@ -1508,7 +1526,11 @@ html.tabl button.lineItem{
 .cancelButton {
 	position: absolute;
 	right: 2%;
-	bottom: 17px;
+	bottom: 15px;
+}
+
+html.phon .cancelButton {
+	bottom: 21px;
 }
 
 .link,

@@ -170,12 +170,12 @@
 			<button class="dropdownButton" v-if="custominput && open === false || custominput === false" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
 				<template v-if="icon">
 					<span class="dropdownButton icon" v-bind:class="icon"></span>
-					<template v-if="nothingselectedtext || buttonValue !== '' || noarrow === false">
+					<template v-if="noinputtext || buttonValue !== '' || noarrow === false">
 						&nbsp;&nbsp;
 					</template>
 				</template>
-				<template v-if="nothingselectedtext || buttonValue !== ''">
-					{{ buttonValue || nothingselectedtext }}
+				<template v-if="noinputtext || buttonValue !== ''">
+					{{ buttonValue || noinputtext }}
 				</template>
 				<template v-if="noarrow === false">
 					&nbsp;
@@ -502,9 +502,16 @@
 								 v-bind:links="groupsDropdownLinks"
 								 v-bind:title="'Add ' + details.title + ' to Group'"
 								 icon="icon-people"
-								 text="Add to Group"
+								 buttontext="Add to Group"
 								 v-on:dropdown-action="groupsDropdownActions"
 								 v-on:dropdown-open="initializeGroups">
+				</dropdown-button>
+				<dropdown-button class="left"
+								 v-bind:links="copyDropdownLinks"
+								 icon="icon-copy"
+								 buttontext="Copy to Clipboard"
+								 v-on:dropdown-action="copyToClipboard"
+								 v-on:dropdown-open="initializeCopyActions">
 				</dropdown-button>
 				<br />
 				<template v-for="(item, index) in details.data">
@@ -532,11 +539,19 @@
 						</a>
 					</template>
 					<template v-else-if="item.type === 'phoneNumber'">
-						<a v-bind:href="externalLink(line, item.column, 'phone')">
-							<span v-if="item.label && /home/i.test(item.label.value)" class="icon icon-phone-alt"></span>
-							<span v-else class="icon icon-phone"></span>
-							&nbsp;&nbsp;{{ line }}
-						</a>
+						<template v-if="item.label && /home/i.test(item.label.value)">
+							<a v-bind:href="externalLink(line, item.column, 'phone')">
+								<span class="icon icon-phone-alt"></span>&nbsp;&nbsp;{{ line }}
+							</a>
+						</template>
+						<template v-else>
+							<a v-bind:href="externalLink(line, item.column, 'phone')" title="Dial">
+								<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
+							</a>&nbsp;&nbsp;&nbsp;&nbsp;
+							<a v-bind:href="externalLink(line, item.column, 'sms')" title="Text Message">
+								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
+							</a>
+						</template>
 					</template>
 					<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
 						<a v-bind:href="externalLink(line, item.column, 'address', item.value)">
@@ -553,8 +568,12 @@
 						<!--skip additional formattedAddress lines-->
 					</template>
 					<template v-else-if="item.label && item.label.value === 'GPS'">
-						<a v-bind:href="externalLink(line, item.column, 'www')">
+						<a v-bind:href="externalLink(line, item.column, 'www')" title="Open in Web Browser">
 							<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
+						</a>
+						<br /><br />
+						<a v-bind:href="externalLink(line, item.column, 'gps')" title="Open in Maps App">
+							<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps App
 						</a>
 					</template>
 					<template v-else-if="item.type === 'multilineString' && /^===\s.*\s===$/.test(line)">
@@ -569,24 +588,6 @@
 					</template>
 					<template v-else>
 						{{ line }}
-					</template>
-					<template v-if="lineIndex === 0">
-						<template v-if="item.type === 'email'">
-							<a v-bind:href="externalLink(line, item.column, 'bcc')" class="right">
-								<span class="icon icon-envelope"></span>&nbsp;&nbsp;E-mail&nbsp;BCC
-							</a>
-						</template>
-						<template v-else-if="item.type === 'phoneNumber' && (item.label === undefined || item.label && !/home/i.test(item.label.value))">
-							<a v-bind:href="externalLink(line, item.column, 'sms')" class="right">
-								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
-							</a>
-						</template>
-						<template v-else-if="item.label && item.label.value === 'GPS'">
-							<a v-bind:href="externalLink(line, item.column, 'gps')" class="right">
-								<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps
-							</a>
-						</template>
-						<a v-if="clipboard" v-on:click="copyToClipboard(item.value.join('\r\n'))" class="right"><span class="icon icon-copy"></span>&nbsp;&nbsp;Copy</a>
 					</template>
 				</template>
 			</div>
@@ -645,12 +646,12 @@
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-lineitem">
-		<div v-if="!item.readonly" class="lineItem">
+		<div v-if="!item.readonly" class="lineItem"><!--v-bind:text="item.label.value"-->
 			<dropdown-button v-if="item.label && item.label.options"
 							 class="itemLabel"
-							 v-bind:nothingselectedtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+							 v-bind:noinputtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
 							 v-bind:custominput="item.label.customize"
-							 v-bind:text="item.label.value"
+							 select
 							 v-bind:links="item.label.options"
 							 v-on:dropdown-action="setLabel"
 							 v-bind:id="item.column + '_label'">
@@ -673,12 +674,13 @@
 				<input v-else-if="item.type === 'date'" type="date" v-bind:value="value" class="textbox" />
 				<input v-else-if="item.type === 'email'" type="email" v-bind:value="value" class="textbox" />
 				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="value" class="textbox" />
+				<!--  v-bind:text="item.value[i]" -->
 				<dropdown-button v-else-if="item.options"
 								 align="left"
 								 class="left"
-								 v-bind:nothingselectedtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+								 v-bind:noinputtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
 								 v-bind:custominput="item.customize"
-								 v-bind:text="item.value[i]"
+								 select
 								 v-bind:links="item.options"
 								 v-on:dropdown-action="setValue"
 								 v-bind:id="item.column + '_dropdown' + i">
