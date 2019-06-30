@@ -1184,7 +1184,6 @@
 							b++;
 						}
 					}
-					//debug(data);
 					app.spin(false, "Loading contact data...");
 					if (callback instanceof Function) callback({
 						id: obj.id,
@@ -1210,7 +1209,6 @@
 				}
 				return callback instanceof Function ? callback(ret) : ret;
 			}
-			debug(tableName);
 			options = options || {};
 			var columns = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.text ? dataTemplates[tableName].display.listView.text.join("|||").split("|||") : [1],
 				joiner = dataTemplates[tableName].display && dataTemplates[tableName].display.listView.joiner ? dataTemplates[tableName].display.listView.joiner : " ";
@@ -2207,7 +2205,6 @@
 						});
 					}
 					function showGroup(group, error) {
-						debug(group);
 						if (!group || error) debug(error);
 						else if (group.searchTerms.value !== "") {
 							for (let a in dataTemplates) {
@@ -2407,7 +2404,6 @@
 				},
 				editDetails: function () {
 					app.details = this.details;
-					//debug(this.details);
 					app.navigate("edit");
 				},
 				detailsViewHelp: function () {
@@ -3304,7 +3300,7 @@
 										break; // noop
 									default:
 										this.notify('An error occurred reading this file.');
-								}
+								} 
 							}.bind(this);
 							reader.onload = function () {
 								callback(reader.result, file);
