@@ -1103,8 +1103,9 @@
 						}
 						function applyLabel() {
 							obj.label = {
+								column: template.label,
 								value: row[template.label].value,
-								column: template.label
+								orig: row[template.label].value
 							};
 							if (labelOptions) {
 								if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
@@ -1123,6 +1124,7 @@
 							if (template.readonly) obj.readonly = true;
 							if (template.hidden) obj.hidden = true;
 							obj.value = formatValue(obj.value, obj.type, splitter);
+							obj.orig = obj.value;
 						}
 						return obj;
 					}
@@ -2535,6 +2537,11 @@
 		},
 		edit_details_card_lineitem = {
 			props: { item: Object },
+			data: function () {
+				return {
+					focused: false
+				};
+			},
 			components: {
 				"dropdown-button": dropdown_button
 			},

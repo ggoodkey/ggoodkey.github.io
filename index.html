@@ -151,9 +151,11 @@
 		<div id="confirmContainer" v-show="showConfirm" v-on:click="shakeConfirm"></div>
 		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
 			<div id="confirmMessage">{{ confirmMsg }}</div>
-			<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
-			<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>
-			<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
+			<form>
+				<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
+				<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>
+				<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
+			</form>
 		</div>
 		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
 		<div id="router-views">
@@ -183,7 +185,7 @@
 					<span v-show="open === false" class="icon icon-collapse-down"></span>
 				</template>
 			</button>
-			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" />
+			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" autocomplete="off"/>
 			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
 				<a class="dropdownButton link" v-for="link in links" v-on:click="action($event, link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
 					<span class="dropdownButton icon left" v-bind:class="link.icon"></span>
@@ -646,7 +648,7 @@
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-lineitem">
-		<div v-if="!item.readonly" class="lineItem"><!--v-bind:text="item.label.value"-->
+		<div v-if="!item.readonly" class="lineItem">
 			<dropdown-button v-if="item.label && item.label.options"
 							 class="itemLabel"
 							 v-bind:noinputtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
@@ -658,23 +660,22 @@
 			</dropdown-button>
 			<template v-else-if="item.label">
 				<label class="itemLabel">{{ item.label.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
-				<input type="text" v-bind:value="item.label.value" class="textbox" />
+				<input type="text" v-bind:value="item.label.value" class="textbox" autocomplete="off"/>
 			</template>
 			<label v-else-if="item.column" class="itemLabel">{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
 			<textarea v-if="item.type === 'multilineString'" v-bind:value="item.value.join('\r\n')" class="textbox"></textarea>
 			<template v-else v-for="(value, i) in item.value">
-				<input v-if="item.type === 'number'" type="number" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="value" class="textbox" />
+				<input v-if="item.type === 'number'" type="number" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
+				<input v-else-if="item.type === 'integer'" type="number" step="1" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
+				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
+				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
 				<div v-else-if="item.type === 'boolean'" class="switch right">
 					<input type="checkbox" v-bind:id="'switch_' + item.column" v-bind:value="value" />
 					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item, i)"></label>
 				</div>
 				<input v-else-if="item.type === 'date'" type="date" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'email'" type="email" v-bind:value="value" class="textbox" />
-				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="value" class="textbox" />
-				<!--  v-bind:text="item.value[i]" -->
+				<input v-else-if="item.type === 'email'" type="email" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
+				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false"/>
 				<dropdown-button v-else-if="item.options"
 								 align="left"
 								 class="left"
@@ -685,8 +686,8 @@
 								 v-on:dropdown-action="setValue"
 								 v-bind:id="item.column + '_dropdown' + i">
 				</dropdown-button>
-				<input v-else type="text" v-bind:value="value" class="textbox" />
-				<a class="cancelButton" v-on:click="deleteValue"><span class="icon icon-cancel"></span></a>
+				<input v-else type="text" v-bind:value="value" class="textbox" autocomplete="off" v-on:focus="focused = true" v-on:blur="focused = false"/>
+				<a class="cancelButton" v-on:click="deleteValue" v-show="value !== '' && focused === true"><span class="icon icon-cancel"></span></a>
 				<div class="alert">{{ item.warning }}</div>
 			</template>
 		</div>
