@@ -407,7 +407,7 @@ APP.nyckelDB = (function () {
 					}
 					deleteRows.call(this);
 				}
-				function updateRow(toTable, toIds, nRow) {
+				function updateRow(toTable, toIds, nRow, rowNotFoundCB) {
 					for (let c = 0, lenC = toTable.length, e, eLen, xRow, xId, nId; c < lenC; c++) {
 						xRow = toTable[c];//existing row
 						if (xRow[0] !== nRow[0]) continue;
@@ -426,19 +426,24 @@ APP.nyckelDB = (function () {
 						match = true;
 						break;//row match found and updated so don't need to search further
 					}
+					if (!match) return rowNotFoundCB(nRow);
+				}
+				function addNewRow(nRow) {
+					if ((!DB[this.id].ids[nRow[0]] || DB[this.id].ids[nRow[0]][0] === "del" && DB[this.id].ids[nRow[0]][1] < ids[nRow[0]][0]) - createdDiff) {
+						//new row
+						syncChanges = true;
+						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
+					}
+				}
+				function tryHiddenRows (nRow) {
+					updateRow.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, nRow, addNewRow.bind(this));
 				}
 				//update rows
 				var match;
 				for (let b = 0, len = table.length, nRow; b < len; b++) {
 					match = false;
 					nRow = table[b];//new row
-					updateRow.call(this, DB[this.id].table, DB[this.id].ids, nRow);
-					if (!match) updateRow.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, nRow);
-					if (!match && (!DB[this.id].ids[nRow[0]] || DB[this.id].ids[nRow[0]][0] === "del" && DB[this.id].ids[nRow[0]][1] < ids[nRow[0]][0]) - createdDiff) {
-						//new row
-						syncChanges = true;
-						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
-					}
+					updateRow.call(this, DB[this.id].table, DB[this.id].ids, nRow, tryHiddenRows.bind(this));
 				}
 				updateTimestamps.call(this);
 			}
@@ -1079,10 +1084,16 @@ APP.nyckelDB = (function () {
 	}
 	function SET_VAL(rowId, colName, newValue, storeBool, editTime, callback) {
 		function applyVal(toTable, toIds, rowIndex) {
+			var thisModified;
 			editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "cell", toTable[rowIndex][0], "setVal");
 			toTable[rowIndex][colIndex] = newValue;
 			toIds[toTable[rowIndex][0]][colIndex] = editTime;
 			thisModified = editTime + toIds[toTable[rowIndex][0]][0] + DB[this.id].created;
+			if (thisModified > DB[this.id].lastModified) DB[this.id].lastModified = thisModified;
+			this.syncPending = true;
+			thisModified = null; rowIndex = null; colIndex = null;
+			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
+			return callback instanceof Function ? callback(newValue, false, DB[this.id].title, true) : newValue;
 		}
 		if (this.isDeleted()) {
 			return callback instanceof Function ? callback(false, "table is deleted", DB[this.id].title, this.syncPending) : false;
@@ -1097,7 +1108,7 @@ APP.nyckelDB = (function () {
 			colIndex = GET_INDEX_OF_COLUMN.call(this, colName),
 			rowIsHidden = false;
 		if (rowIndex < 0) {
-			rowIndex = GET_INDEX_OF_HIDDEN_ROW(rowId);
+			rowIndex = GET_INDEX_OF_HIDDEN_ROW.call(this, rowId);
 			if (rowId > -1) rowIsHidden = true;
 		}
 		if (!(rowIndex > -1 && colIndex > 0)) {
@@ -1105,17 +1116,12 @@ APP.nyckelDB = (function () {
 			rowIndex = null; colIndex = null;
 			return callback instanceof Function ? callback(false, error, DB[this.id].title, this.syncPending) : false;
 		}
-		if (!VALUE_IS_VALID.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0])) {
-			return callback instanceof Function ? callback(false, ERRORS[this.id], DB[this.id].title, this.syncPending) : false;
+		var validationObj = this.validate.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0])
+		if(validationObj.valid){
+			if (rowIsHidden) return applyVal.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, rowIndex);
+			else return applyVal.call(this, DB[this.id].table, DB[this.id].ids, rowIndex);
 		}
-		var thisModified;
-		if (rowIsHidden) applyVal.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, rowIndex);
-		else applyVal.call(this, DB[this.id].table, DB[this.id].ids, rowIndex);
-		if (thisModified > DB[this.id].lastModified) DB[this.id].lastModified = thisModified;
-		this.syncPending = true;
-		thisModified = null; rowIndex = null; colIndex = null;
-		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
-		return callback instanceof Function ? callback(newValue, false, DB[this.id].title, true) : newValue;
+		else return callback instanceof Function ? callback(false, ERRORS[this.id], DB[this.id].title, this.syncPending) : false;
 	}
 	function DELETE_ROW(rowId, storeBool, editTime) {
 		if (this.isDeleted()) {
@@ -2047,7 +2053,7 @@ APP.nyckelDB = (function () {
 			}
 			for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
 				(function (self, b) {
-					this.search.call(this, filterOutQueries[b], options, function (result, err, table, sync) {
+					self.search.call(self, filterOutQueries[b], options, function (result, err, table, sync) {
 						if (!err) filterIds = filterIds.concat(result);
 						else return callback instanceof Function ? callback([], err, table, sync) : [];
 						if (b === lenB - 1) {
@@ -2869,6 +2875,380 @@ APP.nyckelDB = (function () {
 		//check for other columns exportAs name of the same name
 		//TODO change name in search index
 		return newName;
+	};
+	/**
+	 * Check if a value is an acceptable input
+	 * @function validate
+	 * @param {string|number|boolean} value to check
+	 * @param {string} type an input type, such as "number", "emailAddress"...
+	 * @param {validateCallback} [callback] callback function
+	 * @returns {object}
+	 * @since 0.4
+	 */ 
+	NyckelDBObj.prototype.validate = function (value, valueType, callback){
+		function ret(valid, change, msg, details){
+			var obj = {valid: valid, value: change || value, error: msg, details: change ? "Changed '" + value + "' to '" + change + "'": details}
+			return callback instanceof Function ? callback(change || value, msg, change ? "Changed '" + value + "' to '" + change + "'": details, this.syncPending): obj;
+		}
+		function validateFamilyName(name) {
+			var orig = name,
+				n;
+			name = String(name).trim();
+			if (/[^A-Za-z\xC0-\xFF '\-]/g.test(name)) {
+				return ret.call(this, false, false, "Invalid characters found in lastname", "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß")
+			}
+			//catch McNames and O'Names
+			if (name.slice(0, 2).toLowerCase() === "mc" || name.charAt(1) === "'") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2).toUpperCase() + name.slice(3).toLowerCase();
+			//catch MacNames
+			else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") name = "Mac" + name.charAt(3).toUpperCase() + name.slice(4).toLowerCase();
+			//catch LaNames and LeNames (but not La Names or Le Names)
+			else if ((name.slice(0, 2).toLowerCase() === "la" || name.slice(0, 2).toLowerCase() === "le") && name.charAt(2) !== " ") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2) + name.slice(3).toLowerCase();
+			//catch VanNames
+			else if (name.slice(0, 3).toLowerCase() === "van") name = name.charAt(0).toUpperCase() + name.slice(1, 3).toLowerCase() + name.charAt(3) + name.slice(4).toLowerCase();
+			//capitalize Spaced Names
+			else if (/ /.test(name)) {
+				n = name.split(" ");
+				if (n[0].length === 2 || n[0].toLowerCase() === "von" || n[0].toLowerCase() === "van") {
+					for (var a = 0; a < n.length; a++) {
+						n[a] = n[a].charAt(0).toUpperCase() + n[a].slice(1).toLowerCase();
+					}
+					name = n.join(" ");
+				}
+				else return ret.call(this, false, false, "Invalid lastname", "'" + name + "' is not a valid last name");
+			}
+			//capitalize Hyphenated-Names
+			else if (/-/.test(name)) {
+				n = name.split("-");
+				for (var b = 0; b < n.length; b++) {
+					n[b] = n[b].replace(/^\s+|\s+$/g, "");
+					n[b] = n[b].charAt(0).toUpperCase() + n[b].slice(1).toLowerCase();
+				}
+				name = n.join("-");
+			}
+			//capitalize all other cases
+			else name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+			n = null;
+			return name === orig ? ret.call(this, true) : ret.call(this, true, name);
+		}
+		function validateGivenName(name) {
+			var orig = name;
+			name = String(name).trim();
+			if (/[^A-Za-z\xC0-\xFF \-&\(\),;\[\]]/g.test(name)) {
+				return ret.call(this, false, false, "Invalid charactors found in firstname", "Firstnames may only contain latin characters A-Z and special characters &()[],;-'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
+			}
+			name = name.replace(/\. /g, ", ");
+			var n = name.split(" ");
+			//capitalize names
+			for (var a = 0; a < n.length; a++) n[a] = n[a].charAt(0).toUpperCase() + n[a].slice(1);
+			name = n.join(" ");
+			return name === orig ? ret.call(this, true) : ret.call(this, true, name);
+		}
+		function validateOrganization1_Name(field) {
+			var orig = field, brak = "";
+			field = String(field);
+			if (/\(/.test(field) && /\)/.test(field)) {
+				brak = field.slice(field.indexOf("(") + 1, field.indexOf(")"));
+				var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
+				field = field.replace(regexp, " /BRACKETS/ ");
+				brak = brak.trim();
+			}
+			field = field.replace(/[^A-Z\xC0-\xFF\/ ]/gi, "");
+			field = field.replace(/\/BRACKETS\//g, "(" + brak + ")");
+			field = field.trim();
+			var split = field.split(" ");
+			for (var a = 0; a < split.length; a++) {
+				split[a] = split[a].charAt(0).toUpperCase() + split[a].slice(1);
+			}
+			field = split.join(" ");
+			split = field.split("/");
+			for (var b = 0; b < split.length; b++) {
+				split[b] = split[b].charAt(0).toUpperCase() + split[b].slice(1);
+			}
+			field = split.join("/");
+			return field === orig ? ret.call(this, true) : ret.call(this, true, field);
+		}
+		function validateAddress(addr) {
+			var orig = addr, brak = "";
+			var c = String(addr).trim().split(" ");
+			//capitalize
+			for (var a = 0; a < c.length; a++) {
+				if (!/\d/.test(c[a]) && c[a] !== "of" && c[a] !== "see" && !/addres|adres|mail|^see:/.test(c[a])) {
+					c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
+				}
+				if (c[a] === "Nw" || c[a] === "Ne" || c[a] === "Sw" || c[a] === "Se" || c[a] === "Po" || c[a] === "Rr") c[a] = c[a].toUpperCase();
+				if (c[a] === "C/o") c[a] = c[a].toLowerCase();
+			}
+			addr = c.join(" ");
+			if (/[^A-Za-z0-9 \-#&]/.test(addr)) {
+				addr = addr.replace(/addres:|Address:|adress:|Adress:|Addres:|address:/, "address: ");
+				addr = addr.replace(/Mail:|Mail to:|mail to:|mail:/, "mail: ");
+				if (!/mail:/.test(addr)) addr = addr.replace(/c\/o /i, "mail: c/o ");
+				addr = addr.replace(/:see|:See|: See|: see/, ": see ");
+				addr = addr.replace(/Address see:|address see:|address see /, "address: see ");
+				addr = addr.replace(/Mail see:|mail see:|mail see /, "mail: see ");
+				if (/address: |mail: /.test(addr)) {
+					addr = addr.replace(/\)|\(/g, "");
+					addr = "(" + addr + ")";
+					addr = addr.replace(/ : /g, " ");
+				}
+				if (/mail: /.test(addr)) {
+					addr = addr.replace(/Po Box|Bx/g, " PO Box ");
+					if (!/PO Box/g.test(addr)) addr = addr.replace(/Box/g, " PO Box ");
+					addr = addr.replace(/Site/g, " Site ");
+					addr = addr.replace(/Comp/g, " Comp ");
+					addr = addr.replace(/(RR\s\s|RR)(\d)/gi, " RR $2");
+					addr = addr.replace(/Unit/g, " Unit ");
+					addr = addr.replace(/Block/g, " Block ");
+				}
+				//ignore whatever is inside brackets
+				if (/\(/.test(addr) && /\)/.test(addr)) {
+					//APP.CacheMsg("Brackets in Address", "error");
+					brak = addr.slice(addr.indexOf("(") + 1, addr.indexOf(")"));
+					var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
+					addr = addr.replace(regexp, " -BRACKETS- ");
+					brak = brak.trim();
+				}
+			}
+			if (!/mile /gi.test(addr)) addr = addr.replace(/\./g, "");
+			addr = addr.replace(/Rge/g, " Range ");
+			addr = addr.replace(/Twp/g, " Township ");
+			if (/ Range | Township /.test(addr)) addr = addr.replace(/Rd/g, " Road ");
+			addr = addr.replace(/Av /g, " Ave ");
+			addr = addr.replace(/Av$/g, " Ave ");
+			addr = addr.replace(/Hwy|HWY|hwy|Hiway|hiway/g, " Highway ");
+			addr = addr.replace(/Bx|Po Box/g, " PO Box ");
+			if (!/PO Box/.test(addr)) addr = addr.replace(/Box/g, " PO Box ");
+			addr = addr.replace(/Site/g, " Site ");
+			addr = addr.replace(/Comp/g, " Comp ");
+			addr = addr.replace(/(RR\s\s|RR)(\d)/gi, " RR $2");
+			addr = addr.replace(/Rm/g, "Apt ");
+			addr = addr.replace(/# /g, "");
+			addr = addr.replace(/Unit/g, " Unit ");
+			addr = addr.replace(/Block/g, " Block ");
+			addr = addr.trim();
+			//replace dash in Range Road number
+			var i;
+			if (/Range Road \d\-\d|Range Road \d\d-\d/.test(addr)) {
+				i = addr.indexOf("Range Road ");
+				if (addr.charAt(i + 12) === "-") addr = addr.slice(0, i + 12) + addr.slice(i + 13);
+				if (addr.charAt(i + 13) === "-") addr = addr.slice(0, i + 13) + addr.slice(i + 14);
+			}
+			//replace dash in Township Road number
+			if (/Township Road \d\-\d|Township Road \d\d-\d/.test(addr)) {
+				i = addr.indexOf("Township Road ");
+				if (addr.charAt(i + 15) === "-") addr = addr.slice(0, i + 15) + addr.slice(i + 16);
+				if (addr.charAt(i + 16) === "-") addr = addr.slice(0, i + 16) + addr.slice(i + 17);
+			}
+			i = null;
+			if (/\d St|\d Ave/.test(addr)) {
+				addr = addr.replace(/(\d) - (\d)/, "$1-$2");
+			}
+			if (/[^A-Za-z0-9\xC0-\xFF\s\-&\(\)\/#',]/.test(addr)) {
+				return ret.call(this, false, false, "Address contains invalid characters", "Addresses may only contain A-z, 0-9, and special characters -&()/#',ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
+			}
+			addr = addr.replace(/-BRACKETS-/g, "(" + brak + ")");
+			addr = addr.trim();
+			return addr === orig ? ret.call(this, true) : ret.call(this, true, addr);
+		}
+		function validateCity(city) {
+			var orig = city;
+			var c = String(city).trim().split(" ");
+			//capitalize names
+			for (var a = 0; a < c.length; a++) {
+				if (!/\d/.test(c[a]) && c[a] !== "of") {
+					c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
+				}
+			}
+			city = c.join(" ");
+			city = city.replace(/ Nc$| Ne$| Nw$| N$| Sw$| Se$| S$| E$| W$/g, "");
+			city = city.replace(/ Ab$/, ", AB");
+			city = city.replace(/ Ak$/, ", AK");
+			city = city.replace(/ Bc$/, ", BC");
+			city = city.replace(/ Mb$/, ", MB");
+			city = city.replace(/ Nt$/, ", NT");
+			city = city.replace(/ Sk$/, ", SK");
+			city = city.replace(/ Yt$/, ", YT");
+			city = city.replace(/,,/, ",");
+			city = city.replace(/^Ftt |^Fortt /gi, "Fort St. ");
+			city = city.replace(/^Ft /gi, "Fort ");
+			city = city.replace(/^St /i, "St. ");
+			city = city.replace(/^MD of |Municipal District of /i, "M.D. of ");
+			city = city.replace(/ No | \#/i, " No. ");
+			if (/\'/.test(city) && !/\'s/.test(city)) city = city.replace(/\'/g, "");
+			if (/\./.test(city) && !/\St. | No. \d|^M.D. of /.test(city)) city = city.replace(/\./g, "");
+			city = city.replace(/[^A-Za-z0-9\xC0-\xFF\s\'\.]/g, "");//special characters \xC0-\xFF (ÅÖÄöäå, etc) allowed
+			return city === orig ? ret.call(this, true) : ret.call(this, true, city);
+		}
+		function validateProvince(prov) {
+			var orig = prov;
+			prov = String(prov).trim().replace(/[^A-z ]/g, "");
+			if (prov === "PEI") prov = "PE";
+			if (prov.length < 2 && prov !== "") {
+				return ret.call(this, false, false, "Province name is too short");
+			}
+			if (prov.length === 2) {
+				prov = prov.toUpperCase();
+			}
+			else {
+				prov = prov.split(" ");
+				for (var a = 0; a < prov.length; a++) {
+					prov[a] = prov[a].charAt(0).toUpperCase() + prov[a].slice(1).toLowerCase();
+				}
+				prov = prov.join(" ");
+			}
+			return prov === orig ? ret.call(this, true) : ret.call(this, true, prov);
+		}
+		function validatePostalCode(code) {
+			var orig = code;
+			code = String(code).toUpperCase().replace(/[^A-Z0-9]/g, "");
+			//ignore american zip code
+			if (String(code).length === 5 && !isNaN(code * 1)) return code === orig ? ret.call(this, true) : ret.call(this, true, code);
+			//check format
+			for (var a = 0; a < 6; a++) {
+				//catch 0 instead of O
+				if (code.charAt(a) === "0") code = code.slice(0, a) + "O" + code.slice(a + 1, 6);
+				if (/[^A-Z]/.test(code.charAt(a))) {
+					return ret.call(this, false, false, "Invalid Canadian postal code", "Position " + a + " should be an uppercase letter A-Z");
+				}
+				a++;
+				//catch O instead of 0
+				if (code.charAt(a) === "O") code = code.slice(0, a) + "0" + code.slice(a + 1, 6);
+				if (/[^0-9]/.test(code.charAt(a))) {
+					return ret.call(this, false, false, "Invalid Canadian postal code", "Position " + a + " should be a number");
+
+				}
+			}
+			//add missing space
+			if (code.length === 6) code = code.slice(0, 3) + " " + code.slice(3);
+			else return ret.call(this, false, false, "Invalid Canadian Postal Code", "Use format A1A 1A1");
+			return orig === code ? ret.call(this, true) : ret.call(this, true, code);
+		}
+		
+		function validatePhoneNumber(phon) {
+			var orig = String(phon);
+			phon = String(phon).replace(/[^0-9]/g, "");
+			//international numbers
+			if (phon.length > 10 || phon.charAt(0) === "0") {
+				if (orig.replace(/[^+0-9]/g, "").match(/\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$/)) {
+					if (phon.length === 11 && phon.slice(0, 2) === "46") {
+						phon = "+" + phon.slice(0, 2) + "-" + phon.slice(2, 4) + " " + phon.slice(4, 7) + " " + phon.slice(7, 9) + " " + phon.slice(9, 11);
+					}
+					else phon = "+" + orig.replace(/[^0-9\s\-]/g, "");
+				}
+				else if (phon.charAt(0) === "0" && phon.length < 11) {
+					if (phon.length === 10) {
+						if (phon.charAt(1) === "7") {
+							phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + " " + phon.slice(6, 8) + " " + phon.slice(8, 10);
+						}
+						else if (phon.charAt(1) === "8") {
+							phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 8) + " " + phon.slice(8, 10);
+						}
+						else phon = orig.replace(/[^0-9\s\-]/g, "");
+					}
+					else if (phon.length === 9 && phon.charAt(1) === "8") {
+						phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 7) + " " + phon.slice(7, 9);
+					}
+					else phon = orig.replace(/[^0-9\s\-]/g, "");
+				}
+				else if (phon.length < 16 && orig[0] !== "+") {
+					return ret.call(this, false, false, "Invalid Phone Number", "International phone numbers must begin with '+' symbol");
+				}
+				else {
+					return ret.call(this, false, false, "Invalid Phone Number");
+				}
+			}
+			else if (phon) {
+				//catch area code inserted where country code should be (403-403-987-6543)
+				if (phon.length === 13 && phon.slice(0, 3) === phon.slice(3, 6)) phon = "1" + phon.slice(3, 13);
+				//catch country code (1) at beginning of phone number
+				if (phon.length === 11 && parseInt(phon.charAt(0), 10) === 1) phon = phon.slice(1, 11);
+				//catch spaces, dots or brackets used instead of dashes
+				if (phon.length === 10 && parseInt(phon.charAt(0), 10) !== 1) phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + "-" + phon.slice(6, 10);
+				else {
+					//catch missing phone number (just area code)
+					if (phon.length === 3 && parseInt(phon.charAt(0), 10) !== 1) phon = "";
+					else {
+						return ret.call(this, false, false, "Invalid Phone Number");
+
+					}
+				}
+			}
+			return phon === orig ? ret.call(this, true): ret.call(this, true, phon);
+		}
+		function validateEmail(email) {
+			var orig = email,
+				e = String(email).trim().split("@");
+			if (e.length === 2) {
+				e[0] = e[0].replace(/[^A-Za-z0-9\&\'\+\-_\.]/g, "");//too restrictive?
+				e[0] = e[0].replace(/^\.|\.$|^\-|\-$/g, "");
+				e[0] = e[0].replace(/[\s\t\r\n]/g, "");
+				e[0] = e[0].replace(/\.\./g, ".");
+				e[0] = e[0].slice(0, 63);
+				e[1] = e[1].replace(/[^A-Za-z0-9\-\.\_\:\[\]]/g, "");//too restrictive?
+				e[1] = e[1].replace(/^\.|\.$|^\-|\-$/g, "");
+				e[1] = e[1].replace(/[\s\t\r\n]/g, "");
+				e[1] = e[1].replace(/\.\./g, ".");
+				if (e[0].length > 0 && e[1].length > 1 && /^[\w!#$%&'*+\-\/=?^`{|}~.]+$/.test(e[0]) && new RegExp("^([a-z0-9][a-z0-9\\-]*\\.)+([a-z]+|xn--[a-z0-9\\-]+)$", "i").test(e[1])) email = (e[0] + "@" + e[1]).slice(0, 255);
+				else return ret.call(this, false, false, "Invalid Email Address", "This email address contains features that may not be compatible with all clients");
+			}
+			else return ret.call(this, false, false, "Invalid Email Address", e.length === 1 ? "Requires an @ symbol": "Email addresses may only contain 1 @ symbol");
+			return email === orig ? ret.call(this, true) : ret.call(this, true, email);
+		}
+		function validateGPSCoordinates(str) {
+			var orig = str;
+			str = String(str).trim().replace(/[^\+\-0-9\s\.,]/, "");
+			if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
+				return ret.call(this, false, false, "Invalid GPS Co-ordinates");
+			}
+			var coord = str.split(", ");
+			if (coord.length === 2) {
+				if (/\./.test(coord[0])) coord[0] = coord[0].split(".")[0] + "." + coord[0].split(".")[1].slice(0, 6);
+				if (/\./.test(coord[1])) coord[1] = coord[1].split(".")[0] + "." + coord[1].split(".")[1].slice(0, 6);
+				str = coord[0] + ", " + coord[1];
+			}
+			coord = null;
+			return str === orig ? ret.call(this, true): ret.call(this, true, str);
+		}
+		function validateLatitude(str) {
+			var orig = str;
+			str = String(str).replace(/[^\+\-0-9\.]/, "");
+			if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/.test(str)) {
+				return ret.call(this, false, false, "Invalid GPS Latitude", "Requires a decimal between -90 and +90");
+			}
+			if (/\./.test(str)) {
+				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
+			}
+			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
+		}
+		function validateLongitude(str) {
+			var orig = str;
+			str = String(str).replace(/[^\+\-0-9\.]/, "");
+			if (!/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
+				return ret.call(this, false, false,"Invalid GPS Longitude", "Requires a decimal between -180 and +180");
+			}
+			if (/\./.test(str)) {
+				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
+			}
+			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
+		}
+		if(!VALIDATE_TYPE.call(this, valueType)) return ret.call(this, false, false, valueType + " is not a valid type");
+		if(!VALUE_IS_VALID.call(this, value, valueType)) return ret.call(this, false, false, ERRORS.pop());
+		if(value === "") return ret.call(this, true);
+
+		//validate value based on value type
+		if (/Family/i.test(valueType)) return validateFamilyName.call(this, value);
+		else if (/Given|Spouse/i.test(valueType)) return validateGivenName.call(this, value);
+		else if (/Field|Organization/i.test(valueType)) return validateOrganization1_Name.call(this, value);
+		else if (/City|County/i.test(valueType)) return validateCity.call(this, value);
+		else if (/Province|State|Region/i.test(valueType)) return validateProvince.call(this, value);
+		else if (/Postal/i.test(valueType)) return validatePostalCode.call(this, value);
+		else if (/Street/i.test(valueType) || /Location/i.test(valueType) && /[A-z]/i.test(value)) return validateAddress.call(this, value);
+		else if (/Latitude/i.test(valueType)) return validateLatitude.call(this, value);
+		else if (/Longitude/i.test(valueType)) return validateLongitude.call(this, value);
+		else if (/Location/i.test(valueType)) return validateGPSCoordinates.call(this, value);
+		else if (/Phone/i.test(valueType)) return validatePhoneNumber.call(this, value);
+		else if (/Email|E-mail|E_mail/i.test(valueType)) return validateEmail.call(this, value);
+		else return ret.call(this, true);
 	};
 	//TODO share function
 	return NyckelDBObj;

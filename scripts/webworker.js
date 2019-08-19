@@ -157,6 +157,7 @@ self.addEventListener('message', function (e) {
 			case "advancedSearch":
 			case "getVals":
 			case "getSearchSuggestions":
+			case "validate"://returns updatedValue, errors, errorDetails, syncPending 
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else {
 					appData[data.title][data.cmd](data.args[0], data.args[1], function (success, errors, title, syncPending) {

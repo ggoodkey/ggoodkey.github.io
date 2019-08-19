@@ -26,7 +26,7 @@
     
 
 
-    <h3> </h3>
+    <h3>nyckeldb 0.4.0</h3>
 
 
 
@@ -43,7 +43,7 @@
 
 
     <section>
-        <article><h1><img src="./images/firefox/firefox-general-32-32.png" alt="N">yckelDB Documentation</h1><h4>NyckelDB Version 0.4</h4><h5>May 4, 2019</h5><p>NyckelDB is a highly structured JavaScript data store. Any data that 
+        <article><h1><img src="./images/firefox/firefox-general-32-32.png" alt="N">yckelDB Documentation</h1><h4>NyckelDB Version 0.4</h4><h5>July 11, 2019</h5><p>NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
 according to data type, and data can be imported or exported as JSON or CSV (coming soon).</p>
@@ -72,6 +72,7 @@ according to data type, and data can be imported or exported as JSON or CSV (com
 </li>
 </ul>
 </li>
+<li><a href="#full-api-documentation">Full API Documentation</a></li>
 <li><a href="#dependencies">Dependencies</a></li>
 <li><a href="#miscellaneous">Miscellaneous</a><ul>
 <li><a href="#database-structure">Database Structure</a></li>
@@ -80,14 +81,8 @@ according to data type, and data can be imported or exported as JSON or CSV (com
 </li>
 </ul>
 <h1>Overview</h1><p>Nyckel (nick-ale) is a Swedish word that means &quot;key&quot;.</p>
-<p>NyckelDB uses keys in two ways:</p>
-<ol>
-<li>internally, each data store is isolated from other data stores by use of randomly generated keys</li>
-<li>data stores can be obfuscated if desired</li>
-</ol>
-<p>The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.</p>
-<p>NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
-This enables the database to behave like both an Array and an Object, where data is sortable like in an Array, but also highly performant like an Object for read, write, search and sync operations.</p>
+<p>The basic concept of NyckelDB is to create a portable JavaScript client-side data store with data type validation.</p>
+<p>NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is JSON (Figure 2).</p>
 <table>
 <thead>
 <tr>
@@ -168,10 +163,11 @@ This enables the database to behave like both an Array and an Object, where data
     }
 }
 </code></pre><p><em>Figure 2: What a NyckelDB table really looks like</em></p>
-<p>The data store can (and if possible should) be run in the background in a webWorker, and so as much computational work as possible is handled by the database including basic search, sort, filter, 
-and even very simple application specific custom formulas.</p>
-<p>NyckelDB uses <a href="https://github.com/brianleroux/lawnchair/">Lawnchair</a> as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistent storage. For a cloud solution,
-a compressed and obfuscated JSON object can be exported for you to send wherever you want it to go, and imported again and synchronized on another device.</p>
+<p>The data store can run along side your other JavaScript code by adding a \&lt;script> tag directly to your HTML document, or run in a background task in a Web Worker (which is recommended).</p>
+<p>NyckelDB stores data temporarily in the browser using <a href="https://github.com/brianleroux/lawnchair/">Lawnchair</a> as its cross-browser localStorage solution. 
+For more persistant storage, you can export the data from NyckelDB as a JSON file and send it to your own cloud solution. 
+Synchronisation is handled client-side when you import that JSON file back into the NyckelDB. NyckelDB can also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) 
+if used in a UWP application.</p>
 <p>LZString compression is used so you can fit many MB of data in the very limited localStorage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.</p>
 <p>All data written to the data store is automatically validated before being written, taking care of much of your form validation work for you such as names, email addresses and phone numbers. </p>
 <h1>Features</h1><p>Other than the basic read/write functionality that would be expected in any type of data storage solution, NyckelDB also contains the following features:</p>
@@ -198,7 +194,7 @@ Additional data validation, and sometimes error correction can be done by specif
 Some subtypes fall into more than one category such as <em>postalZipCode</em> which can be a String or a Number. 
 <a href="#types">See Types below</a> for a complete list of all the different subtypes.</p>
 <p>If you want the most flexibility you can specify <em>any</em>, which will allow any type of data to be saved to that column in the table, as long as it is a String, Number or Boolean value.</p>
-<p>The data type for each column in the table is best specified on creation of the table, but can be changed afterwards.</p>
+<p>The data type for each column in the table is best specified on creation of the table, but in some cases can be changed afterwards.</p>
 <h3>Formulas</h3><p>Coming soon</p>
 <h1>Types</h1><p>The following types can be applied to any column:</p>
 <h3>String types</h3><ul>
@@ -236,7 +232,10 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
 <li><strong>boolean</strong> accepts only true or false</li>
 </ul>
 <h1>Setting up a new NyckelDB Object</h1><p>Setting up a new NyckelDB object is as simple as calling the constructor using the &quot;new&quot; keyword and passing it the required table parameters: &quot;headers&quot;, and &quot;types&quot;. Optional &quot;customProperties&quot; and &quot;importData&quot; can also be passed to the table on setup.</p>
-<pre class="prettyprint source lang-javascript"><code>var title = &quot;Accounting Spreadsheet&quot;,
+<blockquote>
+<p><a href="#full-api-documentation">See more details about the NyckelDB API below</a>
+<code>`</code>javascript
+var title = &quot;Accounting Spreadsheet&quot;,
     headers = [&quot;Month&quot;, &quot;Monthly Income&quot;, &quot;Monthly Expenses&quot;, &quot;Balance&quot;],
     types = [&quot;date&quot;, &quot;posInteger&quot;, &quot;negInteger&quot;, &quot;integer&quot;],
     options = {
@@ -244,13 +243,15 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
     },
     callback = function(){ 
         //update UI to show newly created NyckelDB here
-};
+};</p>
+</blockquote>
+<p>var myTable = new APP.NyckelDB(title, headers, types, options, callback);
+myTable.getLength(); //returns 0</p>
+<pre class="prettyprint source"><code>There is quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
+or you can pass types as an Object in the form:
 
-var myTable = new APP.NyckelDB(title, headers, types, options, callback);
-myTable.getLength(); //returns 0
-</code></pre><p>There is quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
-or you can pass types as an Object in the form:</p>
-<pre class="prettyprint source lang-javascript"><code>var types = { 
+```javascript
+var types = { 
     &quot;Month&quot;: &quot;date&quot;,
     &quot;Monthly Income&quot;: &quot;posInteger&quot;,
     &quot;Monthly Expenses&quot;: &quot;negInteger&quot;,
@@ -268,61 +269,62 @@ table at once. You can work around this by reordering the output afterwards of c
 specified, or even a <a href="#formulas">formula</a>, by passing Types in like this:</p>
 <pre class="prettyprint source lang-javascript"><code>var types = { 
     &quot;Month&quot;: { 
-        type: &quot;string&quot;, 
-        search: true,
-        initialValue: &quot;January&quot;
+        &quot;type&quot;: &quot;string&quot;, 
+        &quot;search&quot;: true,
+        &quot;initialValue&quot;: &quot;January&quot;
     },
     &quot;Monthly Income&quot;: {
-        type: &quot;posInteger&quot;,
-        search: false,
-        initialValue: 2000
+       &quot;type&quot;: &quot;posInteger&quot;,
+        &quot;search&quot;: false,
+        &quot;initialValue&quot;: 2000
     },
     &quot;Monthly Expenses&quot;: {
-        type: &quot;negInteger&quot;,
-        search: false
+        &quot;type&quot;: &quot;negInteger&quot;,
+        &quot;search&quot;: false
     },
     &quot;Balance&quot;: {
-        type: &quot;integer&quot;,
-        formula: &quot;SUBTRACT('Monthly Income','Monthly Expenses')&quot;
+        &quot;type&quot;: &quot;integer&quot;,
+        &quot;formula&quot;: &quot;SUBTRACT('Monthly Income','Monthly Expenses')&quot;
     }
 }</code></pre><h3>The Options Parameter</h3><p>The 'options' parameter accepts an Object. It may contain data to import immediately after the database is
 created in the form of a CSV file (string), or JSON object, and custom properties that you would like to add to your table.</p>
 <pre class="prettyprint source lang-javascript"><code>var options = {
-    importData: nyckelDBTable,
-    importJSON: json,
-    importCSV: string,
-    customProperties:{
+    &quot;importData&quot;: nyckelDBTable,
+    &quot;importJSON&quot;: json,
+    &quot;importCSV&quot;: string,
+    &quot;customProperties&quot;:{
         &quot;FinalBalance&quot;: {
-            type: &quot;integer&quot;,
-            initialValue: 10000
+            &quot;type&quot;: &quot;integer&quot;,
+            &quot;initialValue&quot;: 10000
         },
         &quot;ICanBuyMyGroceriesThisMonth&quot;: {
-            type: &quot;boolean&quot;,
-            initialValue: true
+            &quot;type&quot;: &quot;boolean&quot;,
+            &quot;initialValue&quot;: true
         }
     }    
 };</code></pre><h5>Importing Data</h5><p>CSV, or JSON data can be imported into the table in the 'options' parameter in one of 3 forms:</p>
 <pre class="prettyprint source lang-javascript"><code>//table data that was generated by NyckelDB sync or exportJSON functions
-importData: nyckelDBTable, 
+&quot;importData&quot;: nyckelDBTable, 
 
 //json data that needs to be parsed
-importJSON: json, 
+&quot;importJSON&quot;: json, 
 
 //or CSV data that needs to be converted to JSON and then parsed
-importCSV: string, </code></pre><h5>Custom Properties</h5><p>Custom properties can be used for data that doesn't quite fit into the &quot;table&quot; model, such as maybe some metadata that applies to the entire database. 
+&quot;importCSV&quot;: string, </code></pre><h5>Custom Properties</h5><p>Custom properties can be used for data that doesn't quite fit into the &quot;table&quot; model, such as maybe some metadata that applies to the entire database. 
 The existence of a custom property must be initiated when the NyckelDB object is created, and must be given an initial value. 
 Custom properties can be given a type as well, but only &quot;string&quot;, &quot;number&quot; or &quot;boolean&quot;, or left as &quot;any&quot;.</p>
 <pre class="prettyprint source lang-javascript"><code>customProperties:{
     //name the custom property what ever you want
     &quot;FinalBalance&quot;: {
-        type: &quot;integer&quot;,
-        initialValue: 10000
+        &quot;type&quot;: &quot;integer&quot;,
+        &quot;initialValue&quot;: 10000
     },
     &quot;ICanBuyMyGroceriesThisMonth&quot;: {
-        type: &quot;boolean&quot;,
-        initialValue: true
+        &quot;type&quot;: &quot;boolean&quot;,
+        &quot;initialValue&quot;: true
     }
-}    </code></pre><h1>Dependencies</h1><ul>
+}    </code></pre><h1>Full API Documentation</h1><p>https://ggoodkey.github.io/dev/APP.nyckelDB.html</p>
+<h1>Dependencies</h1><ul>
 <li>validate.js</li>
 <li>base64.js</li>
 <li>storage.js</li>
@@ -360,13 +362,13 @@ recording changes to the nearest minute.</p></article>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="APP.nyckelDB.html">nyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="APP.nyckelDB.html">APP.nyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sat May 04 2019 20:28:03 GMT+0200 (W. Europe Summer Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
 </footer>
 
 <script> prettyPrint(); </script>

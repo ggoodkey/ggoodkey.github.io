@@ -99,6 +99,7 @@ button {
 	border-radius: 2px;
 	-webkit-appearance: button;
 	-webkit-writing-mode: horizontal-tb !important;
+	writing-mode: horizontal-tb;
 	text-rendering: auto;
 	letter-spacing: normal;
 	word-spacing: normal;
@@ -203,7 +204,7 @@ th{
 }
 
 .table-container {
-	width: 73%;
+	width: 62%;
 	overflow-x: auto;
 }
 
@@ -850,9 +851,9 @@ html.tabl #app.sidenav_open #sidenav {
 
 #sidenav button {
 	height: 40px;
+	min-width: 40px;
 	padding: 10px;
 	margin: 8px 0;
-	float: right;
 	border: 1px solid lightgray;
 	font-size: 15px;
 }
@@ -1139,10 +1140,7 @@ input[type=checkbox] {
 form.find,
 .checkbox label:before,
 .switch,
-.textbox,
-.textbox.valid,
-html.desk .textbox.valid:hover,
-.textbox.invalid:focus {
+.textbox {
 	border-color: #e1e1e1 white white #e1e1e1;
 	border-color: rgba(128, 128, 128, 0.1) white white rgba(128, 128, 128, 0.1);
 	box-shadow: rgba(128, 128, 128, 0.5) 1px 1px 3px inset;
@@ -1152,10 +1150,8 @@ html.desk .textbox.valid:hover,
 .dark-theme .checkbox label:before,
 .dark-theme .switch,
 .dark-theme .textbox,
-.dark-theme .textbox.valid,
-html.desk .dark-theme .textbox.valid:hover,
-.dark-theme .textbox.invalid:focus {
-	border-color: black #252525	#252525 black;
+.dark-theme .valid .textbox {
+	border-color: black #252525 #252525 black;
 	box-shadow: rgba(0, 0, 0, 0.15) 1px 1px 3px inset;
 }
 
@@ -1172,33 +1168,23 @@ html.desk .dark-theme .textbox.valid:hover,
 	background-color: rgba(128, 128, 128, 0.25);
 }
 
-.textbox.invalid {
-	color: red;
-	box-shadow: rgba(255, 0, 0, 0.8) 0 0 4px inset;
+.invalid .textbox {
+    color: red;
 }
 
-.dark-theme .textbox.invalid {
-	color: #700000;
-	box-shadow: rgba(255, 0, 0, 0.5) 0 0 4px inset;
-}
-
-.textbox.valid,
-.textbox.invalid:focus {
-	color: #0f992d; /*text green*/
-}
-
-.dark-theme .textbox.valid,
-html.desk.dark-theme .textbox:hover,
-.dark-theme .textbox.invalid:focus {
-	color: #238c3a; /*dark-theme text green*/
+.invalid .textbox:focus,
+.dark-theme .invalid .textbox:focus {
+	border-color: red;
 }
 
 .switch label,
 html.desk button:hover,
 html.desk .link:hover,
+html.desk .button-link:hover,
 html.desk .jumplink:hover,
 button:active,
 .link:active,
+.button-link:active,
 .jumplink:active,
 html.phon .cardHeading:active {
 	background: #eee; /* Old browsers */
@@ -1237,9 +1223,11 @@ html.phon .card {
 .dark-theme .switch label,
 html.desk .dark-theme button:hover,
 html.desk .dark-theme .link:hover,
+html.desk .dark-theme .button-link:hover,
 html.desk .dark-theme .jumplink:hover,
 .dark-theme button:active,
 .dark-theme .link:active,
+.dark-theme .button-link:active,
 .dark-theme .jumplink:active,
 html.phon .dark-theme .cardHeading:active {
 	background: #222;
@@ -1418,18 +1406,15 @@ html.desk .itemLabel button {
 }
 
 html.tabl .itemText,
-html.desk .itemText {
-	border-left: 1px solid #e2e2e2;
+html.desk .itemText,
+html.tabl .itemInput,
+html.desk .itemInput {
 	margin-left: 38%;
 }
 
-html.phon .itemText {
+html.phon .itemText,
+html.phon .itemInput {
 	padding: 8px 0 24px 0;
-}
-
-html.tabl .dark-theme .itemText,
-html.desk .dark-theme .itemText {
-	border-left: 1px solid #232323;
 }
 
 .textbox, 
@@ -1523,6 +1508,17 @@ html.tabl button.lineItem{
 	left: 22%;
 }
 
+.lineItem div.alert{
+	position: absolute;
+    left: 40%;
+    top: 42px;
+}
+
+html.phon .lineItem div.alert {
+	left: 0;
+    top: 56px;
+}
+
 .cancelButton {
 	position: absolute;
 	right: 19px;
@@ -1572,7 +1568,8 @@ html.phon .dark-theme .cards {
 }
 
 .link,
-.jumplink {
+.jumplink,
+.button-link {
 	min-height: 42px;
 	padding: 13px 16px;
 	text-align: left;
@@ -1626,7 +1623,8 @@ button,
 		border-bottom: 1px solid #478cdb; /*accent blue*/
 	}
 
-html.desk .link:hover{
+html.desk .link:hover,
+html.desk .button-link:hover{
 	color: #444;
 }
 
@@ -1636,12 +1634,15 @@ html.desk .link:hover:active {
 }
 
 
-html.desk .dark-theme .link:hover{
+html.desk .dark-theme .link:hover,
+html.desk .dark-theme .button-link{
 	color: #eee;
 }
 
 .dark-theme .link:hover:active,
-html.desk .dark-theme .link:hover:active {
+.dark-theme .button-link:hover:active,
+html.desk .dark-theme .link:hover:active,
+html.desk .dark-theme .button-link:hover:active {
 	color: white;
 }
 
@@ -1671,6 +1672,8 @@ a:active,
 a:focus,
 a.link:hover:active,
 .dark-theme a.link:hover:active,
+a.button-link:hover:active,
+.dark-theme a.button-link:hover:active,
 button:hover:active,
 button.selected,
 .jumplink:focus,
@@ -1680,6 +1683,10 @@ html.desk a.link:hover,
 html.desk a.link:hover:active,
 html.desk .dark-theme a.link:hover,
 html.desk .dark-theme a.link:hover:active,
+html.desk a.button-link:hover,
+html.desk a.button-link:hover:active,
+html.desk .dark-theme a.button-link:hover,
+html.desk .dark-theme a.button-link:hover:active,
 html.desk button:hover:active,
 html.desk button:focus,
 html.desk button.selected,
@@ -1693,7 +1700,9 @@ html.desk .cardHeading:hover:active {
 
 #searchSuggestions .link:active,
 .link.selected,
-html.desk .link.selected:hover {
+html.desk .link.selected:hover,
+.button-link.selected,
+html.desk .button-link.selected:hover {
 	background-color: #70a6e4; /*accent blue 20% lighter*/
 	color: white;
 }
@@ -1705,7 +1714,9 @@ html.desk .navlink:hover:active {
 
 .dark-theme #searchSuggestions .link:active,
 .dark-theme .link.selected,
-html.desk .dark-theme .link.selected:hover {
+html.desk .dark-theme .link.selected:hover,
+.dark-theme .button-link.selected,
+html.desk .dark-theme .button-link.selected:hover {
 	background-color: #2972c5; /*accent blue 20% darker*/
 }
 
@@ -1738,6 +1749,7 @@ html.desk .dark-theme .jumplink-button:hover,
 	position: absolute;
 	max-height: 300px;
 	min-width: 250px;
+	max-width: 500px;
 	z-index: 1;
 }
 

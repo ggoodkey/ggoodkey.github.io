@@ -203,7 +203,8 @@
 						"Relation1_Type", "Relation2_Type", "Relation3_Type", "Relation4_Type", "Relation5_Type",
 						"Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
 						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type",
-						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"]
+						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"],
+					icon:"icon-user"
 				},
 				display: {
 					listView: {
@@ -436,7 +437,8 @@
 					customProperties: {
 					},
 					doNotIndex: ["Password", "DateCreated"],
-					initialIndex: ["Site", "Username", "Alias"]
+					initialIndex: ["Site", "Username", "Alias"],
+					icon: "icon-lock"
 				},
 				display: {
 					listView: {
@@ -454,7 +456,8 @@
 					customProperties: {
 					},
 					doNotIndex: ["Display Name", "Extension", "Type", "Original Size", "Compression", "Compressed Size", "Created", "Modified", "Hash", "Compressed Contents"],
-					initialIndex: ["Name"]
+					initialIndex: ["Name"],
+					icon: "icon-folder-open"
 				},
 				display: {
 					listView: {
@@ -464,12 +467,12 @@
 				}
 			},
 			Groups: {
-				headers: ["groupName", "groupIds", "searchTerms"],
-				types: ["string", "string", "string"],
+				headers: ["groupName", "groupIds", "searchTerms", "excludeIds"],
+				types: ["string", "string", "string", "string"],
 				options: {
 					customProperties: {
 					},
-					doNotIndex: ["groupIds", "searchTerms"],
+					doNotIndex: ["groupIds", "searchTerms", "excludeIds"],
 					initialIndex: ["groupName"]
 				},
 				display: {
@@ -507,6 +510,7 @@
 				darkTheme: false,
 				useWindowsTheme: false,
 				windowsDarkTheme: false,
+				accentColor: null,
 				showConfirm: false,
 				confirmMsg: "Are you sure?",
 				confirmOK: "OK",
@@ -649,6 +653,7 @@
 						case "setType":
 						case "setVal":
 						case "sync":
+						case "validate":
 							return appData[title][obj.cmd].apply(appData[title], obj.args);
 						default:
 							return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
@@ -763,6 +768,7 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneInit() {
+				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded();
@@ -832,6 +838,76 @@
 			layout();
 			getLocal();
 		},
+		/*colorLuminance 
+		* @craigbuckler
+		* https://www.sitepoint.com/javascript-generate-lighter-darker-color/
+		* hex #CCC or #123abc, with or without #
+		* lum decimal b/t -1 and 1. 0.2 (20% lighter) -0.5 (50% darker)
+		*/
+		colorLuminance = function (hex, lum, returnRGB) {	
+			// validate hex string
+			hex = new String(hex).replace(/[^0-9a-f]/gi, '');
+			if (hex.length < 6) {
+				hex = hex[0]+ hex[0]+ hex[1]+ hex[1]+ hex[2]+ hex[2];
+			}
+			lum = lum || 0;
+
+			// convert to decimal and change luminosity
+			var hexColor = "#", rgbColor = [], c, i, black = 0, white = 255;
+			for (i = 0; i < 3; i++) {
+				c = parseInt(hex.substr(i*2,2), 16);
+			 //	c = Math.round(Math.min(Math.max(black, c + (c * lum)), white));
+				c = Math.round(Math.min(Math.max(black, c + (lum * white)), white));
+				rgbColor[i] = c;
+				c=c.toString(16);
+				hexColor += ("00"+c).substr(c.length);
+			}
+			return returnRGB ? rgbColor.join(", ") : hexColor;
+		},
+		updateCSSColor = function (rgbColor, replaceColor){
+			var styleSheets = document.styleSheets;
+			for (var a = 0; a < styleSheets.length; a++) {
+				var rules = styleSheets[a].cssRules || styleSheets[a].rules;
+				for (var b = 0, len = styleSheets[a].cssRules.length; b < len; b++) {
+					var rule = rules[b].cssText;
+					if (replaceColor.test(rule)) {
+						rule = rule.split("{");
+						var styles = rule[1].replace(/\}/, "").split(";");
+						for (var c = 0; c < styles.length - 1; c++) {
+							styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
+							rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
+						}
+					}
+				}
+			}
+		},
+		setAccentColor = function (hex){
+			if(!hex) return;
+			var colors = [
+					colorLuminance(hex, 0, true),
+					colorLuminance(hex, -0.1, true),
+					colorLuminance(hex, -0.2, true),
+					colorLuminance(hex, -0.3, true),
+					colorLuminance(hex, 0.1, true),
+					colorLuminance(hex, 0.2, true),
+					colorLuminance(hex, 0.3, true)
+				],
+				oldColorString = [
+					new RegExp(windowsAccentColor[0] || "71, 140, 219", "g"),
+					new RegExp(windowsAccentColor[1] || "49, 126, 214", "g"),
+					new RegExp(windowsAccentColor[2] || "41, 114, 197", "g"),
+					new RegExp(windowsAccentColor[3] || "38, 97, 164", "g"),
+					new RegExp(windowsAccentColor[4] || "84, 152, 231", "g"),
+					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
+					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
+				];
+			for(let a=0, len = colors.length; a<len;a++){
+				updateCSSColor(colors[a], oldColorString[a])
+			}
+			windowsAccentColor = colors;
+			app.accentColor = hex;
+			app.storeState();
+		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
 		matchWindowsTheme = function () {
@@ -841,20 +917,7 @@
 					else app.windowsDarkTheme = false;
 				}
 				for (var d = 0; d < windowsAccentColor.length; d++) {
-					for (var a = 0; a < styleSheets.length; a++) {
-						var rules = styleSheets[a].cssRules || styleSheets[a].rules;
-						for (var b = 0, len = styleSheets[a].cssRules.length; b < len; b++) {
-							var rule = rules[b].cssText;
-							if (oldColorString[d].test(rule)) {
-								rule = rule.split("{");
-								var styles = rule[1].replace(/\}/, "").split(";");
-								for (var c = 0; c < styles.length - 1; c++) {
-									styles[c] = styles[c].replace(oldColorString[d], cssColorString[d]).split(":");
-									rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
-								}
-							}
-						}
-					}
+					updateCSSColor(cssColorString[d], oldColorString[d]);
 				}
 			}
 			//use alternate icon stylesheet
@@ -922,8 +985,7 @@
 						new RegExp(windowsAccentColor[4] || "84, 152, 231", "g"),
 						new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 						new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
-					],
-					styleSheets = document.styleSheets;
+					];
 				updateUI();
 				windowsAccentColor = cssColorString;
 			}
@@ -1080,6 +1142,7 @@
 						function applyValueStr() {
 							obj = row[template];
 							obj.value = formatValue(obj.value, obj.type, splitter);
+							obj.orig = obj.value.join(" ::: ").split(" ::: ");
 						}
 						function applyValueArr() {
 							obj.value = [];
@@ -1124,7 +1187,7 @@
 							if (template.readonly) obj.readonly = true;
 							if (template.hidden) obj.hidden = true;
 							obj.value = formatValue(obj.value, obj.type, splitter);
-							obj.orig = obj.value;
+							obj.orig = obj.value.join(" ::: ").split(" ::: ");
 						}
 						return obj;
 					}
@@ -1259,6 +1322,7 @@
 						}
 						ids = obj;
 					}
+					debug(detailsObj, "detailsObj");
 					for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
 						if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
 						if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
@@ -1417,15 +1481,14 @@
 		data: function () {
 			return {
 				open: false,
-				inputValue: this.noinputtext,
+				inputValue: this.buttontext || this.noinputtext,
 				buttonValue: this.buttontext,
 				clickOutside: null
 			};
 		},
 		methods: {
 			toggle: function (open) {
-				var app = document.getElementById("app"),
-					_this = this; // eslint-disable-line
+				var app = document.getElementById("app");
 				if (open === true || open === false) this.open = open;
 				else this.open = !this.open;
 				if (this.open) {
@@ -1436,17 +1499,17 @@
 								//for non UWP
 								//check to see if it is exactly the same button that was clicked, 
 								//or another dropdown button
-								outsideClick = !_this.$el.contains(e.target);
+								outsideClick = !this.$el.contains(e.target);
 								var a = e.path.length || 0;
-								if (_this.$el.id && outsideClick) while (a--) {
-									if (e.path[a].id === _this.$el.id) {
+								if (this.$el.id && outsideClick) while (a--) {
+									if (e.path[a].id === this.$el.id) {
 										outsideClick = false;
 										break;
 									}
 								}
 							}
-							if (outsideClick) _this.toggle(false);
-						};
+							if (outsideClick) this.toggle(false);
+						}.bind(this);
 					}
 					app.addEventListener("click", this.clickOutside);
 					this.$emit("dropdown-open");
@@ -1463,6 +1526,193 @@
 			}
 		},
 		template: "#dropdown-button"
+	},
+	icon_select = {
+		props:{
+			align: {
+				type: String,
+				default: "left"
+			},
+			noinputtext: {
+				type: String,
+				default: "Select Icon"
+			},
+			icon:{
+				type: String,
+				default: null
+			}
+		},
+		data: function () {
+			return {
+				open: false,
+				clickOutside: null,
+				iconSelected: this.icon,
+				options: [
+					"icon-favorite-star",
+					"icon-folder-open",
+					"icon-audio",
+					"icon-film",
+					"icon-file",
+					"icon-picture",
+					"icon-map-marker",
+					"icon-plane",
+					"icon-world",
+					"icon-user",
+					"icon-people", 
+					"icon-lock",
+					"icon-mail",
+					"icon-calendar",
+					"icon-comment",
+					"icon-tasks",
+					"icon-briefcase",
+					"icon-shopping-cart",
+					"icon-hdd",
+					"icon-bell",
+					"icon-bullhorn",
+					"icon-flag",
+					"icon-tag",
+					"icon-bookmarks",
+					"icon-book",
+					"icon-leaf",
+					"icon-fire",
+					"icon-like",
+					"icon-dislike",
+					"icon-eye-open",
+					"icon-time"
+				]
+			};
+		},
+		methods:{
+			toggle: function (open) {
+				var app = document.getElementById("app");
+				if (open === true || open === false) this.open = open;
+				else this.open = !this.open;
+				if (this.open) {
+					if (!this.clickOutside) {
+						this.clickOutside = function clickOutside(e) {
+							var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
+							if (e.path) {
+								//for non UWP
+								//check to see if it is exactly the same button that was clicked, 
+								//or another dropdown button
+								outsideClick = !this.$el.contains(e.target);
+								var a = e.path.length || 0;
+								if (this.$el.id && outsideClick) while (a--) {
+									if (e.path[a].id === this.$el.id) {
+										outsideClick = false;
+										break;
+									}
+								}
+							}
+							if (outsideClick) this.toggle(false);
+						}.bind(this);
+					}
+					app.addEventListener("click", this.clickOutside);
+				}
+				else app.removeEventListener("click", this.clickOutside);
+			},
+			select: function (icon){
+				this.iconSelected = icon;
+				this.toggle(false);
+				this.$emit("icon-select", icon);
+			}
+		},
+		template: "#icon-select"
+	},
+	color_select = {
+		props:{
+			align: {
+				type: String,
+				default: "left"
+			},
+			noinputcolor: {
+				type: String,
+				default: "#478cdb"
+			},
+			color:{
+				type: String,
+				default: "#478cdb"
+			}
+		},
+		data: function () {
+			return {
+				open: false,
+				clickOutside: null,
+				colorSelected: this.color,
+				options: [
+					"#478cdb",
+					"#ffb900",
+					"#ff8c00",
+					"#ca5010",
+					"#da3b01",
+					"#ef6950",
+					"#d13438",
+					"#ff4343",
+					"#e74856",
+					"#e81123",
+					"#ea005e",
+					"#c30052",
+					"#e3008c",
+					"#bf0077",
+					"#c239b3",
+					"#9a0089",
+					"#881798",
+					"#b146c2",
+					"#744da9",
+					"#8764b8",
+					"#6b69d6",
+					"#8e8cd8",
+					"#0063b1",
+					"#0078d7",
+					"#0099bc",
+					"#2d7d9a",
+					"#00b7c3",
+					"#038387",
+					"#00b294",
+					"#018574",
+					"#00cc6a",
+					"#107c10",
+					"#498205",
+					"#486860"
+				]
+			};
+		},
+		methods:{
+			toggle: function (open) {
+				var app = document.getElementById("app");
+				if (open === true || open === false) this.open = open;
+				else this.open = !this.open;
+				if (this.open) {
+					if (!this.clickOutside) {
+						this.clickOutside = function clickOutside(e) {
+							var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
+							if (e.path) {
+								//for non UWP
+								//check to see if it is exactly the same button that was clicked, 
+								//or another dropdown button
+								outsideClick = !this.$el.contains(e.target);
+								var a = e.path.length || 0;
+								if (this.$el.id && outsideClick) while (a--) {
+									if (e.path[a].id === this.$el.id) {
+										outsideClick = false;
+										break;
+									}
+								}
+							}
+							if (outsideClick) this.toggle(false);
+						}.bind(this);
+					}
+					app.addEventListener("click", this.clickOutside);
+				}
+				else app.removeEventListener("click", this.clickOutside);
+			},
+			select: function (color){
+				this.colorSelected = color;
+				this.toggle(false);
+				this.$emit("color-select", color);
+			}
+		},
+		template: "#color-select"
 	},
 		jump_list = {
 			props: {
@@ -1639,6 +1889,7 @@
 						default:
 							if (/^_add_to_group_/.test(action)) {
 								var groupName = action.replace(/_add_to_group_/, "");
+								debug(groupName, "add to group");
 								addToGroup(groupName, null, this.currentQuery);
 							}
 							else debug(action, "no such button action found");
@@ -1807,33 +2058,22 @@
 		},
 		new_table_page = {
 			components: {
-				"dropdown-button": dropdown_button
+				"dropdown-button": dropdown_button,
+				"icon-select": icon_select
 			},
 			data: function () {
 				return {
 					newTable: {
 						title: "",
-
 						headers: ["Column 1", "Column 2", "Column 3"],
 						types: ["string", "string", "string"],
 
-						acceptedValuesDropdown: -1,
-						editableDropdown: -1,
-						labelColDropdown: -1,
-						protectDropdown: -1,
 						searchableDropdown: -1,
 						typesDropdown: -1,
 
-						acceptedValuesDefault: 'any',
-						editableDefault: true,
-						labelColDefault: false,
-						protectDefault: false,
 						searchableDefault: true,
 						typesDefault: 'string',
 
-						acceptedValuesDropdownOptions: ['any'],
-						editableDropdownOptions: [true, false],
-						protectDropdownOptions: [false, true, "to view", "to edit"],
 						searchableDropdownOptions: [true, false, 'optional'],
 						typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString",
 							"multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty",
@@ -1843,7 +2083,8 @@
 							customProperties: {},
 							doNotIndex: [],
 							initialIndex: [],
-							searchable: [true, true, true]
+							searchable: [true, true, true],
+							icon: null
 						},
 						display: {
 							listView: {
@@ -1851,22 +2092,58 @@
 								joiner: " ",
 								sortBy: ""
 							},
-							detailsView: {
-								hidden: [],
-								labelCol: [false, false, false]
-							},
-							editView: {
-								protect: [false, false, false],
-								editable: [true, true, true],
-								acceptedValues: ["any", "any", "any"]
-							}
+							detailsView: {}
 						},
 						optionsDropdown: -1,
 						fullscreen: false
-					}
+					},
+					icon: null,
+					customProperties: [],
+					showCustomPropertyInput: false,
+					customPropertyName: "",
+					customPropertyType: "",
+					customPropertyTypes: [{ text: "Any", action: "Any" }, { text: "String", action: "String" }, { text: "Number", action: "Number" }, { text: "Boolean", action: "Boolean"}],
+					customPropertyInitialValue: "",
+					initialValueInputType: "text",
+					customPropertyError: null
 				};
 			},
 			methods: {
+				setIcon: function(icon){
+					this.icon = icon;
+					this.newTable.options.icon = icon;
+				},
+				setCustomPropertyType: function (value) {
+					this.customPropertyType = value;
+					if (value === "String" || value === "Any") {
+						this.initialValueInputType = "text";
+						this.customPropertyInitialValue = "";
+					}
+					else if (value === "Number") {
+						this.initialValueInputType = "number";
+						this.customPropertyInitialValue = 0;
+					}
+					else if (value === "Boolean") this.customPropertyInitialValue = false;
+					else debug(value, "not valid property type");
+				},
+				addNewProperty: function () {
+					function isNumeric(n) { return !isNaN(parseFloat(n)) && isFinite(n);}
+					if (!/^[A-z_]\w*(\.[A-z_]\w*)*$/.test(this.customPropertyName)) { this.customPropertyError = "Invalid Property Name"; }
+					else if (!/Any|String|Number|Boolean/.test(this.customPropertyType)) { this.customPropertyError = "Invalid Property Type"; }
+					else if (this.customPropertyType === "String" && typeof this.customPropertyInitialValue !== "string" || 
+						this.customPropertyType === "Boolean" && typeof this.customPropertyInitialValue !== "boolean" ||
+						this.customPropertyType === "Number" && !isNumeric(this.customPropertyInitialValue)) {
+						this.customPropertyError = "Invalid Initial Value";
+					}
+					else {
+						this.customPropertyError = null;
+						this.showCustomPropertyInput = false;
+						this.customProperties.push({ name: this.customPropertyName, type: this.customPropertyType, initialValue: this.customPropertyInitialValue });
+						this.customPropertyName = "";
+						this.customPropertyType = "";
+						this.customPropertyInitialValue = "";
+					}
+				},
 				importNewTable: function () {
 					function matches(subsetArr, ofArr) {
 						var ret = true;
@@ -1915,16 +2192,24 @@
 				template: function (templateName) {
 					if (dataTemplates[templateName]) {
 						this.newTable.title = templateName;
-						this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+						if (dataTemplates[templateName].headers instanceof Array) this.newTable.headers = dataTemplates[templateName].headers.join("|").split("|");
+						else {
+							this.newTable.headers = [];
+							var a = 0;
+							for (let header in dataTemplates[templateName].headers) {
+								if (dataTemplates[templateName].headers.hasOwnProperty(header)) {
+									this.newTable.headers[a] = header;
+									a++;
+								}
+							}
+							this.newTable.types = dataTemplates[templateName].types || dataTemplates[templateName].headers;
+						}
 						if (this.newTable.headers[0] === "id") this.newTable.headers.shift();
-						this.newTable.types = dataTemplates[templateName].types;
+						this.newTable.types = this.newTable.types || dataTemplates[templateName].types;
 						this.newTable.options = dataTemplates[templateName].options;
 						this.newTable.display = dataTemplates[templateName].display;
-						this.newTable.display.editView.protect = dataTemplates[templateName].display.editView.protect || [];
-						this.newTable.display.editView.acceptedValues = dataTemplates[templateName].display.editView.acceptedValues || [];
-						this.newTable.display.editView.editable = dataTemplates[templateName].display.editView.editable || [];
 						this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
-						this.newTable.display.detailsView.labelCol = dataTemplates[templateName].display.detailsView.labelCol || [];
+						this.icon = this.newTable.options.icon || null;
 					}
 					else {
 						this.newTable.title = "";
@@ -1934,7 +2219,8 @@
 							customProperties: {},
 							doNotIndex: [],
 							initialIndex: [],
-							searchable: []
+							searchable: [],
+							icon: null
 						};
 						this.newTable.display = {
 							listView: {
@@ -1943,25 +2229,13 @@
 								sortBy: ""
 							},
 							detailsView: {
-							},
-							editView: {
-								acceptedValues: [],
-								editable: [],
-								protect: []
 							}
 						};
+						this.icon = null;
 					}
 					for (let a = 0, len = this.newTable.types.length; a < len; a++) {
-						this.newTable.display.editView.protect[a] = this.newTable.display.editView.protect[a] ||
-							this.newTable.protectDefault;
-						this.newTable.display.editView.acceptedValues[a] = this.newTable.display.editView.acceptedValues[a] ||
-							this.newTable.acceptedValuesDefault;
-						this.newTable.display.editView.editable[a] = this.newTable.display.editView.editable[a] !== undefined ?
-							this.newTable.display.editView.editable[a] : this.newTable.editableDefault;
 						this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ?
 							this.newTable.options.searchable[a] : this.newTable.searchableDefault;
-						this.newTable.display.detailsView.labelCol[a] = this.newTable.display.detailsView.labelCol[a] ||
-							this.newTable.labelColDefault;
 					}
 				},
 				toggleDropdown: function (rowName, colIndex) {
@@ -1976,31 +2250,19 @@
 				deleteColumn: function (index) {
 					this.newTable.headers.splice(index, 1);
 					this.newTable.types.splice(index, 1);
-					this.newTable.display.editView.protect.splice(index, 1);
-					this.newTable.display.editView.acceptedValues.splice(index, 1);
-					this.newTable.display.editView.editable.splice(index, 1);
 					this.newTable.options.searchable.splice(index, 1);
-					this.newTable.display.detailsView.labelCol.splice(index, 1);
 					this.newTable.optionsDropdown = -1;
 				},
 				insertColumn: function (index) {
 					if (!index) {
 						this.newTable.headers.push("");
 						this.newTable.types.push(this.newTable.typesDefault);
-						this.newTable.display.editView.protect.push(this.newTable.protectDefault);
-						this.newTable.display.editView.acceptedValues.push(this.newTable.acceptedValuesDefault);
-						this.newTable.display.editView.editable.push(this.newTable.editableDefault);
 						this.newTable.options.searchable.push(this.newTable.searchableDefault);
-						this.newTable.display.detailsView.labelCol.push(this.newTable.labelColDefault);
 					}
 					else {
 						this.newTable.headers.splice(index, 0, "");
 						this.newTable.types.splice(index, 0, this.newTable.typesDefault);
-						this.newTable.display.editView.protect.splice(index, 0, this.newTable.protectDefault);
-						this.newTable.display.editView.acceptedValues.splice(index, 0, this.newTable.acceptedValuesDefault);
-						this.newTable.display.editView.editable.splice(index, 0, this.newTable.editableDefault);
 						this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
-						this.newTable.display.detailsView.labelCol.splice(index, 0, this.newTable.labelColDefault);
 					}
 					this.newTable.optionsDropdown = -1;
 				}
@@ -2024,7 +2286,7 @@
 				};
 			},
 			methods: {
-				newGroup: function (event, groupName, callback) {
+				newGroup: function (event, groupName) {
 					//Validate groupName
 					groupName = groupName || this.groupName;
 					groupName = VAL.toEnglishAlphabet(groupName);
@@ -2054,18 +2316,17 @@
 								groupName = groupName + " " + i;
 							}
 							//Save new group
-							wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", ""]] }, function () {
-								this.updateGroup(groupName, ids, app.groupSearchBox);
+							wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", "", ""]] }, function () {
+								this.updateGroup(groupName, ids, this.groupSearchBox);
 								this.groups.push(groupName);
 								this.activeGroup = [];
 								this.showNewGroupUI = false;
-								app.groupSearchBox = "";
-								app.groupName = "";
+								this.groupSearchBox = "";
+								this.groupName = "";
 							}.bind(this));
 						}.bind(this));
 					}
 					else app.notify("Group requires a name");
-					debug(callback, "newGroup callback not done");
 				},
 				updateGroup: function (groupName, ids, searchTerms) {
 					groupName = String(groupName);
@@ -2085,10 +2346,7 @@
 					var keyCode = e.which || e.keyCode || 0;
 					if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
 						e.preventDefault();
-					} else {
-						var key = e.char || e.key;
-						if (VAL.toEnglishAlphabet(key).match(/^[a-z0-9]$/i)) app.groupSearchBox = trim(app.groupSearchBox + key);
-					}
+					} 
 				},
 				groupInput: function (e) {
 					function runSearch(table, find) {
@@ -2118,13 +2376,13 @@
 						}
 						if (callback instanceof Function) return callback();
 					}
-					var value = e ? e.target.value : app.groupSearchBox;
+					var value = e ? e.target.value : this.groupSearchBox;
 					checkDBLoaded(processInput.bind(this));
 				},
 				groupKeyUp: function (e) {
 					var keyCode = e.which || e.keyCode || 0;
 					if (keyCode === 32) e.preventDefault();
-					if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) app.groupSearchBox = trim(app.groupSearchBox);
+					if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40) this.groupSearchBox = trim(this.groupSearchBox);
 					switch (keyCode) {
 						case 27:/*escape key*/
 							this.resetGroupSearch();
@@ -2137,13 +2395,13 @@
 						e.preventDefault();
 					}
 					if (keyCode === 32) {
-						if (app.groupSearchBox !== "" && app.groupSearchBox.slice(-1) !== " ") {
-							app.groupSearchBox = app.groupSearchBox + " ";
+						if (this.groupSearchBox !== "" && this.groupSearchBox.slice(-1) !== " ") {
+							this.groupSearchBox = this.groupSearchBox + " ";
 						}
 					}
 				},
 				resetGroupSearch: function () {
-					app.groupSearchBox = "";
+					this.groupSearchBox = "";
 				},
 				seeGroup: function (index) {
 					function add(group) {
@@ -2156,9 +2414,11 @@
 									lenIds++;
 								}
 							}
+							debug(ids, "ids");
 							for (let table in ids) {
 								if (ids.hasOwnProperty(table)) {
 									(function (table) {
+										debug(table, "table");
 										generateListItems(table, ids[table], null, function (arr) {
 											list = list.concat(arr);
 											b++;
@@ -2207,6 +2467,7 @@
 						});
 					}
 					function showGroup(group, error) {
+						debug(group, "group");
 						if (!group || error) debug(error);
 						else if (group.searchTerms.value !== "") {
 							for (let a in dataTemplates) {
@@ -2226,6 +2487,7 @@
 					wwManager({ "cmd": "getRow", "title": "Groups", "args": [index] }, showGroup);
 				},
 				addToGroup: function (groupName, detailsObj, searchQuery) {
+					debug(groupName, "groupName");
 					this.addItemToGroupDropdown = false;
 					this.groupDropdown = false;
 					addToGroup(groupName, detailsObj, searchQuery);
@@ -2238,12 +2500,12 @@
 					}
 				},
 				resetGroups: function () {
-					app.groupPage = 1;
-					app.resetGroupSearch();
-					app.groupName = "";
-					app.activeGroup = [];
-					if (app.groups.length === 0) app.goBack();
-					else app.toggle('showNewGroupUI');
+					this.groupPage = 1;
+					this.resetGroupSearch();
+					this.groupName = "";
+					this.activeGroup = [];
+					if (this.groups.length === 0) app.goBack();
+					else this.toggle('showNewGroupUI');
 				},
 				toggle: function (prop) {
 					if (this[prop] === undefined) return debug(prop, "prop does not exist");
@@ -2344,6 +2606,17 @@
 							action: "_create_new_group"
 						}
 					],
+					moreDropdownLinks: [
+						{
+							text: "Edit",
+							icon: "icon-pencil",
+							action: "edit"
+						}, {
+							text: "Delete",
+							icon: "icon-delete",
+							action: "delete"
+						}
+					],
 					copyDropdownLinks:[]
 				};
 			},
@@ -2369,7 +2642,7 @@
 					if (action === "_create_new_group") {
 						this.addToNewGroup();
 					}
-					else if (action !== "_loading") this.addToGroup(action, this.details.data);
+					else if (action !== "_loading") this.addToGroup(action, this.details);
 				},
 				initializeCopyActions: function () {
 					function addToCopyLinks(item) {
@@ -2404,9 +2677,22 @@
 						}
 					}
 				},
+				moreDropdownActions: function (action) {
+					if (action === "delete") {
+						this.deleteItem();
+					}
+					if (action === "edit") {
+						this.editDetails();
+					}
+				},
 				editDetails: function () {
 					app.details = this.details;
 					app.navigate("edit");
+				},
+				deleteItem: function () {
+					confirm("Are you sure that you want to delete " + this.details.title + "?", function () {
+						debug("delete not done");
+					});
 				},
 				detailsViewHelp: function () {
 					confirm("Item not found. Would you like to remove this listing?", function () {
@@ -2539,7 +2825,9 @@
 			props: { item: Object },
 			data: function () {
 				return {
-					focused: false
+					focused: false,
+					valid: true,
+					validationError: ""
 				};
 			},
 			components: {
@@ -2550,14 +2838,24 @@
 					item.value[index] = item.value[index] === true ? false : true;
 					//TODO
 				},
-				setLabel: function (label) {
-					this.$emit("set-label", label);
+				setLabel: function(value){
+					this.item.label.value = value;
 				},
-				setValue: function (value) {
-					this.$emit("set-value", value);
+				setValue: function(value){
+					this.item.value = [value];
 				},
-				deleteValue: function (value) {
-					this.$emit("delete-value", value);
+				clearValue: function(){
+					this.item.value = "";
+				},
+				/*Cleans up messy contact data. Used before saving data to database to catch common errors
+				* valueType = the column heading from the csv table (ie "GivenName", "Address1_Street"...)
+				* value = the name, address, phone number etc to check
+				*/
+				validateData: function (value, valueType) {
+					wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function(result, error, errorDetails){
+						this.validationError = error || null;
+						this.valid = error ? false : true;
+					}.bind(this));
 				}
 			},
 			template: "#edit-details-card-lineitem"
@@ -2591,15 +2889,6 @@
 				showNext: function (num) {
 					if (num && num !== true && num > 1) this.numShown = this.numShown + num;
 					else this.numShown++;
-				},
-				setValue: function () {
-
-				},
-				setLabel: function () {
-
-				},
-				deleteValue: function () {
-
 				}
 			},
 			template: "#edit-details-card-collapse"
@@ -2615,10 +2904,59 @@
 			},
 			methods: {
 				saveChanges: function () {
-					debug("saveChanges not done");
+					function checkComplete(n){
+						if(n === 0){
+							if(errors.length === 0) app.navigate("details");
+							else debug(errors);
+						}
+					}
+					function save(data){
+						if(data.value) {
+							for(let b=0, lenB = data.value.length; b<lenB;b++){
+								if(data.value[b] !== data.orig[b]){
+									//set value 
+									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function(success, error, title, sync){
+										if(error) errors.push(error);
+										checkComplete(n--)
+									});
+								}
+								else checkComplete(n--);
+							}
+						}
+						else checkComplete(n--);
+					}
+					var table = this.details.table,
+						rowId = this.details.id,
+						data = this.details.data,
+						n = 0,
+						errors = [];
+					//count lineItems
+					for(let a=0, b=0, len = data.length, lenB; a<len;a++){
+						if(data[a].readonly) continue;
+						if(data[a].group){
+							if(data[a].group.readonly) continue;
+							for(b=0,lenB = data[a].group.length; b<lenB;b++){
+								n++;
+							}
+						}
+						else n++;
+					}
+					//go through data and find changes
+					for(let a=0, b=0, len = data.length, lenB; a<len;a++){
+						if(data[a].readonly) continue;
+						if(data[a].group){
+							if(data[a].group.readonly) continue;
+							for(b=0,lenB = data[a].group.length; b<lenB;b++){
+								save(data[a].group[b])
+							}
+						}
+						else save(data[a]);
+					}
+					
 				},
 				cancelChanges: function () {
 					debug("cancelChanges not done");
+					app.navigate("details");
 				}
 			},
 			template: "#edit-details-card"
@@ -2757,6 +3095,9 @@
 		router: router,
 		el: '#app',
 		data: state,
+		components: {
+			"color-select": color_select
+		},
 		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
 			this.$router.beforeEach(function (to, from, next) {
@@ -2881,6 +3222,7 @@
 							darkTheme: this.darkTheme,
 							useWindowsTheme: this.useWindowsTheme,
 							windowsDarkTheme: this.windowsDarkTheme,
+							accentColor: this.accentColor,
 							recentlyViewed: this.recentlyViewed,
 							backstack: backstack,
 							backIndex: backIndex,
@@ -3117,7 +3459,7 @@
 					}
 				}
 				else if (keyCode === 9 || keyCode === 38 || keyCode === 40) { //tab, or up or down arrow
-					movePointer();
+					movePointer.call(this);
 				}
 				else if (keyCode === 32) {//space key
 					e.preventDefault();
@@ -3545,7 +3887,8 @@
 					else console.log("cannot sync to Dropbox now");
 					if (callback instanceof Function) return callback();
 				}.bind(this));
-			}
+			},
+			setAccentColor: setAccentColor
 		}
 	});
 	//make some functions global

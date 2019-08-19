@@ -1,7 +1,7 @@
 # ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
 #### NyckelDB Version 0.4
-##### May 4, 2019
+##### July 11, 2019
 NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
@@ -25,6 +25,7 @@ according to data type, and data can be imported or exported as JSON or CSV (com
   * [The Options Parameter](#the-options-parameter)
     * [Importing Data](#importing-data)
     * [Custom Properties](#custom-properties)
+* [Full API Documentation](#full-api-documentation)
 * [Dependencies](#dependencies)
 * [Miscellaneous](#miscellaneous)
   * [Database Structure](#database-structure)
@@ -33,14 +34,9 @@ according to data type, and data can be imported or exported as JSON or CSV (com
 # Overview
 Nyckel (nick-ale) is a Swedish word that means "key".
 
-NyckelDB uses keys in two ways:
-1. internally, each data store is isolated from other data stores by use of randomly generated keys
-1. data stores can be obfuscated if desired
+The basic concept of NyckelDB is to create a portable JavaScript client-side data store with data type validation.
 
-The basic concept of NyckelDB is to create a portable JavaScript client-side data store that has a very strict gate-keeper, maintaining data integrity wherever you put it and however you use it.
-
-NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is a combination of 2D Array's and JSON Objects, linked together with auto-generated unique ids.
-This enables the database to behave like both an Array and an Object, where data is sortable like in an Array, but also highly performant like an Object for read, write, search and sync operations.
+NyckelDB can be visualized as having a table-like structure (Figure 1), with table headers, and table rows, although the actual structure is JSON (Figure 2).
 
 |           |COLUMN 0        |COLUMN 1  |COLUMN 2  |COLUMN 3      |
 |:---------:|:--------------:|----------|----------|--------------|
@@ -87,11 +83,12 @@ This enables the database to behave like both an Array and an Object, where data
 ``` 
 *Figure 2: What a NyckelDB table really looks like*
 
-The data store can (and if possible should) be run in the background in a webWorker, and so as much computational work as possible is handled by the database including basic search, sort, filter, 
-and even very simple application specific custom formulas.
+The data store can run along side your other JavaScript code by adding a \<script\> tag directly to your HTML document, or run in a background task in a Web Worker (which is recommended).
 
-NyckelDB uses [Lawnchair](https://github.com/brianleroux/lawnchair/) as its cross-browser localStorage solution, but will also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) if used in a UWP application for more persistent storage. For a cloud solution,
-a compressed and obfuscated JSON object can be exported for you to send wherever you want it to go, and imported again and synchronized on another device.
+NyckelDB stores data temporarily in the browser using [Lawnchair](https://github.com/brianleroux/lawnchair/) as its cross-browser localStorage solution. 
+For more persistant storage, you can export the data from NyckelDB as a JSON file and send it to your own cloud solution. 
+Synchronisation is handled client-side when you import that JSON file back into the NyckelDB. NyckelDB can also access Windows storage APIs (Windows.Storage.ApplicationData.current.localFolder) 
+if used in a UWP application.
 
 LZString compression is used so you can fit many MB of data in the very limited localStorage space that some browsers allow, and reduce bandwidth if uploading to a cloud service provider.
 
@@ -138,7 +135,7 @@ Some subtypes fall into more than one category such as *postalZipCode* which can
 
 If you want the most flexibility you can specify *any*, which will allow any type of data to be saved to that column in the table, as long as it is a String, Number or Boolean value.
 
-The data type for each column in the table is best specified on creation of the table, but can be changed afterwards.
+The data type for each column in the table is best specified on creation of the table, but in some cases can be changed afterwards.
 
 ### Formulas
 Coming soon
@@ -182,6 +179,7 @@ The following types can be applied to any column:
 # Setting up a new NyckelDB Object
 Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
 
+> [See more details about the NyckelDB API below](#full-api-documentation)
 ```javascript
 var title = "Accounting Spreadsheet",
     headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
@@ -225,22 +223,22 @@ specified, or even a [formula](#formulas), by passing Types in like this:
 ```javascript
 var types = { 
     "Month": { 
-        type: "string", 
-        search: true,
-        initialValue: "January"
+        "type": "string", 
+        "search": true,
+        "initialValue": "January"
     },
     "Monthly Income": {
-        type: "posInteger",
-        search: false,
-        initialValue: 2000
+       "type": "posInteger",
+        "search": false,
+        "initialValue": 2000
     },
     "Monthly Expenses": {
-        type: "negInteger",
-        search: false
+        "type": "negInteger",
+        "search": false
     },
     "Balance": {
-        type: "integer",
-        formula: "SUBTRACT('Monthly Income','Monthly Expenses')"
+        "type": "integer",
+        "formula": "SUBTRACT('Monthly Income','Monthly Expenses')"
     }
 }
 ```
@@ -251,17 +249,17 @@ created in the form of a CSV file (string), or JSON object, and custom propertie
 
 ```javascript
 var options = {
-    importData: nyckelDBTable,
-    importJSON: json,
-    importCSV: string,
-    customProperties:{
+    "importData": nyckelDBTable,
+    "importJSON": json,
+    "importCSV": string,
+    "customProperties":{
         "FinalBalance": {
-            type: "integer",
-            initialValue: 10000
+            "type": "integer",
+            "initialValue": 10000
         },
         "ICanBuyMyGroceriesThisMonth": {
-            type: "boolean",
-            initialValue: true
+            "type": "boolean",
+            "initialValue": true
         }
     }	
 };
@@ -272,13 +270,13 @@ CSV, or JSON data can be imported into the table in the 'options' parameter in o
 
 ```javascript
 //table data that was generated by NyckelDB sync or exportJSON functions
-importData: nyckelDBTable, 
+"importData": nyckelDBTable, 
 
 //json data that needs to be parsed
-importJSON: json, 
+"importJSON": json, 
 
 //or CSV data that needs to be converted to JSON and then parsed
-importCSV: string, 
+"importCSV": string, 
 ```
 
 ##### Custom Properties
@@ -290,15 +288,18 @@ Custom properties can be given a type as well, but only "string", "number" or "b
 customProperties:{
     //name the custom property what ever you want
     "FinalBalance": {
-        type: "integer",
-        initialValue: 10000
+        "type": "integer",
+        "initialValue": 10000
     },
     "ICanBuyMyGroceriesThisMonth": {
-        type: "boolean",
-        initialValue: true
+        "type": "boolean",
+        "initialValue": true
     }
 }	
 ```
+
+# Full API Documentation
+https://ggoodkey.github.io/dev/APP.nyckelDB.html
 
 # Dependencies
 * validate.js
