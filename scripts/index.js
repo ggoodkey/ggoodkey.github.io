@@ -2746,7 +2746,7 @@
 					detailsView: "v-a"
 				};
 			},
-			created () {
+			created: function () {
 				// fetch the data when the view is created and the data is
 				// already being observed
 				this.fetchData();
