@@ -24,6 +24,10 @@ APP.nyckelDB = (function () {
 		x = null; len = null; y = null;
 		return arr;
 	}
+	function TRIM(str) {
+		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
+		return str.replace(/^\s+|\s+$/gm, "");
+	}
 	/*returns number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000, or since 15e11 in javascript time
 	use wRefTo (with reference to, Optional) to specify a different base time stamp as reference. Returns the difference
 	b/t wRefTo and Now. */
@@ -779,9 +783,7 @@ APP.nyckelDB = (function () {
 			str = str.replace(/\xFE/g, "p");
 		}
 		str = str.replace(/[^_0-9a-z ]/g, " ");
-		//trim
-		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
-		str = str.replace(/^\s+|\s+$/gm, "");
+		str = TRIM(str);
 		if (str === "" || str === " ") return [];
 		str = str.split(" ");
 		for (var a = 0, len = str.length; a < len; a++) {
@@ -2130,11 +2132,11 @@ APP.nyckelDB = (function () {
 					if (SEARCH_SUGGESTIONS[this.id][b].match(matchesThis)) {
 						if (SEARCH_SUGGESTIONS[this.id][b] === last) {//found exact match, suggest at top of list
 							suggest.unshift(searchQuery === "" ? prefix + last : searchQuery + " " + prefix + last);
-							suggest[0] = suggest[0].replace(/[^0-9a-z\s\+\-]/g, "").trim();
+							suggest[0] = TRIM(suggest[0].replace(/[^0-9a-z\s\+\-]/g, ""));
 						}
 						else {
 							suggest[a] = searchQuery === "" ? prefix + SEARCH_SUGGESTIONS[this.id][b] : searchQuery + " " + prefix + SEARCH_SUGGESTIONS[this.id][b];
-							suggest[a] = suggest[a].replace(/[^0-9a-z\s\+\-]/g, "").trim();
+							suggest[a] = TRIM(suggest[a].replace(/[^0-9a-z\s\+\-]/g, ""));
 						}
 						a++;
 					}
@@ -2880,9 +2882,9 @@ APP.nyckelDB = (function () {
 	 * Check if a value is an acceptable input
 	 * @function validate
 	 * @param {string|number|boolean} value to check
-	 * @param {string} type an input type, such as "number", "emailAddress"...
+	 * @param {string} valueType an input type, such as "number", "emailAddress"...
 	 * @param {validateCallback} [callback] callback function
-	 * @returns {object}
+	 * @returns {object} valid(boolean), value, errorMsg, errorDetails
 	 * @since 0.4
 	 */ 
 	NyckelDBObj.prototype.validate = function (value, valueType, callback){
@@ -2893,14 +2895,14 @@ APP.nyckelDB = (function () {
 		function validateFamilyName(name) {
 			var orig = name,
 				n;
-			name = String(name).trim();
+			name = TRIM(String(name));
 			if (/[^A-Za-z\xC0-\xFF '\-]/g.test(name)) {
-				return ret.call(this, false, false, "Invalid characters found in lastname", "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß")
+				return ret.call(this, false, false, "Invalid characters found in lastname", "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
 			}
 			//catch McNames and O'Names
 			if (name.slice(0, 2).toLowerCase() === "mc" || name.charAt(1) === "'") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2).toUpperCase() + name.slice(3).toLowerCase();
 			//catch MacNames
-			else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") name = "Mac" + name.charAt(3).toUpperCase() + name.slice(4).toLowerCase();
+			else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") name = "Mac" + name.charAt(3) + name.slice(4).toLowerCase();
 			//catch LaNames and LeNames (but not La Names or Le Names)
 			else if ((name.slice(0, 2).toLowerCase() === "la" || name.slice(0, 2).toLowerCase() === "le") && name.charAt(2) !== " ") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2) + name.slice(3).toLowerCase();
 			//catch VanNames
@@ -2932,7 +2934,7 @@ APP.nyckelDB = (function () {
 		}
 		function validateGivenName(name) {
 			var orig = name;
-			name = String(name).trim();
+			name = TRIM(String(name));
 			if (/[^A-Za-z\xC0-\xFF \-&\(\),;\[\]]/g.test(name)) {
 				return ret.call(this, false, false, "Invalid charactors found in firstname", "Firstnames may only contain latin characters A-Z and special characters &()[],;-'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
 			}
@@ -2950,11 +2952,11 @@ APP.nyckelDB = (function () {
 				brak = field.slice(field.indexOf("(") + 1, field.indexOf(")"));
 				var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
 				field = field.replace(regexp, " /BRACKETS/ ");
-				brak = brak.trim();
+				brak = TRIM(brak);
 			}
 			field = field.replace(/[^A-Z\xC0-\xFF\/ ]/gi, "");
 			field = field.replace(/\/BRACKETS\//g, "(" + brak + ")");
-			field = field.trim();
+			field = TRIM(field);
 			var split = field.split(" ");
 			for (var a = 0; a < split.length; a++) {
 				split[a] = split[a].charAt(0).toUpperCase() + split[a].slice(1);
@@ -2969,7 +2971,7 @@ APP.nyckelDB = (function () {
 		}
 		function validateAddress(addr) {
 			var orig = addr, brak = "";
-			var c = String(addr).trim().split(" ");
+			var c = TRIM(String(addr)).split(" ");
 			//capitalize
 			for (var a = 0; a < c.length; a++) {
 				if (!/\d/.test(c[a]) && c[a] !== "of" && c[a] !== "see" && !/addres|adres|mail|^see:/.test(c[a])) {
@@ -3006,7 +3008,7 @@ APP.nyckelDB = (function () {
 					brak = addr.slice(addr.indexOf("(") + 1, addr.indexOf(")"));
 					var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
 					addr = addr.replace(regexp, " -BRACKETS- ");
-					brak = brak.trim();
+					brak = TRIM(brak);
 				}
 			}
 			if (!/mile /gi.test(addr)) addr = addr.replace(/\./g, "");
@@ -3025,7 +3027,7 @@ APP.nyckelDB = (function () {
 			addr = addr.replace(/# /g, "");
 			addr = addr.replace(/Unit/g, " Unit ");
 			addr = addr.replace(/Block/g, " Block ");
-			addr = addr.trim();
+			addr = TRIM(addr);
 			//replace dash in Range Road number
 			var i;
 			if (/Range Road \d\-\d|Range Road \d\d-\d/.test(addr)) {
@@ -3047,12 +3049,12 @@ APP.nyckelDB = (function () {
 				return ret.call(this, false, false, "Address contains invalid characters", "Addresses may only contain A-z, 0-9, and special characters -&()/#',ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
 			}
 			addr = addr.replace(/-BRACKETS-/g, "(" + brak + ")");
-			addr = addr.trim();
+			addr = TRIM(addr);
 			return addr === orig ? ret.call(this, true) : ret.call(this, true, addr);
 		}
 		function validateCity(city) {
 			var orig = city;
-			var c = String(city).trim().split(" ");
+			var c = TRIM(String(city)).split(" ");
 			//capitalize names
 			for (var a = 0; a < c.length; a++) {
 				if (!/\d/.test(c[a]) && c[a] !== "of") {
@@ -3081,7 +3083,7 @@ APP.nyckelDB = (function () {
 		}
 		function validateProvince(prov) {
 			var orig = prov;
-			prov = String(prov).trim().replace(/[^A-z ]/g, "");
+			prov = TRIM(String(prov)).replace(/[^A-z ]/g, "");
 			if (prov === "PEI") prov = "PE";
 			if (prov.length < 2 && prov !== "") {
 				return ret.call(this, false, false, "Province name is too short");
@@ -3128,9 +3130,9 @@ APP.nyckelDB = (function () {
 			var orig = String(phon);
 			phon = String(phon).replace(/[^0-9]/g, "");
 			//international numbers
-			if (phon.length > 10 || phon.charAt(0) === "0") {
+			if (phon.length > 10 || phon.charAt(0) === "0" || String(orig).charAt(0) === "+") {
 				if (orig.replace(/[^+0-9]/g, "").match(/\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$/)) {
-					if (phon.length === 11 && phon.slice(0, 2) === "46") {
+					if (phon.length === 11 && phon.slice(0, 2) === "46") {//Swedish number
 						phon = "+" + phon.slice(0, 2) + "-" + phon.slice(2, 4) + " " + phon.slice(4, 7) + " " + phon.slice(7, 9) + " " + phon.slice(9, 11);
 					}
 					else phon = "+" + orig.replace(/[^0-9\s\-]/g, "");
@@ -3151,7 +3153,7 @@ APP.nyckelDB = (function () {
 					else phon = orig.replace(/[^0-9\s\-]/g, "");
 				}
 				else if (phon.length < 16 && orig[0] !== "+") {
-					return ret.call(this, false, false, "Invalid Phone Number", "International phone numbers must begin with '+' symbol");
+					return ret.call(this, false, false, "International phone numbers must begin with '+' symbol");
 				}
 				else {
 					return ret.call(this, false, false, "Invalid Phone Number");
@@ -3177,7 +3179,7 @@ APP.nyckelDB = (function () {
 		}
 		function validateEmail(email) {
 			var orig = email,
-				e = String(email).trim().split("@");
+				e = TRIM(String(email)).split("@");
 			if (e.length === 2) {
 				e[0] = e[0].replace(/[^A-Za-z0-9\&\'\+\-_\.]/g, "");//too restrictive?
 				e[0] = e[0].replace(/^\.|\.$|^\-|\-$/g, "");
@@ -3196,7 +3198,7 @@ APP.nyckelDB = (function () {
 		}
 		function validateGPSCoordinates(str) {
 			var orig = str;
-			str = String(str).trim().replace(/[^\+\-0-9\s\.,]/, "");
+			str = TRIM(String(str)).replace(/[^\+\-0-9\s\.,]/, "");
 			if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
 				return ret.call(this, false, false, "Invalid GPS Co-ordinates");
 			}

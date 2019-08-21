@@ -2827,7 +2827,8 @@
 				return {
 					focused: false,
 					valid: true,
-					validationError: ""
+					validationError: "",
+					validationErrorDetails: null
 				};
 			},
 			components: {
@@ -2847,13 +2848,19 @@
 				clearValue: function(){
 					this.item.value = "";
 				},
+				onBlur: function (value, valueType) {
+					this.focused = false;
+					this.validateData(value, valueType);
+				},
 				/*Cleans up messy contact data. Used before saving data to database to catch common errors
 				* valueType = the column heading from the csv table (ie "GivenName", "Address1_Street"...)
 				* value = the name, address, phone number etc to check
 				*/
 				validateData: function (value, valueType) {
-					wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function(result, error, errorDetails){
+					wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function (result, error, errorDetails) {
+						if (result !== value) this.setValue(result);
 						this.validationError = error || null;
+						this.validationErrorDetails = errorDetails;
 						this.valid = error ? false : true;
 					}.bind(this));
 				}

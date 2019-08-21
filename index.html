@@ -667,17 +667,17 @@
 			<label v-else-if="item.column" class="itemLabel">{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
 			<textarea v-if="item.type === 'multilineString'" v-bind:value="item.value.join('\r\n')" class="textbox"></textarea>
 			<template v-else v-for="(value, i) in item.value">
-				<input v-if="item.type === 'number'" type="number" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'integer'" type="number" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
+				<input v-if="item.type === 'number'" type="number" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
+				<input v-else-if="item.type === 'integer'" type="number" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
+				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
+				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
 				<div v-else-if="item.type === 'boolean'" class="switch right">
 					<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.value[i]" />
 					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item, i)"></label>
 				</div>
-				<input v-else-if="item.type === 'date'" type="date" v-model="item.value[i]" class="textbox" v-on:keyup="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'email'" type="email" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="item.focused = false" v-on:keyup="validateData(value, item.type)"/>
+				<input v-else-if="item.type === 'date'" type="date" v-model="item.value[i]" class="textbox" v-on:blur="validateData(value, item.type)"/>
+				<input v-else-if="item.type === 'email'" type="email" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
+				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
 				<dropdown-button v-else-if="item.options"
 								 align="left"
 								 class="left"
@@ -689,9 +689,9 @@
 								 v-on:dropdown-action="setValue"
 								 v-bind:id="item.column + '_dropdown' + i">
 				</dropdown-button>
-				<input v-else type="text" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="focused = true" v-on:blur="focused = false" v-on:keyup="validateData(value, item.type)"/>
+				<input v-else type="text" v-model="item.value[i]" class="textbox" autocomplete="off" v-on:focus="focused = true" v-on:blur="onBlur(value, item.type)"/>
 				<a class="cancelButton" v-on:click="clearValue" v-show="value !== '' && focused === true"><span class="icon icon-cancel"></span></a>
-				<div class="alert">{{ validationError }}</div>
+				<div class="alert" v-bind:title="validationErrorDetails">{{ validationError }}</div>
 			</template>
 		</div>
 	</script>
