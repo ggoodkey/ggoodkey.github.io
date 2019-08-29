@@ -2758,6 +2758,11 @@ APP.nyckelDB = (function () {
 				}
 				return Base64.read(data, key);
 			}
+			console.log("signature", json.signature);
+			console.log("readKey", readKey, Base64.hmac(json.data, readKey));
+			console.log("initialKey", options.initialKey, Base64.hmac(json.data, options.initialKey));
+			console.log("null", null, Base64.hmac(json.data, null));
+
 			switch (json.signature) {
 				case Base64.hmac(json.data, readKey):
 					json = read.call(this, json.data, readKey, false);
