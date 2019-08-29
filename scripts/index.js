@@ -634,30 +634,10 @@
 			}
 			function noWebWorker() {
 				function applyCallback(callback) {
-					switch (obj.cmd) {
-						//these functions take a callback as their last argument
-						case "addColumn":
-						case "advancedSearch":
-						case "deleteColumn":
-						case "deleteTable":
-						case "getRow":
-						case "getSearchSuggestions":
-						case "getVals":
-						case "importJSON":
-						case "isSyncPending":
-						case "NUKEALL":
-						case "renameColumn":
-						case "search":
-						case "setSyncCompleted":
-						case "setTitle":
-						case "setType":
-						case "setVal":
-						case "sync":
-						case "validate":
-							return appData[title][obj.cmd].apply(appData[title], obj.args);
-						default:
-							return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
-					}
+					var hasCallback = ["addColumn","advancedSearch","deleteColumn","deleteTable","getRow","getSearchSuggestions","getVals",
+					"importJSON","isSyncPending","NUKEALL","renameColumn","search","setSyncCompleted","setTitle","setType","setVal","sync","validate"];
+					if(hasCallback.indexOf(obj.cmd)) return appData[title][obj.cmd].apply(appData[title], obj.args);
+					else return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
 				}
 				if (obj.args && callback) obj.args.push(callback);
 				if (obj.title && obj.cmd) {
@@ -1639,7 +1619,7 @@
 				open: false,
 				clickOutside: null,
 				colorSelected: this.color,
-				options: [
+				options: [//hex color themes
 					"#478cdb",
 					"#ffb900",
 					"#ff8c00",
@@ -1799,58 +1779,64 @@
 								}
 								return arr;
 							}
-							//generate headers
-							var alphabetHeaders = [],
-								b = 0,
-								nameHeaders = [],
-								c = 0,
-								date = new Date(),
-								now = date.getTime(),
-								time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
-								diff = 0,
-								recentHeaders = {
-									"Older": 2592e6,
-									"In the Past 30 Days": 6048e5,
-									"In the Past 7 Days": 1728e5 - time,
-									"Yesterday": 864e5 - time,
-									"Earlier Today": 36e5,
-									"In the Past Hour": 3e5,
-									"Just Now": 0
-								};
-							for (var a = 0, len = list.length, letter, name; a < len; a++) {
-								if (list[a].type === "jumplink") {//strip out old headers
-									list.splice(a, 1);
-									a--;
-									len--;
+							function generateHeaders(){
+								function obj(name, sortBy){
+									return { id: "jumplink_" + VAL.toPropName(name), sortBy: sortBy, text: name, type: "jumplink" };
 								}
-								//by most recent
-								else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
-									diff = now - list[a].sortBy;
-									for (var header in recentHeaders) {
-										if (diff >= recentHeaders[header]) {
-											name = header;
-											break;
+								var b = 0,
+									c = 0,
+									date = new Date(),
+									now = date.getTime(),
+									time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(),
+									diff = 0,
+									recentHeaders = {
+										"Older": 2592e6,
+										"In the Past 30 Days": 6048e5,
+										"In the Past 7 Days": 1728e5 - time,
+										"Yesterday": 864e5 - time,
+										"Earlier Today": 36e5,
+										"In the Past Hour": 3e5,
+										"Just Now": 0
+									};
+								for (let a = 0, len = list.length, name; a < len; a++) {
+									if (list[a].type === "jumplink") {//strip out old headers
+										list.splice(a, 1);
+										a--;
+										len--;
+									}
+									//by most recent
+									else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
+										diff = now - list[a].sortBy;
+										for (let header in recentHeaders) {
+											if (diff >= recentHeaders[header]) {
+												name = header;
+												break;
+											}
+										}
+										if (a === 0 || name !== nameHeaders[c - 1].text) {
+											nameHeaders.push(obj(name, now - recentHeaders[name]));
+											c++;
 										}
 									}
-									if (a === 0 || name !== nameHeaders[c - 1].text) {
-										nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: now - recentHeaders[name], text: name, type: "jumplink" });
-										c++;
-									}
-								}
-								// by alphabetic
-								else {
-									name = list[a].sortBy && list[a].sortBy.split("__")[0] || "A";
-									letter = name.charAt(0);
-									if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
-										alphabetHeaders.push({ id: "jumplink_" + letter, sortBy: letter, text: letter, type: "jumplink" });
-										b++;
-									}
-									if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
-										nameHeaders.push({ id: "jumplink_" + VAL.toPropName(name), sortBy: name, text: name, type: "jumplink" });
-										c++;
+									// by alphabetic
+									else {
+										name = list[a].sortBy && list[a].sortBy.split("__")[0] || "A";
+										letter = name.charAt(0);
+										if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
+											alphabetHeaders.push(obj(letter, letter));
+											b++;
+										}
+										if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
+											nameHeaders.push(obj(name, name));
+											c++;
+										}
 									}
 								}
 							}
+							var alphabetHeaders = [],
+								nameHeaders = [],
+								letter;
+							generateHeaders();
 							if (nameHeaders.length < 20 || nameHeaders.length / list.length < 0.2) list = nameHeaders.concat(list);
 							else list = alphabetHeaders.concat(list);
 							list = deleteDuplicates(list);
@@ -2843,7 +2829,6 @@
 					this.item.label.value = value;
 				},
 				setValue: function(value){
-					debug(value, "setValue");
 					this.item.value = [value];
 				},
 				clearValue: function(){
@@ -2859,7 +2844,6 @@
 				*/
 				validateData: function (value, valueType) {
 					wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function (result, error, errorDetails) {
-						debug(result, value);
 						if (result !== value) this.setValue(result);
 						this.validationError = error || null;
 						this.validationErrorDetails = errorDetails;
@@ -2924,7 +2908,7 @@
 							for(let b=0, lenB = data.value.length; b<lenB; b++){
 								if(data.value[b] !== data.orig[b]){
 									//set value 
-									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function(success, error, title, sync){
+									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function(success, error){
 										if(error) errors.push(error);
 										checkComplete(n--);
 									});
@@ -3103,9 +3087,16 @@
 	const app = new Vue({
 		router: router,
 		el: '#app',
-		data: state,
 		components: {
 			"color-select": color_select
+		},
+		data: state,
+		watch: {
+			'$route'(to, from) {
+				const toDepth = to.query.page || 0;
+				const fromDepth = from.query.page || 0;
+				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
+			}
 		},
 		mounted: function () {
 			this.$router.afterEach(this.updateCurrentView);
@@ -3119,13 +3110,6 @@
 
 				next();
 			});
-		},
-		watch: {
-			'$route'(to, from) {
-				const toDepth = to.query.page || 0;
-				const fromDepth = from.query.page || 0;
-				this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
-			}
 		},
 		methods: {
 			updateCurrentView: function (to) {

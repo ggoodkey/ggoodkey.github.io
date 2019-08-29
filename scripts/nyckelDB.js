@@ -2964,7 +2964,7 @@ APP.nyckelDB = (function () {
 			//capitalize all other cases
 			else name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 			n = null;
-			return name === orig ? ret.call(this, true) : ret.call(this, true, name);
+			return ret.call(this, true, name);
 		}
 		function validateGivenName(name) {
 			var orig = name;
@@ -2978,7 +2978,7 @@ APP.nyckelDB = (function () {
 			//capitalize names
 			for (var a = 0; a < n.length; a++) n[a] = n[a].charAt(0).toUpperCase() + n[a].slice(1);
 			name = n.join(" ");
-			return name === orig ? ret.call(this, true) : ret.call(this, true, name);
+			return ret.call(this, true, name);
 		}
 		function validateOrganization1_Name(field) {
 			var orig = field, brak = "";
@@ -3002,7 +3002,7 @@ APP.nyckelDB = (function () {
 				split[b] = split[b].charAt(0).toUpperCase() + split[b].slice(1);
 			}
 			field = split.join("/");
-			return field === orig ? ret.call(this, true) : ret.call(this, true, field);
+			return ret.call(this, true, field);
 		}
 		function validateAddress(addr) {
 			function formatSeeOtherAddr(addr) {
@@ -3102,7 +3102,7 @@ APP.nyckelDB = (function () {
 			}
 			addr = addr.replace(/-BRACKETS-/g, "(" + brak + ")");
 			addr = TRIM(addr);
-			return addr === orig ? ret.call(this, true) : ret.call(this, true, addr);
+			return ret.call(this, true, addr);
 		}
 		function validateCity(city) {
 			var orig = city;
@@ -3131,7 +3131,7 @@ APP.nyckelDB = (function () {
 			if (/\'/.test(city) && !/\'s/.test(city)) city = city.replace(/\'/g, "");
 			if (/\./.test(city) && !/\St. | No. \d|^M.D. of /.test(city)) city = city.replace(/\./g, "");
 			city = city.replace(/[^A-Za-z0-9\xC0-\xFF\s\'\.]/g, "");//special characters \xC0-\xFF (ÅÖÄöäå, etc) allowed
-			return city === orig ? ret.call(this, true) : ret.call(this, true, city);
+			return ret.call(this, true, city);
 		}
 		function validateProvince(prov) {
 			var orig = prov;
@@ -3150,7 +3150,7 @@ APP.nyckelDB = (function () {
 				}
 				prov = prov.join(" ");
 			}
-			return prov === orig ? ret.call(this, true) : ret.call(this, true, prov);
+			return ret.call(this, true, prov);
 		}
 		function validatePostalCode(code) {
 			var orig = code;
@@ -3159,10 +3159,10 @@ APP.nyckelDB = (function () {
 			if (IS_NUMERIC(code)) {
 				if (/[\s\-]/.test(String(orig))) {
 					code = TRIM(String(orig).replace(/[^0-9\s\-]/g, ""));
-					return code === orig ? ret.call(this, true) : ret.call(this, true, code);
+					return ret.call(this, true, code);
 				}
 				if(!code.match(/\d{2,10}/)) return ret.call(this, false, orig, "Invalid postal code");
-				else return code === orig ? ret.call(this, true) : ret.call(this, true, code);
+				else return ret.call(this, true, code);
 			}
 			//number letter codes
 			else {
@@ -3186,7 +3186,7 @@ APP.nyckelDB = (function () {
 					else return ret.call(this, false, orig, "Invalid Canadian Postal Code", "Use format A1A 1A1");
 				}
 			}
-			return orig === code ? ret.call(this, true) : ret.call(this, true, code);
+			return ret.call(this, true, code);
 		}
 		function validatePhoneNumber(phon) {
 			function validateInternationalNumber(phon) {
@@ -3221,7 +3221,7 @@ APP.nyckelDB = (function () {
 					else return ret.call(this, false, orig, "International phone numbers must begin with '+' symbol");
 				}
 				else return ret.call(this, false, orig, "Invalid Phone Number");
-				return phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
+				return ret.call(this, true, phon);
 			}
 			var orig = String(phon);
 			phon = String(phon).replace(/[^0-9]/g, "");
@@ -3232,7 +3232,7 @@ APP.nyckelDB = (function () {
 			}
 			else if (phon) {
 				//catch emergency numbers
-				if(phon.charAt(0) === "1" && phon.length < 6) return  phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
+				if(phon.charAt(0) === "1" && phon.length < 6) return ret.call(this, true, phon);
 				//catch area code inserted where country code should be (403-403-987-6543)
 				if (phon.length === 13 && phon.slice(0, 3) === phon.slice(3, 6)) phon = "1" + phon.slice(3, 13);
 				//catch country code (1) at beginning of phone number
@@ -3241,7 +3241,7 @@ APP.nyckelDB = (function () {
 				else if (phon.length === 10 && parseInt(phon.charAt(0), 10) !== 1) phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + "-" + phon.slice(6, 10);
 				else return ret.call(this, false, orig, "Invalid Phone Number");
 			}
-			return phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
+			return ret.call(this, true, phon);
 		}
 		function validateEmail(email) {
 			var orig = email,
@@ -3266,7 +3266,7 @@ APP.nyckelDB = (function () {
 				else return ret.call(this, false, orig, "Invalid Email Address", "This email address contains features that may not be compatible with all clients");
 			}
 			else return ret.call(this, false, orig, "Invalid Email Address", e.length === 1 ? "Requires an @ symbol" : "Email addresses may only contain 1 @ symbol");
-			return email === orig ? ret.call(this, true) : ret.call(this, true, email);
+			return ret.call(this, true, email);
 		}
 		function validateGPSCoordinates(str) {
 			var orig = str;
@@ -3281,7 +3281,7 @@ APP.nyckelDB = (function () {
 				str = coord[0] + ", " + coord[1];
 			}
 			coord = null;
-			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
+			return ret.call(this, true, str);
 		}
 		function validateLatitude(str) {
 			var orig = str;
@@ -3292,7 +3292,7 @@ APP.nyckelDB = (function () {
 			if (/\./.test(str)) {
 				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
 			}
-			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
+			return ret.call(this, true, str);
 		}
 		function validateLongitude(str) {
 			var orig = str;
@@ -3303,11 +3303,11 @@ APP.nyckelDB = (function () {
 			if (/\./.test(str)) {
 				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
 			}
-			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
+			return ret.call(this, true, str);
 		}
 		if (!VALIDATE_TYPE.call(this, valueType)) return ret.call(this, false, value, valueType + " is not a valid type");
 		if (!VALUE_IS_VALID.call(this, value, valueType)) return ret.call(this, false, value, ERRORS.pop());
-		if (value === "") return ret.call(this, true);
+		if (value === "") return ret.call(this, true, value);
 
 		//validate value based on value type
 		if (/Family/i.test(valueType)) return validateFamilyName.call(this, value);
@@ -3322,7 +3322,7 @@ APP.nyckelDB = (function () {
 		else if (/Location/i.test(valueType)) return validateGPSCoordinates.call(this, value);
 		else if (/Phone/i.test(valueType)) return validatePhoneNumber.call(this, value);
 		else if (/Email|E-mail|E_mail/i.test(valueType)) return validateEmail.call(this, value);
-		else return ret.call(this, true);
+		else return ret.call(this, true, value);
 	};
 	//TODO share function
 	return NyckelDBObj;
