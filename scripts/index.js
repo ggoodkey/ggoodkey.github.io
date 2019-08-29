@@ -856,8 +856,8 @@
 			var hexColor = "#", rgbColor = [], c, i, black = 0, white = 255;
 			for (i = 0; i < 3; i++) {
 				c = parseInt(hex.substr(i*2,2), 16);
-			 //	c = Math.round(Math.min(Math.max(black, c + (c * lum)), white));
-				c = Math.round(Math.min(Math.max(black, c + (lum * white)), white));
+			//	c = Math.round(Math.min(Math.max(black, c + c * lum), white));
+				c = Math.round(Math.min(Math.max(black, c + lum * white), white));
 				rgbColor[i] = c;
 				c=c.toString(16);
 				hexColor += ("00"+c).substr(c.length);
@@ -901,8 +901,8 @@
 					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
 				];
-			for(let a=0, len = colors.length; a<len;a++){
-				updateCSSColor(colors[a], oldColorString[a])
+			for(let a=0, len = colors.length; a<len; a++){
+				updateCSSColor(colors[a], oldColorString[a]);
 			}
 			windowsAccentColor = colors;
 			app.accentColor = hex;
@@ -2843,10 +2843,11 @@
 					this.item.label.value = value;
 				},
 				setValue: function(value){
+					debug(value, "setValue");
 					this.item.value = [value];
 				},
 				clearValue: function(){
-					this.item.value = "";
+					this.item.value = [];
 				},
 				onBlur: function (value, valueType) {
 					this.focused = false;
@@ -2858,6 +2859,7 @@
 				*/
 				validateData: function (value, valueType) {
 					wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function (result, error, errorDetails) {
+						debug(result, value);
 						if (result !== value) this.setValue(result);
 						this.validationError = error || null;
 						this.validationErrorDetails = errorDetails;
@@ -2919,12 +2921,12 @@
 					}
 					function save(data){
 						if(data.value) {
-							for(let b=0, lenB = data.value.length; b<lenB;b++){
+							for(let b=0, lenB = data.value.length; b<lenB; b++){
 								if(data.value[b] !== data.orig[b]){
 									//set value 
 									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function(success, error, title, sync){
 										if(error) errors.push(error);
-										checkComplete(n--)
+										checkComplete(n--);
 									});
 								}
 								else checkComplete(n--);
@@ -2938,23 +2940,23 @@
 						n = 0,
 						errors = [];
 					//count lineItems
-					for(let a=0, b=0, len = data.length, lenB; a<len;a++){
+					for(let a = 0, b = 0, len = data.length, lenB; a < len; a++){
 						if(data[a].readonly) continue;
 						if(data[a].group){
 							if(data[a].group.readonly) continue;
-							for(b=0,lenB = data[a].group.length; b<lenB;b++){
+							for(b = 0,lenB = data[a].group.length; b < lenB; b++){
 								n++;
 							}
 						}
 						else n++;
 					}
 					//go through data and find changes
-					for(let a=0, b=0, len = data.length, lenB; a<len;a++){
+					for(let a = 0, b = 0, len = data.length, lenB; a < len; a++){
 						if(data[a].readonly) continue;
 						if(data[a].group){
 							if(data[a].group.readonly) continue;
-							for(b=0,lenB = data[a].group.length; b<lenB;b++){
-								save(data[a].group[b])
+							for(b = 0,lenB = data[a].group.length; b < lenB; b++){
+								save(data[a].group[b]);
 							}
 						}
 						else save(data[a]);
@@ -3861,12 +3863,12 @@
 					if (syncfileNeedsUpdated) {
 						APP.Dbx.save("/sync/lastSync", syncfile, null, success.bind(this), failed.bind(this));
 					}
-					else return success.call(this, );
+					else return success.call(this);
 				}
 				function readSyncfile(syncfile, error) {
 					if (error === undefined || error === "data not found" || error.match(/^path\/not_found/)) {
 						if (syncfile) {
-							syncfile = JSON && JSON.parse(syncfile) || $.parseJSON(syncfile);
+							syncfile = JSON.parse(syncfile);
 						}
 						else console.log("no syncfile found " + error);
 						sync.call(this, syncfile, saveSyncfile.bind(this));

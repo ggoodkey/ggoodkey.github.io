@@ -1,4 +1,4 @@
-var APP = APP || {}, Base64;
+var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 (function () {
 	"use strict";
 	var LOCAL = {},
@@ -11,7 +11,6 @@ var APP = APP || {}, Base64;
 		LocalStorageObj = function (tryLawnchairAdaptors) {
 			this.LocalUserRef = "User" + Version;
 			this.LocalUserRef_old = "User" + PreviousVersion;
-			var _this = this;
 			LocalStorageObj.prototype.setItem = function (refName, value, key) {
 				function ret() {
 					LOCAL[refName].save({ key: refName, data: value });
@@ -30,6 +29,7 @@ var APP = APP || {}, Base64;
 					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
 					storageFolder.getFileAsync(refName).done(write, function (error) {
 						//file not found, handle the error
+						console.log(error, "file not found, creating file");
 						storageFolder.createFileAsync(refName).done(write, function (error) {
 							//file not created, handle the error
 							console.log(error, "not created");
@@ -85,15 +85,15 @@ var APP = APP || {}, Base64;
 				}
 			};
 			LocalStorageObj.prototype.nuke = function () {
-				function getAllKeys() { this.keys(deleteEachKey); }
-				function deleteEachKey(keys) { keys.forEach(_this.deleteItem); }
+				function getAllKeys() { this.keys(deleteEachKey.bind(this)); }
+				function deleteEachKey(keys) { keys.forEach(this.deleteItem); }
 				if (Windows) {
 					var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
-					storageFolder.getFilesAsync().done(function (files) {
+					storageFolder.getFilesAsync().done.call(this, function (files) {
 						if(files.length > 0) for (var a = 0, len = files.length; a < len; a++) {
-							_this.deleteItem(files[a].name);
+							this.deleteItem(files[a].name);
 						}
-					}, function (error) {
+					}.bind(this), function (error) {
 						console.log(error);
 					});
 				}
@@ -129,7 +129,7 @@ var APP = APP || {}, Base64;
 				APP.Sto.setItem("fileList", JSON.stringify(obj));
 			}
 			APP.Sto.getItem("fileList", null, function (files) {
-				fileList = JSON && JSON.parse ? JSON.parse(files) : $.parseJSON(files);
+				fileList = JSON.parse(files);
 			}, function () {
 				dropbox("files/list_folder", { path: "", recursive: true }, gotFolder);
 			});
@@ -219,8 +219,8 @@ var APP = APP || {}, Base64;
 					if (user) return successCallback instanceof Function ? successCallback(user) : true;
 					else return failureCallback instanceof Function ? failureCallback() : false;
 				}
-				_this.isAuthenticated = true;
-				_this.getUserInfo(password, gotUser);
+				this.isAuthenticated = true;
+				this.getUserInfo(password, gotUser);
 			}
 			password = password || "";
 			if (WorkingOffline) {//not possible when running locally
@@ -229,21 +229,20 @@ var APP = APP || {}, Base64;
 				else alert(msg);
 				if (failureCallback instanceof Function) return failureCallback();
 				else return;
-			} else if (this.isAuthenticated) initiate();
+			} else if (this.isAuthenticated) initiate.call(this);
 			else auth();
 		};
 		DropboxSessionObj.prototype.logout = function (callback) {
 			function resetApp() {
 				APP.Sto.deleteItem(APP.Sto.LocalUserRef);
-				_this.isAuthenticated = false;
+				this.isAuthenticated = false;
 				return callback instanceof Function ? callback() : true;
 			}
-			dropbox("auth/token/revoke", null, resetApp);
+			dropbox("auth/token/revoke", null, resetApp.bind(this));
 		};
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
-		var _this = this,
-			CLIENT_ID = client_id,
+		var CLIENT_ID = client_id,
 			fileList = [];
 		//try login
 		if (!WorkingOffline) {

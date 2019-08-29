@@ -24,6 +24,7 @@ APP.nyckelDB = (function () {
 		x = null; len = null; y = null;
 		return arr;
 	}
+	/* trims out extra space charaters in a string at the front, end and in between words */
 	function TRIM(str) {
 		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
 		return str.replace(/^\s+|\s+$/gm, "");
@@ -52,6 +53,7 @@ APP.nyckelDB = (function () {
 		return year + month + day + hour + minute;
 	}
 	//add whitespace to JSON
+	// eslint-disable-next-line complexity
 	function READABLE_JSON_STRING(str) {
 		function enter() {
 			out += "\r\n";
@@ -105,7 +107,7 @@ APP.nyckelDB = (function () {
 					break;
 				case "[":
 					if (!quote) {
-						if(c > arrayEnd) getArrayDepth(c);
+						if (c > arrayEnd) getArrayDepth(c);
 						array++;
 					}
 					break;
@@ -178,8 +180,8 @@ APP.nyckelDB = (function () {
 			}
 		}
 		if (this.isDeleted()) return false;
-		var headers = DB[this.id].columns.$headers;		
-		if (typeof colName === "string") return checkString.call(this, colName);		
+		var headers = DB[this.id].columns.$headers;
+		if (typeof colName === "string") return checkString.call(this, colName);
 		else if (IS_NUMERIC(colName)) return checkNumber.call(this, colName);
 		else {
 			CACHE_ERROR.call(this, colName, "column name not found");
@@ -188,7 +190,7 @@ APP.nyckelDB = (function () {
 	}
 	function VALUE_IS_VALID(value, type, ignoreErrors) {
 		if (value == null) {// eslint-disable-line eqeqeq
-			if(!ignoreErrors) CACHE_ERROR.call(this, value, type + " value cannot be");
+			if (!ignoreErrors) CACHE_ERROR.call(this, value, type + " value cannot be");
 			return false;
 		}
 		else if (type === "any") return true;
@@ -281,7 +283,7 @@ APP.nyckelDB = (function () {
 		if (APP.Sto) {
 			if (ERRORS[this.id]) {
 				var msg = "The following errors are found in the " + DB[this.id].title + " database\n" +
-						ERRORS[this.id] + "\nWould you still like to save changes?";
+					ERRORS[this.id] + "\nWould you still like to save changes?";
 				if (APP.confirm) {
 					APP.confirm(msg, save.bind(this), null, { "okButton": "Save" });
 				}
@@ -296,7 +298,7 @@ APP.nyckelDB = (function () {
 	*/
 	function IMPORT_JSON(json, callback, key, fromLocalStorageBool) {
 		function ret(success, err, changes) {
-			if (callback instanceof Function) return callback(success, err, DB[this.id] && DB[this.id].title, !err ? false: changes), this;
+			if (callback instanceof Function) return callback(success, err, DB[this.id] && DB[this.id].title, !err ? false : changes), this;
 			else return this;
 		}
 		function applyJSON(json) {
@@ -439,7 +441,7 @@ APP.nyckelDB = (function () {
 						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
 					}
 				}
-				function tryHiddenRows (nRow) {
+				function tryHiddenRows(nRow) {
 					updateRow.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, nRow, addNewRow.bind(this));
 				}
 				//update rows
@@ -477,7 +479,7 @@ APP.nyckelDB = (function () {
 				DB[this.id].version = this.Version + "_" + Base64.Version;
 				if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this);
 				return ret.call(this, true, null, true);
-			}			
+			}
 			if (json.lastModified && json.lastModified === DB[this.id].lastModified) {
 				//no changes
 				checkDBForMissingItems.call(this);
@@ -504,7 +506,7 @@ APP.nyckelDB = (function () {
 			var createdDiff = DB[this.id].created - json.created;//the difference in time between when the two tables were created
 			syncColumns.call(this, json.columns, function () {
 				syncTable.call(this, json.table, json.ids);
-			});				
+			});
 			//TODO check for errors in headers and column metadata
 
 			if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this, syncChanges);
@@ -534,7 +536,7 @@ APP.nyckelDB = (function () {
 					if (dif === false) return matchedID;
 					if (searchLevel < minimunFindIdLoop) return false;
 					for (let a = 0, difLen = dif.length; a < difLen; a++) {
-						SET_VAL.call(this, matchedID, dif[a], json[dif[a]], false, 0);						
+						SET_VAL.call(this, matchedID, dif[a], json[dif[a]], false, 0);
 						syncChanges = true;
 					}
 					return matchedID;
@@ -937,7 +939,7 @@ APP.nyckelDB = (function () {
 			if (value === "false") value = false;
 		}
 		propName = VAL.toPropName(propName);
-		if  (DB[this.id].properties[propName] && VALUE_IS_VALID.call(this, value, DB[this.id].properties[propName][2])) {
+		if (DB[this.id].properties[propName] && VALUE_IS_VALID.call(this, value, DB[this.id].properties[propName][2])) {
 			if (DB[this.id].properties[propName] !== undefined) {
 				editTime = VALIDATE_EDIT_TIME.call(this, editTime, null, "property", null, "setProp");
 				DB[this.id].properties[propName][0] = value;
@@ -952,6 +954,7 @@ APP.nyckelDB = (function () {
 		else CACHE_ERROR.call(this, value, "cannot set " + propName);
 	}
 	function ADD_ROW(array, id, storeBool, editTimesArr) {
+		//creates a 3 digit id from custom alphabet one step higher than the given starting point
 		function getNextId(idLength, existingIds, startingPoint) {
 			function setStartingPoint(startingPoint) {
 				if (startingPoint) {
@@ -962,14 +965,65 @@ APP.nyckelDB = (function () {
 				}
 				while (newId.length < idLength) newId += alpha;
 			}
-			function buildId(){
+			function maxNumPos(idLength, alphabetLength){
+				return Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10);
+			}
+			function getForbidden(){
+				var forbidden = "alert all anchor anchors area assign blur button checkbox clearInterval clearTimeout clientInformation close closed";
+				forbidden += " confirm constructor crypto decodeURI decodeURIComponent defaultStatus document element elements embed embeds encodeURI";
+				forbidden += " encodeURIComponent escape event fileUpload focus form forms frame innerHeight innerWidth layer layers link location";
+				forbidden += " mimeTypes navigate navigator frames frameRate hidden history image images offscreenBuffering open opener option outerHeight";
+				forbidden += " outerWidth packages pageXOffset pageYOffset parent parseFloat parseInt password pkcs11 plugin prompt propertyIsEnum radio";
+				forbidden += " reset screenX screenY scroll secure select self setInterval setTimeout status submit taint text textarea Array Date eval";
+				forbidden += " function hasOwnProperty Infinity isFinite isNaN isPrototypeOf length Math NaN name Number Object prototype String toString";
+				forbidden += " undefined valueOf abstract arguments boolean break byte case catch char class const continue debugger default delete do";
+				forbidden += " double else enum eval export extends false final finally float for function goto if implements import in instanceof int";
+				forbidden += " interface let long native new null package private protected public return short static super switch synchronized this";
+				forbidden += " throw throws transient true try typeof top unescape untaint window var void volatile while with yield onblur onclick";
+				forbidden += " onerror onfocus onkeydown onkeypress onkeyup onmouseover onload onmouseup onmousedown onsubmit getClass java JavaArray";
+				forbidden += " javaClass JavaObject JavaPackage";
+				return forbidden.split(" ");
+			}
+			function buildId() {
+				function nextIndex(activeChar){
+					return alphabet.indexOf(newId.charAt(activeChar)) - 1;
+				}
+				//roll all the digits ahead ie from 099 to 100
+				function rollAhead(){
+					while (letterIndex + 1 === alphabetLength) {
+						//reached the end of the alphabet
+						end = "";
+						for (var c = 0; c < newId.slice(activeChar, idLength).length; c++) end += alpha;
+						if (activeChar === 0) {
+							//reached the first character in the id, roll over to all letters back to A or 0 or whatever
+							newId = end;
+							activeChar = idLength - 1;
+							letterIndex = nextIndex(activeChar);
+							break;
+						}
+						letterIndex = alphabet.indexOf(newId.charAt(activeChar - 1));
+						if (letterIndex + 1 === alphabetLength || activeChar === 1 && /\d/.test(alphabet[letterIndex + 1])) {
+							//the next character is also at the end of the alphabet
+							activeChar--;
+							letterIndex = nextIndex(activeChar);
+							continue;
+						}
+						newId = newId.slice(0, activeChar - 1) + alphabet[letterIndex + 1] + end;
+						activeChar--;
+						if (alphabet[letterIndex + 1] !== "") {
+							newId = newId.slice(0, activeChar) + alphabet[letterIndex + 1] + newId.slice(activeChar + 1, idLength);
+							activeChar = idLength - 1;
+							letterIndex = nextIndex(activeChar);
+						}
+					}
+				}
 				for (var activeChar = idLength - 1, letterIndex, end;
 					(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible;
-					activeChar--, num++) {
+					activeChar-- , num++) {
 
 					for (letterIndex = alphabet.indexOf(newId.charAt(activeChar));
 						(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible;
-						letterIndex++, num++) {
+						letterIndex++ , num++) {
 
 						if (letterIndex + 1 !== alphabetLength) {
 							if (activeChar === 0 && /\d/.test(alphabet[letterIndex + 1])) {
@@ -979,32 +1033,7 @@ APP.nyckelDB = (function () {
 							newId = newId.slice(0, activeChar) + alphabet[letterIndex + 1] + newId.slice(activeChar + 1, idLength);
 							continue;
 						}
-						while (letterIndex + 1 === alphabetLength) {
-							//reached the end of the alphabet
-							end = "";
-							for (var c = 0; c < newId.slice(activeChar, idLength).length; c++) end += alpha;
-							if (activeChar === 0) {
-								//reached the first character in the id, roll over to all letters back to A or 0 or whatever
-								newId = end;
-								activeChar = idLength - 1;
-								letterIndex = alphabet.indexOf(newId.charAt(activeChar)) - 1;
-								break;
-							}
-							letterIndex = alphabet.indexOf(newId.charAt(activeChar - 1));
-							if (letterIndex + 1 === alphabetLength || activeChar === 1 && /\d/.test(alphabet[letterIndex + 1])) {
-								//the next character is also at the end of the alphabet
-								activeChar--;
-								letterIndex = alphabet.indexOf(newId.charAt(activeChar)) - 1;
-								continue;
-							}
-							newId = newId.slice(0, activeChar - 1) + alphabet[letterIndex + 1] + end;
-							activeChar--;
-							if (alphabet[letterIndex + 1] !== "") {
-								newId = newId.slice(0, activeChar) + alphabet[letterIndex + 1] + newId.slice(activeChar + 1, idLength);
-								activeChar = idLength - 1;
-								letterIndex = alphabet.indexOf(newId.charAt(activeChar)) - 1;
-							}
-						}
+						rollAhead();
 					}
 				}
 				alphabet = null; forbidden = null; alphabetLength = null; alpha = null; activeChar = null; letterIndex = null; end = null;
@@ -1015,20 +1044,7 @@ APP.nyckelDB = (function () {
 				else return newId;
 			}
 			var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),
-				forbidden = "alert all anchor anchors area assign blur button checkbox clearInterval clearTimeout clientInformation close closed";
-			forbidden += " confirm constructor crypto decodeURI decodeURIComponent defaultStatus document element elements embed embeds encodeURI";
-			forbidden += " encodeURIComponent escape event fileUpload focus form forms frame innerHeight innerWidth layer layers link location";
-			forbidden += " mimeTypes navigate navigator frames frameRate hidden history image images offscreenBuffering open opener option outerHeight";
-			forbidden += " outerWidth packages pageXOffset pageYOffset parent parseFloat parseInt password pkcs11 plugin prompt propertyIsEnum radio";
-			forbidden += " reset screenX screenY scroll secure select self setInterval setTimeout status submit taint text textarea Array Date eval";
-			forbidden += " function hasOwnProperty Infinity isFinite isNaN isPrototypeOf length Math NaN name Number Object prototype String toString";
-			forbidden += " undefined valueOf abstract arguments boolean break byte case catch char class const continue debugger default delete do";
-			forbidden += " double else enum eval export extends false final finally float for function goto if implements import in instanceof int";
-			forbidden += " interface let long native new null package private protected public return short static super switch synchronized this";
-			forbidden += " throw throws transient true try typeof top unescape untaint window var void volatile while with yield onblur onclick";
-			forbidden += " onerror onfocus onkeydown onkeypress onkeyup onmouseover onload onmouseup onmousedown onsubmit getClass java JavaArray";
-			forbidden += " javaClass JavaObject JavaPackage";
-			forbidden = forbidden.split(" ");
+				forbidden = getForbidden();
 			idLength = parseInt(idLength, 10);
 
 			existingIds = existingIds || {};
@@ -1037,13 +1053,13 @@ APP.nyckelDB = (function () {
 				return false;
 			}
 			var alphabetLength = alphabet.length,
-				maxIdsPossible = Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10),
+				maxIdsPossible = maxNumPos(idLength, alphabetLength),
 				newId = "",
 				num = 0,
 				alpha = alphabet[0];
 
 			setStartingPoint(startingPoint);
-			return buildId.call(this);			
+			return buildId.call(this);
 		}
 		if (this.isDeleted()) {
 			CACHE_ERROR.call(this, "please recreate table before adding rows");
@@ -1105,7 +1121,7 @@ APP.nyckelDB = (function () {
 			if (newValue !== "" && !isNaN(newValue * 1)) newValue = newValue * 1; //convert numbers in String form to Number form
 			if (newValue === "true") newValue = true;
 			if (newValue === "false") newValue = false;
-		}		
+		}
 		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
 			colIndex = GET_INDEX_OF_COLUMN.call(this, colName),
 			rowIsHidden = false;
@@ -1118,8 +1134,8 @@ APP.nyckelDB = (function () {
 			rowIndex = null; colIndex = null;
 			return callback instanceof Function ? callback(false, error, DB[this.id].title, this.syncPending) : false;
 		}
-		var validationObj = this.validate.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0])
-		if(validationObj.valid){
+		var validationObj = this.validate.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0]);
+		if (validationObj.valid) {
 			if (rowIsHidden) return applyVal.call(this, DB[this.id].hidden, DB[this.id].hiddenIds, rowIndex);
 			else return applyVal.call(this, DB[this.id].table, DB[this.id].ids, rowIndex);
 		}
@@ -1184,7 +1200,7 @@ APP.nyckelDB = (function () {
 			CACHE_ERROR.call(this, num, "invalid " + type + " timestamp found @ " + traceStr);
 			return t;
 		}
-		else if (num - createdDiff <= t){
+		else if (num - createdDiff <= t) {
 			return num;
 		}
 		else {
@@ -1480,7 +1496,7 @@ APP.nyckelDB = (function () {
 		//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
 		//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
 		columnProperties = columnProperties || {};
-			
+
 		var time = TIMESTAMP(tableCreated),
 			obj = {
 				$headers: applyHeaders.call(this, tableHeaders),
@@ -1488,7 +1504,7 @@ APP.nyckelDB = (function () {
 				$modified: [0]
 			};
 		obj.$indexable = obj.$headers.join("|").split("|"),
-		obj.$indexable.splice(0, 1);//remove id
+			obj.$indexable.splice(0, 1);//remove id
 		if (doNotIndex && doNotIndex.constructor === Array) {
 			for (let a = 0, len = doNotIndex.length, i; a < len; a++) {
 				i = obj.$indexable.indexOf(VAL.toPropName(doNotIndex[a]));
@@ -1628,11 +1644,11 @@ APP.nyckelDB = (function () {
 	}
 	function SET_TYPE(colName, type, data, storeBool, editTime, callback) {
 		function retError(err) {
-			if(data) CACHE_ERROR.call(this, err);
-			return callback instanceof Function ? callback(returnData, err, DB[this.id].title, this.syncPending) : err;	
+			if (data) CACHE_ERROR.call(this, err);
+			return callback instanceof Function ? callback(returnData, err, DB[this.id].title, this.syncPending) : err;
 		}
-		function retSuccess(a,b,c,d) {
-			return callback instanceof Function ? callback(a,b,c,d) : a;
+		function retSuccess(a, b, c, d) {
+			return callback instanceof Function ? callback(a, b, c, d) : a;
 		}
 		function checkRows(rowId, i) {
 			var value = data[colName][rowId] || DB[this.id].table[i][colIndex];
@@ -1651,7 +1667,7 @@ APP.nyckelDB = (function () {
 			}
 		}
 		function setType() {
-			if(can_do) DB[this.id].columns[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
+			if (can_do) DB[this.id].columns[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
 		}
 		function applyData(rowId, i, total) {
 			if (can_do && data[colName][rowId]) {
@@ -1716,15 +1732,17 @@ APP.nyckelDB = (function () {
 	 * @property {string} Version nyckelDB version number
 	 * @property {boolean} syncPending whether or not the database has been synchronized with an external file since changes
 	 */
-	function NyckelDBObj(tableTitle, tableHeaders, columnProperties, options, callback) {		
+	function NyckelDBObj(tableTitle, tableHeaders, columnProperties, options, callback) {
 		function applyCustomProperties(props) {
+			function setInitialValue(type){
+				return type === "string" ? "" : type === "boolean" ? false : 0;
+			}
 			if (!props) return {};
 			var _props = {};
 			if (props.constructor === Array) {
-				for (var a = 0, len = props.length; a < len; a++) {
+				for (let a = 0, len = props.length; a < len; a++) {
 					_props[VAL.toPropName(props[a])] = [0, 0, "any"];
 				}
-				a = null; len = null;
 				return _props;
 			}
 			else if (typeof props !== "object") {
@@ -1732,12 +1750,12 @@ APP.nyckelDB = (function () {
 				return {};
 			}
 			var _type = null, _initialValue = 0, _prop;
-			for (var prop in props) {
+			for (let prop in props) {
 				if (props.hasOwnProperty(prop)) {
 					_prop = VAL.toPropName(prop);
 					if (typeof props[prop] === "string") {
 						_type = VALIDATE_TYPE.call(this, props[prop], "custom");
-						_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
+						_initialValue = setInitialValue(_type);
 						_props[_prop] = [_initialValue, 0, _type];
 					}
 					else if (props[prop].constructor === Array && props[prop].length === 3) {
@@ -1754,14 +1772,14 @@ APP.nyckelDB = (function () {
 						}
 						else {
 							_type = _props[_prop][2];
-							_initialValue = _type === "string" ? "" : _type === "boolean" ? false : 0;
+							_initialValue = setInitialValue(_type);
 							_props[_prop][0] = _initialValue;
 						}
 					}
 					else CACHE_ERROR.call(this, prop, "invalid customProperty");
 				}
 			}
-			_type = null; _initialValue = null; _prop = null; prop = null;
+			_type = null; _initialValue = null; _prop = null;
 			return _props;
 		}
 		function applyData(json) {
@@ -1856,7 +1874,7 @@ APP.nyckelDB = (function () {
 			properties = null;
 			if (options.importJSON) IMPORT_JSON.call(this, options.importJSON, function () {
 				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
-			}, );
+			});
 			else {
 				TO_LOCAL_STORAGE.call(this, true);
 				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
@@ -1928,9 +1946,15 @@ APP.nyckelDB = (function () {
 		MAX_SYNC_FREQUENCY = 5, //5 minutes
 		SYNC_ERROR = false,
 		SYNC_ERROR_TIME,
-		VALID_TYPES = /^(any|number|integer|posInteger|negInteger|boolean|string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation|longitude|latitude)$/,
-		VALID_STRING_TYPES = /^(any|string|uniqueString|multilineString|date|email|phoneNumber|password|formattedAddress|streetAddress|mailAddress|cityCounty|provinceStateRegion|country|postalZipCode|givenName|familyName|geoLocation)$/,
-		VALID_NUMBER_TYPES = /^(any|number|integer|posInteger|negInteger|date|phoneNumber|password|postalZipCode|longitude|latitude)$/;
+		VALID_TYPES = new RegExp("^(" + ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string",
+			"uniqueString", "multilineString", "date", "email", "phoneNumber", "password", "formattedAddress",
+			"streetAddress", "mailAddress", "cityCounty", "provinceStateRegion", "country", "postalZipCode",
+			"givenName", "familyName", "geoLocation", "longitude", "latitude"].join("|") + ")$"),
+		VALID_STRING_TYPES = new RegExp("^(" + ["any", "string", "uniqueString", "multilineString", "date",
+			"email", "phoneNumber", "password", "formattedAddress", "streetAddress", "mailAddress", "cityCounty",
+			"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation"].join("|") + ")$"),
+		VALID_NUMBER_TYPES = new RegExp("^(" + ["any", "number", "integer", "posInteger", "negInteger", "date",
+			"phoneNumber", "password", "postalZipCode", "longitude", "latitude"].join("|") + ")$");
 	/**
 	 * Search for rows that contain all of the words given in the search query
 	 * @function search
@@ -2158,7 +2182,7 @@ APP.nyckelDB = (function () {
 		}
 		else {
 			var cols = options.colNames ? options.colNames.join("|").split("|") : null;
-			if(callback instanceof Function) callback([], "currently busy building search index", DB[this.id].title, this.requiresSync);
+			if (callback instanceof Function) callback([], "currently busy building search index", DB[this.id].title, this.requiresSync);
 			BUILD_SEARCH_INDEX.call(this, cols);
 			return [];
 		}
@@ -2375,7 +2399,7 @@ APP.nyckelDB = (function () {
 				if (DB[this.id].columns[colName].exportAs) ret[colName].column = DB[this.id].columns[colName].exportAs[0];
 			}.bind(this), function (success, errors, title, syncPending) {
 				return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
-			});			
+			});
 		}
 		else return callback instanceof Function ? callback(false, "row id not found", DB[this.id].title, this.syncPending) : false;
 	};
@@ -2682,8 +2706,8 @@ APP.nyckelDB = (function () {
 		if (APP.confirm && APP.notify) APP.confirm(msg, nuke.bind(this), function () {
 			APP.notify("<b>Oi!</b> That was close!", true);
 		}, {
-			"okButton": "Delete all of this site's saved data in this web browser or app"
-		});
+				"okButton": "Delete all of this site's saved data in this web browser or app"
+			});
 		else if (window && window.confirm(msg)) nuke.call(this);
 	};
 	/**
@@ -2694,7 +2718,7 @@ APP.nyckelDB = (function () {
 	 * @returns {boolean} whether or not sync is needed
 	 */
 	NyckelDBObj.prototype.isSyncPending = function (cloudSyncFile, callback) {
-		function ret (val) {
+		function ret(val) {
 			return callback instanceof Function ? callback(true, ERRORS[this.id], DB[this.id].title, val) : val;
 		}
 		if (cloudSyncFile) {
@@ -2725,7 +2749,7 @@ APP.nyckelDB = (function () {
 	NyckelDBObj.prototype.sync = function (json, options, callback) {
 		function retError(msg) {
 			callback instanceof Function ? (callback(false, msg, DB[this.id].title, false), this) : this;
-		}		
+		}
 		function sync() {
 			function read(data, key, change) {
 				if (change) {
@@ -2736,7 +2760,7 @@ APP.nyckelDB = (function () {
 			}
 			switch (json.signature) {
 				case Base64.hmac(json.data, readKey):
-					json = read.call(this,json.data, readKey, false);
+					json = read.call(this, json.data, readKey, false);
 					break;
 				case Base64.hmac(json.data, options.initialKey):
 					json = read.call(this, json.data, options.initialKey, true);
@@ -2757,23 +2781,24 @@ APP.nyckelDB = (function () {
 				else return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, false), this) : this;
 			}.bind(this));
 		}
+		function keyMigration(){
+			if (options.oldKey !== undefined && options.key && options.oldKey !== options.key) {
+				readKey = options.oldKey;
+				DB[this.id].lastModified = TIMESTAMP();
+				this.syncPending = true;
+			}
+		}
 		options = options || {};
 		var forceSync = options.forceSync || false,
 			readKey = options.key || false,
 			writeKey = options.key || false,
 			wait = MAX_SYNC_FREQUENCY + DBX_SYNC_OBJ[DB[this.id].title] - TIMESTAMP();
 		if (options === true) forceSync = true;
-		if (options.oldKey !== undefined && options.key && options.oldKey !== options.key) {
-			readKey = options.oldKey;
-			DB[this.id].lastModified = TIMESTAMP();
-			this.syncPending = true;
-		}
+		keyMigration.call(this);
 		if (wait > 0 && !forceSync) return retError.call(this, "rate limited, try again in " + wait + " minutes");
-		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError.call(this, "try again later");
-
-		if (!json) return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
-
-		if (typeof json === "string") json = JSON.parse(json);
+		else if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError.call(this, "try again later");
+		else if (!json) return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
+		else if (typeof json === "string") json = JSON.parse(json);
 		if (!json.data || !(
 			json.version === "0.3_1.1" && this.Version === 0.4 ||//sync takes into account all changes from v0.3 to 0.4
 			json.version === this.Version + "_" + Base64.Version ||
@@ -2810,7 +2835,7 @@ APP.nyckelDB = (function () {
 	 * @return {string} actual type set
 	 */
 	NyckelDBObj.prototype.setType = function (colName, type, data, callback) {
-		return SET_TYPE.call(this, colName, type, data, true, false, callback);		
+		return SET_TYPE.call(this, colName, type, data, true, false, callback);
 	};
 	/**
 	 * Same as isSyncPending but sets the value of syncPending to true if the cloudSyncFile validates
@@ -2886,37 +2911,46 @@ APP.nyckelDB = (function () {
 	 * @param {validateCallback} [callback] callback function
 	 * @returns {object} valid(boolean), value, errorMsg, errorDetails
 	 * @since 0.4
-	 */ 
-	NyckelDBObj.prototype.validate = function (value, valueType, callback){
-		function ret(valid, change, msg, details){
-			var obj = {valid: valid, value: change || value, error: msg, details: change ? "Changed '" + value + "' to '" + change + "'": details}
-			return callback instanceof Function ? callback(change || value, msg, change ? "Changed '" + value + "' to '" + change + "'": details, this.syncPending): obj;
+	 */
+	NyckelDBObj.prototype.validate = function (value, valueType, callback) {
+		function ret(valid, change, msg, details) {
+			var obj = { valid: valid, value: change, error: msg, details: change !== value ? "Changed '" + value + "' to '" + change + "'" : details };
+			return callback instanceof Function ? callback(change, msg, change !== value ? "Changed '" + value + "' to '" + change + "'" : details, this.syncPending) : obj;
 		}
 		function validateFamilyName(name) {
 			var orig = name,
 				n;
 			name = TRIM(String(name));
 			if (/[^A-Za-z\xC0-\xFF '\-]/g.test(name)) {
-				return ret.call(this, false, false, "Invalid characters found in lastname", "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
+				var expl = "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß";
+				return ret.call(this, false, orig, "Invalid characters found in lastname", expl);
 			}
 			//catch McNames and O'Names
-			if (name.slice(0, 2).toLowerCase() === "mc" || name.charAt(1) === "'") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2).toUpperCase() + name.slice(3).toLowerCase();
+			if (name.slice(0, 2).toLowerCase() === "mc" || name.charAt(1) === "'") {
+				name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2).toUpperCase() + name.slice(3).toLowerCase();
+			}
 			//catch MacNames
-			else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") name = "Mac" + name.charAt(3) + name.slice(4).toLowerCase();
+			else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") {
+				name = "Mac" + name.charAt(3) + name.slice(4).toLowerCase();
+			}
 			//catch LaNames and LeNames (but not La Names or Le Names)
-			else if ((name.slice(0, 2).toLowerCase() === "la" || name.slice(0, 2).toLowerCase() === "le") && name.charAt(2) !== " ") name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2) + name.slice(3).toLowerCase();
-			//catch VanNames
-			else if (name.slice(0, 3).toLowerCase() === "van") name = name.charAt(0).toUpperCase() + name.slice(1, 3).toLowerCase() + name.charAt(3) + name.slice(4).toLowerCase();
+			else if ((name.slice(0, 2).toLowerCase() === "la" || name.slice(0, 2).toLowerCase() === "le") && name.charAt(2) !== " ") {
+				name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2) + name.slice(3).toLowerCase();
+			}
 			//capitalize Spaced Names
 			else if (/ /.test(name)) {
 				n = name.split(" ");
 				if (n[0].length === 2 || n[0].toLowerCase() === "von" || n[0].toLowerCase() === "van") {
 					for (var a = 0; a < n.length; a++) {
-						n[a] = n[a].charAt(0).toUpperCase() + n[a].slice(1).toLowerCase();
+						n[a] = n[a].charAt(0) + n[a].slice(1).toLowerCase();
 					}
 					name = n.join(" ");
 				}
-				else return ret.call(this, false, false, "Invalid lastname", "'" + name + "' is not a valid last name");
+				else return ret.call(this, false, orig, "Invalid lastname", "'" + name + "' is not a valid last name");
+			}
+			//catch VanNames
+			else if (name.slice(0, 3).toLowerCase() === "van") {
+				name = name.charAt(0) + name.slice(1, 3).toLowerCase() + name.charAt(3) + name.slice(4).toLowerCase();
 			}
 			//capitalize Hyphenated-Names
 			else if (/-/.test(name)) {
@@ -2936,7 +2970,8 @@ APP.nyckelDB = (function () {
 			var orig = name;
 			name = TRIM(String(name));
 			if (/[^A-Za-z\xC0-\xFF \-&\(\),;\[\]]/g.test(name)) {
-				return ret.call(this, false, false, "Invalid charactors found in firstname", "Firstnames may only contain latin characters A-Z and special characters &()[],;-'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
+				var expl = "Firstnames may only contain latin characters A-Z and special characters &()[],;-'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß";
+				return ret.call(this, false, orig, "Invalid charactors found in firstname", expl);
 			}
 			name = name.replace(/\. /g, ", ");
 			var n = name.split(" ");
@@ -2970,18 +3005,7 @@ APP.nyckelDB = (function () {
 			return field === orig ? ret.call(this, true) : ret.call(this, true, field);
 		}
 		function validateAddress(addr) {
-			var orig = addr, brak = "";
-			var c = TRIM(String(addr)).split(" ");
-			//capitalize
-			for (var a = 0; a < c.length; a++) {
-				if (!/\d/.test(c[a]) && c[a] !== "of" && c[a] !== "see" && !/addres|adres|mail|^see:/.test(c[a])) {
-					c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
-				}
-				if (c[a] === "Nw" || c[a] === "Ne" || c[a] === "Sw" || c[a] === "Se" || c[a] === "Po" || c[a] === "Rr") c[a] = c[a].toUpperCase();
-				if (c[a] === "C/o") c[a] = c[a].toLowerCase();
-			}
-			addr = c.join(" ");
-			if (/[^A-Za-z0-9 \-#&]/.test(addr)) {
+			function formatSeeOtherAddr(addr) {
 				addr = addr.replace(/addres:|Address:|adress:|Adress:|Addres:|address:/, "address: ");
 				addr = addr.replace(/Mail:|Mail to:|mail to:|mail:/, "mail: ");
 				if (!/mail:/.test(addr)) addr = addr.replace(/c\/o /i, "mail: c/o ");
@@ -3002,6 +3026,62 @@ APP.nyckelDB = (function () {
 					addr = addr.replace(/Unit/g, " Unit ");
 					addr = addr.replace(/Block/g, " Block ");
 				}
+				return addr;
+			}
+			function formatMailAddr(addr) {
+				addr = addr.replace(/Bx|Po Box/g, " PO Box ");
+				if (!/PO Box/.test(addr)) addr = addr.replace(/Box/g, " PO Box ");
+				addr = addr.replace(/Site/g, " Site ");
+				addr = addr.replace(/Comp/g, " Comp ");
+				return addr.replace(/(RR\s\s|RR)(\d)/gi, " RR $2");
+			}
+			function formatRuralAddr(addr) {
+				if (!/mile /gi.test(addr)) addr = addr.replace(/\./g, "");
+				addr = addr.replace(/Rge/g, " Range ");
+				addr = addr.replace(/Twp/g, " Township ");
+				if (/ Range | Township /.test(addr)) addr = addr.replace(/Rd/g, " Road ");
+				addr = addr.replace(/Hwy|HWY|hwy|Hiway|hiway/g, " Highway ");
+				//replace dash in Range Road number
+				var i;
+				if (/Range Road \d\-\d|Range Road \d\d-\d/.test(addr)) {
+					i = addr.indexOf("Range Road ");
+					if (addr.charAt(i + 12) === "-") addr = addr.slice(0, i + 12) + addr.slice(i + 13);
+					if (addr.charAt(i + 13) === "-") addr = addr.slice(0, i + 13) + addr.slice(i + 14);
+				}
+				//replace dash in Township Road number
+				if (/Township Road \d\-\d|Township Road \d\d-\d/.test(addr)) {
+					i = addr.indexOf("Township Road ");
+					if (addr.charAt(i + 15) === "-") addr = addr.slice(0, i + 15) + addr.slice(i + 16);
+					if (addr.charAt(i + 16) === "-") addr = addr.slice(0, i + 16) + addr.slice(i + 17);
+				}
+				i = null;
+				return addr;
+			}
+			function formatUrbanAddr(addr) {
+				addr = addr.replace(/Av /g, " Ave ");
+				addr = addr.replace(/Av$/g, " Ave ");
+				addr = addr.replace(/Rm/g, "Apt ");
+				addr = addr.replace(/# /g, "");
+				addr = addr.replace(/Unit/g, " Unit ");
+				addr = addr.replace(/Block/g, " Block ");
+				if (/\d St|\d Ave/.test(addr)) {
+					addr = addr.replace(/(\d) - (\d)/, "$1-$2");
+				}
+				return addr;
+			}
+			var orig = addr, brak = "";
+			var c = TRIM(String(addr)).split(" ");
+			//capitalize
+			for (var a = 0; a < c.length; a++) {
+				if (!/\d/.test(c[a]) && c[a] !== "of" && c[a] !== "see" && !/addres|adres|mail|^see:/.test(c[a])) {
+					c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
+				}
+				if (c[a] === "Nw" || c[a] === "Ne" || c[a] === "Sw" || c[a] === "Se" || c[a] === "Po" || c[a] === "Rr") c[a] = c[a].toUpperCase();
+				if (c[a] === "C/o") c[a] = c[a].toLowerCase();
+			}
+			addr = c.join(" ");
+			if (/[^A-Za-z0-9\xC0-\xFF\s\-#&]/.test(addr)) {
+				addr = formatSeeOtherAddr(addr);
 				//ignore whatever is inside brackets
 				if (/\(/.test(addr) && /\)/.test(addr)) {
 					//APP.CacheMsg("Brackets in Address", "error");
@@ -3011,42 +3091,14 @@ APP.nyckelDB = (function () {
 					brak = TRIM(brak);
 				}
 			}
-			if (!/mile /gi.test(addr)) addr = addr.replace(/\./g, "");
-			addr = addr.replace(/Rge/g, " Range ");
-			addr = addr.replace(/Twp/g, " Township ");
-			if (/ Range | Township /.test(addr)) addr = addr.replace(/Rd/g, " Road ");
-			addr = addr.replace(/Av /g, " Ave ");
-			addr = addr.replace(/Av$/g, " Ave ");
-			addr = addr.replace(/Hwy|HWY|hwy|Hiway|hiway/g, " Highway ");
-			addr = addr.replace(/Bx|Po Box/g, " PO Box ");
-			if (!/PO Box/.test(addr)) addr = addr.replace(/Box/g, " PO Box ");
-			addr = addr.replace(/Site/g, " Site ");
-			addr = addr.replace(/Comp/g, " Comp ");
-			addr = addr.replace(/(RR\s\s|RR)(\d)/gi, " RR $2");
-			addr = addr.replace(/Rm/g, "Apt ");
-			addr = addr.replace(/# /g, "");
-			addr = addr.replace(/Unit/g, " Unit ");
-			addr = addr.replace(/Block/g, " Block ");
+			addr = formatRuralAddr(addr);
+			addr = formatUrbanAddr(addr);
+			addr = formatMailAddr(addr);
+
 			addr = TRIM(addr);
-			//replace dash in Range Road number
-			var i;
-			if (/Range Road \d\-\d|Range Road \d\d-\d/.test(addr)) {
-				i = addr.indexOf("Range Road ");
-				if (addr.charAt(i + 12) === "-") addr = addr.slice(0, i + 12) + addr.slice(i + 13);
-				if (addr.charAt(i + 13) === "-") addr = addr.slice(0, i + 13) + addr.slice(i + 14);
-			}
-			//replace dash in Township Road number
-			if (/Township Road \d\-\d|Township Road \d\d-\d/.test(addr)) {
-				i = addr.indexOf("Township Road ");
-				if (addr.charAt(i + 15) === "-") addr = addr.slice(0, i + 15) + addr.slice(i + 16);
-				if (addr.charAt(i + 16) === "-") addr = addr.slice(0, i + 16) + addr.slice(i + 17);
-			}
-			i = null;
-			if (/\d St|\d Ave/.test(addr)) {
-				addr = addr.replace(/(\d) - (\d)/, "$1-$2");
-			}
+
 			if (/[^A-Za-z0-9\xC0-\xFF\s\-&\(\)\/#',]/.test(addr)) {
-				return ret.call(this, false, false, "Address contains invalid characters", "Addresses may only contain A-z, 0-9, and special characters -&()/#',ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
+				return ret.call(this, false, orig, "Address contains invalid characters", "Addresses may only contain A-z, 0-9, and special characters -&()/#',ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
 			}
 			addr = addr.replace(/-BRACKETS-/g, "(" + brak + ")");
 			addr = TRIM(addr);
@@ -3086,7 +3138,7 @@ APP.nyckelDB = (function () {
 			prov = TRIM(String(prov)).replace(/[^A-z ]/g, "");
 			if (prov === "PEI") prov = "PE";
 			if (prov.length < 2 && prov !== "") {
-				return ret.call(this, false, false, "Province name is too short");
+				return ret.call(this, false, orig, "Province name is too short");
 			}
 			if (prov.length === 2) {
 				prov = prov.toUpperCase();
@@ -3103,104 +3155,124 @@ APP.nyckelDB = (function () {
 		function validatePostalCode(code) {
 			var orig = code;
 			code = String(code).toUpperCase().replace(/[^A-Z0-9]/g, "");
-			//ignore american zip code
-			if (String(code).length === 5 && !isNaN(code * 1)) return code === orig ? ret.call(this, true) : ret.call(this, true, code);
-			//check format
-			for (var a = 0; a < 6; a++) {
-				//catch 0 instead of O
-				if (code.charAt(a) === "0") code = code.slice(0, a) + "O" + code.slice(a + 1, 6);
-				if (/[^A-Z]/.test(code.charAt(a))) {
-					return ret.call(this, false, false, "Invalid Canadian postal code", "Position " + a + " should be an uppercase letter A-Z");
+			//number only codes
+			if (IS_NUMERIC(code)) {
+				if (/[\s\-]/.test(String(orig))) {
+					code = TRIM(String(orig).replace(/[^0-9\s\-]/g, ""));
+					return code === orig ? ret.call(this, true) : ret.call(this, true, code);
 				}
-				a++;
-				//catch O instead of 0
-				if (code.charAt(a) === "O") code = code.slice(0, a) + "0" + code.slice(a + 1, 6);
-				if (/[^0-9]/.test(code.charAt(a))) {
-					return ret.call(this, false, false, "Invalid Canadian postal code", "Position " + a + " should be a number");
-
+				if(!code.match(/\d{2,10}/)) return ret.call(this, false, orig, "Invalid postal code");
+				else return code === orig ? ret.call(this, true) : ret.call(this, true, code);
+			}
+			//number letter codes
+			else {
+				if (code.length === 6) {
+					//check Canadian Postal Codes
+					for (var a = 0; a < 6; a++) {
+						//catch 0 instead of O
+						if (code.charAt(a) === "0") code = code.slice(0, a) + "O" + code.slice(a + 1, 6);
+						if (/[^A-Z]/.test(code.charAt(a))) {
+							return ret.call(this, false, orig, "Invalid Canadian postal code", "Position " + a + " should be an uppercase letter A-Z");
+						}
+						a++;
+						//catch O instead of 0
+						if (code.charAt(a) === "O") code = code.slice(0, a) + "0" + code.slice(a + 1, 6);
+						if (/[^0-9]/.test(code.charAt(a))) {
+							return ret.call(this, false, orig, "Invalid Canadian postal code", "Position " + a + " should be a number");
+						}
+					}
+					//check for Canadian postal code format and add missing space
+					if(code.match(/[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\d[ABCEGHJ-NPRSTV-Z]\d/)) code = code.slice(0, 3) + " " + code.slice(3);
+					else return ret.call(this, false, orig, "Invalid Canadian Postal Code", "Use format A1A 1A1");
 				}
 			}
-			//add missing space
-			if (code.length === 6) code = code.slice(0, 3) + " " + code.slice(3);
-			else return ret.call(this, false, false, "Invalid Canadian Postal Code", "Use format A1A 1A1");
 			return orig === code ? ret.call(this, true) : ret.call(this, true, code);
 		}
-		
 		function validatePhoneNumber(phon) {
-			var orig = String(phon);
-			phon = String(phon).replace(/[^0-9]/g, "");
-			//international numbers
-			if (phon.length > 10 || phon.charAt(0) === "0" || String(orig).charAt(0) === "+") {
-				if (orig.replace(/[^+0-9]/g, "").match(/\+(9[976]\d|8[987530]\d|6[987]\d|5[90]\d|42\d|3[875]\d|2[98654321]\d|9[8543210]|8[6421]|6[6543210]|5[87654321]|4[987654310]|3[9643210]|2[70]|7|1)\d{1,14}$/)) {
-					if (phon.length === 11 && phon.slice(0, 2) === "46") {//Swedish number
-						phon = "+" + phon.slice(0, 2) + "-" + phon.slice(2, 4) + " " + phon.slice(4, 7) + " " + phon.slice(7, 9) + " " + phon.slice(9, 11);
-					}
-					else phon = "+" + orig.replace(/[^0-9\s\-]/g, "");
-				}
-				else if (phon.charAt(0) === "0" && phon.length < 11) {
-					if (phon.length === 10) {
-						if (phon.charAt(1) === "7") {
-							phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + " " + phon.slice(6, 8) + " " + phon.slice(8, 10);
-						}
-						else if (phon.charAt(1) === "8") {
-							phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 8) + " " + phon.slice(8, 10);
-						}
-						else phon = orig.replace(/[^0-9\s\-]/g, "");
-					}
-					else if (phon.length === 9 && phon.charAt(1) === "8") {
-						phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 7) + " " + phon.slice(7, 9);
-					}
-					else phon = orig.replace(/[^0-9\s\-]/g, "");
+			function validateInternationalNumber(phon) {
+				//valid international phone numbers regex
+				var i = /(^9[976]\d|^8[987530]\d|^6[987]\d|^5[90]\d|^42\d|^3[875]\d|^2[98654321]\d|^9[8543210]|^8[6421]|^6[6543210]|^5[87654321]|^4[987654310]|^3[9643210]|^2[70]|^7|^1)\d{1,14}$/;
+				// if (phon.charAt(0) === "0" && phon.length < 11) {
+				// 	if (phon.length === 10) {
+				// 		//format local Swedish numbers beginning with 07
+				// 		if (phon.charAt(1) === "7") {
+				// 			phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + " " + phon.slice(6, 8) + " " + phon.slice(8, 10);
+				// 		}
+				// 		else if (phon.charAt(1) === "8") {
+				// 			phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 8) + " " + phon.slice(8, 10);
+				// 		}
+				// 		else phon = orig.replace(/[^0-9\s\-]/g, "");
+				// 	}
+				// 	else if (phon.length === 9 && phon.charAt(1) === "8") {
+				// 		phon = phon.slice(0, 2) + "-" + phon.slice(2, 5) + " " + phon.slice(5, 7) + " " + phon.slice(7, 9);
+				// 	}
+				// 	else phon = orig.replace(/[^0-9\s\-]/g, "");
+				// }
+				// else
+				if (phon.match(i)) {
+					// if (phon.length === 11 && phon.slice(0, 2) === "46") {//Swedish number
+					// 	phon = "+" + phon.slice(0, 2) + "-" + phon.slice(2, 4) + " " + phon.slice(4, 7) + " " + phon.slice(7, 9) + " " + phon.slice(9, 11);
+					// }
+					phon = "+" + orig.replace(/[^0-9\s\-]/g, "");
 				}
 				else if (phon.length < 16 && orig[0] !== "+") {
-					return ret.call(this, false, false, "International phone numbers must begin with '+' symbol");
+					if(phon.charAt(0) === "0") phon = orig.replace(/[^0-9\s\-]/g, "");
+
+					else return ret.call(this, false, orig, "International phone numbers must begin with '+' symbol");
 				}
-				else {
-					return ret.call(this, false, false, "Invalid Phone Number");
-				}
+				else return ret.call(this, false, orig, "Invalid Phone Number");
+				return phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
+			}
+			var orig = String(phon);
+			phon = String(phon).replace(/[^0-9]/g, "");
+			if(orig.length > 0 && !/\d/.test(phon)) return ret.call(this, false, orig, "Phone number must contain digits");
+			//international numbers
+			if (phon.charAt(0) !== "1" && (phon.length > 10 || phon.charAt(0) === "0" || String(orig).charAt(0) === "+")) {
+				return validateInternationalNumber.call(this, phon);
 			}
 			else if (phon) {
+				//catch emergency numbers
+				if(phon.charAt(0) === "1" && phon.length < 6) return  phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
 				//catch area code inserted where country code should be (403-403-987-6543)
 				if (phon.length === 13 && phon.slice(0, 3) === phon.slice(3, 6)) phon = "1" + phon.slice(3, 13);
 				//catch country code (1) at beginning of phone number
-				if (phon.length === 11 && parseInt(phon.charAt(0), 10) === 1) phon = phon.slice(1, 11);
+				if (phon.length === 11 && parseInt(phon.charAt(0), 10) === 1) phon = "+1 " + phon.slice(1, 4) + "-" + phon.slice(4, 7) + "-" + phon.slice(7, 11);
 				//catch spaces, dots or brackets used instead of dashes
-				if (phon.length === 10 && parseInt(phon.charAt(0), 10) !== 1) phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + "-" + phon.slice(6, 10);
-				else {
-					//catch missing phone number (just area code)
-					if (phon.length === 3 && parseInt(phon.charAt(0), 10) !== 1) phon = "";
-					else {
-						return ret.call(this, false, false, "Invalid Phone Number");
-
-					}
-				}
+				else if (phon.length === 10 && parseInt(phon.charAt(0), 10) !== 1) phon = phon.slice(0, 3) + "-" + phon.slice(3, 6) + "-" + phon.slice(6, 10);
+				else return ret.call(this, false, orig, "Invalid Phone Number");
 			}
-			return phon === orig ? ret.call(this, true): ret.call(this, true, phon);
+			return phon === orig ? ret.call(this, true) : ret.call(this, true, phon);
 		}
 		function validateEmail(email) {
 			var orig = email,
 				e = TRIM(String(email)).split("@");
 			if (e.length === 2) {
+				//username
 				e[0] = e[0].replace(/[^A-Za-z0-9\&\'\+\-_\.]/g, "");//too restrictive?
 				e[0] = e[0].replace(/^\.|\.$|^\-|\-$/g, "");
 				e[0] = e[0].replace(/[\s\t\r\n]/g, "");
 				e[0] = e[0].replace(/\.\./g, ".");
 				e[0] = e[0].slice(0, 63);
+				//domain
 				e[1] = e[1].replace(/[^A-Za-z0-9\-\.\_\:\[\]]/g, "");//too restrictive?
 				e[1] = e[1].replace(/^\.|\.$|^\-|\-$/g, "");
 				e[1] = e[1].replace(/[\s\t\r\n]/g, "");
 				e[1] = e[1].replace(/\.\./g, ".");
-				if (e[0].length > 0 && e[1].length > 1 && /^[\w!#$%&'*+\-\/=?^`{|}~.]+$/.test(e[0]) && new RegExp("^([a-z0-9][a-z0-9\\-]*\\.)+([a-z]+|xn--[a-z0-9\\-]+)$", "i").test(e[1])) email = (e[0] + "@" + e[1]).slice(0, 255);
-				else return ret.call(this, false, false, "Invalid Email Address", "This email address contains features that may not be compatible with all clients");
+				if (e[0].length > 0 && e[1].length > 1
+					&& /^[\w!#$%&'*+\-\/=?^`{|}~.]+$/.test(e[0])
+					&& new RegExp("^([a-z0-9][a-z0-9\\-]*\\.)+([a-z]+|xn--[a-z0-9\\-]+)$", "i").test(e[1])) {
+					email = (e[0] + "@" + e[1]).slice(0, 255);
+				}
+				else return ret.call(this, false, orig, "Invalid Email Address", "This email address contains features that may not be compatible with all clients");
 			}
-			else return ret.call(this, false, false, "Invalid Email Address", e.length === 1 ? "Requires an @ symbol": "Email addresses may only contain 1 @ symbol");
+			else return ret.call(this, false, orig, "Invalid Email Address", e.length === 1 ? "Requires an @ symbol" : "Email addresses may only contain 1 @ symbol");
 			return email === orig ? ret.call(this, true) : ret.call(this, true, email);
 		}
 		function validateGPSCoordinates(str) {
 			var orig = str;
 			str = TRIM(String(str)).replace(/[^\+\-0-9\s\.,]/, "");
 			if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
-				return ret.call(this, false, false, "Invalid GPS Co-ordinates");
+				return ret.call(this, false, orig, "Invalid GPS Co-ordinates");
 			}
 			var coord = str.split(", ");
 			if (coord.length === 2) {
@@ -3209,13 +3281,13 @@ APP.nyckelDB = (function () {
 				str = coord[0] + ", " + coord[1];
 			}
 			coord = null;
-			return str === orig ? ret.call(this, true): ret.call(this, true, str);
+			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
 		}
 		function validateLatitude(str) {
 			var orig = str;
 			str = String(str).replace(/[^\+\-0-9\.]/, "");
 			if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/.test(str)) {
-				return ret.call(this, false, false, "Invalid GPS Latitude", "Requires a decimal between -90 and +90");
+				return ret.call(this, false, orig, "Invalid GPS Latitude", "Requires a decimal between -90 and +90");
 			}
 			if (/\./.test(str)) {
 				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
@@ -3226,16 +3298,16 @@ APP.nyckelDB = (function () {
 			var orig = str;
 			str = String(str).replace(/[^\+\-0-9\.]/, "");
 			if (!/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
-				return ret.call(this, false, false,"Invalid GPS Longitude", "Requires a decimal between -180 and +180");
+				return ret.call(this, false, orig, "Invalid GPS Longitude", "Requires a decimal between -180 and +180");
 			}
 			if (/\./.test(str)) {
 				str = str.split(".")[0] + "." + str.split(".")[1].slice(0, 6);
 			}
 			return str === orig ? ret.call(this, true) : ret.call(this, true, str);
 		}
-		if(!VALIDATE_TYPE.call(this, valueType)) return ret.call(this, false, false, valueType + " is not a valid type");
-		if(!VALUE_IS_VALID.call(this, value, valueType)) return ret.call(this, false, false, ERRORS.pop());
-		if(value === "") return ret.call(this, true);
+		if (!VALIDATE_TYPE.call(this, valueType)) return ret.call(this, false, value, valueType + " is not a valid type");
+		if (!VALUE_IS_VALID.call(this, value, valueType)) return ret.call(this, false, value, ERRORS.pop());
+		if (value === "") return ret.call(this, true);
 
 		//validate value based on value type
 		if (/Family/i.test(valueType)) return validateFamilyName.call(this, value);
