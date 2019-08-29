@@ -3561,7 +3561,7 @@
 						this.dropboxEmail = "";
 						this.notify("", true);
 						if (callback instanceof Function) return callback();
-					});
+					}.bind(this));
 				}
 				if (APP.Dbx && APP.Dbx.isAuthenticated) this.notify("Disconnecting from Dropbox", false, logout.bind(this));
 				else if (callback instanceof Function) return callback();
