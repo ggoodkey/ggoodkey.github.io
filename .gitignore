@@ -262,3 +262,7 @@ __pycache__/
 
 # VSCode
 .vscode/
+tsc
+tsc.cmd
+tsserver
+tsserver.cmd

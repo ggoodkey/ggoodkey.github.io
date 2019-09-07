@@ -107,12 +107,12 @@
 			tableTitle = "Test " + n;
 			if (options && options.importData) options.importData.title = tableTitle;
 			callback = function (ret, err) { document.getElementById('output' + n * 2).innerHTML = "returned: " + ret + ", errors: " + err; };
-			db[n] = new APP.nyckelDB(tableTitle, tableHeaders, headerTypes, options, callback);
+			db[n] = new NyckelDB(tableTitle, tableHeaders, headerTypes, options, callback);
 			document.getElementById('output' + (n * 2 - 1)).innerHTML = JSON.stringify(db[n]);
 		}
 		APP.setDebugMode(true);
 		var tableTitle = "Test 1",
-			tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool", "id": "string" },
+			tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool"},
 			headerTypes,
 			options = { customProperties: ["prop1", "prop_2", "prop_3"] },
 			callback,
@@ -127,22 +127,22 @@
 
 		test(1);
 
-		tableHeaders = { "id": { "type": "id" }, "column_1": { "type": "string" }, "column 2": { "type": "num" }, "column_2": { "type": "boolean" } };
+		tableHeaders = { "column_1": { "type": "string" }, "column 2": { "type": "num" }, "column_3": { "type": "boolean" } };
 		test(2);
 
 		tableHeaders = ["column 1", "column 2", "column_3"];
-		headerTypes = ["Str", "Number", "B oolean"];
+		headerTypes = ["String", "Number", "Boolean"];
 		test(3);
 
-		tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool", "id": "string" };
+		tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "boolean", "id": "string" };
 		test(4);
 
 		options = {
 			customProperties: {
-				prop1: "str",
-				"prop 2": { type: "Num" },
+				prop1: "string",
+				"prop 2": { type: "Number" },
 				"prop_3": {
-					type: "bool",
+					type: "boolean",
 					initialValue: false
 				}
 			}
@@ -171,7 +171,7 @@
 				version: "0.1",
 				ids: { "aaa": [0, 0, 0, 0], "aab": [0, 0, 0, 0] },
 				headers: ["id", "column_1", "column 1", "column 3"],
-				types: { id: "uniqueString", column_1: "string", "column 1": "number", "column 3": "boolean" },
+				types: { column_1: "string", "column 1": "number", "column 3": "boolean" },
 				table: [["aaa", "hello", 1, true], ["aab", "world", 2, false]],
 				properties: { "prop1": ["hello", 0, "string"], "prop 2": [10, 0, "number"], "prop_2": [true, 0, "bool"] }
 			}
@@ -180,7 +180,7 @@
 		options.importData.properties = ["prop1", "prop 2", "prop_3"];
 		test(9);
 
-		options.importData.properties = { "prop1": "string", "prop 2": "number", "prop_3": "bool" };
+		options.importData.properties = { "prop1": "string", "prop 2": "number", "prop_3": "boolean" };
 		test(10);
 
 		function testMethods(testName, method, showLastModBool, callbackBool) {
@@ -221,7 +221,7 @@
 		testMethods("addColumn", function (a) { return db[a].addColumn("column 4", 4, { type: "string", initialValue: "hello, I'm new here", search: true }); }, true);
 		//setType(colName, type, data, callback)
 		testMethods("setType", function (a) {
-			return db[a].setType("column_2", "boolean", null, function (data, err) {
+			return db[a].setType("column_2", "any", null, function (data, err) {
 				if (err === "cannot apply type to this row, please update data and try again" && data) {
 					for (let row in data.column_4) {
 						data.column_4[row] = true;
@@ -245,7 +245,7 @@
 		testMethods("indexOf", function (a) { return db[a].getIndexOf("aaa"); });
 		testMethods("indexOf2", function (a) { return db[a].getIndexOf(null, "yes", "column_1"); });
 		//setProp(propName, value)
-		testMethods("setProp", function (a) { return db[a].setProp("prop1", "hello"); }, true);
+		testMethods("setProp", function (a) { return db[a].setProp("prop1", "hej"); }, true);
 		//getProp(propName)
 		testMethods("getProp", function (a) { return db[a].getProp("prop1"); });
 		//sortByCol(colName, options)

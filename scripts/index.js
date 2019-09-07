@@ -1,4 +1,4 @@
-﻿var APP, VAL, Base64, appData = {}, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
+﻿var APP, VAL, Base64, appData = {}, NyckelDB, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
 (function () {
 	"use strict";
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
@@ -204,7 +204,7 @@
 						"Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
 						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type",
 						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"],
-					icon:"icon-user"
+					icon: "icon-user"
 				},
 				display: {
 					listView: {
@@ -221,213 +221,213 @@
 						}
 					},
 					detailsView: [//displays the following content in the following order
-							{ value: "Photo", hidden: true, readonly: true },
-							{
-								groupHeading: "Name",
-								group: ["NamePrefix", "GivenName", "AdditionalName", "FamilyName", "NameSuffix"],
-								hidden: true
-							},
-							{
-								groupHeading: "Additional Name Information",
-								group: ["Initials", "Nickname", "ShortName", "MaidenName",
-									"YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi"],
-								hidden: true
-							},
-							{
-								groupHeading: "Organization",
-								group: ["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
-									"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],
-								hidden: true
-							},
-							{ value: "GroupMembership", hidden: true, readonly: true },						
-							{
-								groupHeading: "Events",
-								collapse: true,
-								group: [
-									"Birthday",
-									{ value: "Event1_Value", label: "Event1_Type" },//here, the value of Event1_Value is the value and the value of Event1_Type is 
-									{ value: "Event2_Value", label: "Event2_Type" },//the label when value and label are specified 
-									{ value: "Event3_Value", label: "Event3_Type" },
-									{ value: "Event4_Value", label: "Event4_Type" },
-									{ value: "Event5_Value", label: "Event5_Type" },
-									{ value: "Event6_Value", label: "Event6_Type" },
-									{ value: "Event7_Value", label: "Event7_Type" },
-									{ value: "Event8_Value", label: "Event8_Type" },
-									{ value: "Event9_Value", label: "Event9_Type" },
-									{ value: "Event10_Value", label: "Event10_Type" }
-								],
-								splitter: " ::: ",
-								labelOptions: {
-									dropdownList: ["Anniversary", "Other"],
-									customLabel: true
-								}
-							},
-							{
-								groupHeading: "E-mail Addresses",
-								collapse: true,
-								group: [
-									{ value: "E_mail1_Value", label: "E_mail1_Type" },
-									{ value: "E_mail2_Value", label: "E_mail2_Type" },
-									{ value: "E_mail3_Value", label: "E_mail3_Type" },
-									{ value: "E_mail4_Value", label: "E_mail4_Type" },
-									{ value: "E_mail5_Value", label: "E_mail5_Type" },
-									{ value: "E_mail6_Value", label: "E_mail6_Type" },
-									{ value: "E_mail7_Value", label: "E_mail7_Type" },
-									{ value: "E_mail8_Value", label: "E_mail8_Type" },
-									{ value: "E_mail9_Value", label: "E_mail9_Type" },
-									{ value: "E_mail10_Value", label: "E_mail10_Type" }
-								],
-								splitter: " ::: ",
-								labelOptions: {
-									dropdownList: ["Personal Email", "Work Email", "Other Email"],
-									customLabel: true,
-									default: "Email"
-								}
-							},
-							{
-								groupHeading: "Phone Numbers",
-								collapse: true,
-								group: [
-									{ value: "Phone1_Value", label: "Phone1_Type" },
-									{ value: "Phone2_Value", label: "Phone2_Type" },
-									{ value: "Phone3_Value", label: "Phone3_Type" },
-									{ value: "Phone4_Value", label: "Phone4_Type" },
-									{ value: "Phone5_Value", label: "Phone5_Type" },
-									{ value: "Phone6_Value", label: "Phone6_Type" },
-									{ value: "Phone7_Value", label: "Phone7_Type" },
-									{ value: "Phone8_Value", label: "Phone8_Type" },
-									{ value: "Phone9_Value", label: "Phone9_Type" },
-									{ value: "Phone10_Value", label: "Phone10_Type" }
-								],
-								splitter: " ::: ",
-								labelOptions: {
-									dropdownList: ["Mobile Phone", "Home Phone", "Work Phone", "Company Phone",
-										"Other Phone", "Main Phone", "Pager", "Home Fax", "Work Fax"],
-									customLabel: true,
-									default: "Mobile Phone"
-								}
-							},
-							//IM
-							{
-								groupHeading: "Instant Messaging",
-								collapse: 2,
-								group: [
-									{ value: "IM1_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM1_Value", label: "IM1_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM2_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM2_Value", label: "IM2_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM3_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM3_Value", label: "IM3_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM4_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM4_Value", label: "IM4_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM5_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM5_Value", label: "IM5_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM6_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM6_Value", label: "IM6_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM7_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM7_Value", label: "IM7_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM8_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM8_Value", label: "IM8_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM9_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM9_Value", label: "IM9_Type", labelOptions: contactsTemplateIMLabelOptions },
-									{ value: "IM10_Service", options: contactsTemplateIMServiceOptions },
-									{ value: "IM10_Value", label: "IM10_Type", labelOptions: contactsTemplateIMLabelOptions }
-								],
-								splitter: " ::: "
-							}, {
-								groupHeading: "Addresses",
-								group: [
-									{ value: "Address1_Formatted", label: "Address1_Type"},
-									{ value: "Address2_Formatted", label: "Address2_Type" }
-								],
-								readonly: true
-							},
-							{
-								groupHeading: "Address 1",
-								group: ["Address1_Type", "Address1_Street", "Address1_City", "Address1_POBox",
-									"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress"],
-								hidden: true
-							},
-							
-							{
-								groupHeading: "Address 2",
-								group: ["Address2_Type", "Address2_Street", "Address2_City", "Address2_POBox",
-									"Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"],
-								hidden: true
-							},
-							{
-								groupHeading: "Family and Relationships",
-								collapse: true,
-								group: [
-									{ value: "Relation1_Value", label: "Relation1_Type" },
-									{ value: "Relation2_Value", label: "Relation2_Type" },
-									{ value: "Relation3_Value", label: "Relation3_Type" },
-									{ value: "Relation4_Value", label: "Relation4_Type" },
-									{ value: "Relation5_Value", label: "Relation5_Type" },
-									{ value: "Relation6_Value", label: "Relation6_Type" },
-									{ value: "Relation7_Value", label: "Relation7_Type" },
-									{ value: "Relation8_Value", label: "Relation8_Type" },
-									{ value: "Relation9_Value", label: "Relation9_Type" },
-									{ value: "Relation10_Value", label: "Relation10_Type" }
-								],
-								splitter: " ::: ",
-								labelOptions: {
-									dropdownList: ["Spouse", "Child", "Mother", "Father", "Parent", "Brother", "Sister", "Friend", "Relative",
-										"Manager", "Assistant", "Partner", "Coworker", "Reference", "Significant Other", "Other Relationship"],
-									customLabel: false
-								}
-							},
-							{
-								groupHeading: "Websites",
-								collapse: true,
-								group: [
-									{ value: "Website1_Value", label: "Website1_Type" },
-									{ value: "Website2_Value", label: "Website2_Type" },
-									{ value: "Website3_Value", label: "Website3_Type" },
-									{ value: "Website4_Value", label: "Website4_Type" },
-									{ value: "Website5_Value", label: "Website5_Type" },
-									{ value: "Website6_Value", label: "Website6_Type" },
-									{ value: "Website7_Value", label: "Website7_Type" },
-									{ value: "Website8_Value", label: "Website8_Type" },
-									{ value: "Website9_Value", label: "Website9_Type" },
-									{ value: "Website10_Value", label: "Website10_Type" }
-								],
-								splitter: " ::: ",
-								labelOptions: {
-									dropdownList: ["Profile", "Blog", "Google Maps", "Home Page", "Work Website"],
-									customLabel: true,
-									default: "Website"
-								}
-							},
-							{
-								groupHeading: "Other Information",
-								group: ["Gender", "Location","BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
-									"Priority", "Subject", "Language"]
-							},
-							{
-								groupHeading: "Custom Fields",
-								collapse: 2,
-								group: [
-									"CustomField1_Type", { value: "CustomField1_Value", label: "CustomField1_Type" },
-									"CustomField2_Type", { value: "CustomField2_Value", label: "CustomField2_Type" },
-									"CustomField3_Type", { value: "CustomField3_Value", label: "CustomField3_Type" },
-									"CustomField4_Type", { value: "CustomField4_Value", label: "CustomField4_Type" },
-									"CustomField5_Type", { value: "CustomField5_Value", label: "CustomField5_Type" }, 
-									"CustomField6_Type", { value: "CustomField6_Value", label: "CustomField6_Type" },
-									"CustomField7_Type", { value: "CustomField7_Value", label: "CustomField7_Type" },
-									"CustomField8_Type", { value: "CustomField8_Value", label: "CustomField8_Type" },
-									"CustomField9_Type", { value: "CustomField9_Value", label: "CustomField9_Type" },
-									"CustomField10_Type", { value: "CustomField10_Value", label: "CustomField10_Type" }
-								],
-								splitter: " ::: "
-							},
-							{
-								groupHeading: "Notes",
-								collapse: false,
-								group:["Notes"]
-
+						{ value: "Photo", hidden: true, readonly: true },
+						{
+							groupHeading: "Name",
+							group: ["NamePrefix", "GivenName", "AdditionalName", "FamilyName", "NameSuffix"],
+							hidden: true
+						},
+						{
+							groupHeading: "Additional Name Information",
+							group: ["Initials", "Nickname", "ShortName", "MaidenName",
+								"YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi"],
+							hidden: true
+						},
+						{
+							groupHeading: "Organization",
+							group: ["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
+								"Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],
+							hidden: true
+						},
+						{ value: "GroupMembership", hidden: true, readonly: true },
+						{
+							groupHeading: "Events",
+							collapse: true,
+							group: [
+								"Birthday",
+								{ value: "Event1_Value", label: "Event1_Type" },//here, the value of Event1_Value is the value and the value of Event1_Type is 
+								{ value: "Event2_Value", label: "Event2_Type" },//the label when value and label are specified 
+								{ value: "Event3_Value", label: "Event3_Type" },
+								{ value: "Event4_Value", label: "Event4_Type" },
+								{ value: "Event5_Value", label: "Event5_Type" },
+								{ value: "Event6_Value", label: "Event6_Type" },
+								{ value: "Event7_Value", label: "Event7_Type" },
+								{ value: "Event8_Value", label: "Event8_Type" },
+								{ value: "Event9_Value", label: "Event9_Type" },
+								{ value: "Event10_Value", label: "Event10_Type" }
+							],
+							splitter: " ::: ",
+							labelOptions: {
+								dropdownList: ["Anniversary", "Other"],
+								customLabel: true
 							}
-						]
+						},
+						{
+							groupHeading: "E-mail Addresses",
+							collapse: true,
+							group: [
+								{ value: "E_mail1_Value", label: "E_mail1_Type" },
+								{ value: "E_mail2_Value", label: "E_mail2_Type" },
+								{ value: "E_mail3_Value", label: "E_mail3_Type" },
+								{ value: "E_mail4_Value", label: "E_mail4_Type" },
+								{ value: "E_mail5_Value", label: "E_mail5_Type" },
+								{ value: "E_mail6_Value", label: "E_mail6_Type" },
+								{ value: "E_mail7_Value", label: "E_mail7_Type" },
+								{ value: "E_mail8_Value", label: "E_mail8_Type" },
+								{ value: "E_mail9_Value", label: "E_mail9_Type" },
+								{ value: "E_mail10_Value", label: "E_mail10_Type" }
+							],
+							splitter: " ::: ",
+							labelOptions: {
+								dropdownList: ["Personal Email", "Work Email", "Other Email"],
+								customLabel: true,
+								default: "Email"
+							}
+						},
+						{
+							groupHeading: "Phone Numbers",
+							collapse: true,
+							group: [
+								{ value: "Phone1_Value", label: "Phone1_Type" },
+								{ value: "Phone2_Value", label: "Phone2_Type" },
+								{ value: "Phone3_Value", label: "Phone3_Type" },
+								{ value: "Phone4_Value", label: "Phone4_Type" },
+								{ value: "Phone5_Value", label: "Phone5_Type" },
+								{ value: "Phone6_Value", label: "Phone6_Type" },
+								{ value: "Phone7_Value", label: "Phone7_Type" },
+								{ value: "Phone8_Value", label: "Phone8_Type" },
+								{ value: "Phone9_Value", label: "Phone9_Type" },
+								{ value: "Phone10_Value", label: "Phone10_Type" }
+							],
+							splitter: " ::: ",
+							labelOptions: {
+								dropdownList: ["Mobile Phone", "Home Phone", "Work Phone", "Company Phone",
+									"Other Phone", "Main Phone", "Pager", "Home Fax", "Work Fax"],
+								customLabel: true,
+								default: "Mobile Phone"
+							}
+						},
+						//IM
+						{
+							groupHeading: "Instant Messaging",
+							collapse: 2,
+							group: [
+								{ value: "IM1_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM1_Value", label: "IM1_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM2_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM2_Value", label: "IM2_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM3_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM3_Value", label: "IM3_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM4_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM4_Value", label: "IM4_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM5_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM5_Value", label: "IM5_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM6_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM6_Value", label: "IM6_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM7_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM7_Value", label: "IM7_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM8_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM8_Value", label: "IM8_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM9_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM9_Value", label: "IM9_Type", labelOptions: contactsTemplateIMLabelOptions },
+								{ value: "IM10_Service", options: contactsTemplateIMServiceOptions },
+								{ value: "IM10_Value", label: "IM10_Type", labelOptions: contactsTemplateIMLabelOptions }
+							],
+							splitter: " ::: "
+						}, {
+							groupHeading: "Addresses",
+							group: [
+								{ value: "Address1_Formatted", label: "Address1_Type" },
+								{ value: "Address2_Formatted", label: "Address2_Type" }
+							],
+							readonly: true
+						},
+						{
+							groupHeading: "Address 1",
+							group: ["Address1_Type", "Address1_Street", "Address1_City", "Address1_POBox",
+								"Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress"],
+							hidden: true
+						},
+
+						{
+							groupHeading: "Address 2",
+							group: ["Address2_Type", "Address2_Street", "Address2_City", "Address2_POBox",
+								"Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"],
+							hidden: true
+						},
+						{
+							groupHeading: "Family and Relationships",
+							collapse: true,
+							group: [
+								{ value: "Relation1_Value", label: "Relation1_Type" },
+								{ value: "Relation2_Value", label: "Relation2_Type" },
+								{ value: "Relation3_Value", label: "Relation3_Type" },
+								{ value: "Relation4_Value", label: "Relation4_Type" },
+								{ value: "Relation5_Value", label: "Relation5_Type" },
+								{ value: "Relation6_Value", label: "Relation6_Type" },
+								{ value: "Relation7_Value", label: "Relation7_Type" },
+								{ value: "Relation8_Value", label: "Relation8_Type" },
+								{ value: "Relation9_Value", label: "Relation9_Type" },
+								{ value: "Relation10_Value", label: "Relation10_Type" }
+							],
+							splitter: " ::: ",
+							labelOptions: {
+								dropdownList: ["Spouse", "Child", "Mother", "Father", "Parent", "Brother", "Sister", "Friend", "Relative",
+									"Manager", "Assistant", "Partner", "Coworker", "Reference", "Significant Other", "Other Relationship"],
+								customLabel: false
+							}
+						},
+						{
+							groupHeading: "Websites",
+							collapse: true,
+							group: [
+								{ value: "Website1_Value", label: "Website1_Type" },
+								{ value: "Website2_Value", label: "Website2_Type" },
+								{ value: "Website3_Value", label: "Website3_Type" },
+								{ value: "Website4_Value", label: "Website4_Type" },
+								{ value: "Website5_Value", label: "Website5_Type" },
+								{ value: "Website6_Value", label: "Website6_Type" },
+								{ value: "Website7_Value", label: "Website7_Type" },
+								{ value: "Website8_Value", label: "Website8_Type" },
+								{ value: "Website9_Value", label: "Website9_Type" },
+								{ value: "Website10_Value", label: "Website10_Type" }
+							],
+							splitter: " ::: ",
+							labelOptions: {
+								dropdownList: ["Profile", "Blog", "Google Maps", "Home Page", "Work Website"],
+								customLabel: true,
+								default: "Website"
+							}
+						},
+						{
+							groupHeading: "Other Information",
+							group: ["Gender", "Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
+								"Priority", "Subject", "Language"]
+						},
+						{
+							groupHeading: "Custom Fields",
+							collapse: 2,
+							group: [
+								"CustomField1_Type", { value: "CustomField1_Value", label: "CustomField1_Type" },
+								"CustomField2_Type", { value: "CustomField2_Value", label: "CustomField2_Type" },
+								"CustomField3_Type", { value: "CustomField3_Value", label: "CustomField3_Type" },
+								"CustomField4_Type", { value: "CustomField4_Value", label: "CustomField4_Type" },
+								"CustomField5_Type", { value: "CustomField5_Value", label: "CustomField5_Type" },
+								"CustomField6_Type", { value: "CustomField6_Value", label: "CustomField6_Type" },
+								"CustomField7_Type", { value: "CustomField7_Value", label: "CustomField7_Type" },
+								"CustomField8_Type", { value: "CustomField8_Value", label: "CustomField8_Type" },
+								"CustomField9_Type", { value: "CustomField9_Value", label: "CustomField9_Type" },
+								"CustomField10_Type", { value: "CustomField10_Value", label: "CustomField10_Type" }
+							],
+							splitter: " ::: "
+						},
+						{
+							groupHeading: "Notes",
+							collapse: false,
+							group: ["Notes"]
+
+						}
+					]
 				}
 			},
 			Passwords: {
@@ -634,15 +634,16 @@
 			}
 			function noWebWorker() {
 				function applyCallback(callback) {
-					var hasCallback = ["addColumn","advancedSearch","deleteColumn","deleteTable","getRow","getSearchSuggestions","getVals",
-					"importJSON","isSyncPending","NUKEALL","renameColumn","search","setSyncCompleted","setTitle","setType","setVal","sync","validate"];
-					if(hasCallback.indexOf(obj.cmd)) return appData[title][obj.cmd].apply(appData[title], obj.args);
+					var hasCallback = ["addColumn", "advancedSearch", "deleteColumn", "deleteTable", "getHeaders", "getRow", "getRowTemplate", "getSearchSuggestions", "getVals",
+						"importJSON", "isSyncPending", "NUKEALL", "renameColumn", "search", "setSyncCompleted", "setTitle", "setType", "setVal", "setVals", "sync", "validate"];
+					if (hasCallback.indexOf(obj.cmd)) return appData[title][obj.cmd].apply(appData[title], obj.args);
 					else return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
 				}
 				if (obj.args && callback) obj.args.push(callback);
+				else if (callback) obj.args = [callback];
 				if (obj.title && obj.cmd) {
 					var title = VAL.toPropName(obj.title);
-					if (obj.cmd === "initNewNyckelDB") appData[title] = new APP.nyckelDB(obj.args[0], obj.args[1], obj.args[2], obj.args[3], callback);
+					if (obj.cmd === "initNewNyckelDB") appData[title] = new NyckelDB(obj.args[0], obj.args[1], obj.args[2], obj.args[3], callback);
 					else if (!appData[title]) {
 						debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
 						return null;
@@ -656,7 +657,7 @@
 					else return appData[title][obj.cmd].apply(appData[title], obj.args);
 				}
 				else if (obj.cmd) {
-					debug(obj.cmd, "cmd");
+					//debug(obj.cmd, "cmd");
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
@@ -824,27 +825,27 @@
 		* hex #CCC or #123abc, with or without #
 		* lum decimal b/t -1 and 1. 0.2 (20% lighter) -0.5 (50% darker)
 		*/
-		colorLuminance = function (hex, lum, returnRGB) {	
+		colorLuminance = function (hex, lum, returnRGB) {
 			// validate hex string
 			hex = new String(hex).replace(/[^0-9a-f]/gi, '');
 			if (hex.length < 6) {
-				hex = hex[0]+ hex[0]+ hex[1]+ hex[1]+ hex[2]+ hex[2];
+				hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
 			}
 			lum = lum || 0;
 
 			// convert to decimal and change luminosity
 			var hexColor = "#", rgbColor = [], c, i, black = 0, white = 255;
 			for (i = 0; i < 3; i++) {
-				c = parseInt(hex.substr(i*2,2), 16);
-			//	c = Math.round(Math.min(Math.max(black, c + c * lum), white));
+				c = parseInt(hex.substr(i * 2, 2), 16);
+				//	c = Math.round(Math.min(Math.max(black, c + c * lum), white));
 				c = Math.round(Math.min(Math.max(black, c + lum * white), white));
 				rgbColor[i] = c;
-				c=c.toString(16);
-				hexColor += ("00"+c).substr(c.length);
+				c = c.toString(16);
+				hexColor += ("00" + c).substr(c.length);
 			}
 			return returnRGB ? rgbColor.join(", ") : hexColor;
 		},
-		updateCSSColor = function (rgbColor, replaceColor){
+		updateCSSColor = function (rgbColor, replaceColor) {
 			var styleSheets = document.styleSheets;
 			for (var a = 0; a < styleSheets.length; a++) {
 				var rules = styleSheets[a].cssRules || styleSheets[a].rules;
@@ -861,17 +862,17 @@
 				}
 			}
 		},
-		setAccentColor = function (hex){
-			if(!hex) return;
+		setAccentColor = function (hex) {
+			if (!hex) return;
 			var colors = [
-					colorLuminance(hex, 0, true),
-					colorLuminance(hex, -0.1, true),
-					colorLuminance(hex, -0.2, true),
-					colorLuminance(hex, -0.3, true),
-					colorLuminance(hex, 0.1, true),
-					colorLuminance(hex, 0.2, true),
-					colorLuminance(hex, 0.3, true)
-				],
+				colorLuminance(hex, 0, true),
+				colorLuminance(hex, -0.1, true),
+				colorLuminance(hex, -0.2, true),
+				colorLuminance(hex, -0.3, true),
+				colorLuminance(hex, 0.1, true),
+				colorLuminance(hex, 0.2, true),
+				colorLuminance(hex, 0.3, true)
+			],
 				oldColorString = [
 					new RegExp(windowsAccentColor[0] || "71, 140, 219", "g"),
 					new RegExp(windowsAccentColor[1] || "49, 126, 214", "g"),
@@ -881,7 +882,7 @@
 					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
 				];
-			for(let a=0, len = colors.length; a<len; a++){
+			for (let a = 0, len = colors.length; a < len; a++) {
 				updateCSSColor(colors[a], oldColorString[a]);
 			}
 			windowsAccentColor = colors;
@@ -933,7 +934,7 @@
 					sansWidth !== getWidth(font + ',sans-serif') ||
 					serifWidth !== getWidth(font + ',serif');
 			}
-						
+
 			if (isFontAvailable('Segoe UI Symbol')) {
 				document.getElementById("segoe-icons").rel = 'stylesheet';
 				document.getElementById("default-icons").rel = 'alternate stylesheet';
@@ -1103,20 +1104,32 @@
 			}
 		},
 		//application functions
+		createNewItem = function (tableName) {
+			//get blank details object by just provinding a table and no id
+			getDetails({ table: tableName }, function (detailsObj) {
+				app.details = detailsObj;
+				app.navigate("edit");
+			});
+		},
 		getDetails = function (obj, callback) {
 			checkDBLoaded(function (cb) {
 				app.spin(true, "Loading contact data...");
 				app.storeState();
-				wwManager({ "cmd": "getRow", "title": obj.table, "args": [obj.id] }, function (row) {
+				var cmd = {
+					"cmd": obj.id ? "getRow" : "getRowTemplate",
+					"title": obj.table
+				};
+				if (obj.id) cmd.args = [obj.id];
+				wwManager(cmd, function (row) {
 					function getValue(template, splitter, labelOptions) {
 						function getDropdownList(optionsObj) {
 							var options = [];
 							for (let a = 0, lenA = optionsObj.dropdownList.length; a < lenA; a++) {
-									options[a] = {
-										text: optionsObj.dropdownList[a],
-										action: optionsObj.dropdownList[a]
-									};
-								}
+								options[a] = {
+									text: optionsObj.dropdownList[a],
+									action: optionsObj.dropdownList[a]
+								};
+							}
 							return options;
 						}
 						function applyValueStr() {
@@ -1148,7 +1161,8 @@
 							obj.label = {
 								column: template.label,
 								value: row[template.label].value,
-								orig: row[template.label].value
+								orig: row[template.label].value,
+								type: row[template.label].type
 							};
 							if (labelOptions) {
 								if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
@@ -1193,6 +1207,7 @@
 						}
 						return ret;
 					}
+				//	debug(row, "row");
 					var data = [],
 						b = 0,
 						display = dataTemplates[obj.table].display,
@@ -1334,7 +1349,7 @@
 			app.showNewGroupUI = true;
 		},
 		initializeGroups = function (callback) {
-			function getGroups (cb) {
+			function getGroups(cb) {
 				wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
 					var ids = [];
 					for (var a = 0; a < length; a++) ids[a] = a;
@@ -1507,193 +1522,193 @@
 		},
 		template: "#dropdown-button"
 	},
-	icon_select = {
-		props:{
-			align: {
-				type: String,
-				default: "left"
+		icon_select = {
+			props: {
+				align: {
+					type: String,
+					default: "left"
+				},
+				noinputtext: {
+					type: String,
+					default: "Select Icon"
+				},
+				icon: {
+					type: String,
+					default: null
+				}
 			},
-			noinputtext: {
-				type: String,
-				default: "Select Icon"
+			data: function () {
+				return {
+					open: false,
+					clickOutside: null,
+					iconSelected: this.icon,
+					options: [
+						"icon-favorite-star",
+						"icon-folder-open",
+						"icon-audio",
+						"icon-film",
+						"icon-file",
+						"icon-picture",
+						"icon-map-marker",
+						"icon-plane",
+						"icon-world",
+						"icon-user",
+						"icon-people",
+						"icon-lock",
+						"icon-mail",
+						"icon-calendar",
+						"icon-comment",
+						"icon-tasks",
+						"icon-briefcase",
+						"icon-shopping-cart",
+						"icon-hdd",
+						"icon-bell",
+						"icon-bullhorn",
+						"icon-flag",
+						"icon-tag",
+						"icon-bookmarks",
+						"icon-book",
+						"icon-leaf",
+						"icon-fire",
+						"icon-like",
+						"icon-dislike",
+						"icon-eye-open",
+						"icon-time"
+					]
+				};
 			},
-			icon:{
-				type: String,
-				default: null
-			}
-		},
-		data: function () {
-			return {
-				open: false,
-				clickOutside: null,
-				iconSelected: this.icon,
-				options: [
-					"icon-favorite-star",
-					"icon-folder-open",
-					"icon-audio",
-					"icon-film",
-					"icon-file",
-					"icon-picture",
-					"icon-map-marker",
-					"icon-plane",
-					"icon-world",
-					"icon-user",
-					"icon-people", 
-					"icon-lock",
-					"icon-mail",
-					"icon-calendar",
-					"icon-comment",
-					"icon-tasks",
-					"icon-briefcase",
-					"icon-shopping-cart",
-					"icon-hdd",
-					"icon-bell",
-					"icon-bullhorn",
-					"icon-flag",
-					"icon-tag",
-					"icon-bookmarks",
-					"icon-book",
-					"icon-leaf",
-					"icon-fire",
-					"icon-like",
-					"icon-dislike",
-					"icon-eye-open",
-					"icon-time"
-				]
-			};
-		},
-		methods:{
-			toggle: function (open) {
-				var app = document.getElementById("app");
-				if (open === true || open === false) this.open = open;
-				else this.open = !this.open;
-				if (this.open) {
-					if (!this.clickOutside) {
-						this.clickOutside = function clickOutside(e) {
-							var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
-							if (e.path) {
-								//for non UWP
-								//check to see if it is exactly the same button that was clicked, 
-								//or another dropdown button
-								outsideClick = !this.$el.contains(e.target);
-								var a = e.path.length || 0;
-								if (this.$el.id && outsideClick) while (a--) {
-									if (e.path[a].id === this.$el.id) {
-										outsideClick = false;
-										break;
+			methods: {
+				toggle: function (open) {
+					var app = document.getElementById("app");
+					if (open === true || open === false) this.open = open;
+					else this.open = !this.open;
+					if (this.open) {
+						if (!this.clickOutside) {
+							this.clickOutside = function clickOutside(e) {
+								var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
+								if (e.path) {
+									//for non UWP
+									//check to see if it is exactly the same button that was clicked, 
+									//or another dropdown button
+									outsideClick = !this.$el.contains(e.target);
+									var a = e.path.length || 0;
+									if (this.$el.id && outsideClick) while (a--) {
+										if (e.path[a].id === this.$el.id) {
+											outsideClick = false;
+											break;
+										}
 									}
 								}
-							}
-							if (outsideClick) this.toggle(false);
-						}.bind(this);
+								if (outsideClick) this.toggle(false);
+							}.bind(this);
+						}
+						app.addEventListener("click", this.clickOutside);
 					}
-					app.addEventListener("click", this.clickOutside);
+					else app.removeEventListener("click", this.clickOutside);
+				},
+				select: function (icon) {
+					this.iconSelected = icon;
+					this.toggle(false);
+					this.$emit("icon-select", icon);
 				}
-				else app.removeEventListener("click", this.clickOutside);
 			},
-			select: function (icon){
-				this.iconSelected = icon;
-				this.toggle(false);
-				this.$emit("icon-select", icon);
-			}
+			template: "#icon-select"
 		},
-		template: "#icon-select"
-	},
-	color_select = {
-		props:{
-			align: {
-				type: String,
-				default: "left"
+		color_select = {
+			props: {
+				align: {
+					type: String,
+					default: "left"
+				},
+				noinputcolor: {
+					type: String,
+					default: "#478cdb"
+				},
+				color: {
+					type: String,
+					default: "#478cdb"
+				}
 			},
-			noinputcolor: {
-				type: String,
-				default: "#478cdb"
+			data: function () {
+				return {
+					open: false,
+					clickOutside: null,
+					colorSelected: this.color,
+					options: [//hex color themes
+						"#478cdb",
+						"#ffb900",
+						"#ff8c00",
+						"#ca5010",
+						"#da3b01",
+						"#ef6950",
+						"#d13438",
+						"#ff4343",
+						"#e74856",
+						"#e81123",
+						"#ea005e",
+						"#c30052",
+						"#e3008c",
+						"#bf0077",
+						"#c239b3",
+						"#9a0089",
+						"#881798",
+						"#b146c2",
+						"#744da9",
+						"#8764b8",
+						"#6b69d6",
+						"#8e8cd8",
+						"#0063b1",
+						"#0078d7",
+						"#0099bc",
+						"#2d7d9a",
+						"#00b7c3",
+						"#038387",
+						"#00b294",
+						"#018574",
+						"#00cc6a",
+						"#107c10",
+						"#498205",
+						"#486860"
+					]
+				};
 			},
-			color:{
-				type: String,
-				default: "#478cdb"
-			}
-		},
-		data: function () {
-			return {
-				open: false,
-				clickOutside: null,
-				colorSelected: this.color,
-				options: [//hex color themes
-					"#478cdb",
-					"#ffb900",
-					"#ff8c00",
-					"#ca5010",
-					"#da3b01",
-					"#ef6950",
-					"#d13438",
-					"#ff4343",
-					"#e74856",
-					"#e81123",
-					"#ea005e",
-					"#c30052",
-					"#e3008c",
-					"#bf0077",
-					"#c239b3",
-					"#9a0089",
-					"#881798",
-					"#b146c2",
-					"#744da9",
-					"#8764b8",
-					"#6b69d6",
-					"#8e8cd8",
-					"#0063b1",
-					"#0078d7",
-					"#0099bc",
-					"#2d7d9a",
-					"#00b7c3",
-					"#038387",
-					"#00b294",
-					"#018574",
-					"#00cc6a",
-					"#107c10",
-					"#498205",
-					"#486860"
-				]
-			};
-		},
-		methods:{
-			toggle: function (open) {
-				var app = document.getElementById("app");
-				if (open === true || open === false) this.open = open;
-				else this.open = !this.open;
-				if (this.open) {
-					if (!this.clickOutside) {
-						this.clickOutside = function clickOutside(e) {
-							var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
-							if (e.path) {
-								//for non UWP
-								//check to see if it is exactly the same button that was clicked, 
-								//or another dropdown button
-								outsideClick = !this.$el.contains(e.target);
-								var a = e.path.length || 0;
-								if (this.$el.id && outsideClick) while (a--) {
-									if (e.path[a].id === this.$el.id) {
-										outsideClick = false;
-										break;
+			methods: {
+				toggle: function (open) {
+					var app = document.getElementById("app");
+					if (open === true || open === false) this.open = open;
+					else this.open = !this.open;
+					if (this.open) {
+						if (!this.clickOutside) {
+							this.clickOutside = function clickOutside(e) {
+								var outsideClick = !/dropdownButton/.test(e.target._prevClass);//for Windows UWP app which does not support .path or .contains
+								if (e.path) {
+									//for non UWP
+									//check to see if it is exactly the same button that was clicked, 
+									//or another dropdown button
+									outsideClick = !this.$el.contains(e.target);
+									var a = e.path.length || 0;
+									if (this.$el.id && outsideClick) while (a--) {
+										if (e.path[a].id === this.$el.id) {
+											outsideClick = false;
+											break;
+										}
 									}
 								}
-							}
-							if (outsideClick) this.toggle(false);
-						}.bind(this);
+								if (outsideClick) this.toggle(false);
+							}.bind(this);
+						}
+						app.addEventListener("click", this.clickOutside);
 					}
-					app.addEventListener("click", this.clickOutside);
+					else app.removeEventListener("click", this.clickOutside);
+				},
+				select: function (color) {
+					this.colorSelected = color;
+					this.toggle(false);
+					this.$emit("color-select", color);
 				}
-				else app.removeEventListener("click", this.clickOutside);
 			},
-			select: function (color){
-				this.colorSelected = color;
-				this.toggle(false);
-				this.$emit("color-select", color);
-			}
+			template: "#color-select"
 		},
-		template: "#color-select"
-	},
 		jump_list = {
 			props: {
 				details: Object,
@@ -1779,8 +1794,8 @@
 								}
 								return arr;
 							}
-							function generateHeaders(){
-								function obj(name, sortBy){
+							function generateHeaders() {
+								function obj(name, sortBy) {
 									return { id: "jumplink_" + VAL.toPropName(name), sortBy: sortBy, text: name, type: "jumplink" };
 								}
 								var b = 0,
@@ -2088,14 +2103,14 @@
 					showCustomPropertyInput: false,
 					customPropertyName: "",
 					customPropertyType: "",
-					customPropertyTypes: [{ text: "Any", action: "Any" }, { text: "String", action: "String" }, { text: "Number", action: "Number" }, { text: "Boolean", action: "Boolean"}],
+					customPropertyTypes: [{ text: "Any", action: "Any" }, { text: "String", action: "String" }, { text: "Number", action: "Number" }, { text: "Boolean", action: "Boolean" }],
 					customPropertyInitialValue: "",
 					initialValueInputType: "text",
 					customPropertyError: null
 				};
 			},
 			methods: {
-				setIcon: function(icon){
+				setIcon: function (icon) {
 					this.icon = icon;
 					this.newTable.options.icon = icon;
 				},
@@ -2113,10 +2128,10 @@
 					else debug(value, "not valid property type");
 				},
 				addNewProperty: function () {
-					function isNumeric(n) { return !isNaN(parseFloat(n)) && isFinite(n);}
+					function isNumeric(n) { return !isNaN(parseFloat(n)) && isFinite(n); }
 					if (!/^[A-z_]\w*(\.[A-z_]\w*)*$/.test(this.customPropertyName)) { this.customPropertyError = "Invalid Property Name"; }
 					else if (!/Any|String|Number|Boolean/.test(this.customPropertyType)) { this.customPropertyError = "Invalid Property Type"; }
-					else if (this.customPropertyType === "String" && typeof this.customPropertyInitialValue !== "string" || 
+					else if (this.customPropertyType === "String" && typeof this.customPropertyInitialValue !== "string" ||
 						this.customPropertyType === "Boolean" && typeof this.customPropertyInitialValue !== "boolean" ||
 						this.customPropertyType === "Number" && !isNumeric(this.customPropertyInitialValue)) {
 						this.customPropertyError = "Invalid Initial Value";
@@ -2332,7 +2347,7 @@
 					var keyCode = e.which || e.keyCode || 0;
 					if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
 						e.preventDefault();
-					} 
+					}
 				},
 				groupInput: function (e) {
 					function runSearch(table, find) {
@@ -2400,11 +2415,11 @@
 									lenIds++;
 								}
 							}
-							debug(ids, "ids");
+						//	debug(ids, "ids");
 							for (let table in ids) {
 								if (ids.hasOwnProperty(table)) {
 									(function (table) {
-										debug(table, "table");
+									//	debug(table, "table");
 										generateListItems(table, ids[table], null, function (arr) {
 											list = list.concat(arr);
 											b++;
@@ -2453,7 +2468,7 @@
 						});
 					}
 					function showGroup(group, error) {
-						debug(group, "group");
+					//	debug(group, "group");
 						if (!group || error) debug(error);
 						else if (group.searchTerms.value !== "") {
 							for (let a in dataTemplates) {
@@ -2473,7 +2488,7 @@
 					wwManager({ "cmd": "getRow", "title": "Groups", "args": [index] }, showGroup);
 				},
 				addToGroup: function (groupName, detailsObj, searchQuery) {
-					debug(groupName, "groupName");
+				//	debug(groupName, "groupName");
 					this.addItemToGroupDropdown = false;
 					this.groupDropdown = false;
 					addToGroup(groupName, detailsObj, searchQuery);
@@ -2503,7 +2518,8 @@
 		view1_page = {
 			methods: {
 				generateListView: generateListView,
-				importFile: importFile
+				importFile: importFile,
+				createNewItem: createNewItem
 			},
 			template: "#view1-page"
 		},
@@ -2513,7 +2529,8 @@
 		view3_page = {
 			methods: {
 				generateListView: generateListView,
-				importFile: importFile
+				importFile: importFile,
+				createNewItem: createNewItem
 			},
 			template: "#view3-page"
 		},
@@ -2603,7 +2620,7 @@
 							action: "delete"
 						}
 					],
-					copyDropdownLinks:[]
+					copyDropdownLinks: []
 				};
 			},
 			methods: {
@@ -2751,7 +2768,7 @@
 				fetchData: function () {
 					function error(err) {
 						this.loading = false;
-						if(err) console.log(err);
+						if (err) console.log(err);
 					}
 					if (this.recentlyViewed.length === 0) {
 						this.loading = true;
@@ -2774,7 +2791,7 @@
 			components: {
 				"jump-list": jump_list,
 				"v-a": details_view_container,
-				"v-b": details_view_container		
+				"v-b": details_view_container
 			},
 			data: function () {
 				return {
@@ -2825,13 +2842,13 @@
 					item.value[index] = item.value[index] === true ? false : true;
 					//TODO
 				},
-				setLabel: function(value){
+				setLabel: function (value) {
 					this.item.label.value = value;
 				},
-				setValue: function(value){
+				setValue: function (value) {
 					this.item.value = [value];
 				},
-				clearValue: function(){
+				clearValue: function () {
 					this.item.value = [];
 				},
 				onBlur: function (value, valueType) {
@@ -2897,19 +2914,19 @@
 			},
 			methods: {
 				saveChanges: function () {
-					function checkComplete(n){
-						if(n === 0){
-							if(errors.length === 0) app.navigate("details");
+					function checkComplete(n) {
+						if (n === 0) {
+							if (errors.length === 0) app.navigate("details");
 							else debug(errors);
 						}
 					}
-					function save(data){
-						if(data.value) {
-							for(let b=0, lenB = data.value.length; b<lenB; b++){
-								if(data.value[b] !== data.orig[b]){
+					function save(data) {
+						if (data.value) {
+							for (let b = 0, lenB = data.value.length; b < lenB; b++) {
+								if (data.value[b] !== data.orig[b]) {
 									//set value 
-									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function(success, error){
-										if(error) errors.push(error);
+									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function (success, error) {
+										if (error) errors.push(error);
 										checkComplete(n--);
 									});
 								}
@@ -2918,34 +2935,74 @@
 						}
 						else checkComplete(n--);
 					}
+
 					var table = this.details.table,
 						rowId = this.details.id,
 						data = this.details.data,
 						n = 0,
 						errors = [];
-					//count lineItems
-					for(let a = 0, b = 0, len = data.length, lenB; a < len; a++){
-						if(data[a].readonly) continue;
-						if(data[a].group){
-							if(data[a].group.readonly) continue;
-							for(b = 0,lenB = data[a].group.length; b < lenB; b++){
-								n++;
+					if (!rowId) {
+						//create array						
+						wwManager({ "cmd": "getHeaders", "title": table }, function (headers) {
+							function setDefault(type){
+								return /number|integer/i.test(type) ? 0 : type === "boolean" ? false : "";
 							}
-						}
-						else n++;
+							function addToObj(data) {
+								arr[headers.indexOf(data.column)] = [];
+								for (let b = 0, lenB = data.value.length; b < lenB; b++) {
+									arr[headers.indexOf(data.column)][b] = data.value[b];
+								}
+								if(data.type === "boolean" || /number|integer/i.test(data.type)) {
+									arr[headers.indexOf(data.column)] = arr[headers.indexOf(data.column)][0] || setDefault(data.type);
+								}
+								else arr[headers.indexOf(data.column)] = arr[headers.indexOf(data.column)].join(" ::: ");
+								if(data.label){
+									arr[headers.indexOf(data.label.column)] = data.label.value || setDefault(data.label.type);
+								}
+							}
+							var arr = new Array(headers.length);
+							for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+								if (data[a].group) {
+									for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
+										addToObj(data[a].group[b]);
+									}
+								}
+								else addToObj(data[a]);
+							}
+						//	debug(arr, "creating new row");
+							for(let a= 0, len = arr.length; a < len; a++){
+								if(arr[a] === undefined) debug(arr[a], headers[a]);
+							}
+							wwManager({ "cmd": "addRow", "title": table, "args": [arr] }, function (id, errors) {
+								debug(errors, id);
+							});
+						});
+
 					}
 					//go through data and find changes
-					for(let a = 0, b = 0, len = data.length, lenB; a < len; a++){
-						if(data[a].readonly) continue;
-						if(data[a].group){
-							if(data[a].group.readonly) continue;
-							for(b = 0,lenB = data[a].group.length; b < lenB; b++){
-								save(data[a].group[b]);
+					else {
+						//count lineItems
+						for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+							if (data[a].readonly) continue;
+							if (data[a].group) {
+								if (data[a].group.readonly) continue;
+								for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
+									n++;
+								}
 							}
+							else n++;
 						}
-						else save(data[a]);
+						for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+							if (data[a].readonly) continue;
+							if (data[a].group) {
+								if (data[a].group.readonly) continue;
+								for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
+									save(data[a].group[b]);
+								}
+							}
+							else save(data[a]);
+						}
 					}
-					
 				},
 				cancelChanges: function () {
 					debug("cancelChanges not done");
@@ -3228,7 +3285,7 @@
 			},
 			search: function (event, optionalQuery) {
 				function resetApp() {
-					function clearUI () {
+					function clearUI() {
 						if (cordova || Windows && WinJS) {
 							wwManager({ "cmd": "stop" }, function () {
 								setTimeout(function () {
@@ -3247,7 +3304,7 @@
 										loadDB = true;
 										loadDBQueue = [];
 										loadingDB = false;
-										startApp();									
+										startApp();
 									}, 1000);
 								}.bind(this), 1000);
 							}.bind(this));
@@ -3330,7 +3387,7 @@
 								var numOfSearches = 0,
 									n = 0;
 								for (var t in dataTemplates) {
-									if(dataTemplates.hasOwnProperty(t)) numOfSearches++;
+									if (dataTemplates.hasOwnProperty(t)) numOfSearches++;
 								}
 								for (let table in dataTemplates) {
 									(function (self, table) {
@@ -3408,7 +3465,7 @@
 						str = trim(str);
 
 						for (var t in dataTemplates) {
-							if(dataTemplates.hasOwnProperty(t)) numOfTables++;
+							if (dataTemplates.hasOwnProperty(t)) numOfTables++;
 						}
 						for (var table in dataTemplates) {
 							wwManager({ "cmd": "getSearchSuggestions", "title": table, "args": [str, { colNames: searchableColumns }] }, displaySuggestions.bind(this));
@@ -3642,7 +3699,7 @@
 										break; // noop
 									default:
 										this.notify('An error occurred reading this file.');
-								} 
+								}
 							}.bind(this);
 							reader.onload = function () {
 								callback(reader.result, file);

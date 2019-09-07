@@ -1,4 +1,5 @@
-﻿importScripts('base64.min.js');
+﻿/* eslint-disable complexity */
+importScripts('base64.min.js');
 importScripts('validate.min.js');
 importScripts('lists.min.js');
 importScripts('nyckelDB.js');
@@ -28,10 +29,12 @@ function str2ab(str) {
 // stub undefined APP methods.
 var method,
 	noop = function () { },
-	methods = ["confirm"],
+	methods = ["confirm"],//list of methods that don't exisit/haven't been ported to webworker context
 	length = methods.length,
 	appData = {},
-	callbackQueue = [];
+	callbackQueue = [],
+	//globals
+	APP = APP || {}, VAL, Base64, NyckelDB;
 while (length--) {
 	method = methods[length];
 	if (!APP[method]) {
@@ -80,7 +83,7 @@ self.addEventListener('message', function (e) {
 		}
 	};
 	function initNewNyckelDB(title, args, callback) {
-		appData[title] = new APP.nyckelDB(args[0], args[1], args[2], args[3], callback);
+		appData[title] = new NyckelDB(args[0], args[1], args[2], args[3], callback);
 	}
 	var data = ab2str(e.data);
 	data = JSON.parse(data);
@@ -103,6 +106,7 @@ self.addEventListener('message', function (e) {
 			case "unhideRows":
 			case "unfilter":
 			case "getLastModified":
+			case "getHeaders":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else post(appData[data.title][data.cmd](), null, data.callbackIndex);
 				break;
@@ -131,6 +135,7 @@ self.addEventListener('message', function (e) {
 			//functions with callbacks as last argument
 			//1 callback argument, returns success, errors, title and syncPending to callback
 			case "deleteTable":
+			case "getRowTemplate":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else {
 					appData[data.title][data.cmd](function (success, errors, title, syncPending) {
@@ -154,6 +159,7 @@ self.addEventListener('message', function (e) {
 			//3 arguments including callback, returns success, errors, title and syncPending to callback
 			case "sync":
 			case "search":
+			case "setVals":
 			case "advancedSearch":
 			case "getVals":
 			case "getSearchSuggestions":
@@ -183,7 +189,15 @@ self.addEventListener('message', function (e) {
 					var arrBuffer = str2ab(JSON.stringify({ "type": "forEach", "message": msg, "progress": index, "total": length, "callbackIndex": data.callbackIndex, "cmd": data.cmd }));
 					self.postMessage(arrBuffer, [arrBuffer]);
 				}, function finished(success, errors, title, syncPending) {
-					var arrBuffer = str2ab(JSON.stringify({ "type": "finished", "message": success, "args": JSON.stringify([success, errors, title, syncPending]), "finalCallbackIndex": data.finalCallbackIndex, "cmd": data.cmd }));
+					var arrBuffer = str2ab(JSON.stringify(
+						{
+							 "type": "finished", 
+							"message": success,
+							 "args": JSON.stringify([success, errors, title, syncPending]), 
+							 "finalCallbackIndex": data.finalCallbackIndex, 
+							 "cmd": data.cmd 
+						}
+					));
 					self.postMessage(arrBuffer, [arrBuffer]);
 				});
 				break;

@@ -121,7 +121,6 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 	APP.Sto = new LocalStorageObj();
 	var DropboxSessionObj = function (client_id, password, callback) {
 		function dropboxError(error) {
-			console.log(error);
 			if (error instanceof XMLHttpRequest) error = error.statusText;
 			if (console && console.log) console.log("dropbox error:", error);
 		}
@@ -156,18 +155,14 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 		DropboxSessionObj.prototype.getUserInfo = function (password, callback) {
 			function ret(alias, email, id, account_id) {
 				var user = { "alias": alias, "email": email, "id": id, "dbid": account_id };
-				console.log("returning user", user);
 				return callback instanceof Function ? callback(user) : user;
 			}
 			function gotCachedUser(user) {
-				console.log("found cached user", user);
 				user = JSON.parse(user);
 				return ret(user.alias, user.email, user.id, user.dbid);
 			}
 			function tryDropbox() {
-				console.log("getting user from dropbox");
 				function newUser(obj) {
-					console.log("got user", obj);
 					if (obj && obj.email && obj.name) {
 						obj.id = Base64.hash(obj.email); //TODO depricate id
 						APP.Sto.setItem(APP.Sto.LocalUserRef, JSON.stringify({ "alias": obj.name.display_name, "email": obj.email, "id": obj.id, "dbid": obj.account_id }));
@@ -182,19 +177,17 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 			function gotOldUser(user) {
 				console.log("found old cached version user, deleting, get new one from dropbox", user);
 				user = JSON.parse(user);
-				//migrate user version
+				//TODO migrate user version
 
 				APP.Sto.deleteItem(APP.Sto.LocalUserRef_old);
 				tryDropbox();
 			}
 			function noCachedUser() {
-				console.log("didn't find cached user, try old cache version");
 				APP.Sto.getItem(APP.Sto.LocalUserRef_old, null, gotOldUser, tryDropbox);
 			}
 			password = password || "";
 			if (WorkingOffline) return callback instanceof Function ? callback(false) : false;
 			else {
-				console.log("getting user");
 				APP.Sto.getItem(APP.Sto.LocalUserRef, null, gotCachedUser, noCachedUser);
 			}
 		};
@@ -236,7 +229,6 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 		if (!WorkingOffline) {
 			//check if token is already cached
 			if (localStorage.__dbat && localStorage.__dbat !== "") {
-				console.log("got cached dropbox token", localStorage.__dbat);
 				this.isAuthenticated = true;
 				//updateFileList();
 				password = password || "";
@@ -244,11 +236,9 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 			}
 			//else check if returning oauth call with token
 			else if (window.location.hash.match(/^#access_token=/)) {
-				console.log("returning from oath call with dropbox login token");
 				this.login(password, callback);
 			}
 			else if (callback instanceof Function) {
-				console.log("no dropbox token");
 				return callback(false);
 			}
 		}
