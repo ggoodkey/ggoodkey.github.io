@@ -263,6 +263,6 @@ __pycache__/
 # VSCode
 .vscode/
 tsc
-tsc.cmd
+*.cmd
 tsserver
-tsserver.cmd
+dev/typescript/nyckelDB.bac.js

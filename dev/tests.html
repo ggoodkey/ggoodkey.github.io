@@ -196,7 +196,7 @@
 					if (error) results[testNum][a] = "Error: " + error;
 					else results[testNum][a] = result;
 				}) : results[testNum][a] = method(a);
-				if (typeof results[testNum][a] === "object" && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
+				if (typeof results[testNum][a] === "object" && results[testNum][a] !== null && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
 				cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + new Date((Number(db[a].getLastModified()) * 6e4) + 15e11).toLocaleString() : results[testNum][a];
 				var handler = (function (a, testNum) {
 					return function () {

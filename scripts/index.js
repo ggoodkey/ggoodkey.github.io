@@ -1207,7 +1207,6 @@
 						}
 						return ret;
 					}
-				//	debug(row, "row");
 					var data = [],
 						b = 0,
 						display = dataTemplates[obj.table].display,
