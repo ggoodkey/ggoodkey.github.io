@@ -525,6 +525,11 @@
 					</div>
 				</template>
 			</div>
+			<div v-else-if="details.error">
+				<h3>{{ details.title }}</h3>
+				<h5 v-if="details.subtitle">{{ details.subtitle }}</h5>
+				<p>{{ details.error }}</p>
+			</div>
 		</div>
 	</script>
 
@@ -722,7 +727,7 @@
 	<script type="x-template" id="page-not-found">
 		<div class="view">
 			<div class="view-container">
-				<h3>Page Not Found :´(</h3>
+				<h3>Page not found :´(</h3>
 				<h5>Not sure what you was lookin' for here, but I can assure you that this ain't it!</h5>
 			</div>
 		</div>

@@ -201,8 +201,8 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 					if (user) return successCallback instanceof Function ? successCallback(user) : true;
 					else return failureCallback instanceof Function ? failureCallback() : false;
 				}
-				this.isAuthenticated = true;
-				this.getUserInfo(password, gotUser);
+				_this.isAuthenticated = true;
+				_this.getUserInfo(password, gotUser);
 			}
 			password = password || "";
 			if (WorkingOffline) {//not possible when running locally
@@ -211,20 +211,21 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 				else alert(msg);
 				if (failureCallback instanceof Function) return failureCallback();
 				else return;
-			} else if (this.isAuthenticated) initiate.call(this);
+			} else if (_this.isAuthenticated) initiate();
 			else auth();
 		};
 		DropboxSessionObj.prototype.logout = function (callback) {
 			function resetApp() {
 				APP.Sto.deleteItem(APP.Sto.LocalUserRef);
-				this.isAuthenticated = false;
+				_this.isAuthenticated = false;
 				return callback instanceof Function ? callback() : true;
 			}
-			dropbox("auth/token/revoke", null, resetApp.bind(this));
+			dropbox("auth/token/revoke", null, resetApp);
 		};
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
-		var CLIENT_ID = client_id;
+		var CLIENT_ID = client_id,
+			_this = this;
 		//try login
 		if (!WorkingOffline) {
 			//check if token is already cached

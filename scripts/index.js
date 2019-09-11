@@ -1120,7 +1120,7 @@
 					"title": obj.table
 				};
 				if (obj.id) cmd.args = [obj.id];
-				wwManager(cmd, function (row) {
+				wwManager(cmd, function (row, error) {
 					function getValue(template, splitter, labelOptions) {
 						function getDropdownList(optionsObj) {
 							var options = [];
@@ -1210,37 +1210,39 @@
 					var data = [],
 						b = 0,
 						display = dataTemplates[obj.table].display,
-						title = "",
-						subtitle = "",
+						title = "Item not found :´(",
+						subtitle = "Sorry, we couldn't locate this item in the database",
 						image = "";
-					if (display.heading) {
-						if (display.heading.title) title = getHeading(display.heading.title);
-						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
-						if (display.heading.image) image = row[display.heading.image].value;
-					}
-					for (let a = 0, lenA = display.detailsView.length, c, lenC, d, lenD; a < lenA; a++) {
-						if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
-							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
-							b++;
+					if (row) {
+						if (display.heading) {
+							if (display.heading.title) title = getHeading(display.heading.title);
+							if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
+							if (display.heading.image) image = row[display.heading.image].value;
 						}
-						else if (display.detailsView[a].group) {
-							data[b] = {
-								group: [],
-								collapse: display.detailsView[a].collapse || false,
-								show: 0
-							};
-							for (c = 0, lenC = display.detailsView[a].group.length; c < lenC; c++) {
-								data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].labelOptions);
-								for (d = 0, lenD = data[b].group[c].value.length; d < lenD; d++) {
-									if (data[b].group[c].value[d] !== "") data[b].show = c + 1;
+						for (let a = 0, lenA = display.detailsView.length, c, lenC, d, lenD; a < lenA; a++) {
+							if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
+								data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
+								b++;
+							}
+							else if (display.detailsView[a].group) {
+								data[b] = {
+									group: [],
+									collapse: display.detailsView[a].collapse || false,
+									show: 0
+								};
+								for (c = 0, lenC = display.detailsView[a].group.length; c < lenC; c++) {
+									data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].labelOptions);
+									for (d = 0, lenD = data[b].group[c].value.length; d < lenD; d++) {
+										if (data[b].group[c].value[d] !== "") data[b].show = c + 1;
+									}
 								}
+								if (display.detailsView[a].groupHeading) {
+									data[b].groupHeading = display.detailsView[a].groupHeading;
+								}
+								if (display.detailsView[a].hidden) data[b].hidden = true;
+								if (display.detailsView[a].readonly) data[b].readonly = true;
+								b++;
 							}
-							if (display.detailsView[a].groupHeading) {
-								data[b].groupHeading = display.detailsView[a].groupHeading;
-							}
-							if (display.detailsView[a].hidden) data[b].hidden = true;
-							if (display.detailsView[a].readonly) data[b].readonly = true;
-							b++;
 						}
 					}
 					app.spin(false, "Loading contact data...");
@@ -1250,7 +1252,8 @@
 						title: title,
 						subtitle: subtitle,
 						image: image,
-						data: data
+						data: data,
+						error: error
 					});
 					if (cb instanceof Function) return cb();
 				});
