@@ -225,6 +225,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
 		var CLIENT_ID = client_id,
+			// eslint-disable-next-line consistent-this
 			_this = this;
 		//try login
 		if (!WorkingOffline) {

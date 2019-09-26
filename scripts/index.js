@@ -735,6 +735,7 @@
 			if (errors) {
 				if (errors === "wrong key used") {
 					app.notify("Wrong key used", true);
+					debug(app.stoKey, "stoKey tried");
 					app.updateStoKey();
 				}
 				else if (/unsupported version/.test(errors)) {
@@ -752,7 +753,9 @@
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-				checkDBLoaded();
+				checkDBLoaded(function (callback) {
+					if (callback instanceof Function) return callback();
+				});
 				if (!cordova && !app.cookieAgree) {
 					app.notify("By continuing to use this site, you agree to the use of first party, non-tracking cookies for personalised content", false);
 					app.cookieAgree = true;
@@ -1046,23 +1049,13 @@
 		loadingDB = false,
 		checkDBLoaded = function (callback) {
 			function initDB(title, template, dbNum, numOfTables) {
-				function handleErrors(errors) {
-					if (errors === "wrong key used") {
-						debug(app.stoKey, "wrong key used");
-						app.updateStoKey();
-					}
-					else if (/unsupported version/.test(errors)) {
-						app.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
-					}
-					else debug(errors, "loading " + title);
-				}
 				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
 				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
-					if (errors) handleErrors(errors);
+					if (errors) defaultErrorHandler(success, errors);
 				};
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
-						if (errors) handleErrors(errors);
+						if (errors) defaultErrorHandler(success, errors);
 						if (window.navigator.onLine) {
 							app.syncAll();
 						}
@@ -3598,7 +3591,7 @@
 						this.dropboxEmail = user.email;
 						dbid = user.dbid;
 						this.loggedIn = true;
-						this.syncAll(null, { key: this.stoKey === "unknown" && user ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
+						this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
 						if (callback instanceof Function) callback(true);
 					}
 					function startScreen(error) {
@@ -3631,6 +3624,12 @@
 				checkDBLoaded(function (callback) {
 					if (key.value === "") {
 						this.stoKeyWarning = "Required";
+					}
+					else if (key.value.length < 6) {
+						this.stoKeyWarning = "6 characters minimum";
+					}
+					else if (!(/[A-Z]/.test(key.value) && /\d/.test(key.value) && /[a-z]/.test(key.value) && /[^A-z0-9]/.test(key.value))){
+						this.stoKeyWarning = "Uppercase, lowercase, digit and special character required";
 					}
 					else if (key.value === confirmKey.value) {
 						this.stoKeyWarning = "";
@@ -3928,15 +3927,14 @@
 				var err = false,
 					count = 0,
 					syncfileNeedsUpdated = false;
+				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
 				checkDBLoaded(function (callback) {
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
 					options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-					if (APP.Dbx && APP.Dbx.isAuthenticated) {
-						this.spin(true, "Synchronising with Dropbox");
-						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-					}
-					else console.log("cannot sync to Dropbox now");
+					debug(options.key, "key");
+					this.spin(true, "Synchronising with Dropbox");
+					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					if (callback instanceof Function) return callback();
 				}.bind(this));
 			},

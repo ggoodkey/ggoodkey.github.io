@@ -1,30 +1,4 @@
 var LISTSJSON = {
-	"Fields":
-	{
-		"ablocalworkers": ["AB Local Workers", "ABL"],
-		"aboverseasworkers": ["AB Overseas Workers", "ABO"],
-		"barrheadftmcmurray": ["Barrhead/Ft McMurray", "B/FtM"],
-		"calgarynorthcentral": ["Calgary Northcentral", "CNC"],
-		"calgarynortheast": ["Calgary Northeast", "CNE"],
-		"calgarynorthwest": ["Calgary Northwest", "CNW"],
-		"calgarysouth": ["Calgary South", "CS"],
-		"camrosestettler": ["Camrose/Stettler", "C/S"],
-		"didsbury": ["Didsbury", "Did"],
-		"edmontoneast": ["Edmonton East", "EE"],
-		"edmontonnorthwest": ["Edmonton Northwest", "ENW"],
-		"edmontonsouthwest": ["Edmonton Southwest", "ESW"],
-		"edsonwhitecourt": ["Edson/Whitecourt", "E/W"],
-		"ftstjohnyukon": ["Ft St John/Yukon", "FSJ"],
-		"grandeprairie": ["Grande Prairie", "GP"],
-		"highriverclaresholm": ["High River/Claresholm", "HR"],
-		"lacomberimbey": ["Lacombe/Rimbey", "L/R"],
-		"lethbridgepinchercreek": ["Lethbridge/Pincher Creek", "L/P"],
-		"lloydminsterskfield": ["Lloydminster (sk Field)", "Llo"],
-		"medicinehat": ["Medicine Hat", "MH"],
-		"peaceriveryellowknife": ["Peace River/Yellowknife", "PR"],
-		"reddeerrockymtnhouse": ["Red Deer/Rocky Mtn House", "RD"],
-		"vermilionwainwright": ["Vermilion/Wainwright", "V/W"]
-	},
 	"Counties":
 	{
 		/* list of towns, cities, counties, municipalities in Alberta from google maps
