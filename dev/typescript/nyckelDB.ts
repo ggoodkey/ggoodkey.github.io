@@ -1,9 +1,15 @@
-﻿//depenancies
+﻿"use strict";
+
+/* eslint-disable */
+
+//depenancies
 var APP: any, Base64: any, Windows: any, cordova: any, Spelling: any;
 
 type tableValue = string | number | boolean;
 
-type tableRow = [string, tableValue?];
+type tableRow = [string, tableValue];
+
+type tableErrors = string | string[] | false;
 
 type columnMetadata = {
 	type: [string, number];
@@ -17,7 +23,7 @@ type customProperties = string[] |
 	{ [propertyName: string]: [tableValue, number, string] } |
 	{ [propertyName: string]: { initialValue?: tableValue, type?: string } };
 
-type deletedId = ["del", number];
+type deletedId = [-1, number];
 
 type tableIds = {
 	[id: string]: number[] | deletedId;
@@ -39,24 +45,25 @@ interface base64File {
 }
 
 interface nyckelDB_uncompressed {
-	title: string,
-	version: string,
-	readonly Version?: string,//accidental capitalization bug version 0.4 and lower
-	created: number,
-	lastModified: number,
-	columns: tableColumns,
-	ids: tableIds,
-	table: tableRow[],
-	properties: {[propertyName: string]:[tableValue, number, string]},
-	types?: string[],//version 0.3 and below
-	headers?: string[],//version 0.3 and below
-	previousTitle?: string[]
-//	hidden?: tableRow[], //removed
-//	hiddenIds?: tableIds, //removed
+	title: string;
+	version: string;
+	readonly Version?: string;//accidental capitalization bug version 0.4 and lower
+	created: number;
+	lastModified: number;
+	columns: tableColumns;
+	ids: tableIds;
+	table: tableRow[];
+	properties: { [propertyName: string]: [tableValue, number, string] };
+	types?: string[];//version 0.3 and below
+	headers?: string[];//version 0.3 and below
+	previousTitle?: string[];
+	//hidden?: tableRow[] //removed
+	//hiddenIds?: tableIds //removed
 
 	//remove theses
 	//data?: string,
 	//signature?: string
+	deleted?: false | number;
 }
 
 interface nyckelDB_compressed {
@@ -70,12 +77,13 @@ interface nyckelDB_compressed {
 }
 
 interface nyckelDB_deleted {
-	readonly title: string,
+	title: string,
 	version: string,
 	readonly Version?: string,//accidental capitalization bug version 0.4 and lower
 	created: number,
 	lastModified: number,
-	deleted: number
+	deleted: number,
+	previousTitle?: string[]
 
 	//remove these
 	//data?: string,
@@ -83,8 +91,9 @@ interface nyckelDB_deleted {
 }
 
 interface csv2jsonOutput {
+	CSVHeaders: string[],
 	Headers: string[],
-	Rows: string[],
+	Rows: { [colName: string]: string; }[],
 	replaceAll: boolean,
 	lastModified: number | Date,
 	identifierCol: string
@@ -117,6 +126,16 @@ interface NyckelDB_interface {
 	
 }
 
+type NyckelDBOptions = {
+	doNotIndex?: string[];
+	key?: string;
+	token?: syncToken;
+	initialIndex?: string[];
+	importData?: nyckelDB_compressed;
+	importJSON?: nyckelDB_uncompressed | csv2jsonOutput | nyckelDB_compressed | nyckelDB_deleted;
+	customProperties?: customProperties;
+};
+
 //jsdoc callback type declarations
 /**
  * This callback returns whether the function executed successfully as it's first parameter
@@ -126,7 +145,7 @@ interface NyckelDB_interface {
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
-type successCallback = (success: boolean, errors: string | string[] | false, title: string, syncPending: boolean) => void;
+type successCallback = (success: boolean, errors: tableErrors, title: string | null, syncPending: boolean) => void;
 /**
  * This callback returns search results as it's first parameter
  * @callback searchCallback
@@ -135,7 +154,7 @@ type successCallback = (success: boolean, errors: string | string[] | false, tit
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
-type searchCallback = (searchResults: string[], errors: string | string[] | false, title: string, syncPending: boolean) => void;
+type searchCallback = (searchResults: string[], errors: tableErrors, title: string, syncPending: boolean) => void;
 /**
  * This callback returns search suggestions as it's first parameter
  * @callback suggestionsCallback
@@ -148,29 +167,31 @@ type searchCallback = (searchResults: string[], errors: string | string[] | fals
 /**
  * This callback returns a value as it's first parameter
  * @callback getCallback
- * @param {string | number | boolean} value a value from the database
+ * @param {string | number | boolean | undefined} value a value from the database
  * @param {string | string[] | false} errors
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
-type getCallback = (value: tableValue, errors: string | string[] | false, title: string, syncPending: boolean) => void;
+type getCallback = (value: tableValue | undefined, errors: tableErrors, title: string, syncPending: boolean) => void;
 /**
  * This callback returns the validated value set, or false if unsuccessful, as it's first parameter
  * @callback setCallback
- * @param {string | number | boolean} value actual value set after validation, or false if unsuccessful
+ * @param {string | number | boolean | undefined} value actual value set after validation, or false if unsuccessful
  * @param {string | string[] | false} errors
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
 type setCallback = getCallback;
+
 /**
  * This callback returns an array of values as it's first parameter
  * @callback getValsCallback
- * @param {string[] | number[] | boolean[]} values an array of values from the database
+ * @param {(string | number | boolean)[] | undefined} values an array of values from the database
  * @param {string | string[] | false} errors
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
+type getValsCallback = (value: tableValue[] | undefined, errors: tableErrors, title: string, syncPending: boolean) => void;
 
 /**
  * This callback returns an object as it's first parameter
@@ -180,6 +201,34 @@ type setCallback = getCallback;
  * @param {string} title nyckelDB title callback returned from
  * @param {boolean} syncPending
  */
+
+ /**
+ * This callback returns an object as it's first parameter
+ * @callback getHeadersCallback
+ * @param {string[]} a list of the table headers
+ * @param {string | string[] | false} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+
+type getHeadersCallback = (result: string[], errors: tableErrors, title: string, syncPending: boolean) => void;
+
+interface rowTemplate{
+	[columnName: string]: {
+		column: string, //column name
+		type: string, //data type (for data validation)
+		exportAs?: string //original/display column name if column name has been changed
+	}
+}
+/**
+ * This callback returns an object as it's first parameter
+ * @callback getRowTemplateCallback
+ * @param {object} a a blank tableRow object containing all the table columns with their types
+ * @param {string | string[] | false} errors
+ * @param {string} title nyckelDB title callback returned from
+ * @param {boolean} syncPending
+ */
+type getRowTemplateCallback = (result: rowTemplate, errors: tableErrors, title: string, syncPending: boolean) => void;
 
 type searchIndex = { [searchWord: string]: { [columnName: string]: string; }; };
 type searchOptions = { colNames?: string[], fuzzyMatch?: boolean };
@@ -199,14 +248,26 @@ interface syncToken {
 	signature: string;
 	token: string;
 }
-/* eslint-disable */
+
 var NyckelDB = (function () {
-	"use strict";
 	function IS_NUMERIC(n: any): n is number {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	}
-	function TO_PROP_NAME(str:any): string {
-		return str == null ? "_undefined" : (str = String(str).replace(/ /g, "_").replace(/[^A-z0-9_]/g, ""), str === "") ? "_" : /\d/.test(str.charAt(0)) ? "_" + str : str
+	function IS_ARRAY<T>(a: any): a is Array<T>{
+		if (a && a.constructor === Array) return true;
+		return false;
+	}
+	function TABLE_IS_DELETED(obj: nyckelDB_uncompressed | nyckelDB_deleted): obj is nyckelDB_deleted {
+		return obj && (obj as unknown as nyckelDB_deleted).deleted !== undefined && obj.deleted !== false ? true : false;
+	}
+	function TO_PROP_NAME(str: any): string {
+		if (str == null) return "_undefined";
+		else {
+			while (/^_/.test(str)) str = str.replace(/^_/, "");
+			str = TRIM(String(str)).replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
+			if (str === "" || /^\d/.test(str) || /^(moz|scroll|screen|on|webkit)/.test(str) || FORBIDDEN.indexOf(str) > -1) return "_" + str;
+			else return str;
+		}
 	}
 	function TO_BASIC_ALPHABET(n:string):string {
 		if (!n) return "";
@@ -257,7 +318,7 @@ var NyckelDB = (function () {
 	function TRIM(str: string): string {
 		while (/\s\s/g.test(str)) str = str.replace(/\s\s/g, " ");
 		return str.replace(/^\s+|\s+$/gm, "");
-	}
+	}	 
 	/*returns number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000, or since 15e11 in javascript time
 	use wRefTo (with reference to, Optional) to specify a different base time stamp as reference. Returns the difference
 	b/t wRefTo and Now. */
@@ -357,17 +418,17 @@ var NyckelDB = (function () {
 		return out;
 	}
 	function ROW_ID_IS_VALID(this: NyckelDB_interface, rowId: number | string): boolean {
-		if (this.isDeleted()) return false;
-		if (IS_NUMERIC(rowId)) {
+		if (TABLE_IS_DELETED(DB[this.id])) return false;
+		else if (IS_NUMERIC(rowId)) {
 			if (rowId < 0) {
 				CACHE_ERROR.call(this, rowId, "row id cannot be less than 0");
 				return false;
 			}
-			else if (rowId < DB[this.id].table.length) return true;
+			else if (rowId < (DB[this.id] as nyckelDB_uncompressed).table.length) return true;
 			else return false;
 		}
 		else if (typeof rowId === "string" && /^[a-z0-9]+$/i.test(rowId)) {
-			if (DB[this.id].ids[rowId] && (DB[this.id].ids[rowId] as deletedId)[0] !== "del") return true;
+			if ((DB[this.id] as nyckelDB_uncompressed).ids[rowId] && ((DB[this.id] as nyckelDB_uncompressed).ids[rowId] as deletedId)[0] !== -1) return true;
 			else return false;
 		}
 		else {
@@ -387,7 +448,7 @@ var NyckelDB = (function () {
 			else {
 				var ret = false;
 				for (let a = 0, len = headers.length, column; a < len; a++) {
-					column = DB[this.id].columns[headers[a]];
+					column = (DB[this.id] as nyckelDB_uncompressed).columns[headers[a]];
 					if ("exportAs" in column && column.exportAs[0] === str) {
 						CACHE_ERROR.call(this, headers[a], str + " conflicts with another column name. Access it with it's new name");
 						break;
@@ -407,8 +468,8 @@ var NyckelDB = (function () {
 				return false;
 			}
 		}
-		if (this.isDeleted()) return false;
-		var headers = DB[this.id].columns.$headers;
+		if (TABLE_IS_DELETED(DB[this.id])) return false;
+		var headers = (DB[this.id] as nyckelDB_uncompressed).columns.$headers;
 		if (typeof colName === "string") return checkString.call(this, colName);
 		else if (IS_NUMERIC(colName)) return checkNumber.call(this, colName);
 		else {
@@ -436,17 +497,16 @@ var NyckelDB = (function () {
 	}
 	function GET_INDEX_OF_ROW(this: NyckelDB_interface, rowId: string | number): number {
 		function getIndex(this: NyckelDB_interface, rowId: string | number) {
-			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
-				ROW_INDEX_CACHE[this.id][DB[this.id].table[a][0]] = a;//build a cache for faster performance
-				if (DB[this.id].table[a][0] === rowId) return a;
+			for (let a = 0, len = (DB[this.id] as nyckelDB_uncompressed).table.length; a < len; a++) {
+				ROW_INDEX_CACHE[this.id][(DB[this.id] as nyckelDB_uncompressed).table[a][0]] = a;//build a cache for faster performance
+				if ((DB[this.id] as nyckelDB_uncompressed).table[a][0] === rowId) return a;
 			}
 			return -1;
 		}
-		if (this.isDeleted()) return -1;
 		if (ROW_ID_IS_VALID.call(this, rowId)) {
 			if (IS_NUMERIC(rowId)) return rowId as number;
 			else {
-				if ((DB[this.id].ids[rowId] as deletedId)[0] === "del") return -1;
+				if (((DB[this.id] as nyckelDB_uncompressed).ids[rowId] as deletedId)[0] === -1) return -1;
 				if (ROW_INDEX_CACHE[this.id] && ROW_INDEX_CACHE[this.id][rowId]) return ROW_INDEX_CACHE[this.id][rowId]; //direct from cache
 				else return getIndex.call(this, rowId);
 			}
@@ -455,7 +515,7 @@ var NyckelDB = (function () {
 	}
 	function GET_INDEX_OF_HIDDEN_ROW(this: NyckelDB_interface, rowId: string | number): number {
 		if (HIDDEN_TABLE_DATA[this.id] != null && HIDDEN_IDS[this.id] != null && HIDDEN_IDS[this.id][rowId]) {
-			if ((HIDDEN_IDS[this.id][rowId] as deletedId)[0] === "del") return -1;
+			if ((HIDDEN_IDS[this.id][rowId] as deletedId)[0] === -1) return -1;
 			for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
 				if (HIDDEN_TABLE_DATA[this.id][a][0] === rowId) return a;
 			}
@@ -464,8 +524,8 @@ var NyckelDB = (function () {
 		else return -1;
 	}
 	function GET_INDEX_OF_COLUMN(this: NyckelDB_interface, colName: string | number): number {
-		if (this.isDeleted()) return -1;
-		var headers = DB[this.id].columns.$headers;
+		if (TABLE_IS_DELETED(DB[this.id])) return -1;
+		var headers = (DB[this.id] as nyckelDB_uncompressed).columns.$headers;
 		if (IS_NUMERIC(colName)) {
 			if (colName > 0 && colName < headers.length) return colName;
 			else return -1;
@@ -477,7 +537,7 @@ var NyckelDB = (function () {
 			var ret = headers.indexOf(colName);
 			if (ret > -1) return ret;
 			for (let a = 1, len = headers.length, column; a < len; a++) {
-				column = DB[this.id].columns[headers[a]];
+				column = (DB[this.id] as nyckelDB_uncompressed).columns[headers[a]];
 				if (column.exportAs && column.exportAs[0] === orig) {
 					if (ret === -1) ret = a;
 					else {
@@ -490,10 +550,10 @@ var NyckelDB = (function () {
 			return ret;
 		}
 	}
-	function EXPORT_DB(this: NyckelDB_interface): nyckelDB_uncompressed {
-		if (!HIDDEN_TABLE_DATA[this.id]) return DB[this.id];
+	function EXPORT_DB(this: NyckelDB_interface): nyckelDB_uncompressed | nyckelDB_deleted {
+		var db = DB[this.id];
+		if (TABLE_IS_DELETED(db) || !HIDDEN_TABLE_DATA[this.id]) return db;
 		else {
-			var db: nyckelDB_uncompressed = DB[this.id];
 			var row: tableRow;
 			while (HIDDEN_TABLE_DATA[this.id].length > 0) {
 				row = HIDDEN_TABLE_DATA[this.id][0];
@@ -530,15 +590,15 @@ var NyckelDB = (function () {
 	/*json.identifierCol to specify a specific column in the data to use as the basis for the generated unique id for each row
 	*/
 	function IMPORT_JSON(this: NyckelDB_interface, json: nyckelDB_uncompressed | csv2jsonOutput | nyckelDB_compressed | nyckelDB_deleted, callback: successCallback, key: string | false, fromLocalStorageBool: boolean): void {
-		function ret(this: NyckelDB_interface, success: boolean, err: string | null, changes: boolean): void {
+		function ret(this: NyckelDB_interface, success: boolean, err: string | false, changes: boolean): void {
 			if (callback instanceof Function) return callback(success, err, DB[this.id] && DB[this.id].title, !err ? changes : false);
 		}
 		function applyJSON(this: NyckelDB_interface, json: nyckelDB_uncompressed): void {
 			function checkDBForMissingItems(this: NyckelDB_interface): void {
 				//check for errors
-				var missing = [];
+				var missing: string[] = [];
 				for (let item in json.ids) {
-					if (!DB[this.id].ids[item] && json.ids[item][0] !== "del") {
+					if (!(DB[this.id] as nyckelDB_uncompressed).ids[item] && json.ids[item][0] !== -1) {
 						missing.push(item);
 					}
 				}
@@ -554,8 +614,8 @@ var NyckelDB = (function () {
 						}
 					}
 				}
-				if (!HIDDEN_TABLE_DATA[this.id] && json.table.length !== DB[this.id].table.length ||
-					HIDDEN_TABLE_DATA[this.id] && json.table.length !== DB[this.id].table.length + HIDDEN_TABLE_DATA[this.id].length) {
+				if (!HIDDEN_TABLE_DATA[this.id] && json.table.length !== (DB[this.id] as nyckelDB_uncompressed).table.length ||
+					HIDDEN_TABLE_DATA[this.id] && json.table.length !== (DB[this.id] as nyckelDB_uncompressed).table.length + HIDDEN_TABLE_DATA[this.id].length) {
 					CACHE_ERROR.call(this, "lastModified date not updated");
 				}
 			}
@@ -564,19 +624,19 @@ var NyckelDB = (function () {
 				//added in verions 0.4+
 				for (let colName in columns) {
 					//go through all metadata and delete deleted columns //ignore $headers, $etc
-					if (colName.charAt(0) !== "$" && (columns[colName] as columnMetadata).deleted && DB[this.id].columns[colName] && !DB[this.id].columns[colName].deleted) {
-						DELETE_COLUMN.call(this, colName, false, (columns[colName] as columnMetadata).deleted[1]);
+					if (colName.charAt(0) !== "$" && (columns[colName] as columnMetadata).deleted && (DB[this.id] as nyckelDB_uncompressed).columns[colName] && !(DB[this.id] as nyckelDB_uncompressed).columns[colName].deleted) {
+						DELETE_COLUMN.call(this, colName, false, (columns[colName] as columnMetadata).deleted![1]);
 					}
 				}
 				for (let a = 0, lenA = columns.$headers.length, colIndex: number, colName: string, prop: string; a < lenA; a++) {
 					colName = columns.$headers[a];
 					colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-					if (colIndex === -1) ADD_COLUMN.call(this, colName, columns[colName], a, null, false, columns.$created[a]);
+					if (colIndex === -1) ADD_COLUMN.call(this, colName, columns[colName], a, undefined, false, columns.$created[a]);
 					if (colIndex > 0) {//make changes					
 						if (colIndex !== a) MOVE_COLUMN.call(this, colName, colIndex, false);
 						//go through all properties and update
 						for (prop in columns[colName]) {
-							if (columns[colName][prop][1] > DB[this.id].columns[colName][prop][1]) {
+							if (columns[colName][prop][1] > (DB[this.id] as nyckelDB_uncompressed).columns[colName][prop][1]) {
 								switch (prop) {
 									case "deleted"://shouldn't find an unsynced deleted column here!!!
 										CACHE_ERROR.call(this, colName, "deleted column not synced");
@@ -598,16 +658,16 @@ var NyckelDB = (function () {
 				function updateTimestamps(this: NyckelDB_interface): void {
 					function deleteRows(this: NyckelDB_interface): void {
 						function applyProperties(this: NyckelDB_interface): void {
-							if (json.properties && DB[this.id].properties) {
+							if (json.properties && (DB[this.id] as nyckelDB_uncompressed).properties) {
 								var _prop;
 								for (let prop in json.properties) {
 									_prop = TO_PROP_NAME(prop);
-									if (DB[this.id].properties[_prop]) {
-										if (!DB[this.id].properties[_prop][1] || DB[this.id].properties[_prop][1] < json.properties[prop][1]) {
-											SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], undefined, false);
+									if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop]) {
+										if (!(DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] || (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] < json.properties[prop][1]) {
+											SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
 											syncChanges = true;
 										}
-										else if (DB[this.id].properties[_prop][1] && DB[this.id].properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
+										else if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] && (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
 									}
 									else {
 										SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
@@ -620,10 +680,10 @@ var NyckelDB = (function () {
 						}
 						//delete deleted rows
 						for (let rowId in json.ids) {
-							if ((json.ids[rowId] as deletedId)[0] === "del" && DB[this.id].ids[rowId] && (DB[this.id].ids[rowId] as deletedId)[0] !== "del") {
-								if (json.ids[rowId][1] !== DB[this.id].ids[rowId][0]) syncChanges = true;
+							if ((json.ids[rowId] as deletedId)[0] === -1 && (DB[this.id] as nyckelDB_uncompressed).ids[rowId] && ((DB[this.id] as nyckelDB_uncompressed).ids[rowId] as deletedId)[0] !== -1) {
+								if (json.ids[rowId][1] !== (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) syncChanges = true;
 								//if it was deleted after it was created (not restored)
-								if (json.ids[rowId][1] - createdDiff > DB[this.id].ids[rowId][0]) {
+								if (json.ids[rowId][1] - createdDiff > (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) {
 									DELETE_ROW.call(this, rowId, false, json.ids[rowId][1]);
 								}
 							}
@@ -636,10 +696,10 @@ var NyckelDB = (function () {
 						DB[this.id].lastModified = DB[this.id].lastModified === 0 ? json.lastModified : DB[this.id].lastModified - createdDiff;
 						//update all other time stamps to reflect change in created time stamp
 						var i = 0, idiLen: number;
-						for (let id in DB[this.id].ids) {
-							for (i = 0, idiLen = DB[this.id].ids[id].length; i < idiLen; i++) {
-								if (i !== 0 || (DB[this.id].ids[id] as deletedId)[i] !== "del")
-									DB[this.id].ids[id][i] = (DB[this.id].ids[id][i] as number) - createdDiff;
+						for (let id in (DB[this.id] as nyckelDB_uncompressed).ids) {
+							for (i = 0, idiLen = (DB[this.id] as nyckelDB_uncompressed).ids[id].length; i < idiLen; i++) {
+								if (i !== 0 || ((DB[this.id] as nyckelDB_uncompressed).ids[id] as deletedId)[i] !== -1)
+									(DB[this.id] as nyckelDB_uncompressed).ids[id][i] = ((DB[this.id] as nyckelDB_uncompressed).ids[id][i] as number) - createdDiff;
 							}
 						}
 						syncChanges = true;
@@ -656,10 +716,10 @@ var NyckelDB = (function () {
 						xId = toIds[xRow[0]];//existing row metadata
 						nId = ids[nRow[0]];//new row metadata
 						for (e = 1, eLen = nId.length; e < eLen; e++) {
-							if ((xId as deletedId)[0] === "del" && (nId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) === Number(nId[0]) + Number(nId[e]) - createdDiff) continue;
+							if ((xId as deletedId)[0] === -1 && (nId as deletedId)[0] === -1 || Number(xId[0]) + Number(xId[e]) === Number(nId[0]) + Number(nId[e]) - createdDiff) continue;
 							//cells are different
 							syncChanges = true;
-							if ((nId as deletedId)[0] !== "del" && ((xId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) < Number(nId[0]) + Number(nId[e]) - createdDiff)) {
+							if ((nId as deletedId)[0] !== -1 && ((xId as deletedId)[0] === -1 || Number(xId[0]) + Number(xId[e]) < Number(nId[0]) + Number(nId[e]) - createdDiff)) {
 								//cell needs updated
 								SET_VAL.call(this, c, e, nRow[e], false, nId[e]);
 							}
@@ -670,9 +730,9 @@ var NyckelDB = (function () {
 					if (!match) return rowNotFoundCB(nRow);
 				}
 				function addNewRow(this: NyckelDB_interface, nRow: tableRow): void {
-					if (ids[nRow[0]][0] !== "del" &&
-						(!DB[this.id].ids[nRow[0]] || DB[this.id].ids[nRow[0]][0] === "del" &&
-						DB[this.id].ids[nRow[0]][1] < Number(ids[nRow[0]][0]) - createdDiff)) {
+					if (ids[nRow[0]][0] !== -1 &&
+						(!(DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]] || (DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]][0] === -1 &&
+						(DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]][1] < Number(ids[nRow[0]][0]) - createdDiff)) {
 						//new row
 						syncChanges = true;
 						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
@@ -686,42 +746,41 @@ var NyckelDB = (function () {
 				for (let b = 0, len = table.length, nRow; b < len; b++) {
 					match = false;
 					nRow = table[b];//new row
-					updateRow.call(this, DB[this.id].table, DB[this.id].ids, nRow, tryHiddenRows.bind(this));
+					updateRow.call(this, (DB[this.id] as nyckelDB_uncompressed).table, (DB[this.id] as nyckelDB_uncompressed).ids, nRow, tryHiddenRows.bind(this));
 				}
 				updateTimestamps.call(this);
 			}
 			function checkDeleted(this: NyckelDB_interface, json: nyckelDB_deleted): void {
-				if (!this.isDeleted()) {
+				if (!TABLE_IS_DELETED(DB[this.id])) {
 					//delete table
-					return DELETE_TABLE.call(this, function (this: NyckelDB_interface) { return ret.call(this, true, null, true); }.bind(this), json.deleted, false);
+					return DELETE_TABLE.call(this, function (this: NyckelDB_interface) { return ret.call(this, true, false, true); }.bind(this), json.deleted, false);
 				}
-				else return ret.call(this, true, null, false);
+				else return ret.call(this, true, false, false);
 			}
 			function directLoadDB(this: NyckelDB_interface): void {
 				//database has just been initiated and can load all data directly from json, or is being restored from being deleted
-				if (DB[this.id].lastModified >= json.lastModified) return ret.call(this, true, null, false);
+				if (DB[this.id].lastModified >= json.lastModified) return ret.call(this, true, false, false);
 				//recreate existing/deleted table
-				this.unhideRows();
 				DB[this.id].created = json.created;
-				DB[this.id].ids = json.ids;
+				(DB[this.id] as nyckelDB_uncompressed).ids = json.ids;
 				DB[this.id].lastModified = json.lastModified;
-				DB[this.id].properties = json.properties;
-				DB[this.id].table = json.table;
+				(DB[this.id] as nyckelDB_uncompressed).properties = json.properties;
+				(DB[this.id] as nyckelDB_uncompressed).table = json.table;
 				var version = json.version;
-				if ("Version" in json) version = json.Version;
+				if (json.Version) version = json.Version;
 				if (json.types && json.headers && version === "0.3_1.1") {
 					//migrate old json.types to columns
-					DB[this.id].columns = APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created);
+					(DB[this.id] as nyckelDB_uncompressed).columns = APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created);
 				}
-				else DB[this.id].columns = json.columns;
+				else (DB[this.id] as nyckelDB_uncompressed).columns = json.columns;
 				DB[this.id].version = this.version + "_" + Base64.Version;
 				if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this);
-				return ret.call(this, true, null, true);
+				return ret.call(this, true, false, true);
 			}
 			if (json.lastModified && json.lastModified === DB[this.id].lastModified) {
 				//no changes
 				checkDBForMissingItems.call(this);
-				return ret.call(this, true, null, false);
+				return ret.call(this, true, false, false);
 			}
 			var eTitle = TO_PROP_NAME(DB[this.id].title),
 				nTitle = TO_PROP_NAME(json.title);
@@ -729,20 +788,22 @@ var NyckelDB = (function () {
 				//title has been changed
 				DB[this.id].title = json.title;
 			}
-			if (nTitle !== eTitle && !DB[this.id].previousTitle ||
-				DB[this.id].previousTitle && DB[this.id].previousTitle.indexOf(nTitle) === -1) {
+			if (nTitle !== eTitle && !DB[this.id].previousTitle || DB[this.id].previousTitle && DB[this.id].previousTitle!.indexOf(nTitle) === -1) {
 				return ret.call(this, false, "cannot import " + json.title, false);
 			}
 			//table titles match
-			if ("deleted" in json) {
+			if (TABLE_IS_DELETED(json)) {
 				return checkDeleted.call(this, json);
 			}
 			else if (!json.table) return ret.call(this, false, "json is not valid", false);
-			if (DB[this.id].lastModified === 0 && DB[this.id].table.length === 0 && DB[this.id].created !== json.created || this.isDeleted()) {
+			if (TABLE_IS_DELETED(DB[this.id])) return ret.call(this, false, "cannot import to deleted table", false);
+			this.unhideRows();
+			if (DB[this.id].lastModified === 0 && (DB[this.id] as nyckelDB_uncompressed).table.length === 0 && DB[this.id].created !== json.created) {
+				//table has just been initialised and table is being loaded for the first time
 				return directLoadDB.call(this);
 			}
 			var createdDiff = DB[this.id].created - json.created;//the difference in time between when the two tables were created
-			syncColumns.call(this, json.columns, function () {
+			syncColumns.call(this, json.columns, function (this: NyckelDB_interface) {
 				syncTable.call(this, json.table, json.ids);
 			}.bind(this));
 			//TODO check for errors in headers and column metadata
@@ -752,12 +813,13 @@ var NyckelDB = (function () {
 			return ret.call(this, true, ERRORS[this.id], syncChanges);
 		}
 		function applyCSV(this: NyckelDB_interface, json: csv2jsonOutput): void {
-			function getId(this: NyckelDB_interface, jsonRow: tableRow, searchLevel: number, remainingIds: string[], idColName: string): string | false {
-				function findDifferences(this: NyckelDB_interface, id: string, json: csv2jsonOutput): string[] | false {
-					var x: string, y: string, b = 0, ret = [];
-					for (var item in json) {
-						if (json.hasOwnProperty(item)) {
-							x = String(json[item]);
+			type csv2jsonRow = { [colName: string]: tableValue; };
+			function getId(this: NyckelDB_interface, jsonRow: csv2jsonRow, searchLevel: number, remainingIds: string[], idColName: string): string | false {
+				function findDifferences(this: NyckelDB_interface, id: string, jsonRow: csv2jsonRow): string[] | false {
+					var x: string, y: string, b = 0, ret: string[] = [];
+					for (var item in jsonRow) {
+						if (jsonRow.hasOwnProperty(item)) {
+							x = String(jsonRow[item]);
 							y = String(this.getVal(id, item));
 							if (y && x !== y) {
 								ret[b] = item;
@@ -768,26 +830,26 @@ var NyckelDB = (function () {
 					if (b === 0) return false;
 					else return ret;
 				}
-				function onePossibleMatch(this: NyckelDB_interface, matchedID: string, minimunFindIdLoop: number, searchLevel: number, json: csv2jsonOutput): string | false {
-					var dif = findDifferences.call(this, matchedID, json);
+				function onePossibleMatch(this: NyckelDB_interface, matchedID: string, minimunFindIdLoop: number, searchLevel: number, jsonRow: csv2jsonRow): string | false {
+					var dif = findDifferences.call(this, matchedID, jsonRow);
 					if (dif === false) return matchedID;
 					if (searchLevel < minimunFindIdLoop) return false;
 					for (let a = 0, difLen = dif.length; a < difLen; a++) {
-						SET_VAL.call(this, matchedID, dif[a], json[dif[a]], false, 0);
+						SET_VAL.call(this, matchedID, dif[a], jsonRow[dif[a]], false, 0);
 						syncChanges = true;
 					}
 					return matchedID;
 				}
-				function toArray(this: NyckelDB_interface, json: csv2jsonOutput): any[] {
-					var arr = [],
+				function toArray(this: NyckelDB_interface, jsonRow: csv2jsonRow): tableValue[] {
+					var arr: tableValue[] = [],
 						headerName: string;
-					for (let a = 0, headers = DB[this.id].columns.$headers, len = headers.length - 1; a < len; a++) {
+					for (let a = 0, headers = (DB[this.id] as nyckelDB_uncompressed).columns.$headers, len = headers.length - 1; a < len; a++) {
 						headerName = headers[a + 1];
-						arr[a] = json[headerName];
+						arr[a] = jsonRow[headerName];
 						//add empty values to table for boolean (false), number (0) or string ("") values
 						if (arr[a] === undefined) {
-							if (DB[this.id].columns[headerName].type[0] === "boolean") arr[a] = false;
-							else if (/^number|nteger$|itude$/.test(DB[this.id].columns[headerName].type[0])) arr[a] = 0;
+							if ((DB[this.id] as nyckelDB_uncompressed).columns[headerName].type[0] === "boolean") arr[a] = false;
+							else if (/^number|nteger$|itude$/.test((DB[this.id] as nyckelDB_uncompressed).columns[headerName].type[0])) arr[a] = 0;
 							else arr[a] = "";
 						}
 					}
@@ -795,7 +857,7 @@ var NyckelDB = (function () {
 				}
 				function toEditTimesArr(this: NyckelDB_interface, json: csv2jsonOutput, traceStr: string): number[] {
 					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified)), undefined, "row", traceStr)];
-					for (let a = 1, len = DB[this.id].columns.$headers.length; a < len; a++) {
+					for (let a = 1, len = (DB[this.id] as nyckelDB_uncompressed).columns.$headers.length; a < len; a++) {
 						ret[a] = 0;
 					}
 					return ret;
@@ -803,10 +865,10 @@ var NyckelDB = (function () {
 				//if there are no registered ids existing/left, create a new one
 				if (remainingIds.length === 0) {
 					syncChanges = true;
-					return ADD_ROW.call(this, toArray.call(this, jsonRow), false, false, toEditTimesArr.call(this, json, "create new row from csv"));
+					return ADD_ROW.call(this, toArray.call(this, jsonRow), null, false, toEditTimesArr.call(this, json, "create new row from csv"));
 				}
 				else {
-					var ids = [];
+					var ids: string[] = [];
 					for (let a = 0, b = 0, idsLen = remainingIds.length; a < idsLen; a++) {
 						if (this.getVal(remainingIds[a], idColName) === jsonRow[idColName]) {
 							ids[b] = remainingIds[a];
@@ -817,17 +879,17 @@ var NyckelDB = (function () {
 						case 0:
 							if (searchLevel < 2) return false;
 							syncChanges = true;
-							return ADD_ROW.call(this, toArray.call(this, jsonRow), false, false, toEditTimesArr.call(this, json, "no remaining ids"));
+							return ADD_ROW.call(this, toArray.call(this, jsonRow), null, false, toEditTimesArr.call(this, json, "no remaining ids"));
 						case 1:
 							return onePossibleMatch.call(this, ids[0], 3, searchLevel, jsonRow);
 						default:
 							if (searchLevel < 4) return false;
-							var numDif = [],
-								dif = [];
+							var numDif: number[] = [],
+								dif: (false | string[])[] = [];
 							for (var k = 0; k < ids.length; k++) {
 								dif[k] = findDifferences.call(this, ids[k], jsonRow);
 								if (dif[k] === false) return ids[k];
-								numDif[k] = dif[k].length;
+								numDif[k] = (dif[k] as string[]).length;
 							}
 							if (searchLevel < 5) return false;
 							var closest = 0;
@@ -848,8 +910,10 @@ var NyckelDB = (function () {
 					syncChanges = true;
 				}
 				TO_LOCAL_STORAGE.call(this, syncChanges);
-				return ret.call(this, true, null, syncChanges);
+				return ret.call(this, true, false, syncChanges);
 			}
+			var db = DB[this.id];
+			if (TABLE_IS_DELETED(db)) return ret.call(this, false, "cannot import to deleted table", false);
 			//importing CSV file converted to JSON with csv2json function
 			var headers = CHECK_HEADERS_ARRAY.call(this, json.Headers),
 				foundMatch = false;
@@ -859,7 +923,7 @@ var NyckelDB = (function () {
 				//	else json.lastModified = null; //TODO: why is this null? should it pop an error instead?
 			}
 			//check for matching headers
-			for (let a = 0, lenA = headers.length, b, lenB, existingHeaders = DB[this.id].columns.$headers; a < lenA; a++) {
+			for (let a = 0, lenA = headers.length, b, lenB, existingHeaders = db.columns.$headers; a < lenA; a++) {
 				foundMatch = false;
 				for (b = 0, lenB = existingHeaders.length; b < lenB; b++) {
 					if (headers[a] === existingHeaders[b]) {
@@ -868,28 +932,28 @@ var NyckelDB = (function () {
 					}
 				}
 				if (foundMatch === false) {
-					for (let col in DB[this.id].columns) {
-						if (headers[a] === col || DB[this.id].columns[col].exportAs && headers[a] === DB[this.id].columns[col].exportAs[0]) {
+					for (let col in db.columns) {
+						if (headers[a] === col || db.columns[col].exportAs && headers[a] === db.columns[col].exportAs[0]) {
 							foundMatch = true;
 							continue;
 						}
 					}
 				}
 				if (foundMatch === false) {
-					ADD_COLUMN.call(this, headers[a], "any", a, null, false);//TODO set column type to something more specific than "any"
+					ADD_COLUMN.call(this, headers[a], "any", a, undefined, false);//TODO set column type to something more specific than "any"
 				}
 			}
 			//try match rows with existing data
 			var remainingIds: string[] = [],
 				f = 0,
 				identifierCol = json.identifierCol && headers.indexOf(json.identifierCol) > -1 ? json.identifierCol : headers[0];
-			this.forEachRow(function (id: string) {
-				if (DB[this.id].ids[id][0] !== "del") {
+			this.forEachRow(function (this: NyckelDB_interface, id: string) {
+				if ((DB[this.id] as nyckelDB_uncompressed).ids[id][0] !== -1) {
 					remainingIds[f] = id;
 					f++;
 				}
 			}.bind(this));
-			for (let loop = 0, g, lenG, id; loop < 10; loop++) {
+			for (let loop = 0, g: number, lenG: number, id: string | false; loop < 10; loop++) {
 				for (g = 0, lenG = json.Rows.length; g < lenG; g++) {
 					//TODO add some hirarchy to which columns must match, which should, and which don't matter when finding the matching row
 					id = getId.call(this, json.Rows[g], loop, remainingIds, identifierCol);
@@ -911,15 +975,15 @@ var NyckelDB = (function () {
 		if ("data" in json && version === this.version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
 			json = Base64.read(json.data, key);
 		}
-		if ("title" in json) return applyJSON.call(this, json);
-		else return ret.call(this, false, "json incompatible", false);
+		if ("title" in json) return applyJSON.call(this, (json as nyckelDB_uncompressed));
+		else return ret.call(this, false, "json incompatible", false);	
 	}
 	function CACHE_ERROR(this: NyckelDB_interface, error: any, description?: string): void {
 		error = description ? String(description) + ": " + String(error) : String(error);
 		ERRORS[this.id] = ERRORS[this.id] ? ERRORS[this.id] + "<br />" + error : error;
 		if (console && console.log) DB[this.id] ? console.log(DB[this.id].title + ": " + error) : console.log(error);
 	}
-	function SAVE_FILE(this: NyckelDB_interface, str: string, fileName: string, mimeType: string): boolean {
+	function SAVE_FILE(this: NyckelDB_interface, str: string, fileName: string, mimeType?: string): boolean {
 		function saveToWindows(this: NyckelDB_interface, str: string, fileName: string) {
 			// Verify that we are currently not snapped, or that we can unsnap to open the picker
 			var currentState = Windows.UI.ViewManagement.ApplicationView.value;
@@ -939,7 +1003,7 @@ var NyckelDB = (function () {
 			savePicker.fileTypeChoices.insert("Plain Text", [".txt"]);
 			// Default file name if the user does not type one in or select a file to replace
 			savePicker.suggestedFileName = fileName;
-			return savePicker.pickSaveFileAsync().then(function (this: NyckelDB_interface, file) {
+			return savePicker.pickSaveFileAsync().then(function (this: NyckelDB_interface, file: any) {
 				if (file) {
 					// Prevent updates to the remote version of the file until we finish making changes and call CompleteUpdatesAsync.
 					Windows.Storage.CachedFileManager.deferUpdates(file);
@@ -947,7 +1011,7 @@ var NyckelDB = (function () {
 					Windows.Storage.FileIO.writeTextAsync(file, str).done(function (this: NyckelDB_interface) {
 						// Let Windows know that we're finished changing the file so the other app can update the remote version of the file.
 						// Completing updates may require Windows to ask for user input.
-						Windows.Storage.CachedFileManager.completeUpdatesAsync(file).done(function (this: NyckelDB_interface, updateStatus) {
+						Windows.Storage.CachedFileManager.completeUpdatesAsync(file).done(function (this: NyckelDB_interface, updateStatus: any) {
 							if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
 								return true;
 							} else {
@@ -970,7 +1034,7 @@ var NyckelDB = (function () {
 			fileApi.writeFile(path, fileName, str, true);
 			return true;
 		}
-		function downloadToBrowser(this: NyckelDB_interface, str: string, fileName: string, mimeType: string) {
+		function downloadToBrowser(this: NyckelDB_interface, str: string, fileName: string, mimeType?: string) {
 			//depends on a hidden link with id='hiddenDownloadLink'
 			//<a id='hiddenDownloadLink' style='display:none' download='' href=''></a>
 			//somewhere in the page to create a web browser download link
@@ -1042,28 +1106,27 @@ var NyckelDB = (function () {
 		function start(this: NyckelDB_interface): void {
 			SEARCH_INDEX[this.id] = {}; //clear search index
 			SEARCH_SUGGESTIONS[this.id] = []; //clear search suggestions
-			var indexItem = [],
+			var indexItem: any[] = [],
 				a = 0,
-				colNums = [];
+				colNums: number[] = [];
 			for (var h = 0, hLen = COL_NAMES_INDEXED[this.id].length; h < hLen; h++) {
 				colNums[h] = GET_INDEX_OF_COLUMN.call(this, COL_NAMES_INDEXED[this.id][h]);
 			}
 			//get all the words in the table
-			for (var b = 0, len = this.getLength(), words, d, f, fLen, dLen = COL_NAMES_INDEXED[this.id].length; b < len; b++) {
+			for (let b = 0, len = this.getLength(), words: string[], d: number, f: number, fLen: number, dLen = COL_NAMES_INDEXED[this.id].length; b < len; b++) {
 				for (words = [], d = 0; d < dLen; d++) {
 					if (colNums[d] > -1) {
-						words = SEARCH_VALIDATE(DB[this.id].table[b][colNums[d]]);
+						words = SEARCH_VALIDATE((DB[this.id] as nyckelDB_uncompressed).table[b][colNums[d]]);
 						for (f = 0, fLen = words.length; f < fLen; f++) {
 							//arrange words in arrays of [word, columnName, rowId]
-							indexItem[a] = [words[f], COL_NAMES_INDEXED[this.id][d], DB[this.id].table[b][0]];
+							indexItem[a] = [words[f], COL_NAMES_INDEXED[this.id][d], (DB[this.id] as nyckelDB_uncompressed).table[b][0]];
 							a++;
 						}
 					}
 				}
 			}
-			words = null;
 			indexItem = indexItem.sort(sortByFirstCol);
-			for (let x = 0, y = 1, z = 0, reps = indexItem.length, foundMatch, row, col, i; x < reps; x = z > 0 ? x + z : x + 1, y = x + 1, z = 0) {
+			for (let x = 0, y = 1, z = 0, reps = indexItem.length, foundMatch: boolean, row, col, i; x < reps; x = z > 0 ? x + z : x + 1, y = x + 1, z = 0) {
 				foundMatch = true;
 				i = SEARCH_INDEX[this.id][indexItem[x][0]] = {};
 				while (foundMatch === true) {
@@ -1077,11 +1140,9 @@ var NyckelDB = (function () {
 					z++;
 				}
 			}
-			indexItem = null;
-			var searchWords = [],
-				numResultsPerWord = [];
-			searchWords = Object.keys(SEARCH_INDEX[this.id]);
-			for (var c = 0, lenC = searchWords.length, g, lenG = COL_NAMES_INDEXED[this.id].length; c < lenC; c++) {
+			indexItem = null!;
+			var searchWords: any[] = Object.keys(SEARCH_INDEX[this.id]);
+			for (let c = 0, lenC = searchWords.length, g, lenG = COL_NAMES_INDEXED[this.id].length, numResultsPerWord: number[] = []; c < lenC; c++) {
 				numResultsPerWord[c] = 0;
 				for (g = 0; g < lenG; g++) {
 					if (COL_NAMES_INDEXED[this.id][g] !== "id" && SEARCH_INDEX[this.id][searchWords[c]][COL_NAMES_INDEXED[this.id][g]]) {
@@ -1091,33 +1152,34 @@ var NyckelDB = (function () {
 				searchWords[c] = [numResultsPerWord[c], searchWords[c]];
 			}
 			searchWords.sort(sortSearchWords);
-			for (var e = 0, lenE = searchWords.length; e < lenE; e++) {
+			for (let e = 0, lenE = searchWords.length; e < lenE; e++) {
 				SEARCH_SUGGESTIONS[this.id][e] = searchWords[e][1];
 			}
 			STO_SEARCH_INDEX.call(this);
-			searchWords = null; numResultsPerWord = null;
+			searchWords = null!;
 			runQueuedCallbacks.call(this);
 			if (callback instanceof Function) return callback();
 		}
 		function runQueuedCallbacks(this: NyckelDB_interface): void {
 			while (BUILDING_SEARCH_INDEX_QUEUE[this.id].length > 0) {
-				BUILDING_SEARCH_INDEX_QUEUE[this.id].shift()();
+				BUILDING_SEARCH_INDEX_QUEUE[this.id].shift()!();
 			}
 			BUILDING_SEARCH_INDEX[this.id] = false;
 		}
-		if (this.isDeleted()) return;
+		var db = DB[this.id];
+		if (TABLE_IS_DELETED(db)) return;
 		if (BUILDING_SEARCH_INDEX[this.id]) {
 			if (callback instanceof Function) BUILDING_SEARCH_INDEX_QUEUE[this.id].push(callback);
 			return;
 		}
 		BUILDING_SEARCH_INDEX_QUEUE[this.id] = [];
 		BUILDING_SEARCH_INDEX[this.id] = true;
-		if (DB[this.id].columns.$indexable !== undefined) {
-			if (!colNamesToIndex) colNamesToIndex = DB[this.id].columns.$indexable.join("|").split("|");
+		if (db.columns.$indexable !== undefined) {
+			if (!colNamesToIndex) colNamesToIndex = db.columns.$indexable.join("|").split("|");
 			//refine colNames list
 			else for (let c = 0, d = 0; c < colNamesToIndex.length; c++ , d++) {
 				colNamesToIndex[c] = TO_PROP_NAME(colNamesToIndex[c]);
-				if (colNamesToIndex[c] && colNamesToIndex[c] !== "" && DB[this.id].columns.$indexable.indexOf(colNamesToIndex[c]) === -1) {
+				if (colNamesToIndex[c] && colNamesToIndex[c] !== "" && db.columns.$indexable.indexOf(colNamesToIndex[c]) === -1) {
 					colNamesToIndex.splice(d, 1);
 					d--;
 				}
@@ -1125,9 +1187,9 @@ var NyckelDB = (function () {
 		}
 		COL_NAMES_INDEXED[this.id] = colNamesToIndex ?
 			colNamesToIndex.join("|").split("|") :
-			DB[this.id].columns.$indexable ?
-				DB[this.id].columns.$indexable.join("|").split("|") :
-				DB[this.id].columns.$headers.join("|").split("|");
+			db.columns.$indexable ?
+				db.columns.$indexable.join("|").split("|") :
+				db.columns.$headers.join("|").split("|");
 		APP.Sto.getItem("searchIndex_" + DB[this.id].title, null, function (this: NyckelDB_interface, obj: searchIndexObj) {
 			if (typeof obj === "string") obj = JSON.parse(obj);
 			if (!(
@@ -1157,9 +1219,9 @@ var NyckelDB = (function () {
 			"version": this.version + "_" + Base64.Version
 		});
 	}
-	function SET_PROP(this: NyckelDB_interface, propName: string, value: tableValue, editTime: number, type: string, storeBool: boolean): tableValue | void {
+	function SET_PROP(this: NyckelDB_interface, propName: string, value: tableValue, editTime?: number, type?: string, storeBool?: boolean): tableValue | void {
 		function validate(this: NyckelDB_interface, propName: string, value: tableValue, type: string): tableValue | void{
-			if (VALUE_IS_VALID.call(this, value, type), false, "setProp") {
+			if (VALUE_IS_VALID.call(this, value, type, false, "setProp")) {
 				return apply.call(this, propName, value, type);
 			}
 			else {//try to coerce value to valid type
@@ -1168,7 +1230,7 @@ var NyckelDB = (function () {
 					if (value === "true") value = true;
 					if (value === "false") value = false;
 				}
-				if (VALUE_IS_VALID.call(this, value, type), false, "setProp") {
+				if (VALUE_IS_VALID.call(this, value, type, false, "setProp")) {
 					return apply.call(this, propName, value, type);
 				}
 				else CACHE_ERROR.call(this, value, "cannot set " + propName);
@@ -1176,29 +1238,29 @@ var NyckelDB = (function () {
 		}
 		function apply(this: NyckelDB_interface, propName: string, value: tableValue, type: string): tableValue{
 			editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "property", "setProp");
-			DB[this.id].properties[propName][0] = value;
-			DB[this.id].properties[propName][1] = editTime;
-			DB[this.id].properties[propName][2] = type;
+			(DB[this.id] as nyckelDB_uncompressed).properties[propName][0] = value;
+			(DB[this.id] as nyckelDB_uncompressed).properties[propName][1] = editTime;
+			(DB[this.id] as nyckelDB_uncompressed).properties[propName][2] = type;
 			DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
 			this.syncPending = true;
 			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 			return value;
 		}
-		if (this.isDeleted()) return;
+		if (TABLE_IS_DELETED(DB[this.id])) return;
 		if (typeof value === "string") value = value.replace(/<[^>]+>/g, "");//remove html markup
 		propName = TO_PROP_NAME(propName);
-		if (DB[this.id].properties[propName]) {
-			return validate.call(this, propName, value, DB[this.id].properties[propName][2]);
+		if ((DB[this.id] as nyckelDB_uncompressed).properties[propName]) {
+			return validate.call(this, propName, value, (DB[this.id] as nyckelDB_uncompressed).properties[propName][2]);
 		}
 		else if (type) {
 			return validate.call(this, propName, value, type);
 		}
 		else CACHE_ERROR.call(this, propName, "invalid property name")
 	}
-	function ADD_ROW(this: NyckelDB_interface, array: any[], id: string, storeBool: boolean, editTimesArr: number[]): string | false {
+	function ADD_ROW(this: NyckelDB_interface, array: any[], id: string | null, storeBool: boolean, editTimesArr?: number[]): string | false {
 		//creates a 3 digit id from custom alphabet one step higher than the given starting point
-		function getNextId(this: NyckelDB_interface, idLength: number, existingIds: { [id: string]: any; }, startingPoint: string): string | false {
-			function setStartingPoint(startingPoint: string): void {
+		function getNextId(this: NyckelDB_interface, idLength: number, existingIds: { [id: string]: any; }, startingPoint: string | null): string | null {
+			function setStartingPoint(startingPoint: string | null): void {
 				if (startingPoint) {
 					newId = TO_BASIC_ALPHABET(startingPoint);
 					newId = newId.replace(/[^A-z0-9]/g, "");
@@ -1212,23 +1274,7 @@ var NyckelDB = (function () {
 			function maxNumPos(idLength: number, alphabetLength: number): number {
 				return Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10);
 			}
-			function getForbidden(): string[] {
-				var forbidden = "alert all anchor anchors area assign blur button checkbox clearInterval clearTimeout clientInformation close closed";
-				forbidden += " confirm constructor crypto decodeURI decodeURIComponent defaultStatus document element elements embed embeds encodeURI";
-				forbidden += " encodeURIComponent escape event fileUpload focus form forms frame innerHeight innerWidth layer layers link location";
-				forbidden += " mimeTypes navigate navigator frames frameRate hidden history image images offscreenBuffering open opener option outerHeight";
-				forbidden += " outerWidth packages pageXOffset pageYOffset parent parseFloat parseInt password pkcs11 plugin prompt propertyIsEnum radio";
-				forbidden += " reset screenX screenY scroll secure select self setInterval setTimeout status submit taint text textarea Array Date eval";
-				forbidden += " function hasOwnProperty Infinity isFinite isNaN isPrototypeOf length Math NaN name Number Object prototype String toString";
-				forbidden += " undefined valueOf abstract arguments boolean break byte case catch char class const continue debugger default delete do";
-				forbidden += " double else enum eval export extends false final finally float for function goto if implements import in instanceof int";
-				forbidden += " interface let long native new null package private protected public return short static super switch synchronized this";
-				forbidden += " throw throws transient true try typeof top unescape untaint window var void volatile while with yield onblur onclick";
-				forbidden += " onerror onfocus onkeydown onkeypress onkeyup onmouseover onload onmouseup onmousedown onsubmit getClass java JavaArray";
-				forbidden += " javaClass JavaObject JavaPackage";
-				return forbidden.split(" ");
-			}
-			function buildId(this: NyckelDB_interface): string | false {
+			function buildId(this: NyckelDB_interface): string | null {
 				function nextIndex(activeChar: number): number {
 					return alphabet.indexOf(newId.charAt(activeChar)) - 1;
 				}
@@ -1261,14 +1307,10 @@ var NyckelDB = (function () {
 						}
 					}
 				}
-				for (var activeChar = idLength - 1, letterIndex, end;
-					(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible;
-					activeChar-- , num++) {
-
+				for (var activeChar = idLength - 1, letterIndex: number, end; (existingIds[newId] !== undefined || FORBIDDEN.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible; activeChar-- , num++) {
 					for (letterIndex = alphabet.indexOf(newId.charAt(activeChar));
-						(existingIds[newId] !== undefined || forbidden.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible;
+						(existingIds[newId] !== undefined || FORBIDDEN.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible;
 						letterIndex++ , num++) {
-
 						if (letterIndex + 1 !== alphabetLength) {
 							if (activeChar === 0 && /\d/.test(alphabet[letterIndex + 1])) {
 								num--;
@@ -1280,19 +1322,18 @@ var NyckelDB = (function () {
 						rollAhead();
 					}
 				}
-				alphabet = null; forbidden = null; alphabetLength = null; alpha = null; activeChar = null; letterIndex = null; end = null;
+				alphabet = null!; alphabetLength = null!; alpha = null!; activeChar = null!; letterIndex = null!; end = null;
 				if (num > maxIdsPossible) {
 					CACHE_ERROR.call(this, "getNextId failed", "You have exceeded a design limitation in the number of possible records that this application can handle.");
-					return false;
+					return null;
 				}
 				else return newId;
 			}
-			var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),
-				forbidden = getForbidden();
+			var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split("");
 			existingIds = existingIds || {};
 			if (typeof existingIds !== "object") {
 				CACHE_ERROR.call(this, "getNextId failed", "Invalid parameters: existingIds expects a JSON object");
-				return false;
+				return null;
 			}
 			var alphabetLength = alphabet.length,
 				maxIdsPossible = maxNumPos(idLength, alphabetLength),
@@ -1303,11 +1344,11 @@ var NyckelDB = (function () {
 			setStartingPoint(startingPoint);
 			return buildId.call(this);
 		}
-		if (this.isDeleted()) {
+		if (TABLE_IS_DELETED(DB[this.id])) {
 			CACHE_ERROR.call(this, "please recreate table before adding rows");
 			return false;
 		}
-		var hLen = DB[this.id].columns.$headers.length;
+		var hLen = (DB[this.id] as nyckelDB_uncompressed).columns.$headers.length;
 		if (id && array.length === hLen && array[0] === id) {
 			array = array.slice(1);
 		}
@@ -1315,21 +1356,21 @@ var NyckelDB = (function () {
 			CACHE_ERROR.call(this, array, "new row doesn't match table size: " + hLen);
 			return false;
 		}
-		id = getNextId.call(this, 3, DB[this.id].ids, id ? id : array && array.constructor === Array ? array.join("") : null);
+		id = getNextId.call(this, 3, (DB[this.id] as nyckelDB_uncompressed).ids, id ? id : IS_ARRAY(array) ? array.join("") : null);
 		if (!id) return false;
 		var row: any[] = [id];
 		if (!array || array.constructor !== Array) {
 			CACHE_ERROR.call(this, array, "cannot add row");
-			row = null;
+			row = null!;
 			return false;
 		}
-		for (let a = 1, len = DB[this.id].columns.$headers.length, type; a < len; a++){
-			type = DB[this.id].columns[DB[this.id].columns.$headers[a]].type[0];
+		for (let a = 1, len = (DB[this.id] as nyckelDB_uncompressed).columns.$headers.length, type; a < len; a++){
+			type = (DB[this.id] as nyckelDB_uncompressed).columns[(DB[this.id] as nyckelDB_uncompressed).columns.$headers[a]].type[0];
 			if (type === "boolean") row[a] = false;
 			else if (VALID_NUMBER_TYPES.test(type)) row[a] = 0;
 			else row[a] = "";
 		}
-		DB[this.id].table.push((row as tableRow));
+		(DB[this.id] as nyckelDB_uncompressed).table.push((row as tableRow));
 		ROW_INDEX_CACHE[this.id] = {};//clear the cache
 		editTimesArr = editTimesArr || [];
 		editTimesArr[0] = VALIDATE_EDIT_TIME.call(this, editTimesArr[0], undefined, "row", "addRow");
@@ -1338,12 +1379,12 @@ var NyckelDB = (function () {
 			editTimesArr[0] + DB[this.id].created > DB[this.id].lastModified ?
 				editTimesArr[0] + DB[this.id].created : DB[this.id].lastModified : TIMESTAMP();
 
-		DB[this.id].ids[id] = editTimesArr && editTimesArr[0] !== undefined ? [editTimesArr[0]] : [TIMESTAMP(DB[this.id].created)];
+		(DB[this.id] as nyckelDB_uncompressed).ids[id] = editTimesArr && editTimesArr[0] !== undefined ? [editTimesArr[0]] : [TIMESTAMP(DB[this.id].created)];
 
 		for (let a = 0, len = hLen - 1; a < len; a++) {
 			SET_VAL.call(this, id, a + 1, array[a], false, editTimesArr[a + 1]);
 		}
-		row = null;
+		row = null!;
 		this.syncPending = true;
 		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 		return id;
@@ -1760,13 +1801,35 @@ var NyckelDB = (function () {
 		else if (/Email|E-mail|E_mail/i.test(valueType)) return validateEmail.call(this, value);
 		else return ret.call(this, true, value);
 	}
-	function SET_VAL(this: NyckelDB_interface, rowId: string, colName: string, newValue: tableValue, storeBool: boolean, editTime: number, callback: (newValue: tableValue | undefined, errors:string | false, title:string, syncPending: boolean) => void): tableValue | undefined {
+	function GET_FORBIDDEN(): string[] {
+		//globals and properties to avoid using (plus anything that begins with "scroll", "screen", "on", "moz" or "webkit")
+		var forbidden = "Array ContentSearchUIController CssFlags Date HistoryController Infinity InstallTrigger JavaArray JavaObject JavaPackage Math";
+		forbidden += " NaN Number Object PERSISTENT PropTypes TEMPORARY RPMAddMessageListener RPMGetAppBuildID RPMGetBoolPref RPMGetFormatURLPref";
+		forbidden += " RPMGetFxAccountsEndpoint RPMGetIntPref RPMGetUpdateChannel RPMIsWindowPrivate RPMRemoveMessageListener RPMSendAsyncMessage";
+		forbidden += " RPMSetBoolPref React ReactDOM ReactRedux Redux String addEventListener alert all anchor anchors applicationCache area assign atob";
+		forbidden += " blur btoa button caches cancelAnimationFrame cancelIdleCallback captureEvents checkbox chrome class clearInterval clearTimeout";
+		forbidden += " clientInformation close closed confirm console constructor createImageBitmap crypto customElements decodeURI decodeURIComponent";
+		forbidden += " defaultStatus defaultstatus devicePixelRatio dispatchEvent document dump element elements embed embeds encodeURI encodeURIComponent";
+		forbidden += " enum esImport escape eval event export extends external fetch fileUpload find focus form formatParams forms frame frameElement";
+		forbidden += " frameRate frames fullScreen function gContentSearchController generateUUID4 getClass getComputedStyle getCookie getDefaultComputedStyle";
+		forbidden += " getLoggingParameters getSelection getZenAPIHost hasOwnProperty hidden history image images import indexedDB innerHeight innerWidth";
+		forbidden += " isFinite isNaN isPrototypeOf isSecureContext java javaClass layer layers length link localStorage location locationbar logError";
+		forbidden += " matchMedia menubar mimeTypes moveBy moveTo name navigate navigator offscreenBuffering open openDatabase opener option opr origin";
+		forbidden += " outerHeight outerWidth packages pageXOffset pageYOffset parent parseFloat parseInt password performance personalbar pkcs11";
+		forbidden += " plugin postMessage print prompt propertyIsEnum propagateLeads prototype qs qsFromCookies qsFromDataAttribute qsFromDataAttributeHelper";
+		forbidden += " qsFromDocument qsFromUrl queueMicrotask radio releaseEvents removeEventListener requestAnimationFrame requestIdleCallback reset";
+		forbidden += " resizeBy resizeTo secure select self sessionStorage setInterval setResizable setTimeout sidebar sizeToContent speechSynthesis";
+		forbidden += " src status statusbar stop styleMedia submit super taint text textarea toString toolbar top u2f undefined unescape untaint";
+		forbidden += " updateStartpageBackgroundColor updateCommands valueOf visualViewport webWorker webpackJsonp window";
+		return forbidden.split(" ");
+	}
+	function SET_VAL(this: NyckelDB_interface, rowId: string | number, colName: string | number, newValue: tableValue, storeBool: boolean, editTime?: number, callback?: (newValue: tableValue | undefined, errors:string | false, title:string, syncPending: boolean) => void): tableValue | undefined {
 		function applyVal(this: NyckelDB_interface, toTable: tableRow[], toIds: tableIds, rowIndex: number): tableValue {
 			var thisModified: number;
 			editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "cell", "setVal", toTable[rowIndex][0]);
 			toTable[rowIndex][colIndex] = newValue;
 			toIds[toTable[rowIndex][0]][colIndex] = editTime;
-			thisModified = toIds[toTable[rowIndex][0]][0] === "del" ?
+			thisModified = toIds[toTable[rowIndex][0]][0] === -1 ?
 				editTime + Number(toIds[toTable[rowIndex][0]][1]) + DB[this.id].created :
 				editTime + Number(toIds[toTable[rowIndex][0]][0]) + DB[this.id].created;
 			if (thisModified > DB[this.id].lastModified) DB[this.id].lastModified = thisModified;
@@ -1775,7 +1838,8 @@ var NyckelDB = (function () {
 			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 			return callback instanceof Function ? (callback(newValue, false, DB[this.id].title, true), newValue) : newValue;
 		}
-		if (this.isDeleted()) {
+		var db = DB[this.id];
+		if (TABLE_IS_DELETED(db)) {
 			return callback instanceof Function ? (callback(undefined, "table is deleted", DB[this.id].title, this.syncPending), undefined) : undefined;
 		}
 		if (typeof newValue === "string") {
@@ -1795,15 +1859,15 @@ var NyckelDB = (function () {
 			var error = rowIndex === -1 ? "rowId not found: " + rowId : "colName not found: " + colName;
 			return callback instanceof Function ? (callback(undefined, error, DB[this.id].title, this.syncPending), undefined) : undefined;
 		}
-		var validationObj = VALIDATE.call(this, newValue, DB[this.id].columns[DB[this.id].columns.$headers[colIndex]].type[0], "SET_VAL: " + rowId + ":" + colName);
+		var validationObj = VALIDATE.call(this, newValue, db.columns[db.columns.$headers[colIndex]].type[0], "SET_VAL: " + rowId + ":" + colName);
 		if (validationObj.valid) {
 			if (rowIsHidden) return applyVal.call(this, HIDDEN_TABLE_DATA[this.id], HIDDEN_IDS[this.id], rowIndex);
-			else return applyVal.call(this, DB[this.id].table, DB[this.id].ids, rowIndex);
+			else return applyVal.call(this, db.table, db.ids, rowIndex);
 		}
 		else return callback instanceof Function ? (callback(undefined, ERRORS[this.id], DB[this.id].title, this.syncPending), undefined) : undefined;
 	}
-	function DELETE_ROW(this: NyckelDB_interface, rowId: string | number, storeBool: boolean, editTime: number): boolean {
-		if (this.isDeleted()) {
+	function DELETE_ROW(this: NyckelDB_interface, rowId: string | number, storeBool: boolean, editTime?: number): boolean {
+		if (TABLE_IS_DELETED(DB[this.id])) {
 			CACHE_ERROR.call(this, rowId, "could not delete row, table has been deleted");
 			return false;
 		}
@@ -1818,7 +1882,7 @@ var NyckelDB = (function () {
 				index = GET_INDEX_OF_HIDDEN_ROW.call(this, rowId);
 			}
 			if (index === -1) {
-				index = null;
+				index = null!;
 				CACHE_ERROR.call(this, rowId, "row does not exist or was already deleted");
 				return false;
 			}
@@ -1826,11 +1890,11 @@ var NyckelDB = (function () {
 		//if found
 		editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "row", "deleteRow");
 		//set deleted in id registry
-		if (rowIsHidden) HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][index][0]] = ["del", editTime];
-		else DB[this.id].ids[DB[this.id].table[index][0]] = ["del", editTime];
+		if (rowIsHidden) HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][index][0]] = [-1, editTime];
+		else (DB[this.id] as nyckelDB_uncompressed).ids[(DB[this.id] as nyckelDB_uncompressed).table[index][0]] = [-1, editTime];
 		//delete the row
 		if (rowIsHidden) HIDDEN_TABLE_DATA[this.id].splice(index, 1);
-		else DB[this.id].table.splice(index, 1);
+		else (DB[this.id] as nyckelDB_uncompressed).table.splice(index, 1);
 		//clear the row cache
 		ROW_INDEX_CACHE[this.id] = {};
 		//update lastModified and syncPending
@@ -1840,8 +1904,9 @@ var NyckelDB = (function () {
 		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 		return true;
 	}
-	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: number | "del", createdDiff = 0, type: string, traceStr: string, id?: string): number | "del" {
+	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: number | "del" | undefined, createdDiff = 0, type: string, traceStr: string, id?: string): number {
 		var t = TIMESTAMP();
+		var db = DB[this.id];
 		switch (type) {
 			case "created":
 			case "lastModified":
@@ -1850,15 +1915,17 @@ var NyckelDB = (function () {
 			case "row":
 			case "property":
 			case "column":
-				t = TIMESTAMP(DB[this.id].created);
+				t = TIMESTAMP(db.created);
 				break;
 			case "cell":
-				t = TIMESTAMP(DB[this.id].created + ((DB[this.id].ids[id] as deletedId)[0] === "del" ? 0 : DB[this.id].ids[id][0] as number));
+				if (TABLE_IS_DELETED(db)) CACHE_ERROR.call(this, "cannot validate cell edit time of deleted table");
+				else if (id) t = TIMESTAMP(db.created + ((db.ids[id] as deletedId)[0] === -1 ? -1 : db.ids[id][0] as number));
+				else CACHE_ERROR.call(this, "validating a cell edit time requires an cell id");
 				break;
 			default:
 				CACHE_ERROR.call(this, type, "no such item to timestamp @ " + traceStr);
 		}
-		if (num === "del") return num;
+		if (num === "del") return -1;
 		else if (!num && num !== 0) return t;
 		else if (!IS_NUMERIC(num) || num === 0 && (type === "created" || type === "lastModified" || type === "deleted")) {
 			CACHE_ERROR.call(this, num, "invalid " + type + " timestamp found @ " + traceStr);
@@ -1869,10 +1936,10 @@ var NyckelDB = (function () {
 		}
 		else {
 			CACHE_ERROR.call(this, num, type + " timestamp out of range @ " + traceStr + ". Should be less than " + t);
-			return num - DB[this.id].created;
+			return num - db.created;
 		}
 	}
-	function DELETE_TABLE(this: NyckelDB_interface, callback: (sucess: boolean, errors: string | false, title: string, syncPending: boolean) => void, editTime: number, storeBool: boolean): void {
+	function DELETE_TABLE(this: NyckelDB_interface, callback: (sucess: boolean, errors: tableErrors, title: string, syncPending: boolean) => void, editTime?: number, storeBool?: boolean): void {
 		var msg = "Are you sure you want to delete " + DB[this.id].title + " ?",
 			del = function (this: NyckelDB_interface) {
 				DELETE_TABLE_BY_ID.call(this, this.id, editTime);
@@ -1884,20 +1951,20 @@ var NyckelDB = (function () {
 				if (callback instanceof Function) return callback(false, ERRORS[this.id], DB[this.id].title, false);
 			}.bind(this);
 		if (APP.confirm) APP.confirm(msg, del, cancel, { "okButton": "Delete" });
-		else if (window && window.confirm(msg)) del();
-		else cancel();
+		else if (window && window.confirm(msg)) del.call(this);
+		else cancel.call(this);
 	}
-	function DELETE_TABLE_BY_ID(this: NyckelDB_interface, id: number, editTime: number) {
-		editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "deleted", "deleteTableById");
+	function DELETE_TABLE_BY_ID(this: NyckelDB_interface, id: number, editTime?: number) {
+		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "deleted", "deleteTableById");
 		(DB[id] as unknown as nyckelDB_deleted) = {
 			"title": DB[id].title,
 			"created": DB[id].created,
-			"deleted": editTime,
-			"lastModified": editTime > DB[id].lastModified ? editTime : DB[id].lastModified,
+			"deleted": validatedEditTime,
+			"lastModified": validatedEditTime > DB[id].lastModified ? validatedEditTime : DB[id].lastModified,
 			"version": this.version + "_" + Base64.Version
 		};
 	}
-	function INITIATE_NEW_DB(this: NyckelDB_interface, title: string, options, callback: (title: string, options) => void): void {
+	function INITIATE_NEW_DB(this: NyckelDB_interface, title: string, options: NyckelDBOptions | null, callback: (title: string, options: NyckelDBOptions | null) => void) {
 		function initiateEmptyDBObjects(id: number) {
 			SEARCH_INDEX[id] = {};
 			SEARCH_SUGGESTIONS[id] = [];
@@ -1910,17 +1977,17 @@ var NyckelDB = (function () {
 			this.id = Base64.number_hash(title + Base64.rand(), 12);
 			initiateEmptyDBObjects(this.id);
 			APP.Sto.setItem("tables", JSON.stringify(DBS));
-			return callback(title, options);
+			if(callback instanceof Function) return callback(title, options);
 		}
-		title = TO_PROP_NAME(String(title).replace(/[^A-z\s_0-9]/g, ""));
-		APP.Sto && APP.Sto.getItem("tables", null, function (this: NyckelDB_interface, tables: string) {
+		title = TO_PROP_NAME(title);
+		APP.Sto && APP.Sto.getItem("tables", null, function (this: NyckelDB_interface, tables: string): void {
 			if (tables) {
 				DBS = JSON.parse(tables);
 				if (DBS.indexOf(title) > -1) {
 					this.id = Base64.number_hash(title + Base64.rand(), 12);
 					initiateEmptyDBObjects(this.id);
 					NUM++;
-					return callback(title, options);
+					if (callback instanceof Function) return callback(title, options);
 				}
 				else newDBS.call(this);
 			}
@@ -1929,7 +1996,7 @@ var NyckelDB = (function () {
 	}
 	function CHECK_HEADERS_ARRAY(this: NyckelDB_interface, headers: string[]): string[] {
 		var header: string,
-			ret = [];
+			ret: string[] = [];
 		for (let a = 0, b = 1, len = headers.length; a < len; a++) {
 			for (b = a + 1; b < len; b++) {
 				if (headers[a] === headers[b]) CACHE_ERROR.call(this, headers[a], "duplicate header values");
@@ -1954,7 +2021,7 @@ var NyckelDB = (function () {
 		}
 		return ret;
 	}
-	function CREATE_BASE64_FILE(this: NyckelDB_interface, key: string, token: syncToken, callback: (success: boolean, errors:string|false, title:string, base64File: base64File | false) => void): boolean {
+	function CREATE_BASE64_FILE(this: NyckelDB_interface, key: string | null | undefined, token?: syncToken, callback?: (success: boolean, errors:string|false, title:string, base64File: base64File | false) => void): void {
 		function dataString(this: NyckelDB_interface) {
 			var str = Base64.write(JSON.stringify(EXPORT_DB.call(this)), key);
 			return JSON.stringify({
@@ -1968,10 +2035,10 @@ var NyckelDB = (function () {
 			if (!DBX_SYNC_OBJ[title] || DB[this.id].lastModified > DBX_SYNC_OBJ[title]) DBX_SYNC_OBJ[title] = DB[this.id].lastModified;
 			return JSON.stringify(DBX_SYNC_OBJ);
 		}
-		function syncToken(this: NyckelDB_interface, token: syncToken) {
+		function syncToken(this: NyckelDB_interface, token?: syncToken) {
 			if (token) {
 				token = typeof token === "string" ? JSON.parse(token) : token;
-				if (token.version === this.version + "_" + Base64.Version) {
+				if (token && token.version === this.version + "_" + Base64.Version) {
 					if (token.signature && token.token && token.signature === Base64.hmac(token.token, key)) {
 						var dbxSyncObj: { [tableName: string]: number } = JSON.parse(Base64.read(token.token, key));
 						for (var i in dbxSyncObj) {
@@ -1995,18 +2062,21 @@ var NyckelDB = (function () {
 				"version": this.version + "_" + Base64.Version
 			});
 		}
-		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return callback instanceof Function ? (callback(false, "try again later", DB[this.id].title, false), false): false;
+		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) {
+			if (callback instanceof Function) return callback(false, "try again later", DB[this.id].title, false);
+			else return;
+		};
 		var obj = {
 			"title": DB[this.id].title,
 			"file": dataString.call(this),
 			"syncFile": syncFile.call(this),
 			"syncToken": syncToken.call(this, token)
 		};
-		return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, obj), true): true;
+		if (callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, obj);
 	}
-	function VALIDATE_TYPE(this: NyckelDB_interface, type: string, options?: boolean) {
+	function VALIDATE_TYPE(this: NyckelDB_interface, type: string, customTypeBool?: boolean) {
 		type = type ? String(type).toLowerCase().replace(/[^a-z]/g, "") : "null";
-		if (!options) {
+		if (!customTypeBool) {
 			type = type.replace(/^(posinteger|posintegers|positiveint|positiveinteger|pos)$/, "posInteger");
 			type = type.replace(/^(neginteger|negintegers|negativeint|negativeinteger|neg)$/, "negInteger");
 			type = type.replace(/^(uniquestring|uniquestrings|unique|id|uniqueid)$/, "uniqueString");
@@ -2034,14 +2104,14 @@ var NyckelDB = (function () {
 
 		if (type && type.match(VALID_TYPES)) return type;
 		else {
-			if (options) CACHE_ERROR.call(this, type, "customProperties can only be set to string, number, boolean, or any, not");
+			if (customTypeBool) CACHE_ERROR.call(this, type, "customProperties can only be set to string, number, boolean, or any, not");
 			else CACHE_ERROR.call(this, type, "invalid Header type");
 			return "any";
 		}
 	}
-	function APPLY_COLUMN_PROPERTIES(this: NyckelDB_interface, tableHeaders: string[], columnProperties: {[columnName: string]:any}, tableCreated: number, doNotIndex?: string[]) {
-		function applyHeaders(this: NyckelDB_interface, headers: string[] | {[headerName: string]: string}): string[] {
-			if (headers && headers.constructor === Array) {
+	function APPLY_COLUMN_PROPERTIES(this: NyckelDB_interface, tableHeaders: string[] | {[columnName: string]: any}, columnProperties: {[columnName: string]: any} = {}, tableCreated?: number, doNotIndex?: string[]) {
+		function applyHeaders(this: NyckelDB_interface, headers: string[] | {[headerName: string]: string} | {[headerName: string]: {type:string}}): string[] {
+			if (IS_ARRAY(headers)) {
 				return CHECK_HEADERS_ARRAY.call(this, headers);
 			}
 			else if (!headers || typeof headers !== "object") return ["id"];
@@ -2054,11 +2124,14 @@ var NyckelDB = (function () {
 					b++;
 					//initiate columnProperties with unchecked header values (to be fixed later)
 					columnProperties[a] = columnProperties[a] || {};
-					if (typeof _headers[a] === "object") {
-						columnProperties[a].type = columnProperties[a].type || VALIDATE_TYPE.call(this, _headers[a].type);
-					}
-					else if (typeof _headers[a] === "string") {
-						columnProperties[a].type = columnProperties[a].type || VALIDATE_TYPE.call(this, _headers[a]);
+					if (!columnProperties[a].type) {
+						if (typeof _headers[a] === "string") {
+							columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as string));
+						}
+						else if (typeof _headers[a] === "object") {
+							columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as {type: string}).type);
+						}
+
 					}
 				}
 			}
@@ -2097,7 +2170,7 @@ var NyckelDB = (function () {
 						};
 					}
 					else if (columnProperties[obj.$headers[a]].type) {
-						if (columnProperties[obj.$headers[a]].type.constructor === Array) obj[obj.$headers[a]] = {
+						if (IS_ARRAY(columnProperties[obj.$headers[a]].type)) obj[obj.$headers[a]] = {
 							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]].type[0]), columnProperties[obj.$headers[a]].type[1]]
 							//TODO add other properties
 							//initialValue: 
@@ -2153,7 +2226,6 @@ var NyckelDB = (function () {
 		//an Object like this {Column_1: "string", Column_2: "number"...} or
 		//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
 		//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
-		columnProperties = columnProperties || {};
 
 		var time = TIMESTAMP(tableCreated),
 			obj: tableColumns = {
@@ -2164,28 +2236,30 @@ var NyckelDB = (function () {
 			};
 		obj.$indexable = obj.$headers.join("|").split("|"),
 			obj.$indexable.splice(0, 1);//remove id
-		if (doNotIndex && doNotIndex.constructor === Array) {
+		if (IS_ARRAY(doNotIndex)) {
 			for (let a = 0, len = doNotIndex.length, i; a < len; a++) {
 				i = obj.$indexable.indexOf(TO_PROP_NAME(doNotIndex[a]));
 				if (i > -1) obj.$indexable.splice(i, 1);
 			}
 		}
-		if (tableHeaders.constructor === Array) {
+		if (IS_ARRAY(tableHeaders)) {
 			if (tableHeaders[0] !== "id" && obj.$headers.length === tableHeaders.length + 1) tableHeaders.unshift("id");
-			if (columnProperties.constructor === Array) return apply_Simple_Array.call(this); //old db code with types array
+			if (IS_ARRAY(columnProperties)) return apply_Simple_Array.call(this); //old db code with types array
 			else return applyArray.call(this);
 		}
 		else return applyObject.call(this);
 	}
-	function DELETE_COLUMN(this: NyckelDB_interface, colName: string, storeBool: boolean, editTime: number, callback?: successCallback) {
+	function DELETE_COLUMN(this: NyckelDB_interface, colName: string, storeBool: boolean, editTime?: number, callback?: successCallback) {
+		var db = DB[this.id];
+		if(TABLE_IS_DELETED(db)) return callback instanceof Function ? callback(false, "cannot delete " + colName + " column in deleted table", DB[this.id].title, this.syncPending) : false;
 		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex > 0) {
-			var columns = DB[this.id].columns,
+			var columns = db.columns,
 				col = columns.$headers[colIndex],
 				time = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "deleteColumn");
-			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
-				DB[this.id].table[a].splice(colIndex, 1);
-				DB[this.id].ids[DB[this.id].table[a][0]].splice(colIndex, 1);
+			for (let a = 0, len = db.table.length; a < len; a++) {
+				db.table[a].splice(colIndex, 1);
+				db.ids[db.table[a][0]].splice(colIndex, 1);
 			}
 			if (HIDDEN_TABLE_DATA[this.id]) {
 				for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
@@ -2213,88 +2287,90 @@ var NyckelDB = (function () {
 		}
 		else return callback instanceof Function ? callback(false, colName + " column not found", DB[this.id].title, this.syncPending) : false;
 	}
+	type addColOptions = {
+		initialValue?: tableValue,
+		deleted?: boolean,
+		search?: boolean,
+		formula?: string
+	};
 	function ADD_COLUMN(this: NyckelDB_interface,
 		colName: string,
 		type: string,
 		position: number,
-		options: {
-			initialValue?: tableValue,
-			deleted?: boolean,
-			search?: boolean,
-			formula?: string
-		},
-		storeBool: boolean,
+		options?: addColOptions,
+		storeBool?: boolean,
 		editTime?: number,
 		callback?) {
 		function timestamp<T>(val: T | [T, number]): [T, number] {
-			function isArr(val): val is [T, number]{
+			function isArr(val: any): val is [T, number]{
 				return val && val.constructor === Array
 			}
-			return isArr(val) ? val : [val, editTime];
+			return isArr(val) ? val : [val, validatedEditTime];
 		}
-		function applyProps(cb: () => void): void {
+		function applyProps(this: NyckelDB_interface, table: nyckelDB_uncompressed, cb: (table: nyckelDB_uncompressed) => void): void {
 			var arr;
-			for (let prop in options) {
-				arr = timestamp(options[prop]);
+			for (let prop in opt) {
+				arr = timestamp(opt[prop]);
 				switch (prop) {
 					case "deleted": //taken care of above
 						break;
 					case "initialValue":
-						if (VALUE_IS_VALID.call(this, arr[0], props.type[0]), false, "applyProps") props[prop] = arr;
+						if (VALUE_IS_VALID.call(this, arr[0], props.type[0], false, "applyProps")) props[prop] = arr;
 						break;
 					case "search":
-						if (VALUE_IS_VALID.call(this, arr[0], "boolean"), false, "applyProps2") props[prop] = arr;
+						if (VALUE_IS_VALID.call(this, arr[0], "boolean", false, "applyProps2")) props[prop] = arr;
 						break;
 					//TODO add more properties here
 					default: console.log("property not implemented: " + prop);
 				}
 			}
 			cols[colName] = props;
-			return cb();
+			return cb(table);
 		}
-		function updateTable(this: NyckelDB_interface) {
-			if (!options.initialValue || options.initialValue && !VALUE_IS_VALID.call(this, options.initialValue[0], props.type[0]), true, "updateTable") {
-				if (props.type[0] === "boolean") options.initialValue = false;
-				else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(props.type[0])) options.initialValue = 0;
-				else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(props.type[0])) options.initialValue = "";
+		function updateTable(this: NyckelDB_interface, db: nyckelDB_uncompressed) {
+			if (!opt.initialValue || opt.initialValue && !VALUE_IS_VALID.call(this, opt.initialValue, props.type[0], true, "updateTable")) {
+				if (props.type[0] === "boolean") opt.initialValue = false;
+				else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(props.type[0])) opt.initialValue = 0;
+				else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(props.type[0])) opt.initialValue = "";
 				else {
 					CACHE_ERROR.call(this, props.type.toString(), "initial value not found for data type");
-					options.initialValue = "";
+					opt.initialValue = "";
 				}
 			}
 			//insert empty cell to every row in table
-			for (let a = 0, len = DB[this.id].table.length; a < len; a++) {
-				DB[this.id].table[a].splice(position, 0, options.initialValue[0]);
-				DB[this.id].ids[DB[this.id].table[a][0]].splice(position + 1, 0, editTime);
+			for (let a = 0, len = db.table.length; a < len; a++) {
+				db.table[a].splice(position, 0, opt.initialValue!);
+				db.ids[db.table[a][0]].splice(position + 1, 0, validatedEditTime);
 			}
 			if (HIDDEN_TABLE_DATA[this.id]) {
 				for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
-					HIDDEN_TABLE_DATA[this.id][a].splice(position, 0, options.initialValue[0]);
-					HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][a][0]].splice(position + 1, 0, editTime);
+					HIDDEN_TABLE_DATA[this.id][a].splice(position, 0, opt.initialValue!);
+					HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][a][0]].splice(position + 1, 0, validatedEditTime);
 				}
 			}
 			//update search index
 			if (props.search[0] !== false) {
 				cols.$indexable.push(colName);
 			}
-			DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
+			DB[this.id].lastModified = validatedEditTime + DB[this.id].created > DB[this.id].lastModified ? validatedEditTime + DB[this.id].created : DB[this.id].lastModified;
 			this.syncPending = true;
 			if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 			if (callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending);
 			else return true;
 		}
-		options = options || {};
-		if (this.isDeleted() || options.deleted) {
+		var opt: addColOptions = options || {},
+			db = DB[this.id];
+		if (TABLE_IS_DELETED(db) || opt.deleted) {
 			return callback instanceof Function ? callback(false, "cannot add deleted column", DB[this.id].title, this.syncPending) : false; //don't add deleted columns to table
 		}
-		editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "addColumn");
+		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "addColumn");
 		var orig = String(colName),
 			i = 1,
 			props: columnMetadata = {
-				type: ["any", editTime],
-				search: [true, editTime]
+				type: ["any", validatedEditTime],
+				search: [true, validatedEditTime]
 			},
-			cols = DB[this.id].columns,
+			cols = db.columns,
 			headers = cols.$headers;
 		colName = TO_PROP_NAME(colName);
 		if (colName === "id") colName = "_id";
@@ -2304,24 +2380,25 @@ var NyckelDB = (function () {
 			i++;
 		}
 		props.type[0] = VALIDATE_TYPE.call(this, type);
-		if (colName !== orig) props.exportAs = [orig, editTime];
+		if (colName !== orig) props.exportAs = [orig, validatedEditTime];
 		//insert colName to headers
 		position = position && position > 0 && position < headers.length ? position : headers.length;
-		cols.$created.splice(position, 0, editTime);
+		cols.$created.splice(position, 0, validatedEditTime);
 		cols.$modified.splice(position, 0, 0);
 		headers.splice(position, 0, colName);
 		//add column properties
-		return applyProps.call(this, updateTable.bind(this));
+		return applyProps.call(this, db, updateTable.bind(this));
 	}
 	function GET_COL_PROP(this: NyckelDB_interface, colName: string, propName: string) {
+		if (TABLE_IS_DELETED(DB[this.id])) return undefined;
 		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex > 0) {
-			var prop = DB[this.id].columns[DB[this.id].columns.$headers[colIndex]][propName];
+			var prop = (DB[this.id] as nyckelDB_uncompressed).columns[(DB[this.id] as nyckelDB_uncompressed).columns.$headers[colIndex]][propName];
 			return prop ? prop[0] : null;
 		}
 		else return undefined;
 	}
-	function SET_TYPE(this: NyckelDB_interface, colName: string, type: string, data, storeBool: boolean, editTime: number, callback?) {
+	function SET_TYPE(this: NyckelDB_interface, colName: string, type: string, data, storeBool: boolean, editTime?: number, callback?) {
 		function retError(this: NyckelDB_interface, err) {
 			if (data) CACHE_ERROR.call(this, err);
 			return callback instanceof Function ? callback(returnData, err, DB[this.id].title, this.syncPending) : err;
@@ -2330,7 +2407,7 @@ var NyckelDB = (function () {
 			return callback instanceof Function ? callback(a, b, c, d) : a;
 		}
 		function checkRows(this: NyckelDB_interface, rowId, i) {
-			var value = data[colName][rowId] || DB[this.id].table[i][colIndex];
+			var value = data[colName][rowId] || (DB[this.id] as nyckelDB_uncompressed).table[i][colIndex];
 			if (!VALUE_IS_VALID.call(this, value, type, true, "checkRows")) {
 				if (type.match(VALID_STRING_TYPES)) {
 					value = String(value);
@@ -2339,14 +2416,14 @@ var NyckelDB = (function () {
 					value = value * 1;
 				}
 				if (!VALUE_IS_VALID.call(this, value, type, true, "checkRows2")) {
-					returnData[colName][rowId] = DB[this.id].table[i][colIndex];
+					returnData[colName][rowId] = (DB[this.id] as nyckelDB_uncompressed).table[i][colIndex];
 					can_do = false;
 				}
 				else data[colName][rowId] = value;
 			}
 		}
 		function setType(this: NyckelDB_interface, ) {
-			if (can_do) DB[this.id].columns[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
+			if (can_do) (DB[this.id] as nyckelDB_uncompressed).columns[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
 		}
 		function applyData(this: NyckelDB_interface, rowId, i, total) {
 			if (can_do && data[colName][rowId]) {
@@ -2363,6 +2440,7 @@ var NyckelDB = (function () {
 			}
 			else return retError.call(this, "cannot apply type to this row, please update data and try again");
 		}
+		if (TABLE_IS_DELETED(DB[this.id])) return retError.call(this, "cannot set type on deleted table");
 		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex === -1) return retError.call(this, "column does not exist in the table");
 		this.unhideRows(); //TODO iterate through hidden rows without unhiding them(?)
@@ -2388,7 +2466,7 @@ var NyckelDB = (function () {
 	 * @param {string} tableTitle the name of the new database
 	 * @param {string[]|object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
 	 * @param {string[]|object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
-	 * @param {object} [options] {
+	 * @param {object} [opt] {
 	 *	customProperties:{
 	 *	  <property1Name>: {
 	 *	    initialValue: <value>,
@@ -2416,23 +2494,15 @@ var NyckelDB = (function () {
 		tableTitle: string,
 		tableHeaders: string[] | { [columnName: string]: string },
 		columnProperties?: { [x: string]: any; },
-		options?: {
-			doNotIndex?: string[];
-			key: string;
-			token: syncToken;
-			initialIndex: string[];
-			importData: nyckelDB_compressed;
-			importJSON: nyckelDB_uncompressed | csv2jsonOutput | nyckelDB_compressed | nyckelDB_deleted;
-			customProperties: customProperties;
-		},
-		callback?: successCallback): NyckelDB_interface {
+		options?: NyckelDBOptions,
+		callback?: successCallback): void {
 		function applyCustomProperties(this: NyckelDB_interface, props: customProperties): { [propertyName: string]: [tableValue, number, string] } {
 			function setInitialValue(type: string): tableValue {
 				return type === "string" ? "" : type === "boolean" ? false : 0;
 			}
 			if (!props) return {};
 			var _props = {};
-			if (props.constructor === Array) {
+			if (IS_ARRAY(props)) {
 				for (let a = 0, len = props.length; a < len; a++) {
 					_props[TO_PROP_NAME(props[a])] = [0, 0, "any"];
 				}
@@ -2442,94 +2512,131 @@ var NyckelDB = (function () {
 				CACHE_ERROR.call(this, "Please supply properties in proper format");
 				return {};
 			}
-			var _type: string = null, _initialValue: tableValue = 0, _prop: string;
+			var _type: string = "any", _initialValue: tableValue = 0, propName: string, propValue;
 			for (let prop in props) {
 				if (props.hasOwnProperty(prop)) {
-					_prop = TO_PROP_NAME(prop);
-					if (typeof props[prop] === "string") {
-						_type = VALIDATE_TYPE.call(this, props[prop], "custom");
+					propName = TO_PROP_NAME(prop);
+					propValue = props[prop];
+					if (typeof propValue === "string") {
+						_type = VALIDATE_TYPE.call(this, propValue, true);
 						_initialValue = setInitialValue(_type);
-						_props[_prop] = [_initialValue, 0, _type];
+						_props[propName] = [_initialValue, 0, _type];
 					}
-					else if (props[prop].constructor === Array && props[prop].length === 3) {
-						_type = VALIDATE_TYPE.call(this, props[prop][2], "custom");
-						if (VALUE_IS_VALID.call(this, props[prop][0], _type, false, "applyCustomProperties")) _props[_prop] = [props[prop][0], props[prop][1], _type];
+					else if (IS_ARRAY(propValue) && propValue.length === 3) {
+						var propArr: [tableValue, number, string] = (propValue as [tableValue, number, string]);
+						_type = VALIDATE_TYPE.call(this, propArr[2], true);
+						if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties")) _props[propName] = [propValue[0], propValue[1], _type];
+						propArr = null!;
 					}
-					else if (typeof props[prop] === "object") {
-						if (props[prop].type) {
-							_props[_prop] = [0, 0, VALIDATE_TYPE.call(this, props[prop].type, "custom")];
+					else if (typeof propValue === "object") {
+						if (propValue.type) {
+							_props[propName] = [0, 0, VALIDATE_TYPE.call(this, propValue.type, true)];
 						}
-						else _props[_prop] = [0, 0, "any"];
-						if (props[prop].initialValue && VALUE_IS_VALID.call(this, props[prop].initialValue, _props[_prop][2], false, "applyCustomProperties2")) {
-							_props[_prop][0] = props[prop].initialValue;
+						else _props[propName] = [0, 0, "any"];
+						if (propValue.initialValue && VALUE_IS_VALID.call(this, propValue.initialValue, _props[propName][2], false, "applyCustomProperties2")) {
+							_props[propName][0] = propValue.initialValue;
 						}
 						else {
-							_type = _props[_prop][2];
+							_type = _props[propName][2];
 							_initialValue = setInitialValue(_type);
-							_props[_prop][0] = _initialValue;
+							_props[propName][0] = _initialValue;
 						}
 					}
 					else CACHE_ERROR.call(this, prop, "invalid customProperty");
 				}
 			}
-			_type = null; _initialValue = null; _prop = null;
+			_type = null!; _initialValue = null!; propName = null!;
 			return _props;
 		}
-		function applyData(this: NyckelDB_interface, json: nyckelDB_uncompressed | nyckelDB_deleted) {
-			function setColumns(this: NyckelDB_interface, json: nyckelDB_uncompressed) {
-				if (json) {
-					if ("Version" in json) json.version = json.Version;
-					return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns, json.created, options.doNotIndex) :
-						json.types && json.headers || json.version === "0.3_1.1" ?
-							APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created, options.doNotIndex) ://migrate old types
-							APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), options.doNotIndex);
+		function validateData(this: NyckelDB_interface): void {
+			var db = DB[this.id];
+			if (!TABLE_IS_DELETED(db)) {
+				var columns = db.columns;
+				if (columns) {
+					for (let a = 1, headers = columns.$headers, len = headers.length, colProp; a < len; a++) {
+						for (colProp in columns[headers[a]]) {
+							if (columns[headers[a]].hasOwnProperty(colProp)) {
+								columns[headers[a]][colProp][1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp][1], undefined, "column", "didn't get cached table");
+							}
+						}
+					}
 				}
-				else return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), options.doNotIndex);
+				//validate ids
+				for (let id in db.ids) {
+					if (db.ids.hasOwnProperty(id)) {
+						for (let a = 0; a < db.ids[id].length; a++) {
+							db.ids[id][a] = VALIDATE_EDIT_TIME.call(this, db.ids[id][a], undefined, a === 0 ? "row" : "cell", "validating ids", id);
+						}
+					}
+				}
+				for (let prop in db.properties) {
+					if (db.properties.hasOwnProperty(prop)) {
+						db.properties[prop][1] = VALIDATE_EDIT_TIME.call(this, db.properties[prop][1], undefined, "property", "didn't get cached table");
+					}
+				}
 			}
-			if (!json) json = {
+		}
+		function applyData(this: NyckelDB_interface, json?: nyckelDB_uncompressed | nyckelDB_deleted): nyckelDB_uncompressed | nyckelDB_deleted {
+			function setColumns(this: NyckelDB_interface, json?: nyckelDB_uncompressed) {
+				if (json) {
+					if (json.Version) json.version = json.Version;
+					return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns, json.created, opt.doNotIndex) :
+						json.headers && (json.types || json.version === "0.3_1.1") ?
+							APPLY_COLUMN_PROPERTIES.call(this, json.headers, json.types, json.created, opt.doNotIndex) ://migrate old types
+							APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
+				}
+				else return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
+			}
+			var ret: nyckelDB_uncompressed | nyckelDB_deleted = {
 				"title": tableTitle,
 				"created": TIMESTAMP(),
 				"lastModified": 0,
 				"version": this.version + "_" + Base64.Version,
 				"ids": {},
-				"columns": setColumns.call(this, json),
+				"columns": setColumns.call(this),
 				"table": [],
 				"properties": properties
+			};
+			if (!json) {
+				return ret;
 			}
-			else if ("deleted" in json) json = {
+			else if (TABLE_IS_DELETED(json)) ret = {
 				"title": tableTitle,
 				"created": json.created || TIMESTAMP(),
 				"deleted": json.deleted,
 				"lastModified": json.lastModified !== undefined ? json.lastModified : 0,
 				"version": this.version + "_" + Base64.Version
-			}
-			else if ("table" in json) json = {
-				"title": tableTitle,
-				"created": json && json.created !== undefined ? json.created : TIMESTAMP(),
-				"lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
-				"version": this.version + "_" + Base64.Version,
-				"ids": json && json.ids ? json.ids : {},
-				"columns": setColumns.call(this, json),
-				"table": json && json.table ? json.table : [],
-				"properties": json && json.properties ? json.properties : properties
 			};
-			return json;
+			else if ("table" in json) {
+				ret =  {
+					"title": tableTitle,
+					"created": json && json.created !== undefined ? json.created : TIMESTAMP(),
+					"lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
+					"version": this.version + "_" + Base64.Version,
+					"ids": json && json.ids ? json.ids : {},
+					"columns": setColumns.call(this, json),
+					"table": json && json.table ? json.table : [],
+					"properties": json && json.properties ? json.properties : properties,
+					"deleted": false
+				};
+			}
+			else CACHE_ERROR.call(this, "invalid json data supplied");
+			properties = null!;
+			return ret;
 		}
 		function gotCachedTable(this: NyckelDB_interface, json: nyckelDB_compressed | nyckelDB_uncompressed | nyckelDB_deleted) {
-			function returnFunc(this: NyckelDB_interface, success, errors, title, syncChanges) {
-				if (success && syncChanges && !errors) return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
-				else if (callback instanceof Function) return callback(success, errors, DB[this.id].title, false);
-				else return errors;
+			function returnFunc(this: NyckelDB_interface, success: boolean, errors: tableErrors, title: string | null, syncChanges: boolean): NyckelDB_interface {
+				if (success && syncChanges && !errors) return (CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this)), this);
+				else if (callback instanceof Function) return (callback(success, errors, DB[this.id].title, false), this);
+				else return this;
 			}
 			if (!json) {
-				console.log('json not found');
 				didntGetCachedTable.call(this);
 				return;
 			}
 			if (typeof json === "string") json = JSON.parse(json);
-			if ("Version" in json) json.version = json.Version;
+			if (json.Version) json.version = json.Version;
 			if (!json.title || json.title !== tableTitle || !json.version || json.created === undefined || json.lastModified === undefined) {
-				console.log("properties don't match");
 				didntGetCachedTable.call(this);
 				return;
 			}
@@ -2545,8 +2652,8 @@ var NyckelDB = (function () {
 				return;
 			}
 			if ("data" in json) {
-				if (String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, options.key) === json.signature) {
-					json = Base64.read(json.data, options.key);
+				if (String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, opt.key) === json.signature) {
+					json = Base64.read(json.data, opt.key);
 					return IMPORT_JSON.call(this, json, returnFunc.bind(this), false, true);
 				}
 				else {
@@ -2557,52 +2664,36 @@ var NyckelDB = (function () {
 			}
 			else {//loading directly from local storage
 				DB[this.id] = applyData.call(this, json);
-				BUILD_SEARCH_INDEX.call(this, options.initialIndex || null);
-				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
+				validateData.call(this);
+				return BUILD_SEARCH_INDEX.call(this, opt.initialIndex), CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
 			}
 		}
 		function didntGetCachedTable(this: NyckelDB_interface) {
-			console.log("didnt get cached table");
 			//creating a brand new table
-			DB[this.id] = applyData.call(this, options.importData);
-			//validate columns edit time
-			var columns = DB[this.id].columns;
-			if (columns) {
-				for (let a = 1, headers = columns.$headers, len = headers.length, colProp; a < len; a++) {
-					for (colProp in columns[headers[a]]) {
-						columns[headers[a]][colProp][1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp][1], undefined, "column", "didn't get cached table");
-					}
-				}
-			}
-			//validate ids
-			for (let id in DB[this.id].ids) {
-				if (DB[this.id].ids.hasOwnProperty(id)) {
-					for (let a = 0; a < DB[this.id].ids[id].length; a++) {
-						DB[this.id].ids[id][a] = VALIDATE_EDIT_TIME.call(this, DB[this.id].ids[id][a], undefined, a === 0 ? "row" : "cell", "didn't get cached table", id);
-					}
-				}
-			}
-			for (let prop in DB[this.id].properties) {
-				if (DB[this.id].properties.hasOwnProperty(prop)) {
-					DB[this.id].properties[prop][1] = VALIDATE_EDIT_TIME.call(this, DB[this.id].properties[prop][1], undefined, "property", "didn't get cached table");
-				}
-			}
-			properties = null;
-			if (options.importJSON) IMPORT_JSON.call(this, options.importJSON, function (success, errors, title, syncChanges) {
-				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
+			DB[this.id] = applyData.call(this, (opt.importData as unknown as nyckelDB_uncompressed | undefined));
+			validateData.call(this);
+			if (opt.importJSON) IMPORT_JSON.call(this, opt.importJSON, function (this: NyckelDB_interface, success, errors, title, syncChanges) {
+				return CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
 			}, false, false);
 			else {
 				TO_LOCAL_STORAGE.call(this, true);
-				return CREATE_BASE64_FILE.call(this, options.key, options.token, callback);
+				return CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
 			}
 		}
-		function initiateTable(this: NyckelDB_interface, title, options) {
+		function initiateTable(this: NyckelDB_interface, title: string, options: NyckelDBOptions | null) {
 			tableTitle = title;
-			if (options.importData && options.importData.properties) options.importData.properties = applyCustomProperties.call(this, options.importData.properties);
-			else if (options.customProperties) properties = applyCustomProperties.call(this, options.customProperties);
+			if (options && options.importData && (options.importData as unknown as nyckelDB_uncompressed).properties)
+				(options.importData as unknown as nyckelDB_uncompressed).properties = applyCustomProperties.call(this, (options.importData as unknown as nyckelDB_uncompressed).properties);
+			else if (options && options.customProperties) properties = applyCustomProperties.call(this, options.customProperties);
 			//try to get cached table
 			if (APP.Sto) APP.Sto.getItem(tableTitle, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
 			else return callback instanceof Function ? callback(false, "localStorage not found", tableTitle, false) : "localStorage not found";
+		}
+		function base64Callback(this: NyckelDB_interface, success: boolean, errors: tableErrors, title: string, obj) {
+			return callback instanceof Function ? (callback(success, errors, title, this.syncPending), this): this;
+		}
+		function decompress(data: string, key: string | undefined): nyckelDB_uncompressed{
+			return JSON.parse(Base64.read(data, key));
 		}
 		NUM = NUM === undefined ? -1 : NUM;
 		DB = DB || new Array(Math.pow(2, 32) - 1);
@@ -2618,35 +2709,38 @@ var NyckelDB = (function () {
 		ERRORS = ERRORS || [];
 		HIDDEN_TABLE_DATA = HIDDEN_TABLE_DATA || [];
 		HIDDEN_IDS = HIDDEN_IDS || [];
-		options = options ? JSON.parse(JSON.stringify(options)) : {};
-		if (typeof options.importData === "string") options.importData = JSON.parse(options.importData);
-
-		if (options.importData && ((options.importData as unknown as nyckelDB_uncompressed).lastModified < options.importData.created && options.importData.lastModified !== 0 || options.importData.lastModified > TIMESTAMP())) {
-			console.log("importData lastModified dates are corrupted: " + options.importData.lastModified);
+		var opt: NyckelDBOptions = options ? JSON.parse(JSON.stringify(options)) : {};
+		if (typeof opt.importData === "string") opt.importData = JSON.parse(opt.importData);
+		if (opt.importData && ((opt.importData as unknown as nyckelDB_uncompressed).lastModified < opt.importData.created && opt.importData.lastModified !== 0 || opt.importData.lastModified > TIMESTAMP())) {
+			console.log("importData lastModified dates are corrupted: " + opt.importData.lastModified);
+			return callback instanceof Function ? callback(false, "importData lastModified dates are corrupted: " + opt.importData.lastModified, null, false) : CACHE_ERROR.call(this, "importData lastModified dates are corrupted: " + opt.importData.lastModified);
 		}
-		tableTitle = options.importData && options.importData.title ? options.importData.title : tableTitle;
+		tableTitle = opt.importData && opt.importData.title ? opt.importData.title : tableTitle;
 		var properties = {};
 		this.syncPending = true;
 		this.version = "0.4";
 		if (tableTitle == null) {// eslint-disable-line
-			return callback instanceof Function ? (callback(false, "title not defined", null, false), this) : CACHE_ERROR.call(this, "title not defined"), this;
+			console.log("no title");
+			return callback instanceof Function ? callback(false, "title not defined", null, false) : CACHE_ERROR.call(this, "title not defined");
 		}
 		else {
-			if (options.importData && options.importData.data) {
-				if (options.importData.version !== this.version + "_" + Base64.Version && options.importData.version !== this.version + "." + Base64.Version) {
-					return callback instanceof Function ? (callback(false, "imported database version not supported", null, false), this) : CACHE_ERROR.call(this, "imported database version not supported"), this;
+			if (opt.importData && opt.importData.data) {
+				if (opt.importData.version !== this.version + "_" + Base64.Version && opt.importData.version !== this.version + "." + Base64.Version) {
+					return callback instanceof Function ? callback(false, "imported database version not supported", null, false) : CACHE_ERROR.call(this, "imported database version not supported");
 				}
-				else if (Base64.hmac(options.importData.data, options.key) === options.importData.signature) {
-					options.importData = JSON.parse(Base64.read(options.importData.data, options.key));
-					INITIATE_NEW_DB.call(this, tableTitle, options, initiateTable.bind(this));
+				else if (Base64.hmac(opt.importData.data, opt.key) === opt.importData.signature) {
+					(opt.importData as unknown as nyckelDB_uncompressed) = decompress(opt.importData.data, opt.key);
+					INITIATE_NEW_DB.call(this, tableTitle, opt, initiateTable.bind(this));
 				}
-				else return callback instanceof Function ? (callback(false, "imported databse corrupted", null, false), this) : CACHE_ERROR.call(this, "imported database corrupted"), this;
+				else return callback instanceof Function ? callback(false, "imported databse corrupted", null, false) : CACHE_ERROR.call(this, "imported database corrupted");
 			}
-			else INITIATE_NEW_DB.call(this, tableTitle, options, initiateTable.bind(this));
+			else {
+				INITIATE_NEW_DB.call(this, tableTitle, opt, initiateTable.bind(this));
+			}
 		}
 	}
 	//ALL CAPS "PRIVATE" VARIABLES
-	var DB: nyckelDB_uncompressed[];//all databases, contains objects in form 
+	var DB: (nyckelDB_uncompressed | nyckelDB_deleted)[];//all databases, contains objects in form 
 	/*
 	 * {
 	 *	title: String,
@@ -2686,6 +2780,8 @@ var NyckelDB = (function () {
 		"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation"].join("|") + ")$");
 	const VALID_NUMBER_TYPES = new RegExp("^(" + ["any", "number", "integer", "posInteger", "negInteger", "date",
 		"phoneNumber", "password", "postalZipCode", "longitude", "latitude"].join("|") + ")$");
+	const FORBIDDEN = GET_FORBIDDEN();
+
 	/**
 	 * Search for rows that contain all of the words given in the search query
 	 * @function search
@@ -2695,15 +2791,14 @@ var NyckelDB = (function () {
 	 *	"fuzzyMatch": Boolean
 	 * }
 	 * @param {searchCallback} callback callback function
-	 * @returns {string[]} an Array of row ids which contain the searchQuery
 	 */
-	NyckelDBObj.prototype.search = function (searchQuery: string, options: searchOptions, callback: searchCallback): void {
-		function findMatches(arr: any[], min: number) {
+	NyckelDBObj.prototype.search = function (searchQuery: any, options: searchOptions, callback: searchCallback): void {
+		function findMatches(arr: any[], min: number): any[] {
 			min = min || 2;
 			if (min === 1) return arr;
-			var ret = []; /*return array*/
+			var ret: any[] = []; /*return array*/
 			arr = arr.sort();
-			for (let a = 0, found = false, x = 0, y = x + 1, len = arr.length, b; x < len - min + 1; x++ , y = x + 1) {
+			for (let a = 0, found = false, x = 0, y = x + 1, len = arr.length, b: number; x < len - min + 1; x++ , y = x + 1) {
 				if (String(arr[x]) === String(arr[y])) {
 					found = true;
 					for (b = 0; b < min - 1; b++) {
@@ -2718,7 +2813,7 @@ var NyckelDB = (function () {
 			}
 			return ret;
 		}
-		function querySearchIndex(this: NyckelDB_interface, searchQuery: string[], lastRoundBool: boolean) {
+		function querySearchIndex(this: NyckelDB_interface, searchQuery: string[], lastRoundBool: boolean): string[] | void {
 			var aLen = searchQuery.length,
 				tempIds: string[] = [];
 			for (let a = 0, b, bLen = COL_NAMES_INDEXED[this.id].length, i: string[]; a < aLen; a++) {
@@ -2735,7 +2830,7 @@ var NyckelDB = (function () {
 				RECENTLY_SEARCHED[this.id] = RECENTLY_SEARCHED[this.id].slice(0, 25);
 				STO_SEARCH_INDEX.call(this);
 			}
-			if (lastRoundBool) return callback instanceof Function ? callback(ids, ERRORS[this.id], DB[this.id].title, this.syncPending) : ids;
+			if (lastRoundBool) if (callback instanceof Function) return callback(ids, ERRORS[this.id], DB[this.id].title, this.syncPending);
 		}
 		function fuzzyMatch(this: NyckelDB_interface, searchQueryArr: string[]) {
 			//collect all possible alternate queries
@@ -2746,10 +2841,10 @@ var NyckelDB = (function () {
 			//	else searchQueryArr[a] = [searchQueryArr[a]]; //commented out b/c wrong? searchQueryArr is already an array
 			}
 			//combine them in all possible combinations
-			var queries = [],
+			var queries: string[][] = [],
 				a = 0,
 				n = 0,
-				cursor = [],
+				cursor: number[] = [],
 				len = searchQueryArr.length;
 			while (len) cursor[--len] = 0;//initialize cursors
 			len = searchQueryArr.length;
@@ -2777,16 +2872,16 @@ var NyckelDB = (function () {
 			return querySearchIndex.call(this, queries[queries.length - 1], true);
 		}
 		function search(this: NyckelDB_interface, searchQueryArr: string[], options: searchOptions) {
-			if (options.fuzzyMatch) fuzzyMatch.call(this, searchQueryArr);
-			else querySearchIndex.call(this, searchQueryArr, true);
+			if (options.fuzzyMatch) return fuzzyMatch.call(this, searchQueryArr);
+			else return querySearchIndex.call(this, searchQueryArr, true);
 		}
-		if (this.isDeleted()) return callback instanceof Function ? callback([], "no data", DB[this.id].title, this.requiresSync) : null;
+		if (TABLE_IS_DELETED(DB[this.id])) if(callback instanceof Function) return callback([], "no data", DB[this.id].title, this.requiresSync);
 		options = options || {};
 		var cols = options.colNames ? options.colNames.join("|").split("|") : undefined,
 			ids: string[] = [],
 			searchQueryArr = SEARCH_VALIDATE(searchQuery);
 		//check for search index
-		BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQueryArr, options));
+		return BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQueryArr, options));
 	};
 	/**
 	 * Same as search, but accepts join (+) and filter (-) between search terms to create more specific queries
@@ -2798,18 +2893,17 @@ var NyckelDB = (function () {
 	 *	"fuzzyMatch": Boolean
 	 * }
 	 * @param {searchCallback} [callback] callback function
-	 * @returns {array} an Array of row ids which contain the searchQuery
 	 */
-	NyckelDBObj.prototype.advancedSearch = function (searchQuery: string, options: searchOptions, callback: searchCallback): void {
+	NyckelDBObj.prototype.advancedSearch = function (searchQuery: any, options: searchOptions, callback: searchCallback): void {
 		function filter(this: NyckelDB_interface, ids: string[], filterOutQueries: string[]) {
 			if (filterOutQueries.length === 0) {
-				return callback instanceof Function ? callback(ids, ERRORS[this.id], DB[this.id].title, this.syncPending) : ids;
+				return callback instanceof Function ? callback(ids, ERRORS[this.id], DB[this.id].title, this.syncPending) : undefined;
 			}
 			for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
 				(function (self, b) {
 					self.search.call(self, filterOutQueries[b], options, function (result, err, table, sync) {
 						if (!err) filterIds = filterIds.concat(result);
-						else return callback instanceof Function ? callback([], err, table, sync) : [];
+						else return callback instanceof Function ? callback([], err, table, sync) : undefined;
 						if (b === lenB - 1) {
 							filterIds = DELETE_DUPLICATES(filterIds);
 							if (filterIds.length > 0) {
@@ -2824,13 +2918,13 @@ var NyckelDB = (function () {
 									}
 								}
 							}
-							return callback instanceof Function ? callback(ids, ERRORS[self.id], DB[self.id].title, self.syncPending) : ids;
+							return callback instanceof Function ? callback(ids, ERRORS[self.id], DB[self.id].title, self.syncPending) : undefined;
 						}
 					});
 				})(this, b);
 			}
 		}
-		if (!searchQuery) return callback instanceof Function ? callback([], "no query supplied", DB[this.id].title, this.syncPending) : null;
+		if (!searchQuery) return callback instanceof Function ? callback([], "no query supplied", DB[this.id].title, this.syncPending) : undefined;
 		var ids: string[] = [],
 			filterIds: string[] = [],
 			filterOutQueries: string[] = [],
@@ -2840,7 +2934,7 @@ var NyckelDB = (function () {
 			for (let a = 0; a < searchQueryArr.length; a++) {
 				if (/\s\-/.test(searchQueryArr[a])) {
 					var f = searchQueryArr[a].split(" -");
-					searchQueryArr[a] = f.shift();
+					searchQueryArr[a] = f.shift()!;
 					filterOutQueries.push.apply(filterOutQueries, f);
 				}
 			}
@@ -2848,9 +2942,9 @@ var NyckelDB = (function () {
 		else searchQueryArr = [searchQuery];
 		for (let a = 0, len = searchQueryArr.length; a < len; a++) {
 			(function (self, a) {
-				self.search.call(self, searchQueryArr[a], options, function (result: string[], errors: string | false, table: string, sync: boolean) {
+				self.search.call(self, searchQueryArr[a], options, function (result: string[], errors: tableErrors, table: string, sync: boolean) {
 					if (!errors) ids = ids.concat(result);
-					else return callback instanceof Function ? callback([], errors, table, sync) : [];
+					else return callback instanceof Function ? callback([], errors, table, sync) : undefined;
 					if (a === len - 1) {
 						ids = DELETE_DUPLICATES(ids);
 						filter.call(self, ids, filterOutQueries);
@@ -2866,14 +2960,14 @@ var NyckelDB = (function () {
 	 * @param {object} [options] {
 	 *	"colNames": Array, an Array of columns to search in
 	 * }
-	 * @param {suggestionsCallback} [callback] callback function
+	 * @param {searchCallback} [callback] callback function
 	 * @returns {array} an Array of search queries that would return a match
 	 */
-	NyckelDBObj.prototype.getSearchSuggestions = function (searchQuery, options, callback) {
+	NyckelDBObj.prototype.getSearchSuggestions = function (searchQuery: any, options: {colNames: string[]}, callback: searchCallback): string[] {
 		function buildSuggestionsList(this: NyckelDB_interface) {
-			searchQuery = searchQuery.split(" ");
-			var last = searchQuery.pop(),
-				suggest = [],
+			searchQuery = String(searchQuery).split(" ");
+			var last: string = searchQuery.pop(),
+				suggest: string[] = [],
 				a = 0,
 				prefix = last.charAt(0);
 			prefix = prefix.match(/\+|\-/) ? prefix : "";
@@ -2902,14 +2996,14 @@ var NyckelDB = (function () {
 					}
 				}
 			}
-			last = null; a = null; searchQuery = null;
-			return callback instanceof Function ? callback(suggest, ERRORS[this.id], DB[this.id].title, this.syncPending) : suggest;
+			last = null!; a = null!; searchQuery = null;
+			return callback instanceof Function ? (callback(suggest, ERRORS[this.id], DB[this.id].title, this.syncPending), suggest) : suggest;
 		}
 		if (SEARCH_SUGGESTIONS[this.id].length > 0) {
-			buildSuggestionsList.call(this);
+			return buildSuggestionsList.call(this);
 		}
 		else {
-			var cols = options.colNames ? options.colNames.join("|").split("|") : null;
+			var cols = options.colNames ? options.colNames.join("|").split("|") : undefined;
 			if (callback instanceof Function) callback([], "currently busy building search index", DB[this.id].title, this.requiresSync);
 			BUILD_SEARCH_INDEX.call(this, cols);
 			return [];
@@ -2930,13 +3024,15 @@ var NyckelDB = (function () {
 	 * @param {successCallback} [callback] callback function to execute when everything is finished
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.forEachRow = function (funct, callback?) {
+	NyckelDBObj.prototype.forEachRow = function (funct: (rowId: string, rowIndexNum: number, tableLength: number) => void, callback?: successCallback): NyckelDB_interface {
+		if(TABLE_IS_DELETED(DB[this.id])) return callback instanceof Function ? (callback(false, "forEach table is deleted", DB[this.id].title, this.syncPending), this) : this;
 		if (funct instanceof Function) {
 			for (let a = 0, len = this.getLength(); a < len; a++) {
-				funct(DB[this.id].table[a][0], a, len);
+				funct((DB[this.id] as nyckelDB_uncompressed).table[a][0], a, len);
 			}
 			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
+		else return callback instanceof Function ? (callback(false, "forEach requires a function", DB[this.id].title, this.syncPending), this) : this;
 	};
 	/**
 	 * forEachCol funct, use parameters 'isIndexNum' and 'ofNumCols' to get progress
@@ -2954,19 +3050,21 @@ var NyckelDB = (function () {
 	 * @returns {object} this
 	 */
 	NyckelDBObj.prototype.forEachCol = function (funct: (colName: string, isIndexNum: number, ofNumCols: number) => void, callback?: successCallback): NyckelDB_interface {
+		if(TABLE_IS_DELETED(DB[this.id])) return callback instanceof Function ? (callback(false, "forEach table is deleted", DB[this.id].title, this.syncPending), this) : this;
 		if (funct instanceof Function) {
-			for (let a = 1, headers = DB[this.id].columns.$headers, len = headers.length; a < len; a++) {
+			for (let a = 1, headers = (DB[this.id] as nyckelDB_uncompressed).columns.$headers, len = headers.length; a < len; a++) {
 				funct(headers[a], a - 1, len - 1);
 			}
 			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, this.syncPending), this) : this;
 		}
+		else return callback instanceof Function ? (callback(false, "forEach requires a function", DB[this.id].title, this.syncPending), this) : this;
 	};
 	/**
 	 * Get the title of the table
 	 * @function getTitle
-	 * @returns {string} table title
+	 * @returns {string | undefined } table title
 	 */
-	NyckelDBObj.prototype.getTitle = function () { return DB[this.id] ? DB[this.id].title : undefined; };
+	NyckelDBObj.prototype.getTitle = function (): string | undefined { return DB[this.id] ? DB[this.id].title : undefined; };
 	/**
 	 * Change the title of the table.
 	 * 	   note: This actually deletes the table and creates a new one
@@ -2978,19 +3076,19 @@ var NyckelDB = (function () {
 	 * @param {successCallback} [callback] callback function
 	 * @returns {string} the new title
 	 */
-	NyckelDBObj.prototype.setTitle = function (newTitle, callback) {
+	NyckelDBObj.prototype.setTitle = function (newTitle: string, callback?: successCallback): void {
 		var oldId = this.id,
 			oldTitle = DB[this.id].title,
 			y = DBS.indexOf(oldTitle);
 
 		//applyTitle creates a new id from title
-		return INITIATE_NEW_DB.call(this, newTitle, undefined, function (newTitle) {
+		INITIATE_NEW_DB.call(this, newTitle, null, function (this: NyckelDB_interface, newTitle: string) {
 			//copy table and newTitle to new id
 			DB[this.id] = JSON.parse(JSON.stringify(DB[oldId]));
 			DB[this.id].title = newTitle;
 
 			//cache oldTitle to maintain syncability
-			if (DB[this.id].previousTitle) DB[this.id].previousTitle.push(TO_PROP_NAME(oldTitle));
+			if (DB[this.id].previousTitle) DB[this.id].previousTitle!.push(TO_PROP_NAME(oldTitle));
 			else DB[this.id].previousTitle = [TO_PROP_NAME(oldTitle)];
 
 			//delete old table
@@ -3006,7 +3104,7 @@ var NyckelDB = (function () {
 			var x = DBS.indexOf(newTitle);
 			DBS[y] = DBS[x];
 			DBS[x] = oldTitle;
-			oldTitle = null; y = null; x = null;
+			oldTitle = null!; y = null!; x = null!;
 
 			TO_LOCAL_STORAGE.call(this, true);
 			return callback instanceof Function ? (callback(true, ERRORS[this.id], DB[this.id].title, true), this) : this;
@@ -3021,14 +3119,14 @@ var NyckelDB = (function () {
 	 *	"fromEndOfStr": sort xA-xZ, (true or false) }
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.sortByCol = function (colName, options) {
+	NyckelDBObj.prototype.sortByCol = function (colName: string, options?: { reverse?: boolean, fromEndOfStr?: boolean }): NyckelDB_interface {
 		function reverseStr(str) {
 			str = String(str);
-			var ret = [];
+			var ret: string[] = [];
 			for (var a = 0, len = str.length; a < len; a++) {
 				ret[a] = str[len - a - 1];
 			}
-			a = null; len = null;
+			a = null!; len = null;
 			return ret.join("");
 		}
 		function sortFunction(a, b) {
@@ -3040,7 +3138,7 @@ var NyckelDB = (function () {
 				b = Number(b);
 			}
 			//optionally sort string backwards <-- (from this end)
-			if (options.fromEndOfStrBool) {
+			if (options && options.fromEndOfStr) {
 				a = reverseStr(a);
 				b = reverseStr(b);
 			}
@@ -3049,12 +3147,13 @@ var NyckelDB = (function () {
 		options = options || {};
 		var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (colIndex > 0) {
-			DB[this.id].table.sort(sortFunction);
-			if(options.reverse) DB[this.id].table.reverse();
+			(DB[this.id] as nyckelDB_uncompressed).table.sort(sortFunction);
+			if (options.reverse) (DB[this.id] as nyckelDB_uncompressed).table.reverse();
 			ROW_INDEX_CACHE[this.id] = {};
-			colIndex = null;
+			colIndex = null!;
 			return this;
 		}
+		else return this;
 	};
 	/**
 	 * Get the value of a cell
@@ -3063,10 +3162,10 @@ var NyckelDB = (function () {
 	 * @param {string} colName is the column name from the table header
 	 * @returns {string | number | boolean | undefined} table cell value
 	 */
-	NyckelDBObj.prototype.getVal = function (rowId: number | string, colName: string): string | number | boolean | undefined {
+	NyckelDBObj.prototype.getVal = function (rowId: number | string, colName: string): tableValue | undefined {
 		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
 			colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-		if (rowIndex > -1 && colIndex > 0) return DB[this.id].table[rowIndex][colIndex];
+		if (rowIndex > -1 && colIndex > 0) return (DB[this.id] as nyckelDB_uncompressed).table[rowIndex][colIndex];
 	};
 	/**
 	 * Get a number of cell values from the table at once
@@ -3080,20 +3179,15 @@ var NyckelDB = (function () {
 		if (!rowIds || rowIds.constructor !== Array || !colNames || colNames.constructor !== Array) {
 			return callback instanceof Function ? callback(false, "invalid inputs", DB[this.id].title, this.syncPending) : false;
 		}
-		var rowIndex,
-			colIndex,
-			ret = [],
-			a, b, x, y,
-			len = rowIds.length,
-			lenB = colNames.length;
-		for (a = 0, x = 0; a < len; a++) {
+		var ret: tableValue[][] = [];
+		for (let a = 0, x = 0, b: number,  y: number, rowIndex: number, colIndex: number, len = rowIds.length, lenB = colNames.length ; a < len; a++) {
 			rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
 			if (rowIndex > -1) {
 				ret[x] = [rowIds[a]];
 				for (b = 0, y = 1; b < lenB; b++) {
 					colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
 					if (colIndex > 0) {
-						ret[x][y] = DB[this.id].table[rowIndex][colIndex];
+						ret[x][y] = (DB[this.id] as nyckelDB_uncompressed).table[rowIndex][colIndex];
 						y++;
 					}
 					else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
@@ -3106,7 +3200,6 @@ var NyckelDB = (function () {
 				return callback instanceof Function ? callback(false, rowIds[a] + " is not a valid rowId", DB[this.id].title, this.syncPending) : false;
 			}
 		}
-		rowIndex = null; colIndex = null; x = null; y = null; a = null; b = null; len = null; lenB = null;
 		return callback instanceof Function ? callback(ret, ERRORS[this.id], DB[this.id].title, this.syncPending) : ret;
 	};
 	/**
@@ -3120,13 +3213,13 @@ var NyckelDB = (function () {
 		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
 			ret = {};
 		if (rowIndex > -1) {
-			this.forEachCol(function (colName, is) {
+			this.forEachCol(function (this: NyckelDB_interface, colName, is) {
 				ret[colName] = {
 					column: colName,
-					type: DB[this.id].columns[colName].type[0],
-					value: DB[this.id].table[rowIndex][is + 1]
+					type: (DB[this.id] as nyckelDB_uncompressed).columns[colName].type[0],
+					value: (DB[this.id] as nyckelDB_uncompressed).table[rowIndex][is + 1]
 				};
-				if (DB[this.id].columns[colName].exportAs) ret[colName].column = DB[this.id].columns[colName].exportAs[0];
+				if ((DB[this.id] as nyckelDB_uncompressed).columns[colName].exportAs) ret[colName].column = (DB[this.id] as nyckelDB_uncompressed).columns[colName].exportAs[0];
 			}.bind(this), function (success, errors, title, syncPending) {
 				return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
 			});
@@ -3136,16 +3229,19 @@ var NyckelDB = (function () {
 	/**
 	* Get an blank row from the table as JSON arranged by column name
 	* @function getRowTemplate
-	* @param {getRowCallback} [callback] callback
+	* @param {getRowTemplateCallback} callback callback
 	*/
-	NyckelDBObj.prototype.getRowTemplate = function (callback) {
+	NyckelDBObj.prototype.getRowTemplate = function (callback: getRowTemplateCallback): void {
 		var ret = {};
-		this.forEachCol(function (colName) {
+		if (this.isDeleted()) return;
+		this.forEachCol(function (this: NyckelDB_interface, colName) {
 			ret[colName] = {
 				column: colName,
-				type: DB[this.id].columns[colName].type[0]
+				type: (DB[this.id] as nyckelDB_uncompressed).columns[colName].type[0]
 			};
-			if (DB[this.id].columns[colName].exportAs) ret[colName].column = DB[this.id].columns[colName].exportAs[0];
+			if ((DB[this.id] as nyckelDB_uncompressed).columns[colName].exportAs) {
+				ret[colName].column = (DB[this.id] as nyckelDB_uncompressed).columns[colName].exportAs[0];
+			}
 		}.bind(this), function (success, errors, title, syncPending) {
 			return callback instanceof Function ? callback(ret, errors, title, syncPending) : ret;
 		});
@@ -3156,12 +3252,13 @@ var NyckelDB = (function () {
 	* @param {getHeadersCallback} [callback] callback
 	* @returns {string[]} header names
 	*/
-	NyckelDBObj.prototype.getHeaders = function (callback) {
-		var ret = [];
-		for (let a = 1, headers = DB[this.id].columns.$headers, len = headers.length; a < len; a++) {
+	NyckelDBObj.prototype.getHeaders = function (callback?: getHeadersCallback): string[] {
+		var ret: string[] = [];
+		if (this.isDeleted()) return ret;
+		for (let a = 1, headers = (DB[this.id] as nyckelDB_uncompressed).columns.$headers, len = headers.length; a < len; a++) {
 			ret[a - 1] = headers[a];
 		}
-		return callback instanceof Function ? callback(ret, false, DB[this.id].title, this.syncPending) : ret;
+		return callback instanceof Function ? (callback(ret, false, DB[this.id].title, this.syncPending), ret) : ret;
 	};
 	/**
 	 * Exports table as CSV string. Not implemented yet
@@ -3193,34 +3290,37 @@ var NyckelDB = (function () {
 	 * Get the value of a table custom property
 	 * @function getProp
 	 * @param {string} propName the name of the custom property
-	 * @returns {string|number|boolean} the property value
+	 * @returns {string | number | boolean | undefined} the property value
 	 */
-	NyckelDBObj.prototype.getProp = function (propName) {
+	NyckelDBObj.prototype.getProp = function (propName: string): tableValue | undefined {
 		propName = TO_PROP_NAME(propName);
-		return DB[this.id].properties && DB[this.id].properties[propName] ? DB[this.id].properties[propName][0] : undefined;
+		if ((DB[this.id] as nyckelDB_uncompressed).properties) {
+			return (DB[this.id] as nyckelDB_uncompressed).properties[propName] ? (DB[this.id] as nyckelDB_uncompressed).properties[propName][0] : undefined;
+		}
+		else return undefined;
 	};
 	/**
 	 * Get the number of (unhidden, unfiltered) rows in the table
 	 * @function getLength
 	 * @returns {number} the number of rows in the table
 	 */
-	NyckelDBObj.prototype.getLength = function () {
-		return !DB[this.id] || this.isDeleted() ? 0 : DB[this.id].table.length;
+	NyckelDBObj.prototype.getLength = function (): number {
+		return !DB[this.id] || TABLE_IS_DELETED(DB[this.id]) ? 0 : (DB[this.id] as nyckelDB_uncompressed).table.length;
 	};
 	/**
 	 * Check if the table has been deleted or not
 	 * @function isDeleted
 	 * @returns {boolean} whether or not the table has been deleted
 	 */
-	NyckelDBObj.prototype.isDeleted = function () {
-		return DB[this.id] && (DB[this.id] as unknown as nyckelDB_deleted).deleted !== undefined ? true : false;
+	NyckelDBObj.prototype.isDeleted = function (): boolean {
+		return TABLE_IS_DELETED(DB[this.id]);
 	};
 	/**
 	 * Shuffle the order of the rows in the table
 	 * @function shuffle
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.shuffle = function () {
+	NyckelDBObj.prototype.shuffle = function (): NyckelDB_interface {
 		function shuffle(array) {
 			var len = array.length,
 				halfLen = Math.ceil(len / 2),
@@ -3242,25 +3342,27 @@ var NyckelDB = (function () {
 					array.push(array.shift());
 					r = 0;
 				}
-				reps = null; a = null; lenA = null; array1 = null; array2 = null;
+				reps = null!; a = null; lenA = null; array1 = null; array2 = null;
 			}
-			len = null; halfLen = null; random = null; r = null;
+			len = null; halfLen = null!; random = null; r = null!;
 			return array;
 		}
-		if (!this.isDeleted()) {
+		if (!TABLE_IS_DELETED(DB[this.id])) {
 			var len = this.getLength(),
-				shuffled = shuffle(DB[this.id].table);
+				shuffled = shuffle((DB[this.id] as nyckelDB_uncompressed).table);
 			if (shuffled.length !== len) {
 				CACHE_ERROR.call(this, "shuffle error " + len + " != " + this.getLength());
 				len = null; shuffled = null;
+				return this;
 			}
 			else {
-				DB[this.id].table = shuffled;
+				(DB[this.id] as nyckelDB_uncompressed).table = shuffled;
 				ROW_INDEX_CACHE[this.id] = {};
 				len = null; shuffled = null;
 				return this;
 			}
 		}
+		else return this;
 	};
 	/**
 	 * Get a row's current position in the table. You can supply either a row id, or else both a value and colName to find the first row that contains that value in the given column.
@@ -3270,43 +3372,44 @@ var NyckelDB = (function () {
 	 * @param {string} [colName] is the column name from the table header
 	 * @returns {number} zero based index of a row's current position in the table, -1 if not found
 	 */
-	NyckelDBObj.prototype.getIndexOf = function (id, orValue, colName) {
-		if (this.isDeleted()) return -1;
+	NyckelDBObj.prototype.getIndexOf = function (id: string, orValue?: tableValue, colName?: string): number {
+		if (TABLE_IS_DELETED(DB[this.id])) return -1;
 		else if (id) {
 			return GET_INDEX_OF_ROW.call(this, id);
 		}
 		else if (orValue && colName) {
 			var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 			if (colIndex > 0) {
-				for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
-					if (orValue === DB[this.id].table[a][colIndex]) {
+				for (var a = 0, arrLen = (DB[this.id] as nyckelDB_uncompressed).table.length; a < arrLen; a++) {
+					if (orValue === (DB[this.id] as nyckelDB_uncompressed).table[a][colIndex]) {
 						return a;
 					}
 				}
 				return -1;
 			}
+			else return -1;
 		}
 		else return -1;
 	};
 	/**
 	 * Hide a row. The row will not be accessible at all until you call unHideRows.
 	 * @function hideRow
-	 * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+	 * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.hideRow = function (rowId) {
-		if (!this.isDeleted()) {
+	NyckelDBObj.prototype.hideRow = function (rowId: number | string): NyckelDB_interface {
+		if (!TABLE_IS_DELETED(DB[this.id])) {
 			var index = GET_INDEX_OF_ROW.call(this, rowId);
 			if (index > -1) {
-				var row = DB[this.id].table[index];
+				var row = (DB[this.id] as nyckelDB_uncompressed).table[index];
 				HIDDEN_IDS[this.id] = HIDDEN_IDS[this.id] || {};
-				HIDDEN_IDS[this.id][row[0]] = JSON.parse(JSON.stringify(DB[this.id].ids[row[0]]));
-				delete DB[this.id].ids[row[0]];
+				HIDDEN_IDS[this.id][row[0]] = JSON.parse(JSON.stringify((DB[this.id] as nyckelDB_uncompressed).ids[row[0]]));
+				delete (DB[this.id] as nyckelDB_uncompressed).ids[row[0]];
 				HIDDEN_TABLE_DATA[this.id] = HIDDEN_TABLE_DATA[this.id] || [];
-				HIDDEN_TABLE_DATA[this.id].push(DB[this.id].table.splice(index, 1)[0]);
+				HIDDEN_TABLE_DATA[this.id].push((DB[this.id] as nyckelDB_uncompressed).table.splice(index, 1)[0]);
 				ROW_INDEX_CACHE[this.id] = {};
 			}
-			index = null;
+			index = null!;
 		}
 		return this;
 	};
@@ -3315,14 +3418,14 @@ var NyckelDB = (function () {
 	 * @function unhideRows
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.unhideRows = function () {
-		if (HIDDEN_TABLE_DATA[this.id] !== undefined) {
+	NyckelDBObj.prototype.unhideRows = function (): NyckelDB_interface {
+		if (HIDDEN_TABLE_DATA[this.id] !== undefined && !TABLE_IS_DELETED(DB[this.id])) {
 			var row;
 			while (HIDDEN_TABLE_DATA[this.id].length > 0) {
 				row = HIDDEN_TABLE_DATA[this.id][0];
-				DB[this.id].ids[row[0]] = JSON.parse(JSON.stringify(HIDDEN_IDS[this.id][row[0]]));
+				(DB[this.id] as nyckelDB_uncompressed).ids[row[0]] = JSON.parse(JSON.stringify(HIDDEN_IDS[this.id][row[0]]));
 				delete HIDDEN_IDS[this.id][row[0]];
-				DB[this.id].table.push(HIDDEN_TABLE_DATA[this.id].splice(0, 1)[0]);
+				(DB[this.id] as nyckelDB_uncompressed).table.push(HIDDEN_TABLE_DATA[this.id].splice(0, 1)[0]);
 			}
 			row = null;
 			delete HIDDEN_TABLE_DATA[this.id];
@@ -3338,22 +3441,22 @@ var NyckelDB = (function () {
 	 * @param {regExp} regExp the regular expression to match
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.filter = function (colName, regExp) {
+	NyckelDBObj.prototype.filter = function (colName: string, regExp: any): object {
 		if (this.getLength() > 0) {
 			var colIndex = GET_INDEX_OF_COLUMN.call(this, colName),
 				val;
 			if (colIndex > 0) {
-				for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
-					val = String(DB[this.id].table[a][colIndex]);
+				for (var a = 0, arrLen = (DB[this.id] as nyckelDB_uncompressed).table.length; a < arrLen; a++) {
+					val = String((DB[this.id] as nyckelDB_uncompressed).table[a][colIndex]);
 					if (!val.match(regExp)) {
 						this.hideRow(a);
 						a--;
 						arrLen--;
 					}
 				}
-				a = null; arrLen = null;
+				a = null!; arrLen = null!;
 			}
-			colIndex = null; val = null;
+			colIndex = null!; val = null;
 		}
 		return this;
 	};
@@ -3362,7 +3465,7 @@ var NyckelDB = (function () {
 	 * @function unfilter
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.unfilter = function () {
+	NyckelDBObj.prototype.unfilter = function (): NyckelDB_interface {
 		return this.unhideRows();
 	};
 	/**
@@ -3382,31 +3485,31 @@ var NyckelDB = (function () {
 	 * @param {string} [id] id is optional and will only be used if it doesn't already exist
 	 * @returns {string} new row id
 	 */
-	NyckelDBObj.prototype.addRow = function (array, id) {
+	NyckelDBObj.prototype.addRow = function (array: Array<any>, id: string): string | false {
 		if (array && array.constructor !== Array && typeof array === "object") {
 			//convert object to array
-			var _array = [],
+			var _array: any[] = [],
 				a = 0;
-			this.forEachCol.call(this, function (col) {
+			return this.forEachCol.call(this, function (col: string) {
 				if (array[col] && array[col].value) _array[a] = array[col].value;
 				a++;
-			}, function () {
-				return ADD_ROW.call(this, _array, id);
+			}, function (this: NyckelDB_interface) {
+				return ADD_ROW.call(this, _array, id, true);
 			}.bind(this));
 		}
-		else return ADD_ROW.call(this, array, id);
+		else return ADD_ROW.call(this, array, id, true);
 	};
 	/**
 	 * Change the value of a cell
 	 * @function setVal
-	 * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+	 * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
 	 * @param {string} colName is the column name from the table header
-	 * @param {string|number|boolean} newValue the new value to apply to the cell
+	 * @param {string | number | boolean} newValue the new value to apply to the cell
 	 * @param {setCallback} [callback] callback function
-	 * @returns {string|number|boolean} the actual value that was set after passing through data validation
+	 * @returns {string | number | boolean | undefined} the actual value that was set after passing through data validation
 	 */
-	NyckelDBObj.prototype.setVal = function (rowId, colName, newValue, callback) {
-		return SET_VAL.call(this, rowId, colName, newValue, true, null, callback);
+	NyckelDBObj.prototype.setVal = function (rowId: number | string, colName: string, newValue: tableValue, callback: setCallback): tableValue | undefined {
+		return SET_VAL.call(this, rowId, colName, newValue, true, undefined, callback);
 	};
 	/**
 	* Change multiple values at once
@@ -3415,7 +3518,7 @@ var NyckelDB = (function () {
 	* @param {object} newValues object in the form {[colName]:{value:[value]},...}
 	* @param {setCallback} [callback] callback function
 	*/
-	NyckelDBObj.prototype.setVals = function (rowId, newValues, callback) {
+	NyckelDBObj.prototype.setVals = function (rowId: number | string, newValues: object, callback: setCallback) {
 		function ret(this: NyckelDB_interface) {
 			a++;
 			if (a === len && callback instanceof Function) return callback(true, ERRORS[this.id], DB[this.id].title, true);
@@ -3427,7 +3530,7 @@ var NyckelDB = (function () {
 		}
 		for (let value in newValues) {
 			if (newValues[value].column && COL_NAME_IS_VALID.call(this, newValues[value].column)) {
-				SET_VAL.call(this, rowId, newValues[value].column, newValues[value].value, true, null, ret.bind(this));
+				SET_VAL.call(this, rowId, newValues[value].column, newValues[value].value, true, undefined, ret.bind(this));
 			}
 		}
 	};
@@ -3437,8 +3540,8 @@ var NyckelDB = (function () {
 	 * @param {string|number} rowId the row's id, or its current index
 	 * @returns {boolean} success
 	 */
-	NyckelDBObj.prototype.deleteRow = function (rowId) {
-		return DELETE_ROW.call(this, rowId);
+	NyckelDBObj.prototype.deleteRow = function (rowId: string | number): boolean {
+		return DELETE_ROW.call(this, rowId, true);
 	};
 	/**
 	 * Merge two copys of the same NyckelDB table (same title, column headers and column types) into one
@@ -3450,7 +3553,7 @@ var NyckelDB = (function () {
 	 * @returns {object} this
 	 */
 	NyckelDBObj.prototype.importJSON = function (json, syncKey, syncToken, callback) {
-		return IMPORT_JSON.call(this, json, function (success, errors, title, syncChanges) {
+		return IMPORT_JSON.call(this, json, function (this: NyckelDB_interface, success, errors, title, syncChanges) {
 			if (success && syncChanges && !errors) return CREATE_BASE64_FILE.call(this, syncKey, syncToken, callback), this;
 			else return callback instanceof Function ? (callback(success, errors, title, false), this) : this;
 		}.bind(this), syncKey, false);
@@ -3461,8 +3564,8 @@ var NyckelDB = (function () {
 	 * @param {function} [callback] callback function
 	 * @returns {object} this
 	 */
-	NyckelDBObj.prototype.deleteTable = function (callback) {
-		return DELETE_TABLE.call(this, callback);
+	NyckelDBObj.prototype.deleteTable = function (callback: successCallback): void {
+		return DELETE_TABLE.call(this, callback, undefined, true);
 	};
 	/**
 	 * Clear all the locally cached copies of all the NyckelDB databases.
@@ -3470,7 +3573,7 @@ var NyckelDB = (function () {
 	 * @param {string} msg the message that you want to tell the user before you blow everything up!
 	 * @param {successCallback} [callback] callback function
 	 */
-	NyckelDBObj.prototype.NUKEALL = function (msg, callback) {
+	NyckelDBObj.prototype.NUKEALL = function (msg: string, callback: successCallback): void {
 		function nuke(this: NyckelDB_interface) {
 			if (APP.Sto) {
 				for (let a = 0, len = DBS.length; a < len; a++) {
@@ -3492,9 +3595,8 @@ var NyckelDB = (function () {
 			ROW_INDEX_CACHE = [];
 			ERRORS = [];
 			SYNC_ERROR = false;
-			SYNC_ERROR_TIME = null;
-			if (callback instanceof Function) return callback(true, null, null, true), this;
-			else return this;
+			SYNC_ERROR_TIME = 0;
+			if (callback instanceof Function) return callback(true, false, null, true);
 		}
 		if (APP.confirm && APP.notify) APP.confirm(msg, nuke.bind(this), function () {
 			APP.notify("<b>Oi!</b> That was close!", true);
@@ -3572,7 +3674,7 @@ var NyckelDB = (function () {
 					SYNC_ERROR_TIME = new Date().getTime();
 					return retError.call(this, "wrong key used");
 			}
-			return IMPORT_JSON.call(this, json, function (this: NyckelDB_interface, success: boolean, errors: string, title: string, changes: boolean) {
+			return IMPORT_JSON.call(this, json, function (this: NyckelDB_interface, success: boolean, errors: tableErrors, title: string | null, changes: boolean) {
 				if (success && !errors && (changes || this.syncPending === true || forceSync === true)) {
 					return CREATE_BASE64_FILE.call(this, writeKey, options.token, callback);
 				}
@@ -3634,7 +3736,7 @@ var NyckelDB = (function () {
 	 * @return {string} actual type set
 	 */
 	NyckelDBObj.prototype.setType = function (colName: string, type: string, data?, callback?: setCallback) {
-		return SET_TYPE.call(this, colName, type, data, true, false, callback);
+		return SET_TYPE.call(this, colName, type, data, true, undefined, callback);
 	};
 	/**
 	 * Same as isSyncPending but sets the value of syncPending to true if the cloudSyncFile validates
@@ -3671,7 +3773,7 @@ var NyckelDB = (function () {
 	 * @since 0.4
 	 */
 	NyckelDBObj.prototype.addColumn = function (colName: string, position: number, options, callback) {
-		return ADD_COLUMN.call(this, colName, options && options.type ? options.type : "any", position, options, true, null, callback);
+		return ADD_COLUMN.call(this, colName, options && options.type ? options.type : "any", position, options, true, undefined, callback);
 	};
 	/**
 	 * Delete a column from the table
@@ -3682,7 +3784,7 @@ var NyckelDB = (function () {
 	 * @since 0.4
 	 */
 	NyckelDBObj.prototype.deleteColumn = function (colName, callback) {
-		return DELETE_COLUMN.call(this, colName, true, null, callback);
+		return DELETE_COLUMN.call(this, colName, true, undefined, callback);
 	};
 	/**
 	 * Change the name of a column
