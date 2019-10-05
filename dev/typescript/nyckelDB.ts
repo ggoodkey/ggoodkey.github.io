@@ -2109,7 +2109,7 @@ var NyckelDB = (function () {
 			return "any";
 		}
 	}
-	function APPLY_COLUMN_PROPERTIES(this: NyckelDB_interface, tableHeaders: string[] | {[columnName: string]: any}, columnProperties: {[columnName: string]: any} = {}, tableCreated?: number, doNotIndex?: string[]) {
+	function APPLY_COLUMN_PROPERTIES(this: NyckelDB_interface, tableHeaders: string[] | {[columnName: string]: any}, columnProperties?: {[columnName: string]: any}, tableCreated?: number, doNotIndex?: string[]) {
 		function applyHeaders(this: NyckelDB_interface, headers: string[] | {[headerName: string]: string} | {[headerName: string]: {type:string}}): string[] {
 			if (IS_ARRAY(headers)) {
 				return CHECK_HEADERS_ARRAY.call(this, headers);
@@ -2123,13 +2123,13 @@ var NyckelDB = (function () {
 					headers[b] = a;
 					b++;
 					//initiate columnProperties with unchecked header values (to be fixed later)
-					columnProperties[a] = columnProperties[a] || {};
-					if (!columnProperties[a].type) {
+					_columnProperties[a] = _columnProperties[a] || {};
+					if (!_columnProperties[a].type) {
 						if (typeof _headers[a] === "string") {
-							columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as string));
+							_columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as string));
 						}
 						else if (typeof _headers[a] === "object") {
-							columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as {type: string}).type);
+							_columnProperties[a].type = VALIDATE_TYPE.call(this, (_headers[a] as {type: string}).type);
 						}
 
 					}
@@ -2140,7 +2140,7 @@ var NyckelDB = (function () {
 		function apply_Simple_Array(this: NyckelDB_interface): tableColumns {
 			for (let a = 1, b = 0, len = tableHeaders.length; a < len; a++ , b++) {
 				obj[obj.$headers[a]] = {
-					type: [VALIDATE_TYPE.call(this, columnProperties[b]), time]
+					type: [VALIDATE_TYPE.call(this, _columnProperties[b]), time]
 					//TODO add other properties
 					//initialValue: 
 					//search:
@@ -2153,38 +2153,38 @@ var NyckelDB = (function () {
 		}
 		function applyArray(this: NyckelDB_interface): tableColumns {
 			for (let a = 1, len = tableHeaders.length; a < len; a++) {
-				if (columnProperties[tableHeaders[a]]) {
+				if (_columnProperties[tableHeaders[a]]) {
 					//if given tableHeader name contains a space or invalid character
-					if (!columnProperties[obj.$headers[a]]) {
+					if (!_columnProperties[obj.$headers[a]]) {
 						let _badHeader = tableHeaders[a];
-						columnProperties[obj.$headers[a]] = columnProperties[_badHeader];
-						delete columnProperties[_badHeader];
+						_columnProperties[obj.$headers[a]] = _columnProperties[_badHeader];
+						delete _columnProperties[_badHeader];
 					}
-					if (typeof columnProperties[obj.$headers[a]] === "string") {
+					if (typeof _columnProperties[obj.$headers[a]] === "string") {
 						//migrate old version of types data forward to be held in an object
 						obj[obj.$headers[a]] = {
-							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]]), time]
+							type: [VALIDATE_TYPE.call(this, _columnProperties[obj.$headers[a]]), time]
 							//TODO add other properties
 							//initialValue: 
 							//search:
 						};
 					}
-					else if (columnProperties[obj.$headers[a]].type) {
-						if (IS_ARRAY(columnProperties[obj.$headers[a]].type)) obj[obj.$headers[a]] = {
-							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]].type[0]), columnProperties[obj.$headers[a]].type[1]]
+					else if (_columnProperties[obj.$headers[a]].type) {
+						if (IS_ARRAY(_columnProperties[obj.$headers[a]].type)) obj[obj.$headers[a]] = {
+							type: [VALIDATE_TYPE.call(this, _columnProperties[obj.$headers[a]].type[0]), _columnProperties[obj.$headers[a]].type[1]]
 							//TODO add other properties
 							//initialValue: 
 							//search:
 						};
 						else obj[obj.$headers[a]] = {
-							type: [VALIDATE_TYPE.call(this, columnProperties[obj.$headers[a]].type), time]
+							type: [VALIDATE_TYPE.call(this, _columnProperties[obj.$headers[a]].type), time]
 							//TODO add other properties
 							//initialValue: 
 							//search:
 						};
 					}
-					else console.log(columnProperties[obj.$headers[a]], "error");
-					if (columnProperties[obj.$headers[a]].exportAs) obj[obj.$headers[a]].exportAs = columnProperties[obj.$headers[a]].exportAs;
+					else console.log(_columnProperties[obj.$headers[a]], "error");
+					if (_columnProperties[obj.$headers[a]].exportAs) obj[obj.$headers[a]].exportAs = _columnProperties[obj.$headers[a]].exportAs;
 					else if (obj.$headers[a] !== tableHeaders[a]) obj[obj.$headers[a]].exportAs = [tableHeaders[a], time];
 				}
 				else {
@@ -2206,9 +2206,9 @@ var NyckelDB = (function () {
 			for (let a in tableHeaders) {
 				if (a !== "id") {
 					obj[obj.$headers[b]] = {
-						type: [typeof columnProperties[a] === "string" ?
-							VALIDATE_TYPE.call(this, columnProperties[a]) : columnProperties[a] && columnProperties[a].type ?
-								VALIDATE_TYPE.call(this, columnProperties[a].type) : "any", time]
+						type: [typeof _columnProperties[a] === "string" ?
+							VALIDATE_TYPE.call(this, _columnProperties[a]) : _columnProperties[a] && _columnProperties[a].type ?
+								VALIDATE_TYPE.call(this, _columnProperties[a].type) : "any", time]
 
 						//TODO add other properties
 						//initialValue: 
@@ -2222,12 +2222,9 @@ var NyckelDB = (function () {
 			}
 			return obj;
 		}
-		//columnProperties could be an Array ["string","number"...] or
-		//an Object like this {Column_1: "string", Column_2: "number"...} or
-		//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
-		//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
 
 		var time = TIMESTAMP(tableCreated),
+			_columnProperties = columnProperties || {},
 			obj: tableColumns = {
 				$headers: applyHeaders.call(this, tableHeaders),
 				$created: [0],
@@ -2244,7 +2241,7 @@ var NyckelDB = (function () {
 		}
 		if (IS_ARRAY(tableHeaders)) {
 			if (tableHeaders[0] !== "id" && obj.$headers.length === tableHeaders.length + 1) tableHeaders.unshift("id");
-			if (IS_ARRAY(columnProperties)) return apply_Simple_Array.call(this); //old db code with types array
+			if (IS_ARRAY(_columnProperties)) return apply_Simple_Array.call(this); //old db code with types array
 			else return applyArray.call(this);
 		}
 		else return applyObject.call(this);
@@ -2464,8 +2461,8 @@ var NyckelDB = (function () {
 	 * Initialise a new instance of nyckelDB. Note: part of the APP namespace, so use "new APP.nyckelDB(...);"
 	 * @constructs APP.nyckelDB
 	 * @param {string} tableTitle the name of the new database
-	 * @param {string[]|object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
-	 * @param {string[]|object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
+	 * @param {string[] | object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
+	 * @param {string[] | object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
 	 * @param {object} [opt] {
 	 *	customProperties:{
 	 *	  <property1Name>: {
@@ -2489,11 +2486,16 @@ var NyckelDB = (function () {
 	 * @property {string} Version nyckelDB version number
 	 * @property {boolean} syncPending whether or not the database has been synchronized with an external file since changes
 	 */
+
+	//columnProperties could be an Array ["string","number"...] or
+	//an Object like this {Column_1: "string", Column_2: "number"...} or
+	//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
+	//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
 	function NyckelDBObj(
 		this: NyckelDB_interface,
 		tableTitle: string,
 		tableHeaders: string[] | { [columnName: string]: string },
-		columnProperties?: { [x: string]: any; },
+		columnProperties?: string[] | { [columnName: string]: string; } | { [columnName: string]: {type: string}; } | { [columnName: string]: {type: [string, number]}; },
 		options?: NyckelDBOptions,
 		callback?: successCallback): void {
 		function applyCustomProperties(this: NyckelDB_interface, props: customProperties): { [propertyName: string]: [tableValue, number, string] } {
