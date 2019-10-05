@@ -2057,7 +2057,6 @@ var NyckelDB = (function () {
                     headers[b] = a;
                     b++;
                     //initiate columnProperties with unchecked header values (to be fixed later)
-                    console.log(_columnProperties, a);
                     _columnProperties[a] = _columnProperties[a] || {};
                     if (!_columnProperties[a].type) {
                         if (typeof _headers[a] === "string") {
