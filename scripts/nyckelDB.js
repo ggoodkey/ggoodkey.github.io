@@ -3180,7 +3180,7 @@ var NyckelDB = (function () {
      * @returns {object | undefined} json formatted data, or undefined if nothing found
      */
     NyckelDBObj.prototype.getRow = function (rowId, callback) {
-        var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), ret;
+        var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), ret = {};
         if (rowIndex > -1) {
             this.forEachCol(function (colName, is) {
                 ret[colName] = {

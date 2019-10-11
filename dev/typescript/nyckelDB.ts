@@ -3250,7 +3250,7 @@ var NyckelDB = (function () {
 					type: string;
 					value: tableValue;
 				};
-			}
+			} = {};
 		if (rowIndex > -1) {
 			this.forEachCol(function (this: NyckelDB_interface, colName: string, is: number) {
 				ret[colName] = {
