@@ -485,6 +485,7 @@
 		},
 		//set default searchable columns from dataTemplates above
 		searchableColumns = ["Name", "Owner", "Site", "Username", "Alias", "GivenName", "AdditionalName", "FamilyName", "Nickname", "ShortName", "MaidenName",
+			"Phone1_Value", "Phone2_Value", "Phone3_Value", "Phone4_Value", "Phone5_Value", "Phone6_Value", "Phone7_Value", "Phone8_Value", "Phone9_Value", "Phone10_Value",
 			"E_mail1_Value", "E_mail2_Value", "E_mail3_Value", "E_mail4_Value", "E_mail5_Value", "E_mail6_Value", "E_mail7_Value", "Address1_City", "Address2_City",
 			"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department", "groupName"],
 		freshStateObj = function () {
@@ -643,7 +644,10 @@
 				else if (callback) obj.args = [callback];
 				if (obj.title && obj.cmd) {
 					var title = VAL.toPropName(obj.title);
-					if (obj.cmd === "initNewNyckelDB") appData[title] = new NyckelDB(obj.args[0], obj.args[1], obj.args[2], obj.args[3], callback);
+					if (obj.cmd === "initNewNyckelDB") {
+						appData[title] = new NyckelDB(obj.args[0]);
+						appData[title].init(obj.args[1], obj.args[2], obj.args[3], callback);
+					}
 					else if (!appData[title]) {
 						debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
 						return null;
@@ -851,18 +855,22 @@
 		updateCSSColor = function (rgbColor, replaceColor) {
 			var styleSheets = document.styleSheets;
 			for (var a = 0; a < styleSheets.length; a++) {
-				var rules = styleSheets[a].cssRules || styleSheets[a].rules;
-				for (var b = 0, len = styleSheets[a].cssRules.length; b < len; b++) {
-					var rule = rules[b].cssText;
-					if (replaceColor.test(rule)) {
-						rule = rule.split("{");
-						var styles = rule[1].replace(/\}/, "").split(";");
-						for (var c = 0; c < styles.length - 1; c++) {
-							styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
-							rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
+				console.log(styleSheets[a]);
+				var rules = styleSheets[a].rules || styleSheets[a].cssRules;
+				if (rules) {
+					for (var b = 0, len = rules.length; b < len; b++) {
+						var rule = rules[b].cssText;
+						if (replaceColor.test(rule)) {
+							rule = rule.split("{");
+							var styles = rule[1].replace(/\}/, "").split(";");
+							for (var c = 0; c < styles.length - 1; c++) {
+								styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
+								rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
+							}
 						}
 					}
 				}
+				else app.notify("Error: browser does not support this feature :(");
 			}
 		},
 		setAccentColor = function (hex) {
@@ -1105,7 +1113,148 @@
 			});
 		},
 		getDetails = function (obj, callback) {
-			checkDBLoaded(function (cb) {
+			function processDetailsReturnData(row, error, cb) {
+				function getValue(template, splitter, labelOptions) {
+					function getDropdownList(optionsObj) {
+						var options = [];
+						for (let a = 0, lenA = optionsObj.dropdownList.length; a < lenA; a++) {
+							options[a] = {
+								text: optionsObj.dropdownList[a],
+								action: optionsObj.dropdownList[a]
+							};
+						}
+						return options;
+					}
+					function applyValueStr() {
+						obj = row[template];
+						obj.value = formatValue(obj.value, obj.type, splitter);
+						obj.orig = obj.value.join(" ::: ").split(" ::: ");
+					}
+					function applyValueArr() {
+						obj.value = [];
+						for (let a = 0, lenA = template.value.length; a < lenA; a++) {
+							if (row[template.value[a]].value) obj.value[a] = row[template.value[a]].value;
+						}
+						obj.value = obj.value.join(template.joiner || " ");
+						obj.readonly = true;
+					}
+					function applyValueObj() {
+						obj = {
+							type: row[template.value].type,
+							column: row[template.value].column,
+							value: row[template.value].value
+						};
+						if (template.options) {
+							if (template.options.dropdownList) obj.options = getDropdownList(template.options);
+							if (template.options.customLabel) obj.customize = true;
+							if (template.options.default) obj.value = obj.value || template.options.default;
+						}
+					}
+					function applyLabel() {
+						obj.label = {
+							column: template.label,
+							value: row[template.label].value,
+							orig: row[template.label].value,
+							type: row[template.label].type
+						};
+						if (labelOptions) {
+							if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
+							if (labelOptions.customLabel) obj.label.customize = true;
+							if (labelOptions.default) obj.label.value = obj.label.value || labelOptions.default;
+						}
+						//if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
+					}
+					var obj = {};
+					labelOptions = labelOptions || template.labelOptions;
+					if (typeof template === "string") applyValueStr();
+					else if (template.value) {
+						if (template.value.constructor === Array) applyValueArr();
+						else applyValueObj();
+						if (template.label) applyLabel();
+						if (template.readonly) obj.readonly = true;
+						if (template.hidden) obj.hidden = true;
+						obj.value = formatValue(obj.value, obj.type, splitter);
+						obj.orig = obj.value.join(" ::: ").split(" ::: ");
+					}
+					return obj;
+				}
+				function getGroup(template) {
+					var ret = {
+						group: [],
+						collapse: template.collapse || false,
+						show: 0
+					};
+					for (let c = 0, lenC = template.group.length, d, lenD; c < lenC; c++) {
+						ret.group[c] = getValue(template.group[c], template.splitter, template.labelOptions);
+						for (d = 0, lenD = ret.group[c].value.length; d < lenD; d++) {
+							if (ret.group[c].value[d] !== "") ret.show = c + 1;
+						}
+					}
+					if (template.groupHeading) {
+						ret.groupHeading = template.groupHeading;
+					}
+					if (template.hidden) ret.hidden = true;
+					if (template.readonly) ret.readonly = true;
+					return ret;
+				}
+				function formatValue(value, type, splitter) {
+					//format multiline strings
+					if (/multilineString|formattedAddress/.test(type) && value) {
+						value = value.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+					}
+					//split out multiple values in one cell
+					else if (typeof value === "string") value = splitter ? value.split(splitter) : value.split(" ::: ");
+					else value = [value];
+					return value;
+				}
+				function getHeading(template) {
+					var ret;
+					if (typeof template === "string") ret = row[template].value;
+					else if (template.value) {
+						ret = [];
+						for (let a = 0, lenA = template.value.length; a < lenA; a++) {
+							if (row[template.value[a]].value) ret[a] = row[template.value[a]].value;
+						}
+						ret = ret.join(template.joiner || " ");
+					}
+					return ret;
+				}
+				var data = [],
+					b = 0,
+					display = dataTemplates[obj.table].display,
+					title = "Item not found :´(",
+					subtitle = "Sorry, we couldn't locate this item in the database",
+					image = "";
+				if (row) {
+					if (display.heading) {
+						if (display.heading.title) title = getHeading(display.heading.title);
+						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
+						if (display.heading.image) image = row[display.heading.image].value;
+					}
+					for (let a = 0, lenA = display.detailsView.length; a < lenA; a++) {
+						if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
+							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
+							b++;
+						}
+						else if (display.detailsView[a].group) {
+							data[b] = getGroup(display.detailsView[a]);
+							b++;
+						}
+					}
+				}
+				app.spin(false, "Loading contact data...");
+				if (callback instanceof Function) callback({
+					id: obj.id,
+					table: obj.table,
+					title: title,
+					subtitle: subtitle,
+					image: image,
+					data: data,
+					error: error
+				});
+				if (cb instanceof Function) return cb();
+			}
+			function afterDBLoaded(cb) {
 				app.spin(true, "Loading contact data...");
 				app.storeState();
 				var cmd = {
@@ -1113,144 +1262,9 @@
 					"title": obj.table
 				};
 				if (obj.id) cmd.args = [obj.id];
-				wwManager(cmd, function (row, error) {
-					function getValue(template, splitter, labelOptions) {
-						function getDropdownList(optionsObj) {
-							var options = [];
-							for (let a = 0, lenA = optionsObj.dropdownList.length; a < lenA; a++) {
-								options[a] = {
-									text: optionsObj.dropdownList[a],
-									action: optionsObj.dropdownList[a]
-								};
-							}
-							return options;
-						}
-						function applyValueStr() {
-							obj = row[template];
-							obj.value = formatValue(obj.value, obj.type, splitter);
-							obj.orig = obj.value.join(" ::: ").split(" ::: ");
-						}
-						function applyValueArr() {
-							obj.value = [];
-							for (let a = 0, lenA = template.value.length; a < lenA; a++) {
-								if (row[template.value[a]].value) obj.value[a] = row[template.value[a]].value;
-							}
-							obj.value = obj.value.join(template.joiner || " ");
-							obj.readonly = true;
-						}
-						function applyValueObj() {
-							obj = {
-								type: row[template.value].type,
-								column: row[template.value].column,
-								value: row[template.value].value
-							};
-							if (template.options) {
-								if (template.options.dropdownList) obj.options = getDropdownList(template.options);
-								if (template.options.customLabel) obj.customize = true;
-								if (template.options.default) obj.value = obj.value || template.options.default;
-							}
-						}
-						function applyLabel() {
-							obj.label = {
-								column: template.label,
-								value: row[template.label].value,
-								orig: row[template.label].value,
-								type: row[template.label].type
-							};
-							if (labelOptions) {
-								if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
-								if (labelOptions.customLabel) obj.label.customize = true;
-								if (labelOptions.default) obj.label.value = obj.label.value || labelOptions.default;
-							}
-							//if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
-						}
-						var obj = {};
-						labelOptions = labelOptions || template.labelOptions;
-						if (typeof template === "string") applyValueStr();
-						else if (template.value) {
-							if (template.value.constructor === Array) applyValueArr();
-							else applyValueObj();
-							if (template.label) applyLabel();
-							if (template.readonly) obj.readonly = true;
-							if (template.hidden) obj.hidden = true;
-							obj.value = formatValue(obj.value, obj.type, splitter);
-							obj.orig = obj.value.join(" ::: ").split(" ::: ");
-						}
-						return obj;
-					}
-					function formatValue(value, type, splitter) {
-						//format multiline strings
-						if (/multilineString|formattedAddress/.test(type) && value) {
-							value = value.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
-						}
-						//split out multiple values in one cell
-						else if (typeof value === "string") value = splitter ? value.split(splitter) : value.split(" ::: ");
-						else value = [value];
-						return value;
-					}
-					function getHeading(template) {
-						var ret;
-						if (typeof template === "string") ret = row[template].value;
-						else if (template.value) {
-							ret = [];
-							for (let a = 0, lenA = template.value.length; a < lenA; a++) {
-								if (row[template.value[a]].value) ret[a] = row[template.value[a]].value;
-							}
-							ret = ret.join(template.joiner || " ");
-						}
-						return ret;
-					}
-					var data = [],
-						b = 0,
-						display = dataTemplates[obj.table].display,
-						title = "Item not found :´(",
-						subtitle = "Sorry, we couldn't locate this item in the database",
-						image = "";
-					if (row) {
-						if (display.heading) {
-							if (display.heading.title) title = getHeading(display.heading.title);
-							if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
-							if (display.heading.image) image = row[display.heading.image].value;
-						}
-						for (let a = 0, lenA = display.detailsView.length, c, lenC, d, lenD; a < lenA; a++) {
-							if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
-								data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
-								b++;
-							}
-							else if (display.detailsView[a].group) {
-								data[b] = {
-									group: [],
-									collapse: display.detailsView[a].collapse || false,
-									show: 0
-								};
-								for (c = 0, lenC = display.detailsView[a].group.length; c < lenC; c++) {
-									data[b].group[c] = getValue(display.detailsView[a].group[c], display.detailsView[a].splitter, display.detailsView[a].labelOptions);
-									for (d = 0, lenD = data[b].group[c].value.length; d < lenD; d++) {
-										if (data[b].group[c].value[d] !== "") data[b].show = c + 1;
-									}
-								}
-								if (display.detailsView[a].groupHeading) {
-									data[b].groupHeading = display.detailsView[a].groupHeading;
-								}
-								if (display.detailsView[a].hidden) data[b].hidden = true;
-								if (display.detailsView[a].readonly) data[b].readonly = true;
-								b++;
-							}
-						}
-					}
-					app.spin(false, "Loading contact data...");
-					if (callback instanceof Function) callback({
-						id: obj.id,
-						table: obj.table,
-						title: title,
-						subtitle: subtitle,
-						image: image,
-						data: data,
-						error: error
-					});
-					if (cb instanceof Function) return cb();
-				});
-			});
+				wwManager(cmd, function (row, error) { processDetailsReturnData(row, error, cb); });
+			}
+			checkDBLoaded(afterDBLoaded);
 		},
 		generateListItems = function (tableName, ids, options, callback) {
 			function buildList(result, errors) {
@@ -3172,8 +3186,10 @@
 				}
 				function search() {
 					if (to.query.search !== encodeURIComponent(this.currentQuery)) {
-						this.currentQuery = to.query.search;
-						this.search(null, to.query.search);
+						initializeGroups(function () {
+							this.currentQuery = to.query.search;
+							this.search(null, to.query.search);
+						}.bind(this));
 					}
 				}
 				function setPage() {

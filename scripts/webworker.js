@@ -83,7 +83,8 @@ self.addEventListener('message', function (e) {
 		}
 	};
 	function initNewNyckelDB(title, args, callback) {
-		appData[title] = new NyckelDB(args[0], args[1], args[2], args[3], callback);
+		appData[title] = new NyckelDB(args[0]);
+		appData[title].init(args[1], args[2], args[3], callback);
 	}
 	var data = ab2str(e.data);
 	data = JSON.parse(data);

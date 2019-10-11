@@ -107,7 +107,8 @@
 			tableTitle = "Test " + n;
 			if (options && options.importData) options.importData.title = tableTitle;
 			callback = function (ret, err) { document.getElementById('output' + n * 2).innerHTML = "returned: " + ret + ", errors: " + err; };
-			db[n] = new NyckelDB(tableTitle, tableHeaders, headerTypes, options, callback);
+			db[n] = new NyckelDB(tableTitle);
+			db[n].init(tableHeaders, headerTypes, options, callback);
 			document.getElementById('output' + (n * 2 - 1)).innerHTML = JSON.stringify(db[n]);
 		}
 		APP.setDebugMode(true);
