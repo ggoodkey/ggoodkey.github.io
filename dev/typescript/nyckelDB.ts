@@ -3729,7 +3729,6 @@ var NyckelDB = (function () {
 		}
 		function keyMigration(this: NyckelDB_interface) {
 			if (opt.oldKey !== undefined && opt.key && opt.oldKey !== opt.key) {
-				console.log("migrating keys", readKey, opt.oldKey);
 				readKey = opt.oldKey;
 				DB[this.id].lastModified = TIMESTAMP();
 				this.syncPending = true;

@@ -3668,7 +3668,7 @@
 						this.stoKeyWarning = "Passwords don't match";
 					}
 					if (callback instanceof Function) return callback();
-				}.bind(this));
+				}.bind(this), true);
 			},
 			updateStoKey: function () {
 				function storeKey(key, callback) {
@@ -3685,7 +3685,7 @@
 						}
 						else debug("use of dropboxEmail as a key has been depricated", "error");//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
 						return storeKey.call(this, this.stoKey, callback);
-					}.bind(this));
+					}.bind(this), true);
 				}.bind(this));
 			},
 			/*
