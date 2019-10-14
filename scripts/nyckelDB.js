@@ -495,8 +495,9 @@ var NyckelDB = (function () {
                         var i = 0, idiLen;
                         for (var id in DB[this.id].ids) {
                             for (i = 0, idiLen = DB[this.id].ids[id].length; i < idiLen; i++) {
-                                if (i !== 0 || DB[this.id].ids[id][i] !== -1)
+                                if (i !== 0 || DB[this.id].ids[id][i] !== -1) {
                                     DB[this.id].ids[id][i] = DB[this.id].ids[id][i] - createdDiff;
+                                }
                             }
                         }
                         syncChanges = true;
@@ -669,7 +670,7 @@ var NyckelDB = (function () {
                     return arr;
                 }
                 function toEditTimesArr(json, traceStr) {
-                    var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified)), undefined, "row", traceStr)];
+                    var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified || 0)), undefined, "row", traceStr)];
                     for (var a = 1, len = DB[this.id].columns.$headers.length; a < len; a++) {
                         ret[a] = 0;
                     }
@@ -1832,7 +1833,7 @@ var NyckelDB = (function () {
                 if (TABLE_IS_DELETED(db))
                     CACHE_ERROR.call(this, "cannot validate cell edit time of deleted table");
                 else if (id)
-                    t = TIMESTAMP(db.created + (db.ids[id][0] === -1 ? -1 : db.ids[id][0]));
+                    t = TIMESTAMP(db.created + db.ids[id][0]);
                 else
                     CACHE_ERROR.call(this, "validating a cell edit time requires an cell id");
                 break;

@@ -365,7 +365,7 @@ var NyckelDB = (function () {
 	/*returns number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000, or since 15e11 in javascript time
 	use wRefTo (with reference to, Optional) to specify a different base time stamp as reference. Returns the difference
 	b/t wRefTo and Now. */
-	function TIMESTAMP(wRefTo = 0): number {
+	function TIMESTAMP(wRefTo: number = 0): number {
 		var now = Math.round((new Date().getTime() - 15e11) / 6e4);
 		return now - wRefTo;
 	}
@@ -741,8 +741,9 @@ var NyckelDB = (function () {
 						var i = 0, idiLen: number;
 						for (let id in (DB[this.id] as nyckelDB_uncompressed).ids) {
 							for (i = 0, idiLen = (DB[this.id] as nyckelDB_uncompressed).ids[id].length; i < idiLen; i++) {
-								if (i !== 0 || ((DB[this.id] as nyckelDB_uncompressed).ids[id] as deletedId)[i] !== -1)
-									(DB[this.id] as nyckelDB_uncompressed).ids[id][i] = ((DB[this.id] as nyckelDB_uncompressed).ids[id][i] as number) - createdDiff;
+								if (i !== 0 || ((DB[this.id] as nyckelDB_uncompressed).ids[id] as deletedId)[i] !== -1) {
+									(DB[this.id] as nyckelDB_uncompressed).ids[id][i] = (DB[this.id] as nyckelDB_uncompressed).ids[id][i] - createdDiff;
+								}
 							}
 						}
 						syncChanges = true;
@@ -899,7 +900,7 @@ var NyckelDB = (function () {
 					return arr;
 				}
 				function toEditTimesArr(this: NyckelDB_interface, json: csv2jsonOutput, traceStr: string): number[] {
-					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified)), undefined, "row", traceStr)];
+					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified || 0)), undefined, "row", traceStr)];
 					for (let a = 1, len = (DB[this.id] as nyckelDB_uncompressed).columns.$headers.length; a < len; a++) {
 						ret[a] = 0;
 					}
@@ -1963,7 +1964,7 @@ var NyckelDB = (function () {
 				break;
 			case "cell":
 				if (TABLE_IS_DELETED(db)) CACHE_ERROR.call(this, "cannot validate cell edit time of deleted table");
-				else if (id) t = TIMESTAMP(db.created + ((db.ids[id] as deletedId)[0] === -1 ? -1 : db.ids[id][0] as number));
+				else if (id) t = TIMESTAMP(db.created + db.ids[id][0]);
 				else CACHE_ERROR.call(this, "validating a cell edit time requires an cell id");
 				break;
 			default:
