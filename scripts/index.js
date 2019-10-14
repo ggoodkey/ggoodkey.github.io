@@ -1055,7 +1055,7 @@
 		loadDB = true,
 		loadDBQueue = [],
 		loadingDB = false,
-		checkDBLoaded = function (callback) {
+		checkDBLoaded = function (callback, skipSync) {
 			function initDB(title, template, dbNum, numOfTables) {
 				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
 				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
@@ -1064,7 +1064,7 @@
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
-						if (window.navigator.onLine) {
+						if (window.navigator.onLine && !skipSync) {
 							app.syncAll();
 						}
 						app.spin(false, "Loading data...");
@@ -3952,7 +3952,7 @@
 					this.spin(true, "Synchronising with Dropbox");
 					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					if (callback instanceof Function) return callback();
-				}.bind(this));
+				}.bind(this), true);
 			},
 			setAccentColor: setAccentColor
 		}
