@@ -1055,7 +1055,7 @@
 		loadDB = true,
 		loadDBQueue = [],
 		loadingDB = false,
-		checkDBLoaded = function (callback, skipSync) {
+		checkDBLoaded = function (callback) {
 			function initDB(title, template, dbNum, numOfTables) {
 				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
 				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
@@ -1064,9 +1064,9 @@
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
-						if (window.navigator.onLine && !skipSync) {
-							app.syncAll();
-						}
+						// if (window.navigator.onLine) {
+						// 	app.syncAll();
+						// }
 						app.spin(false, "Loading data...");
 						loadDB = false;
 						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
@@ -3668,7 +3668,7 @@
 						this.stoKeyWarning = "Passwords don't match";
 					}
 					if (callback instanceof Function) return callback();
-				}.bind(this), true);
+				}.bind(this));
 			},
 			updateStoKey: function () {
 				function storeKey(key, callback) {
@@ -3685,7 +3685,7 @@
 						}
 						else debug("use of dropboxEmail as a key has been depricated", "error");//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
 						return storeKey.call(this, this.stoKey, callback);
-					}.bind(this), true);
+					}.bind(this));
 				}.bind(this));
 			},
 			/*
@@ -3952,7 +3952,7 @@
 					this.spin(true, "Synchronising with Dropbox");
 					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					if (callback instanceof Function) return callback();
-				}.bind(this), true);
+				}.bind(this));
 			},
 			setAccentColor: setAccentColor
 		}
