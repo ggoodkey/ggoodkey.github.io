@@ -6,7 +6,7 @@
 	"display": "standalone",
 	"start_url": "https://ggoodkey.github.io/",
 	"short_name": "Nyckel Beta",
-	"theme_color": "#00000",
+	"theme_color": "black",
 	"description": "Store, search, view, share and sync data across devices using the cloud.",
 	"orientation": "any",
 	"background_color": "black",

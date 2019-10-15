@@ -757,7 +757,10 @@
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-				checkDBLoaded(function (callback) {
+				if (window.navigator.onLine) {
+						app.syncAll();
+				}
+				else checkDBLoaded(function (callback) {
 					if (callback instanceof Function) return callback();
 				});
 				if (!cordova && !app.cookieAgree) {
@@ -1069,9 +1072,6 @@
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
-						// if (window.navigator.onLine) {
-						// 	app.syncAll();
-						// }
 						app.spin(false, "Loading data...");
 						loadDB = false;
 						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
