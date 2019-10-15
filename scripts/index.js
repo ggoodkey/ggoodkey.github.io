@@ -758,7 +758,7 @@
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				if (window.navigator.onLine) {
-						app.syncAll();
+						app.syncAll({forceSync: true});
 				}
 				else checkDBLoaded(function (callback) {
 					if (callback instanceof Function) return callback();
