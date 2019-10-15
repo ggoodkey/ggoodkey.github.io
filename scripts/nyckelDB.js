@@ -3654,22 +3654,15 @@ var NyckelDB = (function () {
             }
             switch (json.signature) {
                 case Base64.hmac(json.data, readKey):
-                    console.log("Base64.hmac readKey", readKey);
                     json = read.call(this, json.data, readKey, false);
-                    console.log(json);
                     break;
                 case Base64.hmac(json.data, opt.initialKey):
-                    console.log("Base64.hmac options.initialKey", opt.initialKey);
                     json = read.call(this, json.data, opt.initialKey || null, true);
-                    console.log(json);
                     break;
                 case Base64.hmac(json.data, null):
-                    console.log("Base64.hmac null");
                     json = read.call(this, json.data, null, true);
-                    console.log(json);
                     break;
                 default:
-                    console.log("wrong key");
                     //wrong key, put user through key update ui and try again
                     SYNC_ERROR = true;
                     SYNC_ERROR_TIME = new Date().getTime();
@@ -3677,7 +3670,6 @@ var NyckelDB = (function () {
             }
             return IMPORT_JSON.call(this, json, function (success, errors, title, changes) {
                 if (success && !errors && (changes || this.syncPending === true || forceSync === true)) {
-                    console.log("successfully imported, creating base64_file");
                     return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
                 }
                 else

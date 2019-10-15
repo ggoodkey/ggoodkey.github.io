@@ -1949,7 +1949,7 @@ var NyckelDB = (function () {
 		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 		return true;
 	}
-	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: number | "del" | undefined, createdDiff = 0, type: string, traceStr: string, id?: string): number {
+	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: any, createdDiff = 0, type: string, traceStr: string, id?: string): number {
 		var t = TIMESTAMP();
 		var db = DB[this.id];
 		switch (type) {
@@ -3692,37 +3692,28 @@ var NyckelDB = (function () {
 			function read(this: NyckelDB_interface, data: string, key: string | null, change: boolean) {
 				if (change) {
 					DB[this.id].lastModified = TIMESTAMP();
-
 					this.syncPending = true;
 				}
 				return Base64.read(data, key);
 			}
 			switch (json.signature) {
 				case Base64.hmac(json.data, readKey):
-					console.log("Base64.hmac readKey", readKey);
 					json = read.call(this, json.data, readKey, false);
-					console.log(json);
 					break;
 				case Base64.hmac(json.data, opt.initialKey):
-					console.log("Base64.hmac options.initialKey", opt.initialKey);
 					json = read.call(this, json.data, opt.initialKey || null, true);
-					console.log(json);
 					break;
 				case Base64.hmac(json.data, null):
-					console.log("Base64.hmac null");
 					json = read.call(this, json.data, null, true);
-					console.log(json);
 					break;
 				default:
-					console.log("wrong key");
-					//wrong key, put user through key update ui and try again
+				//wrong key, put user through key update ui and try again
 					SYNC_ERROR = true;
 					SYNC_ERROR_TIME = new Date().getTime();
 					return retError.call(this, "wrong key used");
 			}
 			return IMPORT_JSON.call(this, json, function (this: NyckelDB_interface, success: boolean, errors: tableErrors, title: string | null, changes: boolean) {
 				if (success && !errors && (changes || this.syncPending === true || forceSync === true)) {
-					console.log("successfully imported, creating base64_file");
 					return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
 				}
 				else return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id], title, false), this) : this;

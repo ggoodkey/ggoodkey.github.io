@@ -855,7 +855,6 @@
 		updateCSSColor = function (rgbColor, replaceColor) {
 			var styleSheets = document.styleSheets;
 			for (var a = 0; a < styleSheets.length; a++) {
-				console.log(styleSheets[a]);
 				var rules = styleSheets[a].rules || styleSheets[a].cssRules;
 				if (rules) {
 					for (var b = 0, len = rules.length; b < len; b++) {
@@ -896,6 +895,12 @@
 			for (let a = 0, len = colors.length; a < len; a++) {
 				updateCSSColor(colors[a], oldColorString[a]);
 			}
+			var metaThemeColor = document.querySelector("meta[name=theme-color]"),
+				appleThemeColor = document.querySelector("meta[name=apple-mobile-web-app-status-bar-style]"),
+				windowsThemeColor = document.querySelector("meta[name=msapplication-navbutton-color]");
+			metaThemeColor.setAttribute("content", hex);
+			appleThemeColor.setAttribute("content", hex);
+			windowsThemeColor.setAttribute("content", hex);
 			windowsAccentColor = colors;
 			app.accentColor = hex;
 			app.storeState();
@@ -3948,7 +3953,6 @@
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
 					options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-					debug(options.key, "key");
 					this.spin(true, "Synchronising with Dropbox");
 					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					if (callback instanceof Function) return callback();
