@@ -758,7 +758,8 @@
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				if (window.navigator.onLine) {
-						app.syncAll({forceSync: true});
+					if (!APP.Dbx) APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, app.stoKey, app.syncAll);
+					else app.syncAll();
 				}
 				else checkDBLoaded(function (callback) {
 					if (callback instanceof Function) return callback();
