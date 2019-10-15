@@ -757,11 +757,8 @@
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-				if (window.navigator.onLine) {
-					if (!APP.Dbx) APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, app.stoKey, app.syncAll);
-					else app.syncAll();
-				}
-				else checkDBLoaded(function (callback) {
+				checkDBLoaded(function (callback) {
+					app.syncAll();
 					if (callback instanceof Function) return callback();
 				});
 				if (!cordova && !app.cookieAgree) {
@@ -776,6 +773,7 @@
 						app.dropboxUsername = user.alias;
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
+						dbid = user.dbid;
 					}
 					doneInit();
 				}
