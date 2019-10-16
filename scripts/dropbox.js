@@ -1,3 +1,4 @@
+var APP = APP || {}, cordova;
 (function (root, factory) {
 	'use strict';
 	if (typeof define === 'function' && define.amd) {
@@ -13,12 +14,17 @@
 }(this, function () {
 	'use strict';
 	var toString = {}.toString;
-	function isFunction(x, type) { return toString.call(x) === '[object Function]'; }
-	function isString(x, type) { return toString.call(x) === '[object String]'; }
-	function isObject(x, type) { return toString.call(x) === '[object Object]'; }
+	function isFunction(x) { return toString.call(x) === '[object Function]'; }
+	function isString(x) { return toString.call(x) === '[object String]'; }
+	function isObject(x) { return toString.call(x) === '[object Object]'; }
 	function paramsFromUrlHash(hash) {
 		hash = hash || window.location.hash;
-		return hash.replace(/^#\/|^#/, '').split('&').reduce(function (o, entry) { if (entry === '') return o; entry = entry.split('='); o[decodeURIComponent(entry[0])] = decodeURIComponent(entry[1]); return o; }, {});
+		return hash.replace(/^#\/|^#/, '').split('&').reduce(function (o, entry) {
+			if (entry === '') return o;
+			entry = entry.split('=');
+			o[decodeURIComponent(entry[0])] = decodeURIComponent(entry[1]);
+			return o;
+		}, {});
 	}
 	var api = 'https://api.dropboxapi.com/2/',
 		content = 'https://content.dropboxapi.com/2/',
