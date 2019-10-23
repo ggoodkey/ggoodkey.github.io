@@ -169,11 +169,11 @@ The following types can be applied to any column:
 To start using NyckelDB, it's download a copy of `nyckelDB.min.js`, `base64.min.js`, `storage.js`, `Lawnchair.js`, and the Lawnchair adaptors that you want to use (`dom.js`, `indexed-db.js` for starters), and insert them into your html file with script tags, loading them in this order:
 ```html
     <script type="text/javascript" src="scripts/base64.min.js"></script>
-	<script type="text/javascript" src="scripts/Lawnchair.js"></script>
-	<script type="text/javascript" src="scripts/adapters/indexed-db.js"></script>
-	<script type="text/javascript" src="scripts/adapters/dom.js"></script>
-	<script type="text/javascript" src="scripts/storage.js"></script>
-	<script type="text/javascript" src="scripts/nyckelDB.min.js"></script>
+    <script type="text/javascript" src="scripts/Lawnchair.js"></script>
+    <script type="text/javascript" src="scripts/adapters/indexed-db.js"></script>
+    <script type="text/javascript" src="scripts/adapters/dom.js"></script>
+    <script type="text/javascript" src="scripts/storage.js"></script>
+    <script type="text/javascript" src="scripts/nyckelDB.min.js"></script>
 ```
 
 ### Setting up a new NyckelDB Object

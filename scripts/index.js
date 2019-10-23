@@ -1260,7 +1260,7 @@
 					title = "Item not found :´(",
 					subtitle = "Sorry, we couldn't locate this item in the database",
 					image = "";
-				debug(row, "row");
+				//debug(row, "row");
 				if (row) {
 					
 					if (display.heading) {
@@ -1363,7 +1363,7 @@
 						}
 						ids = obj;
 					}
-					debug(detailsObj, "detailsObj");
+					//debug(detailsObj, "detailsObj");
 					for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
 						if (!ids[detailsObj[b].table]) ids[detailsObj[b].table] = [];
 						if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
@@ -1459,15 +1459,12 @@
 			app.storeState();
 		},
 		importFile = function (toTable) {
-			function done(success, errors, title, syncPending) {
+			function done(success, errors) {
 				if (success && !errors) {
-					if (syncPending) {//TODO
-						app.notify("Data imported successfully", true);
-					}
-					else app.notify("Data imported and synchronized successfully", true);
+					app.notify("Data imported successfully", true);
 				}
 				else if (errors) {
-					defaultErrorHandler(success, errors, title, syncPending);
+					defaultErrorHandler(success, errors);
 				}
 				else app.notify("Done", true);
 			}
@@ -1936,7 +1933,7 @@
 						default:
 							if (/^_add_to_group_/.test(action)) {
 								var groupName = action.replace(/_add_to_group_/, "");
-								debug(groupName, "add to group");
+								//debug(groupName, "add to group");
 								addToGroup(groupName, null, this.currentQuery);
 							}
 							else debug(action, "no such button action found");
@@ -2206,8 +2203,8 @@
 						template.options.importJSON = JSON;
 						app.notify("Building new table");
 						wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] },
-							function (success, errors, title, requiresSync) {//final callback function for last NyckelDB to initialise
-								if (errors) defaultErrorHandler(success, errors, title, requiresSync);
+							function (success, errors) {//final callback function for last NyckelDB to initialise
+								if (errors) defaultErrorHandler(success, errors);
 								else app.notify("Done", true);
 							});
 					}
@@ -3860,7 +3857,7 @@
 			}*/
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
-					function done(success, errors, title, obj) {
+					function done(success, errors, obj, title) {
 						this.spin(false, "Synchronising with Dropbox");
 						if (err) {
 							this.notify("Please try again later", true);
@@ -3894,19 +3891,23 @@
 								});
 							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
-						else debug(title, "no json returned to upload to dropbox");
+						else debug("no json returned to upload to dropbox");
 						syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
 						if (b === count) return cb(obj && obj.syncFile || JSON.stringify(syncfile));
 						else b++;
 					}
 					function readFile(title, json, error) {
 						if (json && !error) {
-							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, done.bind(this));
+							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors) {
+								done.call(this, success, errors, title);
+							}.bind(this));
 						}
 						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
 							console.log(error, "offline");
 							options.forceSync = true;
-							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, done.bind(this));
+							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, function (success, errors) {
+								done.call(this, success, errors, title);
+							}.bind(this));
 						}
 						else {
 							debug(error, "couldn't sync " + title);
@@ -3934,21 +3935,23 @@
 						b = 1;
 					for (let table in dataTemplates) {
 						if (!err && dataTemplates.hasOwnProperty(table)) {
-							wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (success, errors, title, requiresSync) {
-								if (success && !errors) {
-									if (requiresSync === true) {
-										download.call(this, title);
+							(function(table) {
+								wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (requiresSync, errors) {
+									if (!errors) {
+										if (requiresSync === true) {
+											download.call(this, table);
+										}
+										else if (a === count) return b++ , cb(syncfile);
+										else b++;
+										a++;
 									}
-									else if (a === count) return b++ , cb(syncfile);
-									else b++;
-									a++;
-								}
-								else {
-									this.spin(false, "Synchronising with Dropbox");
-									debug(errors, "problem syncing " + title);
-									this.notify("Sync did not complete successfully");
-								}
-							}.bind(this));
+									else {
+										this.spin(false, "Synchronising with Dropbox");
+										debug(errors, "problem syncing " + table);
+										this.notify("Sync did not complete successfully");
+									}
+								}.bind(this));
+							})(table);
 						}
 					}
 				}
