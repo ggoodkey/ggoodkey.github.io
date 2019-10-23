@@ -2394,7 +2394,7 @@
 				},
 				groupInput: function (e) {
 					function runSearch(table, find) {
-						wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors, table) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors) {
 							if (!errors && searchResults && searchResults.length > 0) {
 								generateList(table, searchResults, { selected: true }, function (list) {
 									this.activeGroup = this.activeGroup.concat(list);
@@ -2495,7 +2495,7 @@
 						app.navigate("search", app.currentQuery);
 					}
 					function searchForMembers(table, group, lenTables) {
-						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group.searchTerms.value, { colNames: searchableColumns }] }, function (results, err, title) {
+						wwManager({ "cmd": "advancedSearch", "title": table, "args": [group.searchTerms.value, { colNames: searchableColumns }] }, function (results, err) {
 							if (!err) {
 								if (results) generateListItems(table, results, null, function (arr) {
 									list = list.concat(arr);
@@ -2507,7 +2507,7 @@
 									if (n === lenTables) add(group);
 								}
 							}
-							else debug(err, title + " seeGroup error");
+							else debug(err, table + " seeGroup error");
 						});
 					}
 					function showGroup(group, error) {
@@ -2538,9 +2538,11 @@
 				},
 				showSelectGroupMembers: function () {
 					for (let table in dataTemplates) {
-						generateList(table, null, null, function (list) {
-							this.activeGroup = this.activeGroup.concat(list);
-						}.bind(this));
+						(function (self, table) { 
+							generateList(table, null, null, function (list) {
+								self.activeGroup = self.activeGroup.concat(list);
+							});
+						})(this, table);
 					}
 				},
 				resetGroups: function () {
@@ -3404,7 +3406,7 @@
 											this.searchResultsError = "";
 										}
 										else {
-											wwManager({ cmd: "getLength", title: "Contacts" }, function (l) {
+											wwManager({ cmd: "getLength", title: table }, function (l) {
 												if (l > 0) this.searchResultsError = 'No results found for "' + this.currentQuery + '". Try searching for something else.';
 												else this.searchResultsError = 'No data found';
 											}.bind(this));
@@ -3441,7 +3443,7 @@
 								}
 								for (let table in dataTemplates) {
 									(function (self, table) {
-										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, displayResults.bind(self));
+										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, function (success, errors) { displayResults.call(self, success, errors, table); });
 									})(this, table);
 								}
 							} else console.log("empty query field");
