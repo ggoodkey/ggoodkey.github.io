@@ -3898,15 +3898,15 @@
 					}
 					function readFile(title, json, error) {
 						if (json && !error) {
-							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors) {
-								done.call(this, success, errors, title);
+							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
+								done.call(this, success, errors, obj, title);
 							}.bind(this));
 						}
 						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
 							console.log(error, "offline");
 							options.forceSync = true;
-							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, function (success, errors) {
-								done.call(this, success, errors, title);
+							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, function (success, errors, obj) {
+								done.call(this, success, errors, obj, title);
 							}.bind(this));
 						}
 						else {
