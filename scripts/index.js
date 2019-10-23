@@ -3,7 +3,7 @@
 	"use strict";
 	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
-		APP_VERSION = "0.0.1",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+		APP_VERSION = "0.5.1.1",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
 		views = {//views creates new pages in the app
 			new: {
 				name: "Tables",
