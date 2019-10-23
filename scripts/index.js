@@ -446,12 +446,38 @@
 						joiner: ": ",
 						sortBy: "Site"
 					},
-					detailsView: {}
+					heading: {
+						title: "Site",
+						subtitle: {
+							value: ["Username", "Alias"],
+							joiner: ", aka "
+						}
+					},
+					detailsView: [
+						{ value: "Site", hidden: true },
+						{ value: "Username", hidden: true },
+						{ value: "Alias", hidden: true }, 
+						"Password",
+						"DateCreated"
+					]
 				}
 			},
 			Files: {
 				headers: ["Display Name", "Name", "Extension", "Type", "Original Size", "Compressed Size", "Compression", "Created", "Modified", "Owner", "Hash", "Compressed Contents"],
-				types: ["string", "string", "string", "string", "posInteger", "posInteger", "string", "date", "date", "string", "string", "string"],
+				types: {
+					"Display Name": "string",
+					"Name": "string",
+					"Extension": "string",
+					"Type": "string",
+					"Original Size": "posInteger",
+					"Compression Size": "posInteger",
+					"Compression": "string",
+					"Created": "date",
+					"Modified": "date",
+					"Owner": "string",
+					"Hash": "string",
+					"Compressed Contents": "string"
+				},
 				options: {
 					customProperties: {
 					},
@@ -468,7 +494,12 @@
 			},
 			Groups: {
 				headers: ["groupName", "groupIds", "searchTerms", "excludeIds"],
-				types: ["string", "string", "string", "string"],
+				types: {
+					groupName: { type: "string" },
+					groupIds: { type: "string" },
+					searchTerms: { type: "string" },
+					excludeIds: { type: "string" }
+				},
 				options: {
 					customProperties: {
 					},
@@ -1229,7 +1260,9 @@
 					title = "Item not found :´(",
 					subtitle = "Sorry, we couldn't locate this item in the database",
 					image = "";
+				debug(row, "row");
 				if (row) {
+					
 					if (display.heading) {
 						if (display.heading.title) title = getHeading(display.heading.title);
 						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
@@ -2537,6 +2570,11 @@
 			template: "#view1-page"
 		},
 		view2_page = {
+			methods: {
+				generateListView: generateListView,
+				importFile: importFile,
+				createNewItem: createNewItem
+			},
 			template: "#view2-page"
 		},
 		view3_page = {

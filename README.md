@@ -1,7 +1,7 @@
 # ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
-#### NyckelDB Version 0.4
-##### July 11, 2019
+#### NyckelDB Version 0.5
+##### October 22, 2019
 NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
@@ -21,15 +21,13 @@ according to data type, and data can be imported or exported as JSON or CSV (com
   * [String types](#string-types)
   * [Numeric types](#numeric-types)
   * [Boolean types](#boolean-types)
-* [Setting up a new NyckelDB Object](#setting-up-a-new-nyckeldb-object)
+* [Getting Started](#getting-started)
+  * [Setting up a new NyckelDB Object](#setting-up-a-new-nyckeldb-object)
   * [The Options Parameter](#the-options-parameter)
     * [Importing Data](#importing-data)
     * [Custom Properties](#custom-properties)
 * [Full API Documentation](#full-api-documentation)
 * [Dependencies](#dependencies)
-* [Miscellaneous](#miscellaneous)
-  * [Database Structure](#database-structure)
-  * [Time Stamps](#time-stamps)
 
 # Overview
 Nyckel (nick-ale) is a Swedish word that means "key".
@@ -50,34 +48,25 @@ NyckelDB can be visualized as having a table-like structure (Figure 1), with tab
 
 ```javascript
 {
-    title:"Table Name",
+    title: "Table Name",
     created: 1234567,
     lastModified: 1234567,
-    version: "1.0_1.0",
-    table:[
-        ["aaa","Bob",42,false],
-        ["aab","Jill",21,true],
-        ["aac","Anne",88,true]
-    ],
-    ids:{
-        aaa:[<lastModified info>],
-        aab:[<lastModified info>],
-        aac:[<lastModified info>]
+    version: "0.5_1.1",
+    ids: {
+        aaa: [/* lastModified info */],
+        aab: [/* lastModified info */],
+        aac: [/* lastModified info */]
     },
-    columns:{
-        $headers:["id","Name","Age","Is_Awesome"],
-        $created:[<columns created info>],
-        $modified:[<columns lastModified info>],
-        Names:{type:["string", <type modified info>]},
-        Age:{type:["number", <type modified info>]},
-        Is_Awesome:{
-            type:["boolean", <type modified info>],
-            exportAs:["Is Awesome", <exportAs modified info>]
-        }
-    }
-    properties: {
-        <custom properties>
-    }
+    columns: {
+        headers: ["id", "Name", "Age", "Is_Awesome"],
+        meta: {/* column metadata */}
+    },
+    table: [
+        ["aaa", "Bob", 42, false],
+        ["aab", "Jill", 21, true],
+        ["aac", "Anne", 88, true]
+    ],
+    properties: {/* custom properties */}
 }
 
 ``` 
@@ -176,7 +165,18 @@ The following types can be applied to any column:
 * **any** see [String types: any](#string-types)
 * **boolean** accepts only true or false
 
-# Setting up a new NyckelDB Object
+# Getting started
+To start using NyckelDB, it's download a copy of `nyckelDB.min.js`, `base64.min.js`, `storage.js`, `Lawnchair.js`, and the Lawnchair adaptors that you want to use (`dom.js`, `indexed-db.js` for starters), and insert them into your html file with script tags, loading them in this order:
+```html
+    <script type="text/javascript" src="scripts/base64.min.js"></script>
+	<script type="text/javascript" src="scripts/Lawnchair.js"></script>
+	<script type="text/javascript" src="scripts/adapters/indexed-db.js"></script>
+	<script type="text/javascript" src="scripts/adapters/dom.js"></script>
+	<script type="text/javascript" src="scripts/storage.js"></script>
+	<script type="text/javascript" src="scripts/nyckelDB.min.js"></script>
+```
+
+### Setting up a new NyckelDB Object
 Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
 
 > [See more details about the NyckelDB API below](#full-api-documentation)
@@ -191,7 +191,8 @@ var title = "Accounting Spreadsheet",
         //update UI to show newly created NyckelDB here
 };
 
-var myTable = new APP.NyckelDB(title, headers, types, options, callback);
+var myTable = new APP.NyckelDB(title);
+myTable.init(headers, types, options, callback);
 myTable.getLength(); //returns 0
 
 ```
@@ -302,33 +303,6 @@ customProperties:{
 https://ggoodkey.github.io/dev/APP.nyckelDB.html
 
 # Dependencies
-* validate.js
 * base64.js
 * storage.js
-* Lawnchair.js 
-
-# Miscellaneous
-The following information may be helpful to understanding how the database works, but is not key to being able to use it.
-
-### Database Structure
-The NyckelDB JSON Object may contain some, but not all, of the following properties:
-* title - (String) table title
-* created - (Number) created timestamp
-* lastModified - (Number) last modified timestamp
-* deleted - (Number) deleted timestamp
-* version - (String) created by NyckelDB version
-* columns - (Object) table headers, types and other properties
-* ids - (object) ids and their contents last modified metadata
-* table - (Array) 2D Array of table data
-* properties - (Object) optional custom properties
-* data - (String) a password protected database
-* signature - (String) a hash of the password and protected database
-
-### Time Stamps
-The timestamps used for "created", "lastModified" and "deleted" may look strange. 
-Rather than the typical 13 digit UNIX time, which is the number of milliseconds 
-since the beginning of 1970, the NyckelDB uses the number of *minutes* since Fri 
-Jul 14 2017 02:40:00 GMT+0000 (which is 1 500 000 000 000 in UNIX time). To the millisecond accuracy is not necessary, as 
-synchronization is only permitted by NyckelDB, at maximum, every 5 minutes, so 
-the entire database is made much smaller (and possibly slightly faster) by only 
-recording changes to the nearest minute.
+* Lawnchair.js

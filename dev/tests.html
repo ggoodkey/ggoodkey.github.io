@@ -91,14 +91,13 @@
 	</div>
 
 	<script type="text/javascript" src="../scripts/debugmode.min.js"></script>
-	<!--<script type="text/javascript" src="../scripts/dropbox.js"></script>-->
 	<script type="text/javascript" src="../scripts/Lawnchair.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/memory.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/indexed-db.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/dom.js"></script>
 	<script type="text/javascript" src="../scripts/base64.min.js"></script>
 	<script type="text/javascript" src="../scripts/storage.js"></script>
-	<script type="text/javascript" src="../scripts/validate.min.js"></script>
+	<!-- <script type="text/javascript" src="../scripts/validate.min.js"></script> -->
 	<script type="text/javascript" src="../scripts/nyckelDB.js"></script>
 
 	<script>
@@ -113,7 +112,7 @@
 		}
 		APP.setDebugMode(true);
 		var tableTitle = "Test 1",
-			tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "bool"},
+			tableHeaders = { "column_1": "string", "column_2": "number", "column_3": "bool"},
 			headerTypes,
 			options = { customProperties: ["prop1", "prop_2", "prop_3"] },
 			callback,
@@ -128,7 +127,7 @@
 
 		test(1);
 
-		tableHeaders = { "column_1": { "type": "string" }, "column 2": { "type": "num" }, "column_3": { "type": "boolean" } };
+		tableHeaders = { "column_1": "string", "column 2": "num", "column_3": "boolean" };
 		test(2);
 
 		tableHeaders = ["column 1", "column 2", "column_3"];
@@ -165,7 +164,7 @@
 		test(7);
 
 		options = {
-			importData: {
+			importData: {//version 0.3 formated import data
 				created: runTime,
 				lastModified: runTime,
 				title: "Test_8",
@@ -222,7 +221,7 @@
 		testMethods("addColumn", function (a) { return db[a].addColumn("column 4", 4, { type: "string", initialValue: "hello, I'm new here", search: true }); }, true);
 		//setType(colName, type, data, callback)
 		testMethods("setType", function (a) {
-			return db[a].setType("column_2", "any", null, function (data, err) {
+			return db[a].setType("column_4", "any", null, function (data, err) {
 				if (err === "cannot apply type to this row, please update data and try again" && data) {
 					for (let row in data.column_4) {
 						data.column_4[row] = true;
@@ -280,9 +279,9 @@
 		//sync(forceSyncBool, callback)
 		testMethods("sync", function (a) { return db[a].sync(true, callback); }, true);
 		//setTitle(newTitle, callback)
-		testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
+		//testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
 		//deleteTable(callback)
-		testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
+		//testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
 	</script>
 </body>
 </html>
