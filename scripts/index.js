@@ -3935,23 +3935,23 @@
 						b = 1;
 					for (let table in dataTemplates) {
 						if (!err && dataTemplates.hasOwnProperty(table)) {
-							(function(table) {
+							(function(self, table) {
 								wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (requiresSync, errors) {
 									if (!errors) {
 										if (requiresSync === true) {
-											download.call(this, table);
+											download.call(self, table);
 										}
 										else if (a === count) return b++ , cb(syncfile);
 										else b++;
 										a++;
 									}
 									else {
-										this.spin(false, "Synchronising with Dropbox");
+										self.spin(false, "Synchronising with Dropbox");
 										debug(errors, "problem syncing " + table);
-										this.notify("Sync did not complete successfully");
+										self.notify("Sync did not complete successfully");
 									}
-								}.bind(this));
-							})(table);
+								});
+							})(this, table);
 						}
 					}
 				}
