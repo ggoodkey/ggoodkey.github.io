@@ -842,7 +842,6 @@
 						else {
 							app.notify("App version has changed from " + s.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
 							// migrate older version state data here
-							app.recentlyViewed = [];
 							var migrate = "darkTheme useWindowsTheme windowsDarkTheme accentColor cookieAgree".split(" ");
 							for (let x = 0, xLen = migrate.length; x < xLen; x++){
 								if (s[migrate[x]] !== undefined) {
@@ -2795,6 +2794,7 @@
 				return {
 					loading: false,
 					recentlyViewed: state.recentlyViewed,
+					version: state.version,
 					recentDetails: {
 						id: null,
 						table: null,
@@ -2830,8 +2830,8 @@
 					if (this.recentlyViewed.length === 0) {
 						this.loading = true;
 						APP.Sto.getItem("state", null, function (s, error) {
-							this.loading = false;
-							if (s) {
+							if (s && s.version === this.version) {
+								this.loading = false;
 								if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
 								if (s.recentlyViewed) {
 									this.recentlyViewed = s.recentlyViewed;
