@@ -166,7 +166,7 @@ The following types can be applied to any column:
 * **boolean** accepts only true or false
 
 # Getting started
-To start using NyckelDB, it's download a copy of `nyckelDB.min.js`, `base64.min.js`, `storage.js`, `Lawnchair.js`, and the Lawnchair adaptors that you want to use (`dom.js`, `indexed-db.js` for starters), and insert them into your html file with script tags, loading them in this order:
+To start using NyckelDB, download a copy of `nyckelDB.min.js`, `base64.min.js`, `storage.js`, `Lawnchair.js`, and the Lawnchair adaptors that you want to use (`dom.js`, `indexed-db.js` for starters), and insert them into your html file with script tags, loading them in this order:
 ```html
     <script type="text/javascript" src="scripts/base64.min.js"></script>
     <script type="text/javascript" src="scripts/Lawnchair.js"></script>
