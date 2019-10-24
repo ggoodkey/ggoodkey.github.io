@@ -840,8 +840,14 @@
 							}
 						}
 						else {
-							app.notify("App version has changed from " + s.version + " to " + app.version + ". Resetting app settings to default values.");
+							app.notify("App version has changed from " + s.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
 							// migrate older version state data here
+							var migrate = "darkTheme useWindowsTheme windowsDarkTheme accentColor cookieAgree".split(" ");
+							for (let x = 0, xLen = migrate.length; x < xLen; x++){
+								if (s[migrate[x]] !== undefined) {
+									app[migrate[x]] = s[migrate[x]];
+								}
+							}
 							APP.Sto.deleteItem("state");
 							doneInit();
 						}
@@ -3443,7 +3449,14 @@
 								}
 								for (let table in dataTemplates) {
 									(function (self, table) {
-										wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns, fuzzyMatch: true }] }, function (success, errors) { displayResults.call(self, success, errors, table); });
+										wwManager(
+											{
+												"cmd": "advancedSearch",
+												"title": table,
+												"args": [find, { colNames: searchableColumns, fuzzyMatch: true }]
+											},
+											function (success, errors) { displayResults.call(self, success, errors, table); }
+										);
 									})(this, table);
 								}
 							} else console.log("empty query field");
