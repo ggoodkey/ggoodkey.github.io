@@ -104,7 +104,7 @@
     
 
     
-    <h4 class="name" id="addColumn"><span class="type-signature"></span>addColumn<span class="signature">(colName, position, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {boolean|string}</span></h4>
+    <h4 class="name" id="addColumn"><span class="type-signature"></span>addColumn<span class="signature">(colName, position, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -218,9 +218,6 @@
             <td class="type">
             
                 
-<span class="param-type">string</span>
-|
-
 <span class="param-type">object</span>
 
 
@@ -241,7 +238,7 @@
 
             
 
-            <td class="description last"><p>a String indicating data &quot;type&quot; that the column will accept or an Object of column properties: {
+            <td class="description last"><p>an Object of column properties: {
     type: String,
     initialValue: the initial value for every new cell in the new column,
     formula: String,
@@ -259,7 +256,7 @@
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -341,31 +338,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>success or errors</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">boolean</span>
-|
-
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -447,7 +419,7 @@
 
             
 
-            <td class="description last"><p>array must be complete and contain initial values for all the cells in the row</p></td>
+            <td class="description last"><p>a complete array, or a JSON object in form {[colName]: {value: [value]},..}</p></td>
         </tr>
 
     
@@ -572,7 +544,7 @@
     
 
     
-    <h4 class="name" id="advancedSearch"><span class="type-signature"></span>advancedSearch<span class="signature">(searchQuery, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {array}</span></h4>
+    <h4 class="name" id="advancedSearch"><span class="type-signature"></span>advancedSearch<span class="signature">(searchQuery, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -692,7 +664,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#searchCallback">searchCallback</a></span>
+<span class="param-type">searchCallback</span>
 
 
             
@@ -771,28 +743,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>an Array of row ids which contain the searchQuery</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">array</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -1548,7 +1498,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#eachColCallback">eachColCallback</a></span>
+<span class="param-type">eachColCallback</span>
 
 
             
@@ -1579,7 +1529,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -1743,7 +1693,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#eachRowCallback">eachRowCallback</a></span>
+<span class="param-type">eachRowCallback</span>
 
 
             
@@ -1774,7 +1724,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -1869,6 +1819,170 @@
     <dd>
         
 <span class="param-type">object</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getHeaders"><span class="type-signature"></span>getHeaders<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Get the row header names as an Array</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">getHeadersCallback</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>callback</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>header names</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;string></span>
 
 
     </dd>
@@ -2196,7 +2310,7 @@
 
         
 <div class="param-desc">
-    <p>database lastModified timestamp</p>
+    <p>database modified timestamp</p>
 </div>
 
 
@@ -2328,7 +2442,7 @@
     
 
     
-    <h4 class="name" id="getProp"><span class="type-signature"></span>getProp<span class="signature">(propName)</span><span class="type-signature"> &rarr; {string|number|boolean}</span></h4>
+    <h4 class="name" id="getProp"><span class="type-signature"></span>getProp<span class="signature">(propName)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
     
 
     
@@ -2469,6 +2583,9 @@
 |
 
 <span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
 
 
     </dd>
@@ -2486,7 +2603,7 @@
     
 
     
-    <h4 class="name" id="getRow"><span class="type-signature"></span>getRow<span class="signature">(rowId, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object|boolean}</span></h4>
+    <h4 class="name" id="getRow"><span class="type-signature"></span>getRow<span class="signature">(rowId, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object|undefined}</span></h4>
     
 
     
@@ -2572,7 +2689,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#getRowCallback">getRowCallback</a></span>
+<span class="param-type">getRowCallback</span>
 
 
             
@@ -2655,7 +2772,7 @@
 
         
 <div class="param-desc">
-    <p>json formatted data, or false if nothing found</p>
+    <p>json formatted data, or undefined if nothing found</p>
 </div>
 
 
@@ -2669,13 +2786,143 @@
 <span class="param-type">object</span>
 |
 
-<span class="param-type">boolean</span>
+<span class="param-type">undefined</span>
 
 
     </dd>
 </dl>
 
     
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="getRowTemplate"><span class="type-signature"></span>getRowTemplate<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Get an blank row from the table as JSON arranged by column name</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">getRowTemplateCallback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>callback</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2805,7 +3052,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#suggestionsCallback">suggestionsCallback</a></span>
+<span class="param-type">searchCallback</span>
 
 
             
@@ -2917,7 +3164,7 @@
     
 
     
-    <h4 class="name" id="getTitle"><span class="type-signature"></span>getTitle<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="getTitle"><span class="type-signature"></span>getTitle<span class="signature">()</span><span class="type-signature"> &rarr; {string|undefined}</span></h4>
     
 
     
@@ -3003,6 +3250,9 @@
     <dd>
         
 <span class="param-type">string</span>
+|
+
+<span class="param-type">undefined</span>
 
 
     </dd>
@@ -3172,7 +3422,7 @@
     
 
     
-    <h4 class="name" id="getVal"><span class="type-signature"></span>getVal<span class="signature">(rowId, colName)</span><span class="type-signature"> &rarr; {string|number|boolean}</span></h4>
+    <h4 class="name" id="getVal"><span class="type-signature"></span>getVal<span class="signature">(rowId, colName)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
     
 
     
@@ -3339,6 +3589,9 @@
 |
 
 <span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
 
 
     </dd>
@@ -3356,7 +3609,7 @@
     
 
     
-    <h4 class="name" id="getVals"><span class="type-signature"></span>getVals<span class="signature">(rowIds, colNames, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {array|boolean}</span></h4>
+    <h4 class="name" id="getVals"><span class="type-signature"></span>getVals<span class="signature">(rowIds, colNames, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {array|false}</span></h4>
     
 
     
@@ -3473,7 +3726,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#getValsCallback">getValsCallback</a></span>
+<span class="param-type">getValsCallback</span>
 
 
             
@@ -3570,7 +3823,7 @@
 <span class="param-type">array</span>
 |
 
-<span class="param-type">boolean</span>
+<span class="param-type">false</span>
 
 
     </dd>
@@ -3743,7 +3996,7 @@
     
 
     
-    <h4 class="name" id="importJSON"><span class="type-signature"></span>importJSON<span class="signature">(json, syncKey, syncToken, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="importJSON"><span class="type-signature"></span>importJSON<span class="signature">(json, syncKey, syncToken, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -3888,7 +4141,7 @@
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -3967,28 +4220,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>this</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">object</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -4186,7 +4417,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -4381,7 +4612,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -4471,7 +4702,7 @@
     
 
     
-    <h4 class="name" id="renameColumn"><span class="type-signature"></span>renameColumn<span class="signature">(colName, newName, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="renameColumn"><span class="type-signature"></span>renameColumn<span class="signature">(colName, newName, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|false}</span></h4>
     
 
     
@@ -4586,7 +4817,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#setCallback">setCallback</a></span>
+<span class="param-type">setCallback</span>
 
 
             
@@ -4684,6 +4915,9 @@
     <dd>
         
 <span class="param-type">string</span>
+|
+
+<span class="param-type">false</span>
 
 
     </dd>
@@ -4701,7 +4935,7 @@
     
 
     
-    <h4 class="name" id="search"><span class="type-signature"></span>search<span class="signature">(searchQuery, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {array}</span></h4>
+    <h4 class="name" id="search"><span class="type-signature"></span>search<span class="signature">(searchQuery, options, callback)</span><span class="type-signature"></span></h4>
     
 
     
@@ -4733,8 +4967,6 @@
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -4760,14 +4992,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -4791,16 +5015,6 @@
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
 
@@ -4820,22 +5034,12 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#searchCallback">searchCallback</a></span>
+<span class="param-type">searchCallback</span>
 
 
             
             </td>
 
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
             
 
             
@@ -4899,28 +5103,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>an Array of row ids which contain the searchQuery</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">array</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -4932,7 +5114,7 @@
     
 
     
-    <h4 class="name" id="setProp"><span class="type-signature"></span>setProp<span class="signature">(propName, value)</span><span class="type-signature"> &rarr; {string|number|boolean}</span></h4>
+    <h4 class="name" id="setProp"><span class="type-signature"></span>setProp<span class="signature">(propName, value)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
     
 
     
@@ -5102,6 +5284,9 @@
 |
 
 <span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
 
 
     </dd>
@@ -5202,7 +5387,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -5285,7 +5470,7 @@
 
         
 <div class="param-desc">
-    <p>whether or not sync is needed</p>
+    <p>whether or not sync is successfully set to complete</p>
 </div>
 
 
@@ -5401,7 +5586,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#successCallback">successCallback</a></span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -5513,7 +5698,7 @@
     
 
     
-    <h4 class="name" id="setType"><span class="type-signature"></span>setType<span class="signature">(colName, type, data, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="setType"><span class="type-signature"></span>setType<span class="signature">(colName, type, data, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -5659,7 +5844,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#setCallback">setCallback</a></span>
+<span class="param-type">setTypeCallback</span>
 
 
             
@@ -5738,28 +5923,6 @@
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    <p>actual type set</p>
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -5771,7 +5934,7 @@
     
 
     
-    <h4 class="name" id="setVal"><span class="type-signature"></span>setVal<span class="signature">(rowId, colName, newValue, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|number|boolean}</span></h4>
+    <h4 class="name" id="setVal"><span class="type-signature"></span>setVal<span class="signature">(rowId, colName, newValue, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
     
 
     
@@ -5925,7 +6088,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#setCallback">setCallback</a></span>
+<span class="param-type">setCallback</span>
 
 
             
@@ -6026,12 +6189,222 @@
 |
 
 <span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
 
 
     </dd>
 </dl>
 
     
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="setVals"><span class="type-signature"></span>setVals<span class="signature">(rowId, newValues, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Change multiple values at once</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>rowId</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+|
+
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>can be the index of the row, or it's 3 digit identifier</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>newValues</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>object in the form {[colName]:{value:[value]},...}</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">setCallback</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>callback function</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6448,9 +6821,10 @@
 
             <td class="description last"><p>{
     forceSync: true, (false is default)
-    key: a String,
-    oldKey: a String,
-    token: a String
+    key: string,
+ initialKey: string,
+    oldKey: string,
+    token: string
 }</p></td>
         </tr>
 
@@ -6464,7 +6838,7 @@
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type">successCallback</span>
 
 
             
@@ -6484,7 +6858,7 @@
 
             
 
-            <td class="description last"><p>callback function</p></td>
+            <td class="description last"><p>syncCallback function</p></td>
         </tr>
 
     
@@ -7086,18 +7460,12 @@
 
 
         
-    
-
-    
-        <h3 class="subsection-title">Type Definitions</h3>
-
-        
-                
+            
 
     
 
     
-    <h4 class="name" id="eachColCallback"><span class="type-signature"></span>eachColCallback<span class="signature">(colName, index, numCols)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="validate"><span class="type-signature"></span>validate<span class="signature">(value, valueType, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object}</span></h4>
     
 
     
@@ -7105,7 +7473,7 @@
 
 
 <div class="description">
-    <p>forEachCol funct, use parameters 'is' and 'of' to get progress</p>
+    <p>Check if a value is an acceptable input</p>
 </div>
 
 
@@ -7129,357 +7497,7 @@
         <th>Type</th>
 
         
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>colName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the name of the current column</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the position in the table of the current column</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>numCols</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the total number of columns in the table (% complete = index/numCols)</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="eachRowCallback"><span class="type-signature"></span>eachRowCallback<span class="signature">(rowId, is, of)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>forEachRow funct</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>rowId</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the id of the current row</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>is</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the position in the table of the current row</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>of</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>the total number of rows in the table (% complete = is/of)</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="getCallback"><span class="type-signature"></span>getCallback<span class="signature">(value, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns a value as it's first parameter</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
+        <th>Attributes</th>
         
 
         
@@ -7512,43 +7530,25 @@
             </td>
 
             
-
-            
-
-            <td class="description last"><p>a value from the database</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
+                <td class="attributes">
                 
-<span class="param-type">string</span>
-|
 
-<span class="param-type">array</span>
+                
 
-
-            
-            </td>
-
+                
+                </td>
             
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>to check</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>title</code></td>
+                <td class="name"><code>valueType</code></td>
             
 
             <td class="type">
@@ -7561,33 +7561,51 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
+            <td class="description last"><p>an input type, such as &quot;number&quot;, &quot;emailAddress&quot;...</p></td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>syncPending</code></td>
+                <td class="name"><code>callback</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">boolean</span>
+<span class="param-type">validateCallback</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"></td>
+            <td class="description last"><p>callback function</p></td>
         </tr>
 
     
@@ -7603,6 +7621,9 @@
 
     
 
+    
+    <dt class="tag-since">Since:</dt>
+    <dd class="tag-since"><ul class="dummy"><li>0.4</li></ul></dd>
     
 
     
@@ -7646,1236 +7667,36 @@
 
 
 
+<h5>Returns:</h5>
 
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="getRowCallback"><span class="type-signature"></span>getRowCallback<span class="signature">(values, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns an object as it's first parameter</p>
+        
+<div class="param-desc">
+    <p>valid(boolean), value, errorMsg, errorDetails</p>
 </div>
 
 
 
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
         
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>values</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;object></span>
+<span class="param-type">object</span>
 
 
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>an array of objects containing values, types, and column names from the database</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
+    </dd>
 </dl>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="getValsCallback"><span class="type-signature"></span>getValsCallback<span class="signature">(values, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
     
 
 
 
-<div class="description">
-    <p>This callback returns an array of values as it's first parameter</p>
-</div>
 
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
 
         
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>values</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-|
-
-<span class="param-type">Array.&lt;number></span>
-|
-
-<span class="param-type">Array.&lt;boolean></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>an array of values from the database</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="searchCallback"><span class="type-signature"></span>searchCallback<span class="signature">(searchResults, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns search results as it's first parameter</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>searchResults</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>array of ids that matched the searchQuery</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="setCallback"><span class="type-signature"></span>setCallback<span class="signature">(value, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns the validated value set, or false if unsuccessful, as it's first parameter</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>value</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">number</span>
-|
-
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>actual value set after validation, or false if unsuccessful</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
     
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="successCallback"><span class="type-signature"></span>successCallback<span class="signature">(success, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns whether the function executed successfully as it's first parameter</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>success</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>function concluded successfully</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
-    
-    <h4 class="name" id="suggestionsCallback"><span class="type-signature"></span>suggestionsCallback<span class="signature">(searchSuggestions, errors, title, syncPending)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>This callback returns search suggestions as it's first parameter</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>searchSuggestions</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>an array of possible searches that would return search results</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>errors</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>title</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>nyckelDB title callback returned from</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>syncPending</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
-            
     
 
     
@@ -8889,7 +7710,7 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="APP.nyckelDB.html">APP.nyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
 </nav>
 
 <br class="clear">

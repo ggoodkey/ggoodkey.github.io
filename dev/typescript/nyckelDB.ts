@@ -2509,15 +2509,10 @@ var NyckelDB = (function () {
 		//TODO
 	}
 	/**
-	 * Initialise a new instance of nyckelDB. Note: part of the APP namespace, so use "new APP.nyckelDB(...);"
-	 * @constructs APP.nyckelDB
+	 * Initialise a new instance of NyckelDB
+	 * @constructs NyckelDB
 	 * @param {string} tableTitle the name of the new database
 	 */
-
-	//columnProperties could be an Array ["string","number"...] or
-	//an Object like this {Column_1: "string", Column_2: "number"...} or
-	//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
-	//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
 	function NyckelDBObj(this: NyckelDB_interface, tableTitle: any): void {
 		if (tableTitle == null) {// eslint-disable-line
 			console.log("no title");
@@ -2541,7 +2536,7 @@ var NyckelDB = (function () {
 		this.syncPending = true;
 		this.version = "0.5";
 
-		//declare private DB object and unique this.id for every new instance of APP.NyckelBDObj()
+		//declare private DB object and unique this.id for every new instance of NyckelBDObj()
 		this.id = Base64.number_hash(tableTitle + Base64.rand(), 12);
 		SEARCH_INDEX[this.id] = {};
 		SEARCH_SUGGESTIONS[this.id] = [];
@@ -2991,7 +2986,7 @@ var NyckelDB = (function () {
 	/**
 	 * Get a number of cell values from the table at once
 	 * @function getVals
-	 * @param {(string | number)[]} rowIds can be an Array of the index of the row, or it's 3 digit identifier
+	 * @param {string[] | number[]} rowIds can be an Array of the index of the row, or it's 3 digit identifier
 	 * @param {string[]} colNames is an Array the column names from the table header
 	 * @param {getValsCallback} [callback] callback function
 	 * @returns {array | false} 2d array of table values, or false if nothing found
@@ -3063,6 +3058,10 @@ var NyckelDB = (function () {
 			else if(callback instanceof Function) return callback.call(this, success, errors);
 		}.bind(this), syncKey, false);
 	};
+	//columnProperties could be an Array ["string","number"...] or
+	//an Object like this {Column_1: "string", Column_2: "number"...} or
+	//an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
+	//an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
 	/**
 	 * Initiate the database. Required to call this right after creating a new NyckelDB obj. Sets initial values, checks for cached data and builds the search index
 	 * @param {string[] | object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
@@ -3090,7 +3089,7 @@ var NyckelDB = (function () {
 		columnProperties?: string[] | { [columnName: string]: string | addColumnOptions | columnMetadata; } | any,
 		options?: NyckelDBOptions | any,
 		callback?: successCallback | any
-	){
+	): void {
 		function base64Callback(this: NyckelDB_interface, success: boolean, errors: tableErrors) {
 			return callback instanceof Function ? (callback.call(this, success, errors), this): this;
 		}

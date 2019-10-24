@@ -1,6 +1,6 @@
 # ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
-#### NyckelDB Version 0.5
+#### NyckelDB Version 0.5 beta
 ##### October 22, 2019
 NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
@@ -180,6 +180,7 @@ To start using NyckelDB, download a copy of `nyckelDB.min.js`, `base64.min.js`, 
 Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
 
 > [See more details about the NyckelDB API below](#full-api-documentation)
+
 ```javascript
 var title = "Accounting Spreadsheet",
     headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
@@ -190,12 +191,11 @@ var title = "Accounting Spreadsheet",
     callback = function(){ 
         //update UI to show newly created NyckelDB here
 };
-
 var myTable = new APP.NyckelDB(title);
 myTable.init(headers, types, options, callback);
 myTable.getLength(); //returns 0
-
 ```
+
 There is quite a bit of flexibility in how you want to go about setting up a new NyckelDB object. Headers can be passed as an Array, and types as a corresponding Array (as shown above), 
 or you can pass types as an Object in the form:
 
@@ -207,6 +207,7 @@ var types = {
     "Balance": "integer"
 }
 ```
+
 which might be an easier way to manage your code, especially if you have a large number of columns. 
 
 If the order of the columns in your table is unimportant, you can pass this Object directly as the headers
@@ -300,7 +301,7 @@ customProperties:{
 ```
 
 # Full API Documentation
-https://ggoodkey.github.io/dev/APP.nyckelDB.html
+https://ggoodkey.github.io/dev/NyckelDB.html
 
 # Dependencies
 * base64.js

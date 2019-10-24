@@ -345,10 +345,10 @@
 					<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView" v-bind:details="recentDetails" v-on:update-details="onDetailsUpdate" v-on:update-recently-viewed="onRecentlyViewedUpdate"></jump-list>
 				</div>
 				<div v-else class="view-container">
-					<h3>Nyckel <sup><small><small>(beta)</small></small></sup></h3>
+					<h3>Nyckel <sup><small><small>(v{{ version }})</small></small></sup></h3>
 					<h5>Store, search, view, share and sync data across devices using the cloud.</h5>
-					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.</p>
-					<p>You can read the nyckelDB API documentation <a href="dev/index.html" target="_blank">here</a></p>
+					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications. 
+						You can read the full nyckelDB API documentation <a href="dev/index.html" target="_blank">here</a></p>
 					<!--<p>
 						NyckelDB can contain text, numbers or boolean values in a table-like structure. This also includes things like images, because image data can be
 						stored as text. What NyckelDB tables cannot contain is executable code, or structured data such as JSON or XML. Basically, if you can visualise your data
@@ -359,13 +359,17 @@
 						sorting, filtering, and synchronisation. For more information on NyckelDB, visit the
 						<a href="https://github.com/ggoodkey/ggoodkey.github.io" target="_blank">NyckelDB Github Repository</a>.
 					</p>-->
-					<p class="alert">
-						<span class="icon icon-alert"></span>
-						<b>WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
+					<h5>NOTICE</h5>
+					<p>
+						<span class="icon icon-alert alert"></span>
+						<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
 						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser
 						data, deleting all files saved to Dropbox (in Dropbox\Apps\Nyckel\) and typing the command 'nukeapp' into this app's search bar and pressing RETURN.
 					</p>
-					<p>With this app you can currently use some of the pregenerated templates listed to create new tables for Contacts, Groups, Passwords or Files</p>
+					<h5>Version {{ version }} Known issues</h5>
+					<ul>
+						<li></li>
+					</ul>
 				</div>
 			</div>
 			<div class="scroll-outer-container">

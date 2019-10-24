@@ -2830,10 +2830,11 @@
 					if (this.recentlyViewed.length === 0) {
 						this.loading = true;
 						APP.Sto.getItem("state", null, function (s, err) {
-							if (s && s.version === this.version) {
+							console.log(s, this.version);
+							if (s) {
 								this.loading = false;
 								if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
-								if (s.recentlyViewed) {
+								if (s.recentlyViewed && s.version === this.version) {
 									this.recentlyViewed = s.recentlyViewed;
 									state.recentlyViewed = this.recentlyViewed;
 								}
