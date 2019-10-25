@@ -895,15 +895,15 @@
 		updateCSSColor = function (rgbColor, replaceColor) {
 			var styleSheets = document.styleSheets;
 			try {
-				for (var a = 0; a < styleSheets.length; a++) {
-					var rules = styleSheets[a].rules || styleSheets[a].cssRules;
+				for (var a = 0, lenA = styleSheets.length, b, lenB, c, lenC, rules, rule, styles; a < lenA; a++) {
+					rules = styleSheets[a].rules || styleSheets[a].cssRules;
 					if (rules) {
-						for (var b = 0, len = rules.length; b < len; b++) {
-							var rule = rules[b].cssText;
+						for (b = 0, lenB = rules.length; b < lenB; b++) {
+							rule = rules[b].cssText;
 							if (replaceColor.test(rule)) {
 								rule = rule.split("{");
-								var styles = rule[1].replace(/\}/, "").split(";");
-								for (var c = 0; c < styles.length - 1; c++) {
+								styles = rule[1].replace(/\}/, "").split(";");
+								for (c = 0, lenC = styles.length; c < lenC - 1; c++) {
 									styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
 									rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
 								}
