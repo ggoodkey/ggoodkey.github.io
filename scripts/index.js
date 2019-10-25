@@ -1,7 +1,8 @@
 ﻿var APP, VAL, Base64, appData = {}, NyckelDB, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
 (function () {
 	"use strict";
-	APP.setDebugMode(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
+	APP.setDebugMode(false);
+	APP.setDebugToConsole(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.5 beta",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
 		views = {//views creates new pages in the app
@@ -3344,42 +3345,6 @@
 				}
 			},
 			search: function (event, optionalQuery) {
-				function resetApp() {
-					function clearUI() {
-						if (cordova || Windows && WinJS) {
-							wwManager({ "cmd": "stop" }, function () {
-								setTimeout(function () {
-									webWorker = new Worker("scripts/webworker.js");
-									webWorker.addEventListener('message', wwReadMessage, false);
-									webWorker.addEventListener('error', wwOnError, false);
-									appData = {};
-									backstack = [];
-									backIndex = 0;
-									state = freshStateObj();
-									this.storeState();
-									for (let s in state) {
-										if (this[s]) this[s] = state[s];
-									}
-									setTimeout(function () {
-										loadDB = true;
-										loadDBQueue = [];
-										loadingDB = false;
-										startApp();
-									}, 1000);
-								}.bind(this), 1000);
-							}.bind(this));
-						}
-						else if (window.location) {
-							setTimeout(function () {
-								var loc = window.location;
-								window.location.href = [loc.protocol, '//', loc.host, loc.pathname].join('');
-							}, 2000);
-						}
-					}
-					document.getElementById("loading").className = "";
-					APP.Sto.nuke();
-					this.logout(clearUI.bind(this));
-				}
 				if (!this.showSearchBar) {
 					this.searchSuggestions = [];
 					document.getElementById("searchBox").focus();
@@ -3393,11 +3358,10 @@
 						debug("showing debugmode");
 					}
 					else if (this.searchBox === "useragent") {
-						APP.setDebugMode(true);
-						debug(navigator.userAgent, "navigator.userAgent");
+						this.notify(navigator.userAgent);
 					}
 					else if (this.searchBox === "nukeapp") {
-						confirm("Are you sure you want to reset the app?", resetApp.bind(this));
+						this.resetApp();
 					}
 					else {
 						this.spin(true, "Searching...");
@@ -4015,7 +3979,55 @@
 					if (callback instanceof Function) return callback();
 				}.bind(this));
 			},
-			setAccentColor: setAccentColor
+			setAccentColor: setAccentColor,
+			resetApp: function() {
+				function clearUI() {
+					if (cordova || Windows && WinJS) {
+						wwManager({ "cmd": "stop" }, function () {
+							setTimeout(function () {
+								webWorker = new Worker("scripts/webworker.js");
+								webWorker.addEventListener('message', wwReadMessage, false);
+								webWorker.addEventListener('error', wwOnError, false);
+								appData = {};
+								backstack = [];
+								backIndex = 0;
+								state = freshStateObj();
+								this.storeState();
+								for (let s in state) {
+									if (this[s]) this[s] = state[s];
+								}
+								setTimeout(function () {
+									loadDB = true;
+									loadDBQueue = [];
+									loadingDB = false;
+									startApp();
+								}, 1000);
+							}.bind(this), 1000);
+						}.bind(this));
+					}
+					else if (window.location) {
+						setTimeout(function () {
+							var loc = window.location;
+							window.location.href = [loc.protocol, '//', loc.host, loc.pathname].join('');
+						}, 2000);
+					}
+				}
+				var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
+				confirm("Are you sure you want to reset the app? This will " +  msg + "and restore default settings", function reset() {
+					document.getElementById("loading").className = "";
+					APP.Sto.nuke();
+					this.logout(clearUI.bind(this));
+				}.bind(this), {ok:"Reset App"});
+			},
+			wipeDropbox: function () {
+				function onComplete(response, errors) {
+					console.log(response, errors);
+				}
+				confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account? Do this if you are having synchronisation issues. This will not effect your locally saved app data, which can be restored to Dropbox afterwards by clicking 'SYNC NOW' in Settings", function () {
+					APP.Dbx.delete("/sync", onComplete);
+					APP.Dbx.delete("/data", onComplete);
+				},{ok:"Reset App Cloud Data"});
+			}
 		}
 	});
 	//make some functions global

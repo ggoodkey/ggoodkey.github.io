@@ -173,6 +173,17 @@ h6,
 	letter-spacing: 0.0075rem;
 }
 
+hr {
+	border-top: 1px solid #bbb;
+	border-bottom: 1px solid white;
+	clear: both;
+}
+
+.dark-theme hr {
+	border-top: 1px solid black;
+	border-bottom: 1px solid #555;
+}
+
 base {
 	font-size: 14px;
 	line-height: 20px;
@@ -599,6 +610,12 @@ html.desk #closeSidenav {
 	padding-top: 12px;
 }
 
+.clear:after {
+	content: "";
+	 display: table;
+	 clear: both;
+}
+
 #app,
 #confirm,
 #searchReset,
@@ -745,7 +762,7 @@ html.desk .dark-theme #searchSuggestions-container,
 	z-index: 9;
 }
 
-topnav-container{
+#topnav-container{
 	position: relative;
 }
 
@@ -756,7 +773,6 @@ topnav-container{
 	width: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
-	padding-right: 30px;
 }
 
 html.phon #sidenav-container,
@@ -795,7 +811,7 @@ html.tabl #app.sidenav_open #sidenav {
 
 #sidenav .navButtons .navlink,
 #sidenav .text {
-	width: 100%;
+	max-width: 290px;
 	padding: 16px 20px;
 }
 
@@ -807,6 +823,16 @@ html.tabl #app.sidenav_open #sidenav {
 .dark-theme #sidenav .text {
 	background-color: #333;
 	background-color: rgba(255,255,255,0.04);
+}
+
+#sidenav .right button,
+#sidenav button.right{
+	position: relative;
+	top: -16px;
+}
+
+#sidenav .dropdown.right {
+	top: 36px;
 }
 
 .navlinkIndicator {
@@ -1373,6 +1399,10 @@ html.phon .dropdown-container.itemLabel {
 	height: 52px;
 }
 
+html.phon .itemLabel .dropdown {
+	top: 38px;
+}
+
 html.tabl .itemLabel,
 html.desk .itemLabel {
 	float: left;
@@ -1385,6 +1415,7 @@ html.desk .itemLabel {
 html.tabl .dropdown-container.itemLabel,
 html.desk .dropdown-container.itemLabel {
 	padding: 0;
+	top: 10px;
 }
 
 html.tabl .itemLabel button,
@@ -1557,6 +1588,15 @@ ul.links,
 html.phon .cards {
 	padding: 0;
 	margin: 0;
+}
+
+.grid {
+	display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(40px, 1fr));
+}
+
+ul.links,
+html.phon .cards {
 	border-top: 1px solid #e1e1e1;
 	border-bottom: 1px solid white;
 }
@@ -1576,6 +1616,12 @@ html.phon .dark-theme .cards {
 	overflow: hidden;
 	border-right: 1px solid transparent;
 	border-left: 1px solid transparent;
+
+}
+
+.button-link {
+	margin: 1px;
+	border: none;
 }
 
 .jumplink {
@@ -1748,8 +1794,7 @@ html.desk .dark-theme .jumplink-button:hover,
 .dropdown {
 	position: absolute;
 	max-height: 300px;
-	min-width: 250px;
-	max-width: 500px;
+	min-width: 220px;
 	z-index: 1;
 }
 

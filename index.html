@@ -93,6 +93,7 @@
 						</span><span class="icon icon-menu-up right" v-show="showSettings"></span>
 					</div>
 					<div class="text" v-show="showSettings">
+						<h6>Personalisation</h6>
 						<div v-if="windows">
 							Use Windows Theme
 							<div class="switch right">
@@ -111,32 +112,43 @@
 							Accent Color
 							<color-select class="right menu-button" align="right" v-bind:noinputcolor="accentColor" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
 						</div>
+						<h6>Dropbox</h6>
 						<div class="clear">
-							Dropbox
-							<a class="right" tabindex="22" v-if="loggedIn === false" v-on:click="login">Connect to Dropbox</a>
-							<span class="right">{{ dropboxUsername }}</span>
-							<div v-if="loggedIn === true">
-								<a class="right" tabindex="23" v-on:click="logout">Disconnect Account</a>
-								<br /><br />
-								<a class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</a>
+							Connect App
+							<button class="right" tabindex="22" v-if="loggedIn === false" v-on:click="login">Sign in</button>
+						</div>
+						<div v-if="loggedIn === true" class="clear">
+							{{ dropboxUsername }}ggoodkey@gmail.com
+							<div class="clear">
+								Disconnect App
+								<button class="right" tabindex="23" v-on:click="logout">Sign Out</button>
+							</div>
+							<div class="clear">
+								<button class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
 								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
-									Your files have been secured <a class="right" v-on:click="toggle('showStoKeyInput')">Change Key</a>
+									Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
 								</div>
-								<form v-if="showStoKeyInput" class="right">
+								<form v-if="showStoKeyInput">
 									Change your key<br /><br />
 									<label for="stoKeyInput" v-bind:class="{alert:stoKeyWarning !== ''}">Create a new password</label>
 									<input id="stoKeyInput" type="password" />
 									<br /><br />
 									<label for="stoKeyInputConfirm" v-bind:class="{alert:stoKeyWarning !== ''}">Type it in again</label>
 									<input id="stoKeyInputConfirm" type="password" />
-									<span class="alert">{{stoKeyWarning}}</span>
+									<span class="alert">{{stoKeyWarning}}</span>										
 									<button v-on:click.stop="newStoKey">Create Key</button>&nbsp;
 									<button v-on:click.stop="toggle('showStoKeyInput')">Cancel</button>
 								</form>
-								<br />
-								<a class="right" v-on:click="syncAll">Sync Now</a>
 							</div>
+							<button class="right" v-on:click="syncAll">Sync Now</button>	
 						</div>
+						<h6>Reset data and settings</h6>
+						<div class="clear">
+							<button v-if="loggedIn === true" class="alert right" v-on:click="wipeDropbox">Reset App Cloud Data</button>
+							<button class="alert right" v-on:click="resetApp">Reset App</button>
+						</div>
+						<br />
+						<hr />
 						<div class="clear">
 							App Version
 							<div class="right">{{ version }}</div>
@@ -206,7 +218,7 @@
 				<template v-if="iconSelected"><span class="dropdownButton icon" v-bind:class="iconSelected"></span></template>
 				<template v-else="noinputtext">{{ noinputtext }}</template>
 			</button>
-			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
+			<div v-show="open" class="dropdownButton dropdown grid" v-bind:class="align">
 				<a class="left button-link dropdownButton" v-for="option in options" v-on:click="select(option)"><span class="dropdownButton icon" v-bind:class="option"></span></a>
 			</div>
 		</div>
@@ -214,7 +226,7 @@
 	<script type="text/x-template" id="color-select">
 		<div class="dropdownButton dropdown-container">
 			<button class="dropdownButton" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:style="{ backgroundColor: colorSelected || noinputcolor }"></button>
-			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
+			<div v-show="open" class="dropdownButton dropdown grid" v-bind:class="align">
 				<div class="left button-link dropdownButton" v-for="option in options" v-on:click="select(option)" v-bind:style="{ backgroundColor:option }"></div>
 			</div>
 		</div>
@@ -348,18 +360,15 @@
 					<h3>Nyckel <sup><small><small>(v{{ version }})</small></small></sup></h3>
 					<h5>Store, search, view, share and sync data across devices using the cloud.</h5>
 					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications. 
-						You can read the full NyckelDB API documentation <a href="dev/index.html" target="_blank">here</a></p>
-					<h6>NOTICE</h6>
+						You can read the full NyckelDB API documentation <a href="dev/index.html" target="_blank">here</a>
+					</p>
+					<br />
 					<p>
 						<span class="icon icon-alert alert"></span>
 						<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
 						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it by uninstalling it, clearing your browser
 						data, deleting all files saved to Dropbox (in Dropbox\Apps\Nyckel\) and typing the command 'nukeapp' into this app's search bar and pressing RETURN.
 					</p>
-					<h6>Version {{ version }} Known issues</h6>
-					<ul>
-						<li></li>
-					</ul>
 				</div>
 			</div>
 			<div class="scroll-outer-container">

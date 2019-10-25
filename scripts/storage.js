@@ -152,6 +152,9 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 			if (WorkingOffline) return callback instanceof Function ? callback(false, "working offline") : false;
 			else dropbox("files/download", { path: fileName, responseType: "text" }, { onComplete: rtn, onError: fail });
 		};
+		DropboxSessionObj.prototype.delete = function (fileName, callback) {
+			dropbox("files/delete_v2", { path: fileName }, { onComplete: callback, onError: dropboxError });
+		};
 		DropboxSessionObj.prototype.getUserInfo = function (password, callback) {
 			function ret(alias, email, id, account_id) {
 				var user = { "alias": alias, "email": email, "id": id, "dbid": account_id };
