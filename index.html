@@ -113,11 +113,11 @@
 							<color-select class="right menu-button" align="right" v-bind:noinputcolor="accentColor" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
 						</div>
 						<h6>Dropbox</h6>
-						<div class="clear">
+						<div class="clear" v-if="loggedIn === false">
 							Connect App
-							<button class="right" tabindex="22" v-if="loggedIn === false" v-on:click="login">Sign in</button>
+							<button class="right" tabindex="22" v-on:click="login">Sign in</button>
 						</div>
-						<div v-if="loggedIn === true" class="clear">
+						<div v-else class="clear">
 							{{ dropboxUsername }}
 							<div class="clear">
 								Disconnect App

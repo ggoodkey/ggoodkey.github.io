@@ -1272,7 +1272,6 @@
 					title = "Item not found :´(",
 					subtitle = "Sorry, we couldn't locate this item in the database",
 					image = "";
-				//debug(row, "row");
 				if (row) {
 					
 					if (display.heading) {
@@ -2836,7 +2835,6 @@
 					if (this.recentlyViewed.length === 0) {
 						this.loading = true;
 						APP.Sto.getItem("state", null, function (s, err) {
-							console.log(s, this.version);
 							if (s) {
 								this.loading = false;
 								if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
