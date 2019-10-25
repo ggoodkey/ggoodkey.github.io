@@ -894,22 +894,27 @@
 		},
 		updateCSSColor = function (rgbColor, replaceColor) {
 			var styleSheets = document.styleSheets;
-			for (var a = 0; a < styleSheets.length; a++) {
-				var rules = styleSheets[a].rules || styleSheets[a].cssRules;
-				if (rules) {
-					for (var b = 0, len = rules.length; b < len; b++) {
-						var rule = rules[b].cssText;
-						if (replaceColor.test(rule)) {
-							rule = rule.split("{");
-							var styles = rule[1].replace(/\}/, "").split(";");
-							for (var c = 0; c < styles.length - 1; c++) {
-								styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
-								rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
+			try {
+				for (var a = 0; a < styleSheets.length; a++) {
+					var rules = styleSheets[a].rules || styleSheets[a].cssRules;
+					if (rules) {
+						for (var b = 0, len = rules.length; b < len; b++) {
+							var rule = rules[b].cssText;
+							if (replaceColor.test(rule)) {
+								rule = rule.split("{");
+								var styles = rule[1].replace(/\}/, "").split(";");
+								for (var c = 0; c < styles.length - 1; c++) {
+									styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
+									rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
+								}
 							}
 						}
 					}
+					else app.notify("Error: browser does not support this feature :(");
 				}
-				else app.notify("Error: browser does not support this feature :(");
+			}
+			catch (error) {
+				console.log(error);
 			}
 		},
 		setAccentColor = function (hex) {
