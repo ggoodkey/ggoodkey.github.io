@@ -425,7 +425,7 @@ var NyckelDB = (function () {
                         DELETE_COLUMN.call(this, colName, false, columns.meta[colName].deleted[1]);
                     }
                 }
-                for (let a = 0, lenA = DB[this.id].columns.headers.length, colIndex, colName, prop; a < lenA; a++) {
+                for (let a = 1, lenA = DB[this.id].columns.headers.length, colIndex, colName, prop; a < lenA; a++) {
                     colName = DB[this.id].columns.headers[a];
                     colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
                     if (colIndex === -1) {

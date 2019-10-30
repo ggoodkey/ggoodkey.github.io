@@ -696,7 +696,7 @@ var NyckelDB = (function () {
 						DELETE_COLUMN.call(this, colName, false, (columns.meta[colName] as columnMetadata).deleted![1]);
 					}
 				}
-				for (let a = 0, lenA = (DB[this.id] as nyckelDB_uncompressed).columns.headers.length, colIndex: number, colName: string, prop: string; a < lenA; a++) {
+				for (let a = 1, lenA = (DB[this.id] as nyckelDB_uncompressed).columns.headers.length, colIndex: number, colName: string, prop: string; a < lenA; a++) {
 					colName = (DB[this.id] as nyckelDB_uncompressed).columns.headers[a];
 					colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 					if (colIndex === -1) {
