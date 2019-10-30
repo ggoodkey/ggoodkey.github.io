@@ -428,8 +428,10 @@ var NyckelDB = (function () {
                 for (let a = 0, lenA = DB[this.id].columns.headers.length, colIndex, colName, prop; a < lenA; a++) {
                     colName = DB[this.id].columns.headers[a];
                     colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-                    if (colIndex === -1)
+                    if (colIndex === -1) {
+                        console.log(colName, "adding colname");
                         ADD_COLUMN.call(this, colName, columns.meta[colName].type[0], a, undefined, false, columns.meta[colName].timestamp[0], columns.meta[colName]);
+                    }
                     if (colIndex > 0) { //make changes
                         if (colIndex !== a)
                             MOVE_COLUMN.call(this, colName, colIndex, false);

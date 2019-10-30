@@ -166,7 +166,8 @@
 		<div id="spinner" v-show="spinner"><img width="20" height="20" src="images/spinner.gif" /> {{ spinnerMsg[spinIndex] }}</div>
 		<div id="confirmContainer" v-show="showConfirm" v-on:click="shakeConfirm"></div>
 		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
-			<div id="confirmMessage">{{ confirmMsg }}</div>
+			<h5 v-if="confirmDetails">{{ confirmMsg }}</h5>
+			<p id="confirmMessage">{{ confirmDetails || confirmMsg }}</p>
 			<form>
 				<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
 				<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>

@@ -546,6 +546,7 @@
 				accentColor: null,
 				showConfirm: false,
 				confirmMsg: "Are you sure?",
+				confirmDetails: null,
 				confirmOK: "OK",
 				confirmCancel: "Cancel",
 				confirmFunction: function () { },
@@ -582,16 +583,17 @@
 				groupSearchBox: "",
 				groups: []
 			};
-		};
-	var fileReaderInitiated = [],
-		backstack = [],
-		backIndex = 0,
-		state = freshStateObj(),
+		},
 		localTestingMode = function () {
 			var loc = window.location;
 			if (!loc || /^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://") return true;
 			else return false;
-		}(),
+		}();
+	if(localTestingMode) APP.setDebugMode(true);
+	var fileReaderInitiated = [],
+		backstack = [],
+		backIndex = 0,
+		state = freshStateObj(),
 		dbid = null,
 		trim = function (str) {
 			str = String(str);
@@ -897,24 +899,24 @@
 			try {
 				for (var a = 0, lenA = styleSheets.length, b, lenB, c, lenC, rules, rule, styles; a < lenA; a++) {
 					rules = styleSheets[a].rules || styleSheets[a].cssRules;
-					if (rules) {
-						for (b = 0, lenB = rules.length; b < lenB; b++) {
-							rule = rules[b].cssText;
-							if (replaceColor.test(rule)) {
-								rule = rule.split("{");
-								styles = rule[1].replace(/\}/, "").split(";");
-								for (c = 0, lenC = styles.length; c < lenC - 1; c++) {
-									styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
-									rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
-								}
+					for (b = 0, lenB = rules.length; b < lenB; b++) {
+						rule = rules[b].cssText;
+						if (replaceColor.test(rule)) {
+							rule = rule.split("{");
+							styles = rule[1].replace(/\}/, "").split(";");
+							for (c = 0, lenC = styles.length; c < lenC - 1; c++) {
+								styles[c] = styles[c].replace(replaceColor, rgbColor).split(":");
+								rules[b].style[trim(styles[c][0])] = trim(styles[c][1]);
 							}
 						}
 					}
-					else app.notify("Error: browser does not support this feature :(");
 				}
+				return true;
 			}
 			catch (error) {
+				if (!localTestingMode) app.notify("Error setting color theme: This browser doesn't allow direct access to styles in this way");
 				console.log(error);
+				return false;
 			}
 		},
 		setAccentColor = function (hex) {
@@ -937,8 +939,9 @@
 					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
 				];
+			var success = true;
 			for (let a = 0, len = colors.length; a < len; a++) {
-				updateCSSColor(colors[a], oldColorString[a]);
+				if (success) success = updateCSSColor(colors[a], oldColorString[a]);
 			}
 			var metaThemeColor = document.querySelector("meta[name=theme-color]"),
 				appleThemeColor = document.querySelector("meta[name=apple-mobile-web-app-status-bar-style]"),
@@ -947,7 +950,7 @@
 			appleThemeColor.setAttribute("content", hex);
 			windowsThemeColor.setAttribute("content", hex);
 			windowsAccentColor = colors;
-			app.accentColor = hex;
+			app.accentColor = success ? hex : null;
 			app.storeState();
 		},
 		//Windows specific functions
@@ -1174,8 +1177,9 @@
 					}
 					function applyValueStr() {
 						obj = row[template];
+						obj.orig = obj.value;
 						obj.value = formatValue(obj.value, obj.type, splitter);
-						obj.orig = obj.value.join(" ::: ").split(" ::: ");
+						obj.splitter = splitter;
 					}
 					function applyValueArr() {
 						obj.value = [];
@@ -1200,8 +1204,8 @@
 					function applyLabel() {
 						obj.label = {
 							column: template.label,
-							value: row[template.label].value,
 							orig: row[template.label].value,
+							value: row[template.label].value,
 							type: row[template.label].type
 						};
 						if (labelOptions) {
@@ -1220,8 +1224,9 @@
 						if (template.label) applyLabel();
 						if (template.readonly) obj.readonly = true;
 						if (template.hidden) obj.hidden = true;
+						obj.orig = obj.value;
 						obj.value = formatValue(obj.value, obj.type, splitter);
-						obj.orig = obj.value.join(" ::: ").split(" ::: ");
+						obj.splitter = splitter;
 					}
 					return obj;
 				}
@@ -1490,6 +1495,7 @@
 			app.confirmMsg = msg || "Are you sure?";
 			app.confirmOK = options && options.ok ? options.ok : "OK";
 			app.confirmCancel = options && options.cancel ? options.cancel : "Cancel";
+			app.confirmDetails = options && options.details ? options.details : null;
 			app.showConfirm = true;
 			app.confirmFunction = callback;
 		};
@@ -2978,24 +2984,29 @@
 				saveChanges: function () {
 					function checkComplete(n) {
 						if (n === 0) {
+							app.spin(false, "Saving...");
 							if (errors.length === 0) app.navigate("details");
 							else debug(errors);
 						}
 					}
 					function save(data) {
 						if (data.value) {
-							for (let b = 0, lenB = data.value.length; b < lenB; b++) {
-								if (data.value[b] !== data.orig[b]) {
-									//set value 
-									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, data.value[b]] }, function (success, error) {
-										if (error) errors.push(error);
-										checkComplete(n--);
-									});
-								}
-								else checkComplete(n--);
+							var value;
+							if (/multilineString|formattedAddress/.test(data.type)) {
+								value = data.value.join('\r\n');
 							}
+							else if (typeof data.value === "string") value = data.splitter ? data.value.join(data.splitter) : data.value.join(" ::: ");
+							else value = data.value[0];
+							if (value !== data.orig) {
+								//set value 
+								wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, value] }, function (success, error) {
+									if (error) errors.push(error);
+									checkComplete(--n);
+								});
+							}
+							else checkComplete(--n);
 						}
-						else checkComplete(n--);
+						else checkComplete(--n);
 					}
 
 					var table = this.details.table,
@@ -3004,6 +3015,7 @@
 						n = 0,
 						errors = [];
 					if (!rowId) {
+						app.spin(true, "Creating new item...");
 						//create array						
 						wwManager({ "cmd": "getHeaders", "title": table }, function (headers) {
 							function setDefault(type){
@@ -3037,12 +3049,14 @@
 							}
 							wwManager({ "cmd": "addRow", "title": table, "args": [arr] }, function (id, errors) {
 								debug(errors, id);
+								app.spin(false, "Creating new item...");
 							});
 						});
 
 					}
 					//go through data and find changes
 					else {
+						app.spin(true, "Saving...");
 						//count lineItems
 						for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
 							if (data[a].readonly) continue;
@@ -3354,7 +3368,10 @@
 				}
 				else this.showSearchSuggestions = true;
 				this.showSearchBar = true;
-				if (this.showSideNav) this.showSideNav = false;
+				if (this.showSideNav) {
+					this.showSideNav = false;
+					this.showSettings = false;
+				}
 				if (this.searchBox !== "" || optionalQuery) {
 					if (this.searchBox === "debugmode") {
 						APP.setDebugMode(true);
@@ -4016,20 +4033,23 @@
 					}
 				}
 				var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
-				confirm("Are you sure you want to reset the app? This will " +  msg + "and restore default settings", function reset() {
+				msg = "This will " + msg + "and restore default settings";
+				confirm("Are you sure you want to reset the app?", function reset() {
 					document.getElementById("loading").className = "";
 					APP.Sto.nuke();
 					this.logout(clearUI.bind(this));
-				}.bind(this), {ok:"Reset App"});
+				}.bind(this), {ok:"Reset App", details: msg});
 			},
 			wipeDropbox: function () {
 				function onComplete(response, errors) {
 					console.log(response, errors);
 				}
-				confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account? Do this if you are having synchronisation issues. This will not effect your locally saved app data, which can be restored to Dropbox afterwards by clicking 'SYNC NOW' in Settings", function () {
+				var msg = "Do this if you are having synchronisation issues.This will not effect your locally saved app data, which can be restored to Dropbox";
+				msg += "afterwards by clicking 'SYNC NOW' in Settings";
+				confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account?", function () {
 					APP.Dbx.delete("/sync", onComplete);
 					APP.Dbx.delete("/data", onComplete);
-				},{ok:"Reset App Cloud Data"});
+				},{ ok:"Reset App Cloud Data", details: msg });
 			}
 		}
 	});
