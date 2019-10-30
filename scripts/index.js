@@ -1162,6 +1162,16 @@
 				app.navigate("edit");
 			});
 		},
+		formatValue = function (value, type, splitter) {
+			//format multiline strings
+			if (/multilineString|formattedAddress/.test(type) && value) {
+				value = value.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
+			}
+			//split out multiple values in one cell
+			else if (typeof value === "string") value = splitter ? value.split(splitter) : value.split(" ::: ");
+			else value = [value];
+			return value;
+		},
 		getDetails = function (obj, callback) {
 			function processDetailsReturnData(row, error, cb) {
 				function getValue(template, splitter, labelOptions) {
@@ -1248,16 +1258,6 @@
 					if (template.hidden) ret.hidden = true;
 					if (template.readonly) ret.readonly = true;
 					return ret;
-				}
-				function formatValue(value, type, splitter) {
-					//format multiline strings
-					if (/multilineString|formattedAddress/.test(type) && value) {
-						value = value.replace(/\r\n|\r|\n/g, '\r\n').split('\r\n');
-					}
-					//split out multiple values in one cell
-					else if (typeof value === "string") value = splitter ? value.split(splitter) : value.split(" ::: ");
-					else value = [value];
-					return value;
 				}
 				function getHeading(template) {
 					var ret;
@@ -1563,7 +1563,7 @@
 									}
 								}
 							}
-							if (outsideClick) this.toggle(false);
+							if (outsideClick) this.action(null, this.buttonValue);
 						}.bind(this);
 					}
 					app.addEventListener("click", this.clickOutside);
@@ -2986,12 +2986,27 @@
 						if (n === 0) {
 							app.spin(false, "Saving...");
 							if (errors.length === 0) app.navigate("details");
-							else debug(errors);
+							else debug(errors, "errors saving changes");
 						}
 					}
-					function save(data) {
+					function save(data, label) {
 						if (data.value) {
+							if (label) {
+								if (String(label.value) !== String(label.orig)) {
+									//set value 
+									wwManager({ "cmd": "setVal", "title": table, "args": [rowId, label.column, label.value] }, function (setValue, error) {
+										if (error) errors.push(error);
+										if (setValue) {
+											label.orig = setValue;
+											label.value = setValue;
+										}
+										checkComplete(--n);
+									});
+								}
+								else checkComplete(--n);
+							}
 							var value;
+							//remove formatting
 							if (/multilineString|formattedAddress/.test(data.type)) {
 								value = data.value.join('\r\n');
 							}
@@ -2999,8 +3014,12 @@
 							else value = data.value[0];
 							if (value !== data.orig) {
 								//set value 
-								wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, value] }, function (success, error) {
+								wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, value] }, function (setValue, error) {
 									if (error) errors.push(error);
+									if (setValue) {
+										data.orig = setValue;
+										data.value = formatValue(setValue, data.type, data.splitter);
+									}
 									checkComplete(--n);
 								});
 							}
@@ -3008,7 +3027,6 @@
 						}
 						else checkComplete(--n);
 					}
-
 					var table = this.details.table,
 						rowId = this.details.id,
 						data = this.details.data,
@@ -3063,20 +3081,28 @@
 							if (data[a].group) {
 								if (data[a].group.readonly) continue;
 								for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
+									if (data[a].group[b].label) {
+										n++;
+									}
 									n++;
 								}
 							}
-							else n++;
+							else {
+								if (data[a].label) {
+									n++;
+								}
+								n++;
+							}
 						}
 						for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
 							if (data[a].readonly) continue;
 							if (data[a].group) {
 								if (data[a].group.readonly) continue;
 								for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
-									save(data[a].group[b]);
+									save(data[a].group[b], data[a].group[b].label);
 								}
 							}
-							else save(data[a]);
+							else save(data[a], data[a].label);
 						}
 					}
 				},
@@ -3853,25 +3879,34 @@
 				}.bind(this));
 			},
 			/*options = {
-				see NyckelDBObj.prototype.sync options
-
+				see nyckeldb.js NyckelDBObj.prototype.sync options
 			}*/
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
 					function done(success, errors, obj, title) {
 						this.spin(false, "Synchronising with Dropbox");
-						if (err) {
-							this.notify("Please try again later", true);
-							return;
+						if (success && obj && obj.file) {
+							syncfile = JSON.parse(obj.syncFile);
+							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
+								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title) {
+									if (!success) debug(error, title + " setSyncComplete error");
+									else console.log("sync complete");
+								});
+							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
 						else if (!obj && errors) {
+							if (err) return;
+							err = true;//break until error fixed and try again
 							if (/unsupported version/.test(errors)) {
 								this.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
+							}
+							else if (/rate limited, try again in /.test(errors)) {
+								var time = parseFloat(errors.replace("rate limited, try again in ", ""));
+								setTimeout(this.syncAll, /seconds/.tests(errors) ? time * 1000 : time * 6e4);
 							}
 							else {
 								switch (errors) {
 									case "wrong key used":
-										err = true;//break until right key input and try again
 										this.updateStoKey();
 										break;
 									case "try again later":
@@ -3882,15 +3917,6 @@
 										debug(errors, "sync errors");
 								}
 							}
-						}
-						else if (success && obj && obj.file) {
-							syncfile = JSON.parse(obj.syncFile);
-							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title) {
-									if (!success) debug(error, title + " setSyncComplete error");
-									else console.log("sync complete");
-								});
-							}, function (error) { debug(error, "save file to Dropbox error"); });
 						}
 						else debug("no json returned to upload to dropbox");
 						syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
