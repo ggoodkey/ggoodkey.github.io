@@ -118,7 +118,8 @@
 							<button class="right" tabindex="22" v-on:click="login">Sign in</button>
 						</div>
 						<div v-else class="clear">
-							{{ dropboxUsername }}
+							<div align="right">{{ dropboxUsername }}</div>
+							<br />
 							<button class="right clear" tabindex="23" v-on:click="logout">Sign Out</button>
 							<button class="right clear" v-on:click="syncAll">Sync Now</button>
 							<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
