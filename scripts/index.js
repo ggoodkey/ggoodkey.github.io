@@ -4021,48 +4021,45 @@
 				}.bind(this));
 			},
 			setAccentColor: setAccentColor,
-			resetSettings: function() {
-				state = freshStateObj();
-				this.storeState();
-				for (let s in state) {
-					if (this[s]) this[s] = state[s];
-				}
-			},
-			wipeApp: function () {
+			resetSettings: function () {
 				function loadApp() {
 					loadDB = true;
 					loadDBQueue = [];
 					loadingDB = false;
 					startApp();
 				}
-				function clearUI() {
-					if (cordova || Windows && WinJS) {
-						wwManager({ "cmd": "stop" }, function () {
-							setTimeout(function () {
-								webWorker = new Worker("scripts/webworker.js");
-								webWorker.addEventListener('message', wwReadMessage, false);
-								webWorker.addEventListener('error', wwOnError, false);
-								appData = {};
-								backstack = [];
-								backIndex = 0;
-								this.resetSettings();
-								setTimeout(loadApp, 1000);
-							}.bind(this), 1000);
-						}.bind(this));
-					}
-					else if (window.location) {
+				document.getElementById("loading").className = "";
+				state = freshStateObj();
+				this.storeState();
+				if (cordova || Windows && WinJS) {
+					wwManager({ "cmd": "stop" }, function () {
 						setTimeout(function () {
-							var loc = window.location;
-							window.location.href = [loc.protocol, '//', loc.host, loc.pathname].join('');
-						}, 2000);
-					}
+							webWorker = new Worker("scripts/webworker.js");
+							webWorker.addEventListener('message', wwReadMessage, false);
+							webWorker.addEventListener('error', wwOnError, false);
+							appData = {};
+							backstack = [];
+							backIndex = 0;
+							for (let s in state) {
+								if (this[s]) this[s] = state[s];
+							}
+							setTimeout(loadApp, 1000);
+						}.bind(this), 1000);
+					}.bind(this));
 				}
+				else if (window.location) {
+					setTimeout(function () {
+						var loc = window.location;
+						window.location.href = [loc.protocol, '//', loc.host, loc.pathname].join('');
+					}, 2000);
+				}
+			},
+			wipeApp: function () {
 				var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
 				msg = "This will " + msg + "and restore default settings";
 				confirm("Are you sure you want to reset the app?", function reset() {
-					document.getElementById("loading").className = "";
 					APP.Sto.nuke();
-					clearUI.call(this);
+					this.logout(this.resetSettings);
 				}.bind(this), {ok:"Reset App", details: msg});
 			},
 			wipeDropbox: function () {
@@ -4070,7 +4067,7 @@
 					console.log(response, errors);
 				}
 				var msg = "Do this if you are having synchronisation issues.This will not effect your locally saved app data, which can be restored to Dropbox";
-				msg += "afterwards by clicking 'SYNC NOW' in Settings";
+				msg += " afterwards by clicking 'SYNC NOW' in Settings";
 				confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account?", function () {
 					APP.Dbx.delete("/sync", onComplete);
 					APP.Dbx.delete("/data", onComplete);

@@ -121,7 +121,7 @@
 							{{ dropboxUsername }}
 							<div class="clear">
 								<button class="right" tabindex="23" v-on:click="logout">Sign Out</button>
-								<button class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
+								<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
 								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
 									Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
 								</div>
