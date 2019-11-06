@@ -4030,10 +4030,10 @@
 				}
 				document.getElementById("loading").className = "";
 				state = freshStateObj();
-				state.cookieAgree = true;
 				for (let s in state) {
 					if (this[s]) this[s] = state[s];
 				}
+				state.cookieAgree = true;
 				this.storeState();
 				if (cordova || Windows && WinJS) {
 					wwManager({ "cmd": "stop" }, function () {
