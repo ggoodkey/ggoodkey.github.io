@@ -4031,6 +4031,9 @@
 				document.getElementById("loading").className = "";
 				state = freshStateObj();
 				this.storeState();
+				for (let s in state) {
+					if (this[s]) this[s] = state[s];
+				}
 				if (cordova || Windows && WinJS) {
 					wwManager({ "cmd": "stop" }, function () {
 						setTimeout(function () {
@@ -4040,12 +4043,9 @@
 							appData = {};
 							backstack = [];
 							backIndex = 0;
-							for (let s in state) {
-								if (this[s]) this[s] = state[s];
-							}
 							setTimeout(loadApp, 1000);
-						}.bind(this), 1000);
-					}.bind(this));
+						}, 1000);
+					});
 				}
 				else if (window.location) {
 					setTimeout(function () {
