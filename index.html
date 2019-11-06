@@ -123,7 +123,7 @@
 							<button class="right clear" v-on:click="syncAll">Sync Now</button>
 							<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
 							<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
-								Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
+								Your files have been secured <button class="clear right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
 							</div>
 							<div v-if="showStoKeyInput" class="clear">
 								Change your key<br /><br />
