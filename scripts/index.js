@@ -4029,11 +4029,11 @@
 					startApp();
 				}
 				document.getElementById("loading").className = "";
-				state = freshStateObj();
-				this.storeState();
+				state = freshStateObj();	
 				for (let s in state) {
 					if (this[s]) this[s] = state[s];
 				}
+				this.storeState();
 				if (cordova || Windows && WinJS) {
 					wwManager({ "cmd": "stop" }, function () {
 						setTimeout(function () {
