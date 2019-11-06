@@ -119,25 +119,25 @@
 						</div>
 						<div v-else class="clear">
 							{{ dropboxUsername }}
-							<div class="clear">
-								<button class="right" tabindex="23" v-on:click="logout">Sign Out</button>
-								<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
-								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
-									Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
-								</div>
-								<form v-if="showStoKeyInput">
-									Change your key<br /><br />
-									<label for="stoKeyInput" v-bind:class="{alert:stoKeyWarning !== ''}">Create a new password</label>
-									<input id="stoKeyInput" type="password" />
-									<br /><br />
-									<label for="stoKeyInputConfirm" v-bind:class="{alert:stoKeyWarning !== ''}">Type it in again</label>
-									<input id="stoKeyInputConfirm" type="password" />
-									<span class="alert">{{stoKeyWarning}}</span>										
-									<button v-on:click.stop="newStoKey">Create Key</button>&nbsp;
-									<button v-on:click.stop="toggle('showStoKeyInput')">Cancel</button>
-								</form>
+							<button class="right clear" tabindex="23" v-on:click="logout">Sign Out</button>
+							<button class="right clear" v-on:click="syncAll">Sync Now</button>
+							<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
+							<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
+								Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
 							</div>
-							<button class="right" v-on:click="syncAll">Sync Now</button>	
+							<div v-if="showStoKeyInput" class="clear">
+								Change your key<br /><br />
+								<label for="stoKeyInput" v-bind:class="{alert:stoKeyWarning !== ''}">Create a new password</label>
+								<input id="stoKeyInput" type="password" />
+								<br /><br />
+								<label for="stoKeyInputConfirm" v-bind:class="{alert:stoKeyWarning !== ''}">Type it in again</label>
+								<input id="stoKeyInputConfirm" type="password" />
+								<span class="alert">{{stoKeyWarning}}</span>
+								<div class="clear right">
+									<button v-on:click.stop="newStoKey">Create Key</button>
+									<button v-on:click.stop="toggle('showStoKeyInput')">Cancel</button>	
+								</div>									
+							</div>
 						</div>
 						<h6>Reset data and settings</h6>
 						<div class="clear">

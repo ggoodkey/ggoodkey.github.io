@@ -3702,8 +3702,8 @@
 					if (key.value === "") {
 						this.stoKeyWarning = "Required";
 					}
-					else if (key.value.length < 6) {
-						this.stoKeyWarning = "6 characters minimum";
+					else if (key.value.length < 8) {
+						this.stoKeyWarning = "8 characters minimum";
 					}
 					else if (!(/[A-Z]/.test(key.value) && /\d/.test(key.value) && /[a-z]/.test(key.value) && /[^A-z0-9]/.test(key.value))){
 						this.stoKeyWarning = "Uppercase, lowercase, digit and special character required";
@@ -3716,7 +3716,8 @@
 							this.stoKey = Base64.hash(dbid + key.value);
 						}
 						else {//temp until depricate APP.User.id
-							debug("use of dropboxEmail as a key has been depricated", "error");
+							debug("error setting key", "error");
+							console.log(oldKey, this.stoKey, dbid);
 							//oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(_this.dropboxEmail);
 							//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
 						}
@@ -4030,10 +4031,10 @@
 				}
 				document.getElementById("loading").className = "";
 				state = freshStateObj();
+				state.cookieAgree = true;
 				for (let s in state) {
 					if (this[s]) this[s] = state[s];
 				}
-				state.cookieAgree = true;
 				this.storeState();
 				if (cordova || Windows && WinJS) {
 					wwManager({ "cmd": "stop" }, function () {
