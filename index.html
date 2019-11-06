@@ -120,10 +120,7 @@
 						<div v-else class="clear">
 							{{ dropboxUsername }}
 							<div class="clear">
-								Disconnect App
 								<button class="right" tabindex="23" v-on:click="logout">Sign Out</button>
-							</div>
-							<div class="clear">
 								<button class="right" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
 								<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
 									Your files have been secured <button class="right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
@@ -144,8 +141,9 @@
 						</div>
 						<h6>Reset data and settings</h6>
 						<div class="clear">
-							<button v-if="loggedIn === true" class="alert right" v-on:click="wipeDropbox">Reset App Cloud Data</button>
-							<button class="alert right" v-on:click="resetApp">Reset App</button>
+							<button class="right" v-on:click="resetSettings">Reset Settings</button>
+							<button v-if="loggedIn === true" class="alert right" v-on:click="wipeDropbox">Delete Cloud Data</button>
+							<button class="alert right" v-on:click="wipeApp">Delete Local Data</button>
 						</div>
 						<br />
 						<hr />
@@ -724,14 +722,14 @@
 				<div v-show="isCollapsed === false" class="cardExpand">
 					<template v-for="(groupItem, index) in item.group">
 						<edit-details-card-lineitem v-show="item.collapse === false || index < numShown" v-bind:item="groupItem" v-bind:key="'edit_' + groupItem.column"></edit-details-card-lineitem>
-						<button v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1" v-on:click="showNext(item.collapse)" class="lineItem"><span class="icon icon-plus"></span></button>
+						<button v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1" v-on:click="revealNext(item.collapse)" class="lineItem"><span class="icon icon-plus"></span></button>
 					</template>
 				</div>
 			</transition>
 		</div>
 	</script>
 
-	<script type="x-template" id="page-not-found">
+	<script type="text/x-template" id="page-not-found">
 		<div class="view">
 			<div class="view-container">
 				<h3>Page not found :´(</h3>

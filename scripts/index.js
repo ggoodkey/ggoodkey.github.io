@@ -281,8 +281,7 @@
 							splitter: " ::: ",
 							labelOptions: {
 								dropdownList: ["Personal Email", "Work Email", "Other Email"],
-								customLabel: true,
-								default: "Email"
+								customLabel: true
 							}
 						},
 						{
@@ -304,8 +303,7 @@
 							labelOptions: {
 								dropdownList: ["Mobile Phone", "Home Phone", "Work Phone", "Company Phone",
 									"Other Phone", "Main Phone", "Pager", "Home Fax", "Work Fax"],
-								customLabel: true,
-								default: "Mobile Phone"
+								customLabel: true
 							}
 						},
 						//IM
@@ -396,8 +394,7 @@
 							splitter: " ::: ",
 							labelOptions: {
 								dropdownList: ["Profile", "Blog", "Google Maps", "Home Page", "Work Website"],
-								customLabel: true,
-								default: "Website"
+								customLabel: true
 							}
 						},
 						{
@@ -1208,7 +1205,6 @@
 						if (template.options) {
 							if (template.options.dropdownList) obj.options = getDropdownList(template.options);
 							if (template.options.customLabel) obj.customize = true;
-							if (template.options.default) obj.value = obj.value || template.options.default;
 						}
 					}
 					function applyLabel() {
@@ -1221,7 +1217,6 @@
 						if (labelOptions) {
 							if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
 							if (labelOptions.customLabel) obj.label.customize = true;
-							if (labelOptions.default) obj.label.value = obj.label.value || labelOptions.default;
 						}
 						//if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
 					}
@@ -2964,7 +2959,7 @@
 					this.isCollapsed = this.isCollapsed ? false : true;
 					if (this.numShown === 0) this.numShown = 1;
 				},
-				showNext: function (num) {
+				revealNext: function (num) {
 					if (num && num !== true && num > 1) this.numShown = this.numShown + num;
 					else this.numShown++;
 				}
@@ -4026,7 +4021,20 @@
 				}.bind(this));
 			},
 			setAccentColor: setAccentColor,
-			resetApp: function() {
+			resetSettings: function() {
+				state = freshStateObj();
+				this.storeState();
+				for (let s in state) {
+					if (this[s]) this[s] = state[s];
+				}
+			},
+			wipeApp: function () {
+				function loadApp() {
+					loadDB = true;
+					loadDBQueue = [];
+					loadingDB = false;
+					startApp();
+				}
 				function clearUI() {
 					if (cordova || Windows && WinJS) {
 						wwManager({ "cmd": "stop" }, function () {
@@ -4037,17 +4045,8 @@
 								appData = {};
 								backstack = [];
 								backIndex = 0;
-								state = freshStateObj();
-								this.storeState();
-								for (let s in state) {
-									if (this[s]) this[s] = state[s];
-								}
-								setTimeout(function () {
-									loadDB = true;
-									loadDBQueue = [];
-									loadingDB = false;
-									startApp();
-								}, 1000);
+								this.resetSettings();
+								setTimeout(loadApp, 1000);
 							}.bind(this), 1000);
 						}.bind(this));
 					}
@@ -4063,7 +4062,7 @@
 				confirm("Are you sure you want to reset the app?", function reset() {
 					document.getElementById("loading").className = "";
 					APP.Sto.nuke();
-					this.logout(clearUI.bind(this));
+					clearUI.call(this);
 				}.bind(this), {ok:"Reset App", details: msg});
 			},
 			wipeDropbox: function () {
