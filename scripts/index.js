@@ -3722,7 +3722,7 @@
 							//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
 						}
 						this.storeState();
-						this.syncAll(null, { oldKey: oldKey, key: this.stoKey });
+						this.syncAll(null, { oldKey: oldKey, key: this.stoKey, forceSync: true });
 						this.showStoKeyInput = false;
 						oldKey = null;
 					}
@@ -3898,7 +3898,7 @@
 							}
 							else if (/rate limited, try again in /.test(errors)) {
 								var time = parseFloat(errors.replace("rate limited, try again in ", ""));
-								setTimeout(this.syncAll, /seconds/.tests(errors) ? time * 1000 : time * 6e4);
+								setTimeout(function () { this.syncAll(null, options); }, time * 6e4);
 							}
 							else {
 								switch (errors) {
@@ -3920,23 +3920,21 @@
 						else b++;
 					}
 					function readFile(title, json, error) {
-						if (json && !error) {
-							wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
-								done.call(this, success, errors, obj, title);
-							}.bind(this));
-						}
-						else if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
+						if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
 							console.log(error, "offline");
 							options.forceSync = true;
-							wwManager({ "cmd": "sync", "title": title, "args": [null, options] }, function (success, errors, obj) {
-								done.call(this, success, errors, obj, title);
-							}.bind(this));
 						}
 						else {
 							debug(error, "couldn't sync " + title);
 							this.spin(false, "Synchronising with Dropbox");
 							this.notify("Sync did not complete successfully");
+							return;
 						}
+						console.log("syncing...", json, options);
+						wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
+							console.log("sunk", success, errors, obj);
+							done.call(this, success, errors, obj, title);
+						}.bind(this));						
 					}
 					function download(title) {
 						APP.Dbx.open("/data/" + title, null, function (json, error) {
@@ -3964,7 +3962,7 @@
 										if (requiresSync === true) {
 											download.call(self, table);
 										}
-										else if (a === count) return b++ , cb(syncfile);
+										else if (a === count) return b++, cb(syncfile);
 										else b++;
 										a++;
 									}
@@ -4014,8 +4012,8 @@
 				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
 				checkDBLoaded(function (callback) {
 					options = options || {};
-					options.initialKey = dbid ? Base64.hash(dbid) : this.dropboxEmail ? Base64.hash(this.dropboxEmail) : null;
-					options.key = options.key || this.stoKey === "unknown" ? options.initialKey : this.stoKey;
+					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
+					options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
 					this.spin(true, "Synchronising with Dropbox");
 					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 					if (callback instanceof Function) return callback();

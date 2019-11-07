@@ -124,7 +124,8 @@
 							<button class="right clear" v-on:click="syncAll">Sync Now</button>
 							<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
 							<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
-								Your files have been secured <br />
+								<div>Your files have been secured</div>
+								<br />
 								<button class="clear right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
 							</div>
 							<div v-if="showStoKeyInput" class="clear">
@@ -167,7 +168,7 @@
 		<div id="confirmContainer" v-show="showConfirm" v-on:click="shakeConfirm"></div>
 		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
 			<h5 v-if="confirmDetails">{{ confirmMsg }}</h5>
-			<p id="confirmMessage">{{ confirmDetails || confirmMsg }}</p>
+			<div id="confirmMessage">{{ confirmDetails || confirmMsg }}</div>
 			<form>
 				<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
 				<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>
