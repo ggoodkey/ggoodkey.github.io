@@ -3920,15 +3920,17 @@
 						else b++;
 					}
 					function readFile(title, json, error) {
-						if (json === false && error && (error === "" || error === "data not found" || error.match(/^path\/not_found/))) {
-							console.log(error, "offline");
-							options.forceSync = true;
-						}
-						else {
-							debug(error, "couldn't sync " + title);
-							this.spin(false, "Synchronising with Dropbox");
-							this.notify("Sync did not complete successfully");
-							return;
+						if (json === false && error !== undefined) {
+							if (error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
+								console.log(error, "offline");
+								options.forceSync = true;
+							}
+							else {
+								debug(error, "couldn't sync " + title);
+								this.spin(false, "Synchronising with Dropbox");
+								this.notify("Sync did not complete successfully");
+								return;
+							}
 						}
 						console.log("syncing...", json, options);
 						wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
