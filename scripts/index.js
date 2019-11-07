@@ -3920,7 +3920,7 @@
 						else b++;
 					}
 					function readFile(title, json, error) {
-						if (json === false && error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
+						if (json === false && error && (error === "" || error === "data not found" || error.match(/^path\/not_found/))) {
 							console.log(error, "offline");
 							options.forceSync = true;
 						}
