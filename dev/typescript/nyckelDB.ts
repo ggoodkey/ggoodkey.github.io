@@ -714,6 +714,9 @@ var NyckelDB = (function () {
 										break;
 									case "type": SET_TYPE.call(this, colName, columns.meta[colName][prop][0], null, false, columns.meta[colName][prop][1]);
 										break;
+									case "timestamp":
+										console.log("column timestamp compare (new, old): ", columns.meta[colName][prop], (DB[this.id] as nyckelDB_uncompressed).columns.meta[colName][prop]);
+										break;
 									//TODO add more props here
 									default:
 										CACHE_ERROR.call(this, prop, "unknown column property not being synced");
