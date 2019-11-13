@@ -3884,7 +3884,7 @@
 						if (success && obj && obj.file) {
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
-								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error, title) {
+								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error) {
 									if (!success) debug(error, title + " setSyncComplete error");
 									else console.log("sync complete");
 								});

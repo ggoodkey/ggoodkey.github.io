@@ -682,10 +682,6 @@ var NyckelDB = (function () {
 					}
 				}
 				missing = null!;
-				if (!HIDDEN_TABLE_DATA[this.id] && json.table.length !== (DB[this.id] as nyckelDB_uncompressed).table.length ||
-					HIDDEN_TABLE_DATA[this.id] && json.table.length !== (DB[this.id] as nyckelDB_uncompressed).table.length + HIDDEN_TABLE_DATA[this.id].length) {
-					CACHE_ERROR.call(this, "modified date not updated");
-				}
 			}
 			function syncColumns(this: NyckelDB_interface, columns: tableColumns, callback: () => void): void {
 				if (!columns) return callback();
@@ -726,62 +722,43 @@ var NyckelDB = (function () {
 						}
 					}
 				}
+				//TODO check for errors in headers and column metadata
 				return callback();
 			}
 			function syncTable(this: NyckelDB_interface, table: tableRow[], ids: tableIds) {
-				function updateTimestamps(this: NyckelDB_interface): void {
-					function deleteRows(this: NyckelDB_interface): void {
-						function applyProperties(this: NyckelDB_interface): void {
-							if (json.properties && (DB[this.id] as nyckelDB_uncompressed).properties) {
-								var _prop: string;
-								for (let prop in json.properties) {
-									_prop = TO_PROP_NAME(prop);
-									if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop]) {
-										if (!(DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] || (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] < json.properties[prop][1]) {
-											SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
-											syncChanges = true;
-										}
-										else if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] && (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
-									}
-									else {
-										SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
-										syncChanges = true;
-									}
+				function applyProperties(this: NyckelDB_interface): void {
+					if (json.properties && (DB[this.id] as nyckelDB_uncompressed).properties) {
+						var _prop: string;
+						for (let prop in json.properties) {
+							_prop = TO_PROP_NAME(prop);
+							if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop]) {
+								if (!(DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] || (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] < json.properties[prop][1]) {
+									SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
+									syncChanges = true;
 								}
-								_prop = null!;
+								else if ((DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] && (DB[this.id] as nyckelDB_uncompressed).properties[_prop][1] !== json.properties[prop][1]) syncChanges = true;
 							}
-							checkDBForMissingItems.call(this);
-						}
-						//delete deleted rows
-						for (let rowId in json.ids) {
-							if ((json.ids[rowId] as deletedId)[0] === "del" && (DB[this.id] as nyckelDB_uncompressed).ids[rowId] && ((DB[this.id] as nyckelDB_uncompressed).ids[rowId] as deletedId)[0] !== "del") {
-								if (json.ids[rowId][1] !== (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) syncChanges = true;
-								//if it was deleted after it was created (not restored)
-								if (json.ids[rowId][1] - createdDiff > (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) {
-									DELETE_ROW.call(this, rowId, false, json.ids[rowId][1]);
-								}
+							else {
+								SET_PROP.call(this, _prop, json.properties[prop][0], json.properties[prop][1], json.properties[prop][2], false);
+								syncChanges = true;
 							}
 						}
-						applyProperties.call(this);
+						_prop = null!;
 					}
-					if (json.created < DB[this.id].created) {
-						//update created time stamp
-						DB[this.id].created = json.created;
-						DB[this.id].lastModified = DB[this.id].lastModified === 0 ? json.lastModified : DB[this.id].lastModified - createdDiff;
-						//update all other time stamps to reflect change in created time stamp
-						var i = 0, idiLen: number;
-						for (let id in (DB[this.id] as nyckelDB_uncompressed).ids) {
-							for (i = 0, idiLen = (DB[this.id] as nyckelDB_uncompressed).ids[id].length; i < idiLen; i++) {
-								if (i !== 0 || ((DB[this.id] as nyckelDB_uncompressed).ids[id] as deletedId)[i] !== "del") {
-									(DB[this.id] as nyckelDB_uncompressed).ids[id][i] = (DB[this.id] as nyckelDB_uncompressed).ids[id][i] - createdDiff;
-								}
+					checkDBForMissingItems.call(this);
+				}
+				function deleteRows(this: NyckelDB_interface): void {	
+					//delete deleted rows
+					for (let rowId in json.ids) {
+						if ((json.ids[rowId] as deletedId)[0] === "del" && (DB[this.id] as nyckelDB_uncompressed).ids[rowId] && ((DB[this.id] as nyckelDB_uncompressed).ids[rowId] as deletedId)[0] !== "del") {
+							if (json.ids[rowId][1] !== (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) syncChanges = true;
+							//if it was deleted after it was created (not restored)
+							if (json.ids[rowId][1] > (DB[this.id] as nyckelDB_uncompressed).ids[rowId][0]) {
+								DELETE_ROW.call(this, rowId, false, json.ids[rowId][1]);
 							}
 						}
-						i = null!; idiLen = null!;
-						syncChanges = true;
-						//TODO update column timestamps
 					}
-					deleteRows.call(this);
+					applyProperties.call(this);
 				}
 				function updateRow(this: NyckelDB_interface, toTable: tableRow[], toIds: tableIds, nRow: tableRow, rowNotFoundCB: (nRow: tableRow) => void): void {
 					if (!toTable) return rowNotFoundCB(nRow);
@@ -792,10 +769,10 @@ var NyckelDB = (function () {
 						xId = toIds[xRow[0]];//existing row metadata
 						nId = ids[nRow[0]];//new row metadata
 						for (e = 1, eLen = nId.length; e < eLen; e++) {
-							if ((xId as deletedId)[0] === "del" && (nId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) === Number(nId[0]) + Number(nId[e]) - createdDiff) continue;
+							if ((xId as deletedId)[0] === "del" && (nId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) === Number(nId[0]) + Number(nId[e])) continue;
 							//cells are different
 							syncChanges = true;
-							if ((nId as deletedId)[0] !== "del" && ((xId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) < Number(nId[0]) + Number(nId[e]) - createdDiff)) {
+							if ((nId as deletedId)[0] !== "del" && ((xId as deletedId)[0] === "del" || Number(xId[0]) + Number(xId[e]) < Number(nId[0]) + Number(nId[e]))) {
 								//cell needs updated
 								SET_VAL.call(this, c, e, nRow[e], false, nId[e]);
 							}
@@ -808,7 +785,7 @@ var NyckelDB = (function () {
 				function addNewRow(this: NyckelDB_interface, nRow: tableRow): void {
 					if ((ids[nRow[0]] as deletedId)[0] !== "del" &&
 						(!(DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]] || ((DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]] as deletedId)[0] === "del" &&
-						(DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]][1] < Number(ids[nRow[0]][0]) - createdDiff)) {
+						(DB[this.id] as nyckelDB_uncompressed).ids[nRow[0]][1] < Number(ids[nRow[0]][0]))) {
 						//new row
 						syncChanges = true;
 						ADD_ROW.call(this, nRow, nRow[0], false, ids[nRow[0]]);
@@ -824,7 +801,7 @@ var NyckelDB = (function () {
 					nRow = table[b];//new row
 					updateRow.call(this, (DB[this.id] as nyckelDB_uncompressed).table, (DB[this.id] as nyckelDB_uncompressed).ids, nRow, tryHiddenRows.bind(this));
 				}
-				updateTimestamps.call(this);
+				deleteRows.call(this);
 			}
 			function checkDeleted(this: NyckelDB_interface, json: nyckelDB_deleted): void {
 				if (!TABLE_IS_DELETED(DB[this.id])) {
@@ -837,41 +814,83 @@ var NyckelDB = (function () {
 				//database has just been initiated and can load all data directly from json, or is being restored from being deleted
 				if (DB[this.id].lastModified >= json.lastModified) return ret.call(this, true, false, false);
 				//recreate existing/deleted table
-				DB[this.id].created = json.created;
-				(DB[this.id] as nyckelDB_uncompressed).ids = json.ids;
-				(DB[this.id] as nyckelDB_uncompressed).lastModified = json.lastModified;
-				(DB[this.id] as nyckelDB_uncompressed).properties = json.properties;
-				(DB[this.id] as nyckelDB_uncompressed).table = json.table;
-				(DB[this.id] as nyckelDB_uncompressed).columns = json.columns;
-				DB[this.id].version = this.version + "_" + Base64.Version;
+				DB[this.id] = {
+					"title": DB[this.id].title,
+					"created": json.created,
+					"lastModified": json.lastModified,
+					"deleted": json.deleted,
+					"version": this.version + "_" + Base64.Version,
+					"columns": json.columns,
+					"ids": json.ids,
+					"table": json.table,
+					"properties": json.properties
+				}
 				if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this);
 				return ret.call(this, true, false, true);
 			}
+			function updateTimestamps(this: NyckelDB_interface, cb: () => void): void {
+				function shiftCreatedDate(DB1: nyckelDB_uncompressed, DB2:nyckelDB_uncompressed): nyckelDB_uncompressed {
+					//update created time stamp
+					DB1.created = DB2.created;
+					DB1.lastModified = DB1.lastModified === 0 ? DB2.lastModified : DB1.lastModified - createdDiff;
+					//update all other time stamps to reflect change in created time stamp
+					var i = 0, idiLen: number;
+					for (let id in DB1.ids) {
+						for (i = 0, idiLen = DB1.ids[id].length; i < idiLen; i++) {
+							if (i !== 0 || (DB1.ids[id] as deletedId)[i] !== "del") {
+								DB1.ids[id][i] = DB1.ids[id][i] - createdDiff;
+							}
+						}
+					}
+					i = null!; idiLen = null!;
+					//update propert timestamps
+					for (let p in DB1.properties) {
+						if (DB1.hasOwnProperty(p)) {
+							DB1.properties[p][1] = DB1.properties[p][1] - createdDiff;
+						}
+					}
+					//update column timestamps
+					var a;
+					for (let c in DB1.columns.meta) {
+						if (DB1.columns.meta.hasOwnProperty(c)) {
+							for (a in DB1.columns.meta[c]) {
+								if (DB1.columns.meta[c].hasOwnProperty(a)) {
+									if (a === "timestamp") DB1.columns.meta[c][a]![0] = DB1.columns.meta[c][a]![0] - createdDiff;
+									DB1.columns.meta[c][a]![1] = DB1.columns.meta[c][a]![1] - createdDiff;
+								}
+							}
+						}
+					}
+					a = null!;
+					return DB1;
+				}
+				var createdDiff = DB[this.id].created - json.created;//the difference in time between when the two tables were created
+				if (createdDiff === 0) return cb();
+				syncChanges = true;
+				if (createdDiff > 0) DB[this.id] = shiftCreatedDate((DB[this.id] as nyckelDB_uncompressed), json);
+				else json = shiftCreatedDate(json, (DB[this.id] as nyckelDB_uncompressed));
+				return cb();
+			}
+			//preliminary checks
+			if (DB[this.id].title !== json.title) return ret.call(this, false, "cannot import " + json.title, false);
+			if (TABLE_IS_DELETED(json)) return checkDeleted.call(this, json);
+			if (TABLE_IS_DELETED(DB[this.id])) return ret.call(this, false, "cannot import to deleted table", false);
+			if (!json.table) return ret.call(this, false, "json is not valid", false);
+			this.unhideRows();
 			if (json.lastModified && json.lastModified === DB[this.id].lastModified) {
 				//no changes
 				checkDBForMissingItems.call(this);
 				return ret.call(this, true, false, false);
 			}
-			if (DB[this.id].title !== json.title) {
-				return ret.call(this, false, "cannot import " + json.title, false);
-			}
-			//table titles match
-			if (TABLE_IS_DELETED(json)) {
-				return checkDeleted.call(this, json);
-			}
-			else if (!json.table) return ret.call(this, false, "json is not valid", false);
-			if (TABLE_IS_DELETED(DB[this.id])) return ret.call(this, false, "cannot import to deleted table", false);
-			this.unhideRows();
 			if (DB[this.id].lastModified === 0 && (DB[this.id] as nyckelDB_uncompressed).table.length === 0 && DB[this.id].created !== json.created) {
 				//table has just been initialised and table is being loaded for the first time
 				return directLoadDB.call(this);
 			}
-			var createdDiff = DB[this.id].created - json.created;//the difference in time between when the two tables were created
-			syncColumns.call(this, json.columns, function (this: NyckelDB_interface) {
-				syncTable.call(this, json.table, json.ids);
+			updateTimestamps.call(this, function (this: NyckelDB_interface) {
+				syncColumns.call(this, json.columns, function (this: NyckelDB_interface) {
+					syncTable.call(this, json.table, json.ids);
+				}.bind(this));
 			}.bind(this));
-			//TODO check for errors in headers and column metadata
-
 			if (!fromLocalStorageBool) TO_LOCAL_STORAGE.call(this, syncChanges);
 			else BUILD_SEARCH_INDEX.call(this);
 			return ret.call(this, true, ERRORS[this.id], syncChanges);
@@ -921,7 +940,7 @@ var NyckelDB = (function () {
 					return arr;
 				}
 				function toEditTimesArr(this: NyckelDB_interface, json: csv2jsonOutput, traceStr: string): number[] {
-					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified || 0)), undefined, "row", traceStr)];
+					var ret = [VALIDATE_EDIT_TIME.call(this, TIMESTAMP(Number(json.lastModified || 0)), "row", traceStr)];
 					for (let a = 1, len = (DB[this.id] as nyckelDB_uncompressed).columns.headers.length; a < len; a++) {
 						ret[a] = 0;
 					}
@@ -1301,7 +1320,7 @@ var NyckelDB = (function () {
 			}
 		}
 		function apply(this: NyckelDB_interface, propName: string, value: tableValue, type: basicTypeString): tableValue{
-			editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "property", "setProp");
+			editTime = VALIDATE_EDIT_TIME.call(this, editTime, "property", "setProp");
 			(DB[this.id] as nyckelDB_uncompressed).properties[propName][0] = value;
 			(DB[this.id] as nyckelDB_uncompressed).properties[propName][1] = editTime;
 			(DB[this.id] as nyckelDB_uncompressed).properties[propName][2] = type;
@@ -1441,7 +1460,7 @@ var NyckelDB = (function () {
 		(DB[this.id] as nyckelDB_uncompressed).table.push((row as tableRow));
 		ROW_INDEX_CACHE[this.id] = {};//clear the cache
 		editTimesArr = editTimesArr || [];
-		editTimesArr[0] = VALIDATE_EDIT_TIME.call(this, editTimesArr[0], undefined, "row", "addRow");
+		editTimesArr[0] = VALIDATE_EDIT_TIME.call(this, editTimesArr[0], "row", "addRow");
 
 		DB[this.id].lastModified = editTimesArr && editTimesArr[0] !== undefined ?
 			editTimesArr[0] + DB[this.id].created > DB[this.id].lastModified ?
@@ -1898,7 +1917,7 @@ var NyckelDB = (function () {
 	function SET_VAL(this: NyckelDB_interface, rowId: string | number, colName: string | number, newValue: tableValue, storeBool: boolean, editTime?: number, callback?: (newValue: tableValue | undefined, errors:string | false, title:string, syncPending: boolean) => void): tableValue | undefined {
 		function applyVal(this: NyckelDB_interface, toTable: tableRow[], toIds: tableIds, rowIndex: number): tableValue {
 			var thisModified: number;
-			editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "cell", "setVal", toTable[rowIndex][0]);
+			editTime = VALIDATE_EDIT_TIME.call(this, editTime, "cell", "setVal", toTable[rowIndex][0]);
 			toTable[rowIndex][colIndex] = newValue;
 			toIds[toTable[rowIndex][0]][colIndex] = editTime;
 			thisModified = (toIds[toTable[rowIndex][0]] as deletedId)[0] === "del" ?
@@ -1960,7 +1979,7 @@ var NyckelDB = (function () {
 			}
 		}
 		//if found
-		editTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "row", "deleteRow");
+		editTime = VALIDATE_EDIT_TIME.call(this, editTime, "row", "deleteRow");
 		//set deleted in id registry
 		if (rowIsHidden) (HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][index][0]] as deletedId) = ["del", editTime];
 		else ((DB[this.id] as nyckelDB_uncompressed).ids[(DB[this.id] as nyckelDB_uncompressed).table[index][0]] as deletedId) = ["del", editTime];
@@ -1976,7 +1995,7 @@ var NyckelDB = (function () {
 		if (storeBool !== false) TO_LOCAL_STORAGE.call(this, true);
 		return true;
 	}
-	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: any, createdDiff = 0, type: string, traceStr: string, id?: string): number {
+	function VALIDATE_EDIT_TIME(this: NyckelDB_interface, num: any, type: string, traceStr: string, id?: string): number {
 		var t = TIMESTAMP();
 		var db = DB[this.id];
 		switch (type) {
@@ -2003,7 +2022,7 @@ var NyckelDB = (function () {
 			CACHE_ERROR.call(this, num, "invalid " + type + " timestamp found @ " + traceStr);
 			return t;
 		}
-		else if (num - createdDiff <= t) {
+		else if (num <= t) {
 			return num;
 		}
 		else {
@@ -2027,7 +2046,7 @@ var NyckelDB = (function () {
 		else cancel.call(this);
 	}
 	function DELETE_TABLE_BY_ID(this: NyckelDB_interface, id: number, editTime?: number): void {
-		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "deleted", "deleteTableById");
+		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "deleted", "deleteTableById");
 		(DB[id] as unknown as nyckelDB_deleted) = {
 			"title": DB[id].title,
 			"created": DB[id].created,
@@ -2115,10 +2134,10 @@ var NyckelDB = (function () {
 				"version": this.version + "_" + Base64.Version
 			});
 		}
-		if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) {
-			if (callback instanceof Function) return callback.call(this, false, "try again later", false);
-			else return;
-		};
+		// if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) {
+		// 	if (callback instanceof Function) return callback.call(this, false, "try again later", false);
+		// 	else return;
+		// }; //code duplication from sync???
 		var title = TO_PROP_NAME(DB[this.id].title),
 			obj = {
 			"title": DB[this.id].title,
@@ -2272,10 +2291,10 @@ var NyckelDB = (function () {
 					else if (typeof _columnProperties[a] === "object") {
 						for (let c in _columnProperties[a]) {
 							if (_columnProperties[a].hasOwnProperty(c)) {
-								obj.meta[headers[b]][c] = obj.meta[headers[b]][c] || ["", VALIDATE_EDIT_TIME.call(this, 0, undefined, "column", "apply column type")];
+								obj.meta[headers[b]][c] = obj.meta[headers[b]][c] || ["", VALIDATE_EDIT_TIME.call(this, 0, "column", "apply column type")];
 								if (IS_ARRAY(_columnProperties[a][c])) {
 									obj.meta[headers[b]][c]![0] = VALIDATE_COLUMN_PROPERTY.call(this, _columnProperties[a][c][0], c, _columnProperties[a].type[0]);
-									obj.meta[headers[b]][c]![1] = VALIDATE_EDIT_TIME.call(this, _columnProperties[a][c][1], undefined, "column", "apply column type");
+									obj.meta[headers[b]][c]![1] = VALIDATE_EDIT_TIME.call(this, _columnProperties[a][c][1],"column", "apply column type");
 								}
 								else if (VALUE_IS_VALID.call(this, _columnProperties[a][c], "any", true, "applying table properties")) {
 									obj.meta[headers[b]][c]![0] = VALIDATE_COLUMN_PROPERTY.call(this, _columnProperties[a][c], c, _columnProperties[a].type);
@@ -2327,7 +2346,7 @@ var NyckelDB = (function () {
 		if (colIndex > 0) {
 			var columns = db.columns.meta,
 				col = db.columns.headers[colIndex],
-				time = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "deleteColumn");
+				time = VALIDATE_EDIT_TIME.call(this, editTime, "column", "deleteColumn");
 			for (let a = 0, len = db.table.length; a < len; a++) {
 				db.table[a].splice(colIndex, 1);
 				db.ids[db.table[a][0]].splice(colIndex, 1);
@@ -2415,7 +2434,7 @@ var NyckelDB = (function () {
 			if (callback instanceof Function) return callback.call(this, false, "cannot add deleted column");
 			else return; //don't add deleted columns to table
 		}
-		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "addColumn");
+		var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "column", "addColumn");
 		var orig = String(colName),
 			i = 1,
 			props: columnMetadata = {
@@ -2500,7 +2519,7 @@ var NyckelDB = (function () {
 		this.unhideRows(); //TODO iterate through hidden rows without unhiding them(?)
 		type = VALIDATE_TYPE.call(this, type);
 		colName = TO_PROP_NAME(colName);
-		editTime = editTime ? VALIDATE_EDIT_TIME.call(this, editTime, undefined, "column", "set type") : TIMESTAMP(DB[this.id].created);
+		editTime = editTime ? VALIDATE_EDIT_TIME.call(this, editTime, "column", "set type") : TIMESTAMP(DB[this.id].created);
 		var can_do: boolean = true,
 			returnData: {[columnName: string]:{[rowId: string]: tableValue}} = {};
 		returnData[colName] = {};
@@ -3107,7 +3126,7 @@ var NyckelDB = (function () {
 					for (let a = 1, headers = db.columns.headers, len = headers.length, colProp; a < len; a++) {
 						for (colProp in columns[headers[a]]) {
 							if (columns[headers[a]].hasOwnProperty(colProp)) {
-								columns[headers[a]][colProp]![1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp]![1], undefined, "column", "didn't get cached table");
+								columns[headers[a]][colProp]![1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp]![1], "column", "didn't get cached table");
 							}
 						}
 					}
@@ -3116,13 +3135,13 @@ var NyckelDB = (function () {
 				for (let id in db.ids) {
 					if (db.ids.hasOwnProperty(id)) {
 						for (let a = 0; a < db.ids[id].length; a++) {
-							db.ids[id][a] = VALIDATE_EDIT_TIME.call(this, db.ids[id][a], undefined, a === 0 ? "row" : "cell", "validating ids", id);
+							db.ids[id][a] = VALIDATE_EDIT_TIME.call(this, db.ids[id][a], a === 0 ? "row" : "cell", "validating ids", id);
 						}
 					}
 				}
 				for (let prop in db.properties) {
 					if (db.properties.hasOwnProperty(prop)) {
-						db.properties[prop][1] = VALIDATE_EDIT_TIME.call(this, db.properties[prop][1], undefined, "property", "didn't get cached table");
+						db.properties[prop][1] = VALIDATE_EDIT_TIME.call(this, db.properties[prop][1], "property", "didn't get cached table");
 					}
 				}
 			}
@@ -3760,7 +3779,7 @@ var NyckelDB = (function () {
 			wait = MAX_SYNC_FREQUENCY + DBX_SYNC_OBJ[DB[this.id].title] - TIMESTAMP();
 		keyMigration.call(this);
 		if (wait > 0 && !forceSync) return retError.call(this, "rate limited, try again in " + wait + " minutes");
-		else if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 6e4) return retError.call(this, "try again later");
+		else if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 15e3) return retError.call(this, "try again later");//15 seconds
 		else if (!json) return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
 		else if (typeof json === "string") json = JSON.parse(json);
 		if (!json.data || !(json.version === this.version + "_" + Base64.Version)) {
