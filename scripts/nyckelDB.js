@@ -442,6 +442,7 @@ var NyckelDB = (function () {
                                         SET_TYPE.call(this, colName, columns.meta[colName][prop][0], null, false, columns.meta[colName][prop][1]);
                                         break;
                                     case "timestamp":
+                                        //do nothing, update timestamp on prop change
                                         console.log("column timestamp compare (new, old): ", columns.meta[colName][prop], DB[this.id].columns.meta[colName][prop]);
                                         break;
                                     //TODO add more props here
@@ -584,13 +585,13 @@ var NyckelDB = (function () {
                     }
                     i = null;
                     idiLen = null;
-                    //update propert timestamps
+                    //update propert time stamps
                     for (let p in DB1.properties) {
                         if (DB1.hasOwnProperty(p)) {
                             DB1.properties[p][1] = DB1.properties[p][1] - createdDiff;
                         }
                     }
-                    //update column timestamps
+                    //update column time stamps
                     var a;
                     for (let c in DB1.columns.meta) {
                         if (DB1.columns.meta.hasOwnProperty(c)) {
