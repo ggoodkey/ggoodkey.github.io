@@ -1,4 +1,4 @@
-var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
+var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = window;
 (function () {
 	"use strict";
 	var LOCAL = {},
@@ -235,7 +235,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 			_this = this;
 		//try login
 		if (!WorkingOffline) {
-			if (localStorage.__dbat && localStorage.__dbat != "") {
+			if (localStorage.__dbat && localStorage.__dbat !== "") {
 				this.isAuthenticated = true;
 				//updateFileList();
 				password = password || "";
