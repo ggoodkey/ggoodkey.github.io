@@ -699,8 +699,9 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			if (typeof Worker !== "undefined" && !localTestingMode) startWorker();
-			else noWebWorker();
+			// if (typeof Worker !== "undefined" && !localTestingMode) startWorker(); //temp removed webworker
+			// else
+				noWebWorker();
 		},
 		wwReadMessage = function (e) {
 			function ab2str(buffer) {
