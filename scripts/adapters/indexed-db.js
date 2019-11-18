@@ -54,7 +54,7 @@ Lawnchair.adapter('indexed-db', (function(){
         var request = this.idb.open(this.name, STORE_VERSION);
         var self = this;
         var cb = self.fn(self.name, callback);
-        if (cb && typeof cb != 'function') throw 'callback not valid';
+        if (cb && typeof cb !== 'function') throw 'callback not valid';
         var win = function() {
             // manually clean up event handlers on request; this helps on chrome
             request.onupgradeneeded = request.onsuccess = request.error = null;
@@ -85,6 +85,7 @@ Lawnchair.adapter('indexed-db', (function(){
         request.onsuccess = function(event) {
            self.db = event.target.result; 
             
+            // eslint-disable-next-line
             if(self.db.version != (''+STORE_VERSION)) {
               // DEPRECATED API: modern implementations will fire the
               // upgradeneeded event instead.
@@ -119,7 +120,7 @@ Lawnchair.adapter('indexed-db', (function(){
             }
         }
         request.onerror = function(ev) {
-            if (request.errorCode === getIDBDatabaseException().VERSION_ERR) {
+            if (getIDBDatabaseException() && request.errorCode === getIDBDatabaseException().VERSION_ERR) {
                 // xxx blow it away
                 self.idb.deleteDatabase(self.name);
                 // try it again.
@@ -343,7 +344,7 @@ Lawnchair.adapter('indexed-db', (function(){
           os.transaction.oncomplete = win;
           os.transaction.onabort = fail;
         } catch (e) {
-          if (e.name=='NotFoundError') 
+          if (e.name === 'NotFoundError') 
             win() 
           else 
             fail(e);

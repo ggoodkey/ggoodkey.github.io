@@ -699,7 +699,6 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			var time = new Date().getTime();
 			if (typeof Worker !== "undefined" && !localTestingMode) startWorker();
 			else noWebWorker();
 		},
@@ -753,17 +752,17 @@
 					}
 					else debug(data.message, "finished but no callback found");
 					break;
-				case "setItem":
-				case "deleteItem":
-					APP.Sto[data.type].apply(null, data.args);
-					break;
-				case "getItem":
-					APP.Sto.getItem(data.args[0], data.args[1], function (value, error) {
-						if (data.callbackIndex !== false) wwManager({ "cmd": "getItemCallback", "message": value, "error": error, "callbackIndex": data.callbackIndex });
-					}, function () {
-						if (data.doesntExistCallbackIndex !== false) wwManager({ "cmd": "getItemDoesntExistCallback", "doesntExistCallbackIndex": data.doesntExistCallbackIndex });
-					});
-					break;
+				// case "setItem":
+				// case "deleteItem":
+				// 	APP.Sto[data.type].apply(null, data.args);
+				// 	break;
+				// case "getItem":
+				// 	APP.Sto.getItem(data.args[0], data.args[1], function (value, error) {
+				// 		if (data.callbackIndex !== false) wwManager({ "cmd": "getItemCallback", "message": value, "error": error, "callbackIndex": data.callbackIndex });
+				// 	}, function () {
+				// 		if (data.doesntExistCallbackIndex !== false) wwManager({ "cmd": "getItemDoesntExistCallback", "doesntExistCallbackIndex": data.doesntExistCallbackIndex });
+				// 	});
+				// 	break;
 				case "progress":
 				case "confirm":
 				default://other types of data
@@ -3412,9 +3411,6 @@
 					}
 					else if (this.searchBox === "useragent") {
 						this.notify(navigator.userAgent);
-					}
-					else if (this.searchBox === "nukeapp") {
-						this.resetApp();
 					}
 					else {
 						this.spin(true, "Searching...");
