@@ -639,11 +639,13 @@
 		 */
 		wwManager = function (obj, callback, finalCallback) {
 			function str2ab(str) {
+				var time = new Date().getTime();
 				var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
 				var bufView = new Uint16Array(buf);
 				for (var i = 0, strLen = str.length; i < strLen; i++) {
 					bufView[i] = str.charCodeAt(i);
 				}
+				console.log((new Date().getTime() - time) / 1000 + "s", "to create array buffer");
 				return buf;
 			}
 			function startWorker() {
@@ -660,6 +662,7 @@
 					obj.finalCallbackIndex = ++wwCallbackIndex;
 					wwCallbackQueue[wwCallbackIndex] = finalCallback;
 				}
+				obj.time = new Date().getTime();
 				var arrBuffer = str2ab(JSON.stringify(obj));
 				webWorker.postMessage(arrBuffer, [arrBuffer]);
 				obj = null;
@@ -696,11 +699,13 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
+			var time = new Date().getTime();
 			if (typeof Worker !== "undefined" && !localTestingMode) startWorker();
 			else noWebWorker();
 		},
 		wwReadMessage = function (e) {
 			function ab2str(buffer) {
+				var time = new Date().getTime();
 				var bufView = new Uint16Array(buffer),
 					length = bufView.length,
 					result = '',
@@ -712,6 +717,7 @@
 					}
 					result += String.fromCharCode.apply(null, bufView.subarray(i, i + addition));
 				}
+				console.log((new Date().getTime() - time) / 1000 + "s", "to convert array buffer to string");
 				return result;
 			}
 			var data = ab2str(e.data);
@@ -730,6 +736,7 @@
 					else debug(data.message, "no forEach callback found");
 					break;
 				case "result":
+						console.log((new Date().getTime() - data.time) / 1000 + "s", "to get result", data.message);
 					if (data.callbackIndex) {
 						if (data.args) wwCallbackQueue[data.callbackIndex].apply(null, JSON.parse(data.args));
 						else wwCallbackQueue[data.callbackIndex](data.message);
