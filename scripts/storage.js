@@ -5,6 +5,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova;
 		Version = 1.1,
 		PreviousVersion = 1,
 		WorkingOffline = function () {
+			if (!window) return false;//running in webworker
 			var loc = window.location;
 			if (!loc || /^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://" || window.navigator.onLine === false) return true;
 			else return false;
