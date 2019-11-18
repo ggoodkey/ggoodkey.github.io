@@ -810,60 +810,54 @@
 				}
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
-			function getLocal() {
-				APP.Sto.getItem("state", null, function (s, error) {
-					if (s) {
-						if (typeof s === "string" && JSON.parse) s = JSON.parse(s);
-						if (s.version === app.version) {
+			function getLocalState() {
+				APP.Sto.getItem("state", null, function (appStateObj, error) {
+					if (appStateObj) {
+						if (typeof appStateObj === "string" && JSON.parse) appStateObj = JSON.parse(appStateObj);
+						if (appStateObj.version === app.version) {
 							for (var prop in state) {
 								if (prop === "recentlyViewed" && app[prop].length > 0) continue;//don't overwrite
-								if (s[prop] !== undefined) {
-									app[prop] = s[prop];
+								if (appStateObj[prop] !== undefined) {
+									app[prop] = appStateObj[prop];
 								}
 							}
-							if (resumeBool && s.time && new Date().getTime() - s.time < 864e5) {
+							if (resumeBool && appStateObj.time && new Date().getTime() - appStateObj.time < 864e5) {
 								//resume view and back history
-								backstack = s.backstack;
-								backIndex = s.backIndex;
+								backstack = appStateObj.backstack;
+								backIndex = appStateObj.backIndex;
 								app.navigate();
 							}
-							if (!s.stoKey) {
-								APP.Sto.getItem("stoKey", null, function (k) {
-									app.stoKey = k;
-									APP.Sto.deleteItem("stoKey");
-									tryDropbox(k);
-								});
-							}
-							else {
-								tryDropbox(s.stoKey);
-								APP.Sto.deleteItem("stoKey");
-							}
+							tryDropbox(appStateObj.stoKey);
 						}
 						else {
-							app.notify("App version has changed from " + s.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
+							app.notify("App version has changed from " + appStateObj.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
 							// migrate older version state data here
 							var migrate = "darkTheme useWindowsTheme windowsDarkTheme accentColor cookieAgree".split(" ");
 							for (let x = 0, xLen = migrate.length; x < xLen; x++){
-								if (s[migrate[x]] !== undefined) {
-									app[migrate[x]] = s[migrate[x]];
+								if (appStateObj[migrate[x]] !== undefined) {
+									app[migrate[x]] = appStateObj[migrate[x]];
 								}
 							}
 							APP.Sto.deleteItem("state");
 							doneInit();
 						}
-
-					} else if (error) {
+					}
+					else if (error) {
 						debug(error, "error getting app state");
 						doneInit();
-					} else {
+					}
+					else {
 						APP.Sto.deleteItem("state");
 						doneInit();
 					}
 				}, doneInit);
 			}
+			checkDBLoaded(function (callback) {
+				if (callback instanceof Function) return callback();
+			});
 			matchWindowsTheme();
 			layout();
-			getLocal();
+			getLocalState();
 		},
 		/*colorLuminance 
 		* @craigbuckler
