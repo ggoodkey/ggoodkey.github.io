@@ -784,7 +784,8 @@
 		},
 		//initialise the application
 		startApp = function (resumeBool) {
-			function doneInit() {
+			function doneStartApp() {
+				var time = new Date().getTime();
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
@@ -797,17 +798,20 @@
 					app.cookieAgree = true;
 					app.storeState();
 				}
+				console.log((new Date().getTime() - time) / 1000 + "s", "to finish startApp");
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
+					console.log((new Date().getTime() - time) / 1000 + "s", "to initiateDropbox");
 					if (user) {
 						app.dropboxUsername = user.alias;
 						app.dropboxEmail = user.email;
 						app.loggedIn = true;
 						dbid = user.dbid;
 					}
-					doneInit();
+					doneStartApp();
 				}
+				var time = new Date().getTime();
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
 			function getLocalState() {
@@ -839,25 +843,28 @@
 								}
 							}
 							APP.Sto.deleteItem("state");
-							doneInit();
+							doneStartApp();
 						}
 					}
 					else if (error) {
 						debug(error, "error getting app state");
-						doneInit();
+						doneStartApp();
 					}
 					else {
 						APP.Sto.deleteItem("state");
-						doneInit();
+						doneStartApp();
 					}
-				}, doneInit);
+				}, doneStartApp);
 			}
+			var time = new Date().getTime();
+			console.log("loading app");
 			checkDBLoaded(function (callback) {
 				if (callback instanceof Function) return callback();
 			});
 			matchWindowsTheme();
 			layout();
 			getLocalState();
+			console.log((new Date().getTime() - time) / 1000 + "s", "to startApp");
 		},
 		/*colorLuminance 
 		* @craigbuckler
@@ -1104,21 +1111,24 @@
 				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
 				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
 					if (errors) defaultErrorHandler(success, errors);
+					console.log((new Date().getTime() - time) / 1000 + "s", "to load " + title);
 				};
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
+						console.log((new Date().getTime() - time) / 1000 + "s", "to load " + title);
 						app.spin(false, "Loading data...");
 						loadDB = false;
 						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
 						else loadDBQueue.pop()(cb);
 					};
 				}
+				var time = new Date().getTime();
 				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
 			}
 			function getTables() {
 				var numOfTables = 0,
-					b = 0;
+					b = 0, time = new Date().getTime();
 				for (var template in dataTemplates) {
 					if (dataTemplates.hasOwnProperty(template)) {
 						numOfTables++;
@@ -1130,6 +1140,7 @@
 						b++;
 					}
 				}
+				console.log((new Date().getTime() - time) / 1000 + "s", "getTables");
 			}
 			if (loadDB) {
 				if (callback instanceof Function) {
