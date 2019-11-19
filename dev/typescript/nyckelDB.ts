@@ -2103,7 +2103,9 @@ var NyckelDB = (function () {
 	}
 	function CREATE_BASE64_FILE(this: NyckelDB_interface, key: string | null | undefined, token?: string | syncToken, callback?: syncCallback): void {
 		function dataString(this: NyckelDB_interface): string {
+			var time = new Date().getTime();
 			var str = Base64.write(JSON.stringify(EXPORT_DB.call(this)), key);
+			console.log((new Date().getTime() - time) / 1000 + "s", "to Base64.write DB");
 			return JSON.stringify({
 				"data": str,
 				"signature": Base64.hmac(str, key),
@@ -3277,7 +3279,8 @@ var NyckelDB = (function () {
 			else {//loading directly from local storage
 				DB[this.id] = applyData.call(this, json);
 				validateData.call(this);
-				return BUILD_SEARCH_INDEX.call(this, opt.initialIndex), CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
+				BUILD_SEARCH_INDEX.call(this, opt.initialIndex);
+				return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this): this;
 			}
 		}
 		function didntGetCachedTable(this: NyckelDB_interface) {
