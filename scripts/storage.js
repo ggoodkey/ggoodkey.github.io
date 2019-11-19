@@ -85,6 +85,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				}
 				// or from Lawnchair object and cache it to to LOCAL object for quick retrieval later
 				else {
+					console.log(Lawnchair);
 					LOCAL[refName] = new Lawnchair();
 					return LOCAL[refName].get(refName, got);
 				}
