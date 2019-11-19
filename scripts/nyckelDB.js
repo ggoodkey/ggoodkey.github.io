@@ -361,7 +361,8 @@ var NyckelDB = (function () {
     function TO_LOCAL_STORAGE(changes = false) {
         function save() {
             if (typeof changes === "undefined" || changes === true) {
-                //check for and surface hidden values before save				
+                //check for and surface hidden values before save
+                console.log("saving to localStorage");
                 APP.Sto.setItem(DB[this.id].title, EXPORT_DB.call(this));
             }
             ERRORS[this.id] = "";
@@ -565,8 +566,7 @@ var NyckelDB = (function () {
                     "table": json.table,
                     "properties": json.properties
                 };
-                if (!fromLocalStorageBool)
-                    TO_LOCAL_STORAGE.call(this);
+                TO_LOCAL_STORAGE.call(this, !fromLocalStorageBool);
                 return ret.call(this, true, false, true);
             }
             function updateTimestamps(cb) {
@@ -1120,8 +1120,7 @@ var NyckelDB = (function () {
             DB[this.id].properties[propName][2] = type;
             DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
             this.syncPending = true;
-            if (storeBool !== false)
-                TO_LOCAL_STORAGE.call(this, true);
+            TO_LOCAL_STORAGE.call(this, storeBool);
             return value;
         }
         if (TABLE_IS_DELETED(DB[this.id]))
@@ -1271,8 +1270,7 @@ var NyckelDB = (function () {
         row = null;
         hLen = null;
         this.syncPending = true;
-        if (storeBool !== false)
-            TO_LOCAL_STORAGE.call(this, true);
+        TO_LOCAL_STORAGE.call(this, storeBool);
         return id;
     }
     function VALIDATE(value, valueType, traceStr, callback) {
@@ -1771,8 +1769,7 @@ var NyckelDB = (function () {
                 DB[this.id].lastModified = thisModified;
             thisModified = null;
             this.syncPending = true;
-            if (storeBool !== false)
-                TO_LOCAL_STORAGE.call(this, true);
+            TO_LOCAL_STORAGE.call(this, storeBool);
             return callback instanceof Function ? (callback.call(this, newValue, false, DB[this.id].title, true), newValue) : newValue;
         }
         var db = DB[this.id];
@@ -1846,8 +1843,7 @@ var NyckelDB = (function () {
         DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
         this.syncPending = true;
         //save changes to localStorage
-        if (storeBool !== false)
-            TO_LOCAL_STORAGE.call(this, true);
+        TO_LOCAL_STORAGE.call(this, storeBool);
         return true;
     }
     function VALIDATE_EDIT_TIME(num, type, traceStr, id) {
@@ -1894,8 +1890,7 @@ var NyckelDB = (function () {
         var msg = "Are you sure you want to delete " + DB[this.id].title + " ?", del = function () {
             DELETE_TABLE_BY_ID.call(this, this.id, editTime);
             this.syncPending = true;
-            if (storeBool !== false)
-                TO_LOCAL_STORAGE.call(this, true);
+            TO_LOCAL_STORAGE.call(this, storeBool);
             if (callback instanceof Function)
                 return callback.call(this, true, ERRORS[this.id], DB[this.id].title, true);
         }.bind(this), cancel = function () {
@@ -1928,20 +1923,26 @@ var NyckelDB = (function () {
                 return callback(title);
         }
         title = TO_PROP_NAME(title);
-        APP.Sto && APP.Sto.getItem("tables", null, function (tables) {
-            if (tables) {
-                DBS = JSON.parse(tables);
-                if (DBS.indexOf(title) === -1)
-                    newDBS.call(this);
-                else {
-                    NUM++;
-                    if (callback instanceof Function)
-                        return callback(title);
+        if (DBS && DBS[NUM + 1] === title) {
+            NUM++;
+            if (callback instanceof Function)
+                return callback(title);
+        }
+        else
+            APP.Sto && APP.Sto.getItem("tables", null, function (tables) {
+                if (tables) {
+                    DBS = JSON.parse(tables);
+                    if (DBS.indexOf(title) === -1)
+                        newDBS.call(this);
+                    else {
+                        NUM++;
+                        if (callback instanceof Function)
+                            return callback(title);
+                    }
                 }
-            }
-            else
-                newDBS.call(this);
-        }.bind(this), newDBS.bind(this));
+                else
+                    newDBS.call(this);
+            }.bind(this), newDBS.bind(this));
     }
     function CHECK_HEADER_VALUE(headerValue, existingHeaders) {
         headerValue = TO_PROP_NAME(headerValue);
@@ -2264,8 +2265,7 @@ var NyckelDB = (function () {
             }
             DB[this.id].lastModified = time + DB[this.id].created > DB[this.id].lastModified ? time + DB[this.id].created : DB[this.id].lastModified;
             this.syncPending = true;
-            if (storeBool !== false)
-                TO_LOCAL_STORAGE.call(this, true);
+            TO_LOCAL_STORAGE.call(this, storeBool);
             if (callback instanceof Function)
                 return callback.call(this, true, ERRORS[this.id]);
             else
@@ -2317,8 +2317,7 @@ var NyckelDB = (function () {
             }
             DB[this.id].lastModified = validatedEditTime + DB[this.id].created > DB[this.id].lastModified ? validatedEditTime + DB[this.id].created : DB[this.id].lastModified;
             this.syncPending = true;
-            if (storeBool !== false)
-                TO_LOCAL_STORAGE.call(this, true);
+            TO_LOCAL_STORAGE.call(this, storeBool);
             if (callback instanceof Function)
                 return callback.call(this, true, ERRORS[this.id]);
             else
