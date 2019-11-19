@@ -3,7 +3,6 @@ importScripts('base64.min.js');
 importScripts('validate.min.js');
 importScripts('lists.min.js');
 importScripts('nyckelDB.js');
-importScripts('storage.js');
 
 function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),
@@ -59,30 +58,30 @@ self.addEventListener('message', function (e) {
 		var arrBuffer = str2ab(JSON.stringify({ "type": "notify", "message": msg, "fadeOut": fadeOut }));
 		self.postMessage(arrBuffer, [arrBuffer]);
 	};
-	// APP.Sto = {
-	// 	setItem: function (refName, value, key) {
-	// 		var arrBuffer = str2ab(JSON.stringify({ "type": "setItem", "args": [refName, value, key] }));
-	// 		self.postMessage(arrBuffer, [arrBuffer]);
-	// 	},
-	// 	getItem: function (refName, key, callback, doesntExistCallback) {
-	// 		var callbackIndex = false, doesntExistCallbackIndex = false;
-	// 		if (callback) {
-	// 			callbackQueue.push(callback);
-	// 			callbackIndex = callbackQueue.length - 1;
-	// 		}
-	// 		if (doesntExistCallback) {
-	// 			callbackQueue.push(doesntExistCallback);
-	// 			doesntExistCallbackIndex = callbackQueue.length - 1;
-	// 		}
-	// 		var arrBuffer = str2ab(JSON.stringify({ "type": "getItem", "args": [refName, key], "callbackIndex": callbackIndex, "doesntExistCallbackIndex": doesntExistCallbackIndex }));
-	// 		self.postMessage(arrBuffer, [arrBuffer]);
-	// 	},
-	// 	nuke: noop,
-	// 	deleteItem: function (key) {
-	// 		var arrBuffer = str2ab(JSON.stringify({ "type": "deleteItem", "args": [key] }));
-	// 		self.postMessage(arrBuffer, [arrBuffer]);
-	// 	}
-	// };
+	APP.Sto = {
+		setItem: function (refName, value, key) {
+			var arrBuffer = str2ab(JSON.stringify({ "type": "setItem", "args": [refName, value, key] }));
+			self.postMessage(arrBuffer, [arrBuffer]);
+		},
+		getItem: function (refName, key, callback, doesntExistCallback) {
+			var callbackIndex = false, doesntExistCallbackIndex = false;
+			if (callback) {
+				callbackQueue.push(callback);
+				callbackIndex = callbackQueue.length - 1;
+			}
+			if (doesntExistCallback) {
+				callbackQueue.push(doesntExistCallback);
+				doesntExistCallbackIndex = callbackQueue.length - 1;
+			}
+			var arrBuffer = str2ab(JSON.stringify({ "type": "getItem", "args": [refName, key], "callbackIndex": callbackIndex, "doesntExistCallbackIndex": doesntExistCallbackIndex }));
+			self.postMessage(arrBuffer, [arrBuffer]);
+		},
+		nuke: noop,
+		deleteItem: function (key) {
+			var arrBuffer = str2ab(JSON.stringify({ "type": "deleteItem", "args": [key] }));
+			self.postMessage(arrBuffer, [arrBuffer]);
+		}
+	};
 	function initNewNyckelDB(title, args, callback) {
 		appData[title] = new NyckelDB(args[0]);
 		appData[title].init(args[1], args[2], args[3], callback);
