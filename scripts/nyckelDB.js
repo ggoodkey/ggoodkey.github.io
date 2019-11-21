@@ -1968,9 +1968,7 @@ var NyckelDB = (function () {
     }
     function CREATE_BASE64_FILE(key, token, callback) {
         function dataString() {
-            var time = new Date().getTime();
             var str = Base64.write(JSON.stringify(EXPORT_DB.call(this)), key);
-            console.log((new Date().getTime() - time) / 1000 + "s", "to Base64.write DB");
             return JSON.stringify({
                 "data": str,
                 "signature": Base64.hmac(str, key),
@@ -2986,20 +2984,10 @@ var NyckelDB = (function () {
      * @function importJSON
      * @param {json} json an exported NyckelDB object
      * @param {string} syncKey the key used to obfuscate the data
-     * @param {string} syncToken the obfuscated version number, hashed message authentication code (HMAC), and lastSync timestamp of the NyckelDB json object
      * @param {successCallback} [callback] callback function
      */
-    NyckelDBObj.prototype.importJSON = function (json, syncKey, syncToken, callback) {
-        return IMPORT_JSON.call(this, json, function (success, errors, syncChanges) {
-            if (success && syncChanges && !errors) {
-                return CREATE_BASE64_FILE.call(this, syncKey, syncToken, function (success, errors) {
-                    if (callback instanceof Function)
-                        return callback.call(this, success, errors);
-                });
-            }
-            else if (callback instanceof Function)
-                return callback.call(this, success, errors);
-        }.bind(this), syncKey, false);
+    NyckelDBObj.prototype.importJSON = function (json, syncKey, callback) {
+        return IMPORT_JSON.call(this, json, callback.bind(this), syncKey, false);
     };
     //columnProperties could be an Array ["string","number"...] or
     //an Object like this {Column_1: "string", Column_2: "number"...} or
@@ -3020,7 +3008,6 @@ var NyckelDB = (function () {
      *	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
      *	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
      *	key: <string>,
-     *	token: <string>
      * 	importData: <json>, table data that is ready to drop in to the database without parsing
      *	importJSON: <json>, json data that needs to be parsed
      *	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
@@ -3028,9 +3015,6 @@ var NyckelDB = (function () {
      * @param {successCallback} [callback]
      */
     NyckelDBObj.prototype.init = function (tableHeaders, columnProperties, options, callback) {
-        function base64Callback(success, errors) {
-            return callback instanceof Function ? (callback.call(this, success, errors), this) : this;
-        }
         function validateData() {
             var db = DB[this.id];
             if (!TABLE_IS_DELETED(db)) {
@@ -3162,14 +3146,6 @@ var NyckelDB = (function () {
                 return callback instanceof Function ? callback.call(this, false, "localStorage not found", false) : "localStorage not found";
         }
         function gotCachedTable(json) {
-            function returnFunc(success, errors, syncChanges) {
-                if (success && syncChanges && !errors)
-                    return (CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this)), this);
-                else if (callback instanceof Function)
-                    return (callback.call(this, success, errors, false), this);
-                else
-                    return this;
-            }
             if (!json) {
                 didntGetCachedTable.call(this);
                 return;
@@ -3189,7 +3165,7 @@ var NyckelDB = (function () {
             if ("data" in json) {
                 if (String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, opt.key) === json.signature) {
                     json = Base64.read(json.data, opt.key);
-                    return IMPORT_JSON.call(this, json, returnFunc.bind(this), false, true);
+                    return IMPORT_JSON.call(this, json, callback.bind(this), false, true);
                 }
                 else {
                     console.log("compressed data is corrupted");
@@ -3209,12 +3185,10 @@ var NyckelDB = (function () {
             DB[this.id] = applyData.call(this, opt.importData);
             validateData.call(this);
             if (opt.importJSON)
-                IMPORT_JSON.call(this, opt.importJSON, function (success, errors, syncChanges) {
-                    return CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
-                }, false, false);
+                return IMPORT_JSON.call(this, opt.importJSON, callback.bind(this), opt.key || false, false);
             else {
                 TO_LOCAL_STORAGE.call(this, true);
-                return CREATE_BASE64_FILE.call(this, opt.key, opt.token, base64Callback.bind(this));
+                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
             }
         }
         var opt = options ? JSON.parse(JSON.stringify(options)) : {};

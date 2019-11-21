@@ -163,6 +163,7 @@ self.addEventListener('message', function (e) {
 			case "search":
 			case "setVals":
 			case "advancedSearch":
+			case "importJSON":
 			case "getVals":
 			case "getSearchSuggestions":
 			case "validate"://returns updatedValue, errors, errorDetails, syncPending 
@@ -174,7 +175,6 @@ self.addEventListener('message', function (e) {
 				}
 				break;
 			//4 argumants including callback, returns success, errors, title and syncPending to callback	
-			case "importJSON":
 			case "setVal":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else {
@@ -188,7 +188,15 @@ self.addEventListener('message', function (e) {
 			case "forEachCol":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else appData[data.title][data.cmd](function (msg, index, length) {
-					var arrBuffer = str2ab(JSON.stringify({ "type": "forEach", "message": msg, "progress": index, "total": length, "callbackIndex": data.callbackIndex, "cmd": data.cmd, "time": data.time }));
+					var arrBuffer = str2ab(JSON.stringify({
+						"type": "forEach",
+						"message": msg,
+						"progress": index,
+						"total": length,
+						"callbackIndex": data.callbackIndex,
+						"cmd": data.cmd,
+						"time": data.time
+					}));
 					self.postMessage(arrBuffer, [arrBuffer]);
 				}, function finished(success, errors, title, syncPending) {
 					var arrBuffer = str2ab(JSON.stringify(

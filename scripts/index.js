@@ -639,13 +639,11 @@
 		 */
 		wwManager = function (obj, callback, finalCallback) {
 			function str2ab(str) {
-				var time = new Date().getTime();
 				var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
 				var bufView = new Uint16Array(buf);
 				for (var i = 0, strLen = str.length; i < strLen; i++) {
 					bufView[i] = str.charCodeAt(i);
 				}
-				console.log((new Date().getTime() - time) / 1000 + "s", "to create array buffer");
 				return buf;
 			}
 			function startWorker() {
@@ -705,7 +703,6 @@
 		},
 		wwReadMessage = function (e) {
 			function ab2str(buffer) {
-				var time = new Date().getTime();
 				var bufView = new Uint16Array(buffer),
 					length = bufView.length,
 					result = '',
@@ -717,7 +714,6 @@
 					}
 					result += String.fromCharCode.apply(null, bufView.subarray(i, i + addition));
 				}
-				console.log((new Date().getTime() - time) / 1000 + "s", "to convert array buffer to string");
 				return result;
 			}
 			var data = ab2str(e.data);
@@ -792,7 +788,6 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneStartApp() {
-				var time = new Date().getTime();
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
@@ -805,11 +800,9 @@
 					app.cookieAgree = true;
 					app.storeState();
 				}
-				console.log((new Date().getTime() - time) / 1000 + "s", "to finish startApp");
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
-					console.log((new Date().getTime() - time) / 1000 + "s", "to initiateDropbox");
 					if (user) {
 						app.dropboxUsername = user.alias;
 						app.dropboxEmail = user.email;
@@ -818,7 +811,6 @@
 					}
 					doneStartApp();
 				}
-				var time = new Date().getTime();
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
 			function getLocalState() {
@@ -863,15 +855,12 @@
 					}
 				}, doneStartApp);
 			}
-			var time = new Date().getTime();
-			console.log("loading app");
 			checkDBLoaded(function (callback) {
 				if (callback instanceof Function) return callback();
 			});
 			matchWindowsTheme();
 			layout();
 			getLocalState();
-			console.log((new Date().getTime() - time) / 1000 + "s", "to startApp");
 		},
 		/*colorLuminance 
 		* @craigbuckler
@@ -1135,7 +1124,7 @@
 			}
 			function getTables() {
 				var numOfTables = 0,
-					b = 0, time = new Date().getTime();
+					b = 0;
 				for (var template in dataTemplates) {
 					if (dataTemplates.hasOwnProperty(template)) {
 						numOfTables++;
@@ -1147,7 +1136,6 @@
 						b++;
 					}
 				}
-				console.log((new Date().getTime() - time) / 1000 + "s", "getTables");
 			}
 			if (loadDB) {
 				if (callback instanceof Function) {
@@ -1495,7 +1483,7 @@
 				wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
 			});
 			else if (toTable === "Contacts") app.loadFile('hiddenCSVInput', 'csv', function (data) {
-				wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey, null] }, done);
+				wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey] }, done);
 			});
 		},
 		confirm = function (msg, callback, options) {
