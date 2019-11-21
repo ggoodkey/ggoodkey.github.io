@@ -47,7 +47,7 @@ self.addEventListener('message', function (e) {
 		self.postMessage(arrBuffer, [arrBuffer]);
 	}
 	function post(msg, args, callbackIndex) {
-		var obj = { "type": "result", "message": msg, "cmd": data.cmd };
+		var obj = { "type": "result", "message": msg, "cmd": data.cmd, "time": data.time };
 		if (args) obj.args = JSON.stringify(args);
 		if (callbackIndex) obj.callbackIndex = callbackIndex;
 		var arrBuffer = str2ab(JSON.stringify(obj));
@@ -188,16 +188,17 @@ self.addEventListener('message', function (e) {
 			case "forEachCol":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else appData[data.title][data.cmd](function (msg, index, length) {
-					var arrBuffer = str2ab(JSON.stringify({ "type": "forEach", "message": msg, "progress": index, "total": length, "callbackIndex": data.callbackIndex, "cmd": data.cmd }));
+					var arrBuffer = str2ab(JSON.stringify({ "type": "forEach", "message": msg, "progress": index, "total": length, "callbackIndex": data.callbackIndex, "cmd": data.cmd, "time": data.time }));
 					self.postMessage(arrBuffer, [arrBuffer]);
 				}, function finished(success, errors, title, syncPending) {
 					var arrBuffer = str2ab(JSON.stringify(
 						{
-							 "type": "finished", 
+							"type": "finished",
 							"message": success,
-							 "args": JSON.stringify([success, errors, title, syncPending]), 
-							 "finalCallbackIndex": data.finalCallbackIndex, 
-							 "cmd": data.cmd 
+							"args": JSON.stringify([success, errors, title, syncPending]), 
+							"finalCallbackIndex": data.finalCallbackIndex, 
+							"cmd": data.cmd,
+							"time": data.time
 						}
 					));
 					self.postMessage(arrBuffer, [arrBuffer]);
