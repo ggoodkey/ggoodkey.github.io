@@ -736,7 +736,7 @@
 					else debug(data.message, "no forEach callback found");
 					break;
 				case "result":
-						console.log((new Date().getTime() - data.time) / 1000 + "s", "to get result", data.message);
+						console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.message);
 					if (data.callbackIndex) {
 						if (data.args) wwCallbackQueue[data.callbackIndex].apply(null, JSON.parse(data.args));
 						else wwCallbackQueue[data.callbackIndex](data.message);
