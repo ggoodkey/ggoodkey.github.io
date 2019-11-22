@@ -732,7 +732,7 @@
 					else debug(data.message, "no forEach callback found");
 					break;
 				case "result":
-						console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.message);
+					//	console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.cmd);
 					if (data.callbackIndex) {
 						if (data.args) wwCallbackQueue[data.callbackIndex].apply(null, JSON.parse(data.args));
 						else wwCallbackQueue[data.callbackIndex](data.message);
@@ -1107,19 +1107,16 @@
 				template.options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
 				var cb = function (success, errors) {//default callback function for handling errors initialising NyckelDB
 					if (errors) defaultErrorHandler(success, errors);
-					console.log((new Date().getTime() - time) / 1000 + "s", "to load " + title);
 				};
 				if (numOfTables === dbNum + 1) {
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
-						console.log((new Date().getTime() - time) / 1000 + "s", "to load " + title);
 						app.spin(false, "Loading data...");
 						loadDB = false;
 						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
 						else loadDBQueue.pop()(cb);
 					};
 				}
-				var time = new Date().getTime();
 				wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, template.options] }, cb);
 			}
 			function getTables() {
@@ -3876,55 +3873,62 @@
 			}*/
 			syncAll: function (event, options) {
 				function sync(syncfile, cb) {
-					function done(success, errors, obj, title) {
-						this.spin(false, "Synchronising with Dropbox");
+					function done(success, errors, obj, title, finalBool) {
 						if (success && obj && obj.file) {
 							syncfile = JSON.parse(obj.syncFile);
 							APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
 								wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error) {
 									if (!success) debug(error, title + " setSyncComplete error");
 									else console.log("sync complete");
+									if (finalBool) this.spin(false, "Synchronising with Dropbox");
 								});
-							}, function (error) { debug(error, "save file to Dropbox error"); });
+							}, function (error) {
+								if (finalBool) this.spin(false, "Synchronising with Dropbox");
+								debug(error, "save file to Dropbox error");
+							});
 						}
-						else if (!obj && errors) {
-							if (err) return;
-							err = true;//break until error fixed and try again
-							if (/unsupported version/.test(errors)) {
-								this.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
-							}
-							else if (/rate limited, try again in /.test(errors)) {
-								var time = parseFloat(errors.replace("rate limited, try again in ", ""));
-								setTimeout(function () { this.syncAll(null, options); }, time * 6e4);
-							}
-							else {
-								switch (errors) {
-									case "wrong key used":
-										this.updateStoKey();
-										break;
-									case "try again later":
-										this.notify("Wrong password used. Please try again later", true);
-										break;
-									default:
-										this.notify("Unknown error");
-										debug(errors, "sync errors");
+						else {
+							if (finalBool) this.spin(false, "Synchronising with Dropbox");
+							if (!obj && errors) {
+								if (err) return;
+								err = true;//break until error fixed and try again
+								if (/unsupported version/.test(errors)) {
+									this.notify("File found was written with a newer version of the app. Please update your app to the latest version.");
+								}
+								else if (/rate limited, try again in /.test(errors)) {
+									console.log(errors);
+									var time = parseFloat(errors.replace("rate limited, try again in ", ""));
+									setTimeout(function () { this.syncAll(null, options); }, time * 6e4);
+								}
+								else {
+									switch (errors) {
+										case "wrong key used":
+											this.updateStoKey();
+											break;
+										case "try again later":
+											this.notify("Wrong password used. Please try again later", true);
+											break;
+										default:
+											this.notify("Unknown error");
+											debug(errors, "sync errors");
+									}
 								}
 							}
+							else debug("no json returned to upload to dropbox");
 						}
-						else debug("no json returned to upload to dropbox");
 						syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
 						if (b === count) return cb(obj && obj.syncFile || JSON.stringify(syncfile));
 						else b++;
 					}
-					function readFile(title, json, error) {
+					function readFile(title, json, error, b) {
 						if (json === false && error !== undefined) {
+							if(b === count) this.spin(false, "Synchronising with Dropbox");
 							if (error === "" || error === "data not found" || error.match(/^path\/not_found/)) {
 								console.log(error, "offline");
 								options.forceSync = true;
 							}
 							else {
 								debug(error, "couldn't sync " + title);
-								this.spin(false, "Synchronising with Dropbox");
 								this.notify("Sync did not complete successfully");
 								return;
 							}
@@ -3932,12 +3936,12 @@
 						console.log("syncing...", json, options);
 						wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
 							console.log("sunk", success, errors, obj);
-							done.call(this, success, errors, obj, title);
+							done.call(this, success, errors, obj, title, b === count);
 						}.bind(this));						
 					}
-					function download(title) {
+					function download(title, b) {
 						APP.Dbx.open("/data/" + title, null, function (json, error) {
-							readFile.call(this, title, json, error);
+							readFile.call(this, title, json, error, b);
 						}.bind(this));
 					}
 					syncfile = syncfile || {};
@@ -3959,7 +3963,7 @@
 								wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (requiresSync, errors) {
 									if (!errors) {
 										if (requiresSync === true) {
-											download.call(self, table);
+											download.call(self, table, b);
 										}
 										else if (a === count) return b++, cb(syncfile);
 										else b++;
@@ -3996,12 +4000,9 @@
 						else console.log("no syncfile found " + error);
 						sync.call(this, syncfile, saveSyncfile.bind(this));
 					}
-					else if (error === "") {
-						console.log("Sync failed, you are offline");
-						this.spin(false, "Synchronising with Dropbox");
-					}
 					else {
-						this.notify("Unhandled sync error: " + error);
+						if (error === "") console.log("Sync failed, you are offline");
+						else this.notify("Unhandled sync error: " + error);
 						this.spin(false, "Synchronising with Dropbox");
 					}
 				}
@@ -4071,6 +4072,16 @@
 					APP.Dbx.delete("/sync", onComplete);
 					APP.Dbx.delete("/data", onComplete);
 				},{ ok:"Reset App Cloud Data", details: msg });
+			},
+			shareFile: function (fileName, recipient, password, expires) {
+				APP.Dbx.share(fileName, recipient, password, expires, function (response) {
+					console.log(response);
+				});
+			}, 
+			recieveFile: function (fileName, password) {
+				APP.Dbx.recieve(fileName, password, function (response) {
+					console.log(response);
+				});
 			}
 		}
 	});

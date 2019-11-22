@@ -228,6 +228,37 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			}
 			dropbox("auth/token/revoke", null, resetApp);
 		};
+		DropboxSessionObj.prototype.share = function (fileName, recipient, password, expires, callback) {
+			var settings = {
+				"requested_visibility": password ? "password" : "public",
+				"audience": password ? "password" : "public",
+				"access": "editor"
+			};
+			if (password) settings.link_password = password;
+			if (expires) {
+				if (expires instanceof Date) expires = expires.toISOString();
+				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
+			}
+			dropbox("sharing/create_shared_link_with_settings", { "path": fileName, "settings": settings }, callback);
+		};
+		DropboxSessionObj.prototype.revoke = function (fileName, callback) {
+			dropbox("sharing/list_shared_links", { path: fileName }, function (ret) {
+				console.log(ret);
+			//	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
+			});
+		};
+		DropboxSessionObj.prototype.recieve = function (fileName, password, callback) {
+			dropbox("sharing/list_shared_links", { path: fileName }, function (ret) {
+				console.log(ret);
+				var settings = {
+					"url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0",
+					"path": fileName
+				};
+				if (password) settings.link_password = password;
+			//	dropbox("sharing/get_shared_link_file", settings, callback);
+			});
+			
+		};
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
 		var CLIENT_ID = client_id,
