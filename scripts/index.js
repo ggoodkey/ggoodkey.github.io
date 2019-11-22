@@ -2573,7 +2573,17 @@
 			methods: {
 				generateListView: generateListView,
 				importFile: importFile,
-				createNewItem: createNewItem
+				createNewItem: createNewItem,
+				shareFile: function (fileName, recipient, password, expires) {
+					APP.Dbx.share(fileName, recipient, password, expires, function (response) {
+						console.log(response);
+					});
+				}, 
+				recieveFile: function (fileName, password) {
+					APP.Dbx.recieve(fileName, password, function (response) {
+						console.log(response);
+					});
+				}
 			},
 			template: "#view1-page"
 		},
@@ -4072,16 +4082,6 @@
 					APP.Dbx.delete("/sync", onComplete);
 					APP.Dbx.delete("/data", onComplete);
 				},{ ok:"Reset App Cloud Data", details: msg });
-			},
-			shareFile: function (fileName, recipient, password, expires) {
-				APP.Dbx.share(fileName, recipient, password, expires, function (response) {
-					console.log(response);
-				});
-			}, 
-			recieveFile: function (fileName, password) {
-				APP.Dbx.recieve(fileName, password, function (response) {
-					console.log(response);
-				});
 			}
 		}
 	});
