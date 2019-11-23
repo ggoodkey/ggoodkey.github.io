@@ -2579,8 +2579,8 @@
 						console.log(response);
 					});
 				}, 
-				recieveFile: function (fileName, password) {
-					APP.Dbx.recieve(fileName, password, function (response) {
+				receiveFile: function (fileName, password) {
+					APP.Dbx.receive(fileName, password, function (response) {
 						console.log(response);
 					});
 				}
