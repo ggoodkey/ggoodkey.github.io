@@ -257,9 +257,9 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 		};
 		DropboxSessionObj.prototype.receive = function (fileName, key, callback) {
 			var settings = {
-				"url": "https://dl.dropbox.com/s/tau85u30l7ml69p/README.txt?dl=0",
+				"url": "https://www.dropbox.com/s/tau85u30l7ml69p/README.txt?dl=0",
 				//"path": "/shared/" + fileName,
-				"responseType": ""
+				"responseType": "document"
 			};
 			if (key) settings.link_password = key;
 			dropbox("sharing/get_shared_link_file", settings, callback);
