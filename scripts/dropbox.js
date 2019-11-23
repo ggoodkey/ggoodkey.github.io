@@ -66,7 +66,8 @@ var APP = APP || {}, cordova;
 		var r = new XMLHttpRequest();
 		r.open('POST', baseUri + endpoint, true);
 		r.setRequestHeader('Authorization', 'Bearer ' + (tokenStore('__dbat') || '000000000000000000000000_00000-000000000000000000000000000000000'));
-		if (format === 'content-download') r.responseType = 'blob';
+		if (baseUri === 'sharing/get_shared_link_file') r.responseType = '';
+		else if (format === 'content-download') r.responseType = 'blob';
 		if (apiArgs && apiArgs.responseType) {
 			r.responseType = apiArgs.responseType;
 			delete apiArgs.responseType;
