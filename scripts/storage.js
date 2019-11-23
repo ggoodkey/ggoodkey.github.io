@@ -232,7 +232,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			var settings = {
 				"requested_visibility": key ? "password" : "public",
 				"audience": key ? "password" : "public",
-				"access": "editor"
+				"access": "max"
 			};
 			if (key) settings.link_password = key;
 			if (expires) {
