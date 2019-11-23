@@ -239,7 +239,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
-			this.save("/shared/" + fileName, fileContents, function (ret) {
+			this.save("/shared/" + fileName, fileContents, key, function (ret) {
 				console.log(ret, "saved file");
 				dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
 			});
