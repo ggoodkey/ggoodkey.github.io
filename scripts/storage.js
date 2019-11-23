@@ -259,7 +259,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			var settings = {
 				"url": "https://www.dropbox.com/s/tau85u30l7ml69p/README.txt?dl=0",
 				//"path": "/shared/" + fileName,
-				"responseType": "document"
+				"responseType": "text"
 			};
 			if (key) settings.link_password = key;
 			dropbox("sharing/get_shared_link_file", settings, callback);
