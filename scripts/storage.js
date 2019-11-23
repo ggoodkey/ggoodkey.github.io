@@ -124,7 +124,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 	APP.Sto = new LocalStorageObj();
 	var DropboxSessionObj = function (client_id, password, callback) {
 		function dropboxError(error, error1, XMLhttpRequest) {
-			if (error instanceof XMLHttpRequest) error = error.statusText;
+			//if (error instanceof XMLHttpRequest) error = error.statusText;
 			if (console && console.log) console.log("dropbox error:", error, error1, XMLhttpRequest);
 		}
 		DropboxSessionObj.prototype.save = function (fileName, fileContents, key, callback, onErrorCallback) {
