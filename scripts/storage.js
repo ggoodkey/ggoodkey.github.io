@@ -239,22 +239,22 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
-			dropbox("sharing/list_shared_links", /*{ path: fileName }*/ null, function (ret) {
+			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
-				this.upload("/shared/README.txt", "Readme", function () {
+				this.save("/shared/README.txt", "Readme", function () {
 					dropbox("sharing/create_shared_link_with_settings", { "path": /*fileName*/ "/shared/README.txt", "settings": settings }, callback);
 				});
 			}.bind(this));
-			dropbox("sharing/create_shared_link_with_settings", { "path": fileName, "settings": settings }, callback);
+			//dropbox("sharing/create_shared_link_with_settings", { "path": fileName, "settings": settings }, callback);
 		};
 		DropboxSessionObj.prototype.revoke = function (fileName, callback) {
-			dropbox("sharing/list_shared_links", { path: fileName }, function (ret) {
+			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
 			//	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
 			});
 		};
 		DropboxSessionObj.prototype.recieve = function (fileName, password, callback) {
-			dropbox("sharing/list_shared_links", { path: fileName }, function (ret) {
+			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
 				var settings = {
 					"url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0",
