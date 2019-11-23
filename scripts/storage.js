@@ -255,11 +255,9 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			//	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
 			});
 		};
-		DropboxSessionObj.prototype.receive = function (fileName, key, callback) {
+		DropboxSessionObj.prototype.receive = function (linkURL, key, callback) {
 			var settings = {
 				"url": "https://www.dropbox.com/s/tau85u30l7ml69p/README.txt?dl=0"//,
-				//"path": "/shared/" + fileName,
-				//"responseType": "text"
 			};
 			if (key) settings.link_password = key;
 			dropbox("sharing/get_shared_link_file", settings, callback);

@@ -2581,7 +2581,7 @@
 				}, 
 				receiveFile: function (fileName, password) {
 					APP.Dbx.receive(fileName, password, function (response) {
-						console.log(response);
+						console.log("got file", response);
 					});
 				}
 			},
