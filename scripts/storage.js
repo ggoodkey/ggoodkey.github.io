@@ -239,12 +239,13 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
+			this.save("/shared/README.txt", "Readme", function () {
+				dropbox("sharing/create_shared_link_with_settings", { "path": /*fileName*/ "/shared/README.txt", "settings": settings }, callback);
+			});
 			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
-				this.save("/shared/README.txt", "Readme", function () {
-					dropbox("sharing/create_shared_link_with_settings", { "path": /*fileName*/ "/shared/README.txt", "settings": settings }, callback);
-				});
-			}.bind(this));
+				
+			});
 			//dropbox("sharing/create_shared_link_with_settings", { "path": fileName, "settings": settings }, callback);
 		};
 		DropboxSessionObj.prototype.revoke = function (fileName, callback) {
