@@ -228,19 +228,20 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			}
 			dropbox("auth/token/revoke", null, resetApp);
 		};
-		DropboxSessionObj.prototype.share = function (fileName, recipient, password, expires, callback) {
+		DropboxSessionObj.prototype.share = function (fileName, fileContents, key, expires, callback) {
 			var settings = {
-				"requested_visibility": password ? "password" : "public",
-				"audience": password ? "password" : "public",
+				"requested_visibility": key ? "password" : "public",
+				"audience": key ? "password" : "public",
 				"access": "editor"
 			};
-			if (password) settings.link_password = password;
+			if (key) settings.link_password = key;
 			if (expires) {
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
-			this.save("/shared/README.txt", "Readme", function () {
-				dropbox("sharing/create_shared_link_with_settings", { "path": /*fileName*/ "/shared/README.txt", "settings": settings }, callback);
+			this.save("/shared/" + fileName, fileContents, function (ret) {
+				console.log(ret, "saved file");
+				dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
 			});
 			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
@@ -254,14 +255,14 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			//	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
 			});
 		};
-		DropboxSessionObj.prototype.recieve = function (fileName, password, callback) {
+		DropboxSessionObj.prototype.recieve = function (fileName, key, callback) {
 			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
 				var settings = {
 					"url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0",
 					"path": fileName
 				};
-				if (password) settings.link_password = password;
+				if (key) settings.link_password = key;
 			//	dropbox("sharing/get_shared_link_file", settings, callback);
 			});
 			
