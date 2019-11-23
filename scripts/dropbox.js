@@ -40,7 +40,7 @@ var APP = APP || {}, cordova;
 		'files/upload_session/append_v2': { baseUri: content, format: 'content-upload' },
 		'files/upload_session/finish': { baseUri: content, format: 'content-upload' },
 		'files/upload_session/start': { baseUri: content, format: 'content-upload' },
-		'files/get_shared_link_file': { baseUri: content, format: 'content-download' }
+		'sharing/get_shared_link_file': { baseUri: content, format: 'content-download' }
 	};
 	var contentTypeMapping = {
 		'rpc': 'application/json',
