@@ -2570,18 +2570,24 @@
 			template: "#groups-page"
 		},
 		view1_page = {
+			data: function() {
+				return {
+					sharedFileLink: ""
+				};
+			},
 			methods: {
 				generateListView: generateListView,
 				importFile: importFile,
 				createNewItem: createNewItem,
-				shareFile: function (fileName, recipient, password, expires) {
-					APP.Dbx.share(fileName, recipient, password, expires, function (response, response2, response3) {
+				shareFile: function (fileName, fileContents, password, expires) {
+					APP.Dbx.share(fileName, fileContents, password, expires, function (response, response2, response3) {
 						console.log("shared file", response, response2, response3);
-					});
+						this.sharedFileLink = response.url;
+					}.bind(this));
 				}, 
 				receiveFile: function (fileName, password) {
-					APP.Dbx.receive(fileName, password, function (response) {
-						console.log("got file", response);
+					APP.Dbx.receive(this.sharedFileLink, password, function (response, response2, response3) {
+						console.log("got file", response, response2, response3);
 					});
 				}
 			},
