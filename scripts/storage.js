@@ -249,7 +249,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 					if (ret.links[a].name === fileName && ret.links[a].path_lower === "/shared/" + fileName.toLowerCase())
 						found = ret.links[a];
 				}
-				if (!found) this.save("/shared/" + fileName, fileContents, key, function (ret) {
+				if (!found) _this.save("/shared/" + fileName, fileContents, key, function (ret) {
 					dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
 				});
 				else return callback instanceof Function ? callback(found) : found;
