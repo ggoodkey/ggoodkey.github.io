@@ -242,14 +242,14 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
-			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
+			dropbox("sharing/list_shared_links", null, function (ret) {
 				console.log(ret);
 				var found = false;
 				for (let a = 0, aLen = ret.links.length; a < aLen; a++) {
 					if (ret.links[a].name === fileName && ret.links[a].path_lower === "/shared/" + fileName.toLowerCase())
 						found = ret.links[a];
 				}
-				if (!found) _this.save("/shared/" + fileName, fileContents, key, function (ret) {
+				if (found === false) _this.save("/shared/" + fileName, fileContents, key, function (ret) {
 					dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
 				});
 				else return callback instanceof Function ? callback(found) : found;
