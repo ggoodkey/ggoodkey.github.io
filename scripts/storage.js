@@ -256,7 +256,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			});
 		};
 		DropboxSessionObj.prototype.revoke = function (fileName, callback) {
-			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
+			dropbox("sharing/list_shared_links", { "path": "/shared/" + fileName, "direct_only": true }, function (ret) {
 				console.log(ret);
 			//	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
 			});
