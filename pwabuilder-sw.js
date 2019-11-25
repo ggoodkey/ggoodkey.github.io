@@ -3,7 +3,6 @@ var precacheFiles = [
 	"cordova.js",
 	"index.html",
 	"manifest.json",
-	//"pwabuilder-sw.js",
 	"css/icons.css",
 	"css/icons-mdl2.css",
 	"css/index.css",

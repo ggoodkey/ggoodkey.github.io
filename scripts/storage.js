@@ -234,7 +234,10 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				"audience": key ? "password" : "public",
 				"access": "max"
 			};
-			if (key) settings.link_password = key;
+			if (key) {
+				settings.link_password = Base64.hash(key);
+				fileContents = Base64.write(fileContents, key);
+			}
 			if (expires) {
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
@@ -256,11 +259,18 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 			});
 		};
 		DropboxSessionObj.prototype.receive = function (linkURL, key, callback) {
+			function ret(apiResponse, data) {
+				if (data) {
+					if (key) data = Base64.read(data, key);
+					return callback instanceof Function ? callback(data) : data;
+				}
+				else return callback instanceof Function ? callback(false, "shared data not found") : false;
+			}
 			var settings = {
-				"url": "https://www.dropbox.com/s/tau85u30l7ml69p/README.txt?dl=0"//,
+				"url": linkURL
 			};
-			if (key) settings.link_password = key;
-			dropbox("sharing/get_shared_link_file", settings, callback);
+			if (key) settings.link_password = Base64.hash(key);
+			dropbox("sharing/get_shared_link_file", settings, ret);
 		};
 		dropbox.setGlobalErrorHandler(dropboxError);
 		this.isAuthenticated = false;
