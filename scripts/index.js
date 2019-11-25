@@ -2575,8 +2575,8 @@
 				importFile: importFile,
 				createNewItem: createNewItem,
 				shareFile: function (fileName, recipient, password, expires) {
-					APP.Dbx.share(fileName, recipient, password, expires, function (response) {
-						console.log(response);
+					APP.Dbx.share(fileName, recipient, password, expires, function (response, response2, response3) {
+						console.log("shared file", response, response2, response3);
 					});
 				}, 
 				receiveFile: function (fileName, password) {

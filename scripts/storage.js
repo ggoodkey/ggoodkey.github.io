@@ -242,15 +242,18 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				if (expires instanceof Date) expires = expires.toISOString();
 				settings.expires = expires;//"%Y-%m-%dT%H:%M:%SZ"
 			}
-			this.save("/shared/" + fileName, fileContents, key, function (ret) {
-				console.log(ret, "saved file");
-				dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
-			});
 			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
 				console.log(ret);
-				
+				var found = false;
+				for (let a = 0, aLen = ret.links.length; a < aLen; a++) {
+					if (ret.links[a].name === fileName && ret.links[a].path_lower === "/shared/" + fileName.toLowerCase())
+						found = ret.links[a];
+				}
+				if (!found) this.save("/shared/" + fileName, fileContents, key, function (ret) {
+					dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
+				});
+				else return callback instanceof Function ? callback(found) : found;
 			});
-			//dropbox("sharing/create_shared_link_with_settings", { "path": fileName, "settings": settings }, callback);
 		};
 		DropboxSessionObj.prototype.revoke = function (fileName, callback) {
 			dropbox("sharing/list_shared_links", { path: "/shared" }, function (ret) {
@@ -260,6 +263,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 		};
 		DropboxSessionObj.prototype.receive = function (linkURL, key, callback) {
 			function ret(apiResponse, data) {
+				console.log(apiResponse);
 				if (data) {
 					if (key) data = Base64.read(data, key);
 					return callback instanceof Function ? callback(data) : data;
@@ -267,7 +271,7 @@ var APP = APP || {}, Base64, Windows, Lawnchair, dropbox, cordova, window = wind
 				else return callback instanceof Function ? callback(false, "shared data not found") : false;
 			}
 			var settings = {
-				"url": linkURL
+				"url": linkURL.replace(/\?dl\=0$/, "?dl=1")
 			};
 			if (key) settings.link_password = Base64.hash(key);
 			dropbox("sharing/get_shared_link_file", settings, ret);
