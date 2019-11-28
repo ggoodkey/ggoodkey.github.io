@@ -863,6 +863,7 @@
 			matchWindowsTheme();
 			layout();
 			//getLocalState();//TODO temp commented out testing iOS
+			doneStartApp();//TODO remove line
 		},
 		/*colorLuminance 
 		* @craigbuckler
