@@ -1,7 +1,7 @@
 ﻿var APP, VAL, Base64, appData = {}, NyckelDB, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
 (function () {
 	"use strict";
-	APP.setDebugMode(false);
+	APP.setDebugMode(true);//TODO set to false
 	APP.setDebugToConsole(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.5 beta",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
@@ -604,6 +604,8 @@
 				type = "tabl",
 				orientation = " port ",
 				htmlTag = document.getElementsByTagName("html")[0];
+			debug(width, "width");
+			debug(height, "height");
 			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 640) orientation = " land ";
@@ -860,7 +862,7 @@
 			});
 			matchWindowsTheme();
 			layout();
-			getLocalState();
+			//getLocalState();//TODO temp commented out testing iOS
 		},
 		/*colorLuminance 
 		* @craigbuckler
