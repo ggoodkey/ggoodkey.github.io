@@ -898,7 +898,7 @@ html.tabl #app.sidenav_open #sidenav {
 
 #router-views{
 	position: fixed;
-	top: 0;
+	top: 54px;
 	left: 0;
 	width: 200%;
 	height: 100%;
