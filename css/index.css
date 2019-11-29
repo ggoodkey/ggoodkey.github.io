@@ -1921,3 +1921,20 @@ html.desk .back-leave-to {
 .expand-leave-to {
 	max-height: 0;
 }
+
+html{
+	border: 2px solid blue;
+}
+
+body{
+	border: 2px solid green;
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+#app{
+	border: 2px solid red;
+}
