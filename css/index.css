@@ -1939,11 +1939,10 @@ body{
 	border: 2px solid red;
 }
 
-#router-view{
+#router-views{
 	position: absolute;
 	left: 0;
 	top: 0;
-	width: 100%;
 	border: 2px solid blue;
 }
 
