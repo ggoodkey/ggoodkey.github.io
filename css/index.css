@@ -897,6 +897,9 @@ html.tabl #app.sidenav_open #sidenav {
 }
 
 #router-views{
+	position: fixed;
+	top: 0;
+	left: 0;
 	width: 200%;
 	height: 100%;
 }
@@ -1920,40 +1923,4 @@ html.desk .back-leave-to {
 .expand-enter,
 .expand-leave-to {
 	max-height: 0;
-}
-
-/* html{
-	border: 2px solid blue;
-}
-
-body{
-	border: 2px solid green;
-	position: absolute;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    margin: 0;
-}
-*/
-#app{
-	border: 2px solid red;
-}
-
-#router-views{
-	position: fixed;
-	left: 0;
-	top: 0;
-	border: 2px solid blue;
-}
-
-.views{
-	border: 2px solid green;
-}
-
-.view{
-	border: 2px solid red;
-}
-
-.view-container{
-	border: 2px dashed blue;
 }

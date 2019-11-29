@@ -604,8 +604,6 @@
 				type = "tabl",
 				orientation = " port ",
 				htmlTag = document.getElementsByTagName("html")[0];
-			debug(width, "width");
-			debug(height, "height");
 			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 640) orientation = " land ";
