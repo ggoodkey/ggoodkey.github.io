@@ -1922,7 +1922,7 @@ html.desk .back-leave-to {
 	max-height: 0;
 }
 
-html{
+/* html{
 	border: 2px solid blue;
 }
 
@@ -1937,4 +1937,20 @@ body{
 
 #app{
 	border: 2px solid red;
+} */
+
+#router-view{
+	border: 2px solid blue;
+}
+
+.views{
+	border: 2px solid green;
+}
+
+.view{
+	border: 2px solid red;
+}
+
+.view-container{
+	border: 2px dashed blue;
 }
