@@ -897,9 +897,6 @@ html.tabl #app.sidenav_open #sidenav {
 }
 
 #router-views{
-	position: absolute;
-	left: 0;
-	top: 0;
 	width: 200%;
 	height: 100%;
 }
@@ -1937,12 +1934,15 @@ body{
     padding: 0;
     margin: 0;
 }
-
+*/
 #app{
 	border: 2px solid red;
-} */
+}
 
 #router-view{
+	position: absolute;
+	left: 0;
+	top: 0;
 	border: 2px solid blue;
 }
 
