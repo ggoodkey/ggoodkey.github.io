@@ -58,7 +58,7 @@
 	<div id="loading"></div>
 	<div id="app" v-bind:class="{
 		 'sidenav_open': showSideNav,
-		 'dark-theme': useWindowsTheme && windowsDarkTheme || useWindowsTheme === false && darkTheme
+		 'dark-theme': useSystemTheme && systemDarkTheme || useSystemTheme === false && darkTheme
 		 }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
@@ -94,21 +94,21 @@
 					</div>
 					<div class="text" v-show="showSettings">
 						<h6>Personalisation</h6>
-						<div v-if="windows">
-							Use Windows Theme
+						<div>
+							Use System Theme
 							<div class="switch right">
-								<input type="checkbox" id="switch_useWindowsTheme" v-model="useWindowsTheme" />
-								<label for="switch_useWindowsTheme" v-on:click="toggleUseWindowsTheme" tabindex="20"></label>
+								<input type="checkbox" id="switch_useSystemTheme" v-model="useSystemTheme" />
+								<label for="switch_useSystemTheme" v-on:click="toggleUseSystemTheme" tabindex="20"></label>
 							</div>
 						</div>
-						<div v-show="useWindowsTheme === false" class="clear">
+						<div v-show="useSystemTheme === false" class="clear">
 							Dark Theme
 							<div class="switch right">
 								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" v-on:change="setTheme"/>
 								<label for="switch_darktheme" v-on:click="storeState" tabindex="21"></label>
 							</div>
 						</div>
-						<div v-show="useWindowsTheme === false" class="clear">
+						<div v-show="useSystemTheme === false" class="clear">
 							Accent Color
 							<color-select class="right menu-button" align="right" v-bind:noinputcolor="accentColor" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
 						</div>

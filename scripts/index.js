@@ -538,8 +538,8 @@
 				showSettings: false,
 				windows: false,
 				darkTheme: false,
-				useWindowsTheme: false,
-				windowsDarkTheme: false,
+				useSystemTheme: false,
+				systemDarkTheme: false,
 				accentColor: null,
 				showConfirm: false,
 				confirmMsg: "Are you sure?",
@@ -790,8 +790,9 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneStartApp() {
-				setAccentColor(app.accentColor);
 				app.updateCurrentView();
+				matchSystemTheme();
+				setAccentColor(app.accentColor);
 				layout();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded(function (callback) {
@@ -838,7 +839,7 @@
 						else {
 							app.notify("App version has changed from " + appStateObj.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
 							// migrate older version state data here
-							var migrate = "darkTheme useWindowsTheme windowsDarkTheme accentColor cookieAgree".split(" ");
+							var migrate = "darkTheme accentColor cookieAgree".split(" ");
 							for (let x = 0, xLen = migrate.length; x < xLen; x++){
 								if (appStateObj[migrate[x]] !== undefined) {
 									app[migrate[x]] = appStateObj[migrate[x]];
@@ -861,7 +862,6 @@
 			checkDBLoaded(function (callback) {
 				if (callback instanceof Function) return callback();
 			});
-			matchWindowsTheme();
 			getLocalState();//TODO temp commented out testing iOS
 			//doneStartApp();//TODO remove line
 		},
@@ -952,12 +952,10 @@
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
-		matchWindowsTheme = function () {
-			function updateUI() {
-				if (app.useWindowsTheme) {
-					if (backgroundColor.r === 0 && backgroundColor.g === 0 && backgroundColor.b === 0) app.windowsDarkTheme = true;
-					else app.windowsDarkTheme = false;
-				}
+		matchSystemTheme = function () {
+			function updateWindowsUI() {
+				if (backgroundColor.r === 0 && backgroundColor.g === 0 && backgroundColor.b === 0) app.systemDarkTheme = true;
+				else app.systemDarkTheme = false;
 				for (var d = 0; d < windowsAccentColor.length; d++) {
 					updateCSSColor(cssColorString[d], oldColorString[d]);
 				}
@@ -1028,8 +1026,31 @@
 						new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 						new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
 					];
-				updateUI();
+				updateWindowsUI();
 				windowsAccentColor = cssColorString;
+			}
+			else if (app.useSystemTheme) {
+				const DARK = '(prefers-color-scheme: dark)';
+				const LIGHT = '(prefers-color-scheme: light)';
+
+				if (!window.matchMedia) {
+					app.useSystemTheme = false;
+					return;
+				}
+				function listener({ matches, media }) {
+					if (!matches) { // Not matching anymore = not interesting
+						return;
+					}
+					if (media === DARK) {
+						app.systemDarkTheme = true;
+					} else if (media === LIGHT) {
+						app.systemDarkTheme = false;
+					}
+				}
+				const mqDark = window.matchMedia(DARK);
+				mqDark.addListener(listener);
+				const mqLight = window.matchMedia(LIGHT);
+				mqLight.addListener(listener);	
 			}
 		},
 		//updateWindowsLiveTile = function (content, imageurl) {
@@ -3385,8 +3406,8 @@
 						APP.Sto.setItem("state", {
 							version: this.version,
 							darkTheme: this.darkTheme,
-							useWindowsTheme: this.useWindowsTheme,
-							windowsDarkTheme: this.windowsDarkTheme,
+							useSystemTheme: this.useSystemTheme,
+							systemDarkTheme: this.systemDarkTheme,
 							accentColor: this.accentColor,
 							recentlyViewed: this.recentlyViewed,
 							backstack: backstack,
@@ -3674,8 +3695,8 @@
 				if (msg) this.spinnerMsg[this.spinIndex] = msg;
 				this.spinner = active || this.spinIndex > 0 ? true : false;
 			},
-			toggleUseWindowsTheme: function () {
-				matchWindowsTheme();
+			toggleUseSystemTheme: function () {
+				matchSystemTheme();
 				this.storeState();
 			},
 			login: function (callback) {
@@ -4152,7 +4173,7 @@
 			if (isFirstActivation) {
 				startApp();//and... GO!
 				document.addEventListener("visibilitychange", onVisibilityChanged);
-				uiSettings.addEventListener("colorvalueschanged", matchWindowsTheme);
+				uiSettings.addEventListener("colorvalueschanged", matchSystemTheme);
 				args.setPromise(WinJS.UI.processAll());
 			}
 
