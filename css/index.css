@@ -1037,6 +1037,7 @@ html.phon .searchBar_open #searchBar {
 	width: 100%;
 	z-index: 35;
 	background-color: transparent;
+	border-radius: 0; /*ios fix*/
 }
 
 #searchBox,
@@ -1104,10 +1105,6 @@ input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
 input[type="search"]::-webkit-search-results-decoration {
 	display: none;
-}
-
-input[type="search"]{
-	border-radius: 0;
 }
 
 #searchReset {
