@@ -935,12 +935,20 @@ html.tabl .view{
 	padding: 8px 16px 8px 16px;
 	margin-left: auto;
 	margin-right: auto;
+	margin-bottom: 100px;
 }
 
 html.phon .view-container,
 html.tabl .view-container {
 	padding-left: 8px;
+}
+
+html.phon .view-container {
 	padding-right: 20px;
+}
+
+html.tabl .view-container {
+	padding-right: 74px;
 }
 
 .splitViewLeft {
@@ -1568,9 +1576,15 @@ html.phon .cancelButton {
 .jumplink {
 	display: block;
 	min-width: 244px;
-	max-width: 570px;
 	-ms-word-wrap: break-word;
 	word-wrap: break-word;
+}
+
+html.phon .link,
+html.phon .jumplink,
+html.phon .view-container,
+html.phon .card {
+	max-width: 570px;
 }
 
 html.tabl .link,
