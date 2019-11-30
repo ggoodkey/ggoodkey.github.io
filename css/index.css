@@ -1938,3 +1938,19 @@ html.desk .back-leave-to {
 .expand-leave-to {
 	max-height: 0;
 }
+
+html{
+	border: 2px solid red;
+}
+body{
+	border: 2px solid green;
+}
+#app{
+	border: 2px solid yellow;
+}
+#router-views{
+	border: 2px solid blue;
+}
+.views{
+	border: 2px solid orange;
+}
