@@ -9,7 +9,9 @@ var precacheFiles = [
 	"icon.png",
 	"index.html",
 	"manifest.json",
+	"pwabuilder-sw.js",
 	"safari-pinned-tab.svg",
+	"sw.js",
 	"css/icons.css",
 	"css/icons-mdl2.css",
 	"css/index.css",
@@ -87,6 +89,13 @@ function fromCache(request) {
 	});
 }
 
+function fromServer(request) {
+	//this is the fallback if it is not in the cache to go to the server and get it
+	return fetch(request).then(function (response) {
+		return response;
+	});
+}
+
 function update(request) {
 	//this is where we call the server to get the newest version of the 
 	//file to use the next time we show view
@@ -95,12 +104,5 @@ function update(request) {
 			//console.log("[PWA Builder] update", response);
 			return cache.put(request, response);
 		});
-	});
-}
-
-function fromServer(request) {
-	//this is the fallback if it is not in the cache to go to the server and get it
-	return fetch(request).then(function (response) {
-		return response;
 	});
 }
