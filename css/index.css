@@ -65,6 +65,12 @@ body, input, button {
 	letter-spacing: 0.03125rem;
 }
 
+input,
+textarea,
+[contenteditable] {
+	caret-color: #478cdb; /*accent blue*/
+}
+
 a {
 	border: 0;
 	padding: 0;
