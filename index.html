@@ -108,7 +108,7 @@
 								<label for="switch_darktheme" v-on:click="storeState" tabindex="21"></label>
 							</div>
 						</div>
-						<div v-show="useSystemTheme === false" class="clear">
+						<div v-show="useSystemTheme === false && windows === true || windows === false" class="clear">
 							Accent Color
 							<color-select class="right menu-button" align="right" v-bind:noinputcolor="accentColor" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
 						</div>
