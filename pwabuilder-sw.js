@@ -1,8 +1,15 @@
 var CACHE = 'pwabuilder-precache';
 var precacheFiles = [
+	"apple-touch-icon-152x152.png",
+	"apple-touch-icon.png",
 	"cordova.js",
+	"favicon-16x16.png",
+	"favicon-32x32.png",
+	"favicon.ico",
+	"icon.png",
 	"index.html",
 	"manifest.json",
+	"safari-pinned-tab.svg",
 	"css/icons.css",
 	"css/icons-mdl2.css",
 	"css/index.css",
@@ -27,7 +34,6 @@ var precacheFiles = [
 	"scripts/vue.min.js",
 	"scripts/vue-router.min.js",
 	"scripts/webworker.js",
-	"scripts/adapters/memory.js",
 	"scripts/adapters/indexed-db.js",
 	"scripts/adapters/dom.js",
 	"scripts/winjs/base.min.js"
