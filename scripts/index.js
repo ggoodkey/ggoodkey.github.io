@@ -1039,6 +1039,7 @@
 					} else if (media === LIGHT) {
 						app.systemDarkTheme = false;
 					}
+					layout();
 				}
 				const DARK = '(prefers-color-scheme: dark)';
 				const LIGHT = '(prefers-color-scheme: light)';
