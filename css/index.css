@@ -538,12 +538,14 @@ html.desk .tabl {
 		display: block;
 	}
 
+html,
 #app,
 html.phon #searchSuggestions-container,
 .views{
 	background-color: #eee; /*page color*/
 }
 
+	html.dark-theme,
 	#app.dark-theme,
 	.dark-theme #searchBar,
 	html.phon .dark-theme #searchSuggestions-container,
@@ -1937,7 +1939,7 @@ html.desk .back-leave-to {
 .expand-leave-to {
 	max-height: 0;
 }
-
+/* 
 html{
 	border: 2px solid red;
 }
@@ -1952,4 +1954,4 @@ body{
 }
 .views{
 	border: 2px solid orange;
-}
+} */

@@ -603,11 +603,13 @@
 				height = getHeight(),
 				type = "tabl",
 				orientation = " port ",
+				theme = "",
 				htmlTag = document.getElementsByTagName("html")[0];
 			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 640) orientation = " land ";
-			htmlTag.className = trim(type + orientation + htmlTag.className.replace(/desk|tabl|phon|port|land/g, ""));
+			if (app.darkTheme) theme = "dark-theme ";
+			htmlTag.className = trim(type + orientation + theme + htmlTag.className.replace(/desk|tabl|phon|port|land|dark\-theme/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
 			location = location ? location.replace(/\//, "") : startView;
@@ -790,6 +792,7 @@
 			function doneStartApp() {
 				setAccentColor(app.accentColor);
 				app.updateCurrentView();
+				layout();
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
 				checkDBLoaded(function (callback) {
 					app.syncAll();
@@ -859,7 +862,6 @@
 				if (callback instanceof Function) return callback();
 			});
 			matchWindowsTheme();
-			layout();
 			getLocalState();//TODO temp commented out testing iOS
 			//doneStartApp();//TODO remove line
 		},
@@ -3395,6 +3397,11 @@
 						});
 					}.bind(this), 1);
 				}
+			},
+			setTheme: function (event) {
+				var theme = event.target.checked ? "dark-theme " : "",
+					htmlTag = document.getElementsByTagName("html")[0];
+				htmlTag.className = trim(theme + htmlTag.className.replace(/dark\-theme/g, ""));
 			},
 			search: function (event, optionalQuery) {
 				if (!this.showSearchBar) {

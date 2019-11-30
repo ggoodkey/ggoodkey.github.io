@@ -104,7 +104,7 @@
 						<div v-show="useWindowsTheme === false" class="clear">
 							Dark Theme
 							<div class="switch right">
-								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" />
+								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" v-on:change="setTheme"/>
 								<label for="switch_darktheme" v-on:click="storeState" tabindex="21"></label>
 							</div>
 						</div>
