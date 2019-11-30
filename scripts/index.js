@@ -608,7 +608,7 @@
 			if (width > 1280) type = "desk";
 			if (width <= 640) type = "phon";
 			if (height < width && width > 640) orientation = " land ";
-			if (app.darkTheme) theme = "dark-theme ";
+			if (app.useSystemTheme && app.systemDarkTheme || app.useSystemTheme === false && app.darkTheme) theme = "dark-theme ";
 			htmlTag.className = trim(type + orientation + theme + htmlTag.className.replace(/desk|tabl|phon|port|land|dark\-theme/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
@@ -1030,13 +1030,6 @@
 				windowsAccentColor = cssColorString;
 			}
 			else if (app.useSystemTheme) {
-				const DARK = '(prefers-color-scheme: dark)';
-				const LIGHT = '(prefers-color-scheme: light)';
-
-				if (!window.matchMedia) {
-					app.useSystemTheme = false;
-					return;
-				}
 				function listener({ matches, media }) {
 					if (!matches) { // Not matching anymore = not interesting
 						return;
@@ -1047,6 +1040,16 @@
 						app.systemDarkTheme = false;
 					}
 				}
+				const DARK = '(prefers-color-scheme: dark)';
+				const LIGHT = '(prefers-color-scheme: light)';
+				if (!window.matchMedia) {
+					app.useSystemTheme = false;
+					return;
+				}
+				else if (window.matchMedia(DARK).matches) {
+					app.systemDarkTheme = true;
+				}
+				else app.systemDarkTheme = false;
 				const mqDark = window.matchMedia(DARK);
 				mqDark.addListener(listener);
 				const mqLight = window.matchMedia(LIGHT);
@@ -3697,6 +3700,7 @@
 			},
 			toggleUseSystemTheme: function () {
 				matchSystemTheme();
+				layout();
 				this.storeState();
 			},
 			login: function (callback) {

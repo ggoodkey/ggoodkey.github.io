@@ -97,8 +97,8 @@
 						<div>
 							Use System Theme
 							<div class="switch right">
-								<input type="checkbox" id="switch_useSystemTheme" v-model="useSystemTheme" />
-								<label for="switch_useSystemTheme" v-on:click="toggleUseSystemTheme" tabindex="20"></label>
+								<input type="checkbox" id="switch_useSystemTheme" v-model="useSystemTheme" v-on:change="toggleUseSystemTheme" />
+								<label for="switch_useSystemTheme" tabindex="20"></label>
 							</div>
 						</div>
 						<div v-show="useSystemTheme === false" class="clear">
