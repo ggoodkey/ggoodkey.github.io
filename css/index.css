@@ -1037,6 +1037,7 @@ html.phon .searchBar_open #searchBar {
 	width: 100%;
 	z-index: 35;
 	background-color: transparent;
+	-webkit-appearance: none; /*ios fix*/
 	border-radius: 0; /*ios fix*/
 }
 
