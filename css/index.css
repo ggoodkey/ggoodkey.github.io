@@ -1039,6 +1039,7 @@ html.phon .searchBar_open #searchBar {
 	background-color: transparent;
 	-webkit-appearance: none; /*ios fix*/
 	border-radius: 0; /*ios fix*/
+	-webkit-border-radius: 0; /*ios fix*/
 }
 
 #searchBox,
