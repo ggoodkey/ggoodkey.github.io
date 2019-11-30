@@ -541,7 +541,7 @@ html.desk .tabl {
 html,
 #app,
 html.phon #searchSuggestions-container,
-.splitViewRight{
+.views{
 	background-color: #eee; /*page color*/
 }
 
@@ -550,7 +550,7 @@ html.phon #searchSuggestions-container,
 	html.phon .dark-theme #searchSuggestions-container,
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm,
-	.dark-theme .splitViewRight{
+	.dark-theme .views{
 		background-color: #111; /*dark-theme page color*/
 	}
 
