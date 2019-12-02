@@ -2046,7 +2046,6 @@
 				updateDropdownLinks: function () {
 					function newEmailLink() {
 						var bccIds = [];
-						debug(this.list, "list");
 						for (let a = 0, len = this.list.length; a < len; a++) {
 							if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true) && this.list[a].table === "Contacts") bccIds.push(this.list[a].id);
 						}
@@ -3109,7 +3108,7 @@
 								if(arr[a] === undefined) debug(arr[a], headers[a]);
 							}
 							wwManager({ "cmd": "addRow", "title": table, "args": [arr] }, function (id, errors) {
-								debug(errors, id);
+								if(errors) debug(errors, id);
 								app.spin(false, "Creating new item...");
 							});
 						});
