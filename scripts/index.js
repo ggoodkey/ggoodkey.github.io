@@ -2057,7 +2057,12 @@
 								"E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type",
 								"E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
 						}, function (vals, errors) {
-							if (!vals || errors) return debug(errors, "get email errors");
+								if (!vals || errors) {
+									wwManager({ cmd: "forEachRow", title: "Contacts" }, function (id) {
+										debug(id);
+									});
+									return debug(errors, "get email errors");
+								}
 							var type, email, name, primary = false;
 							for (let a = 0, lenA = vals.length; a < lenA; a++) {
 								name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
