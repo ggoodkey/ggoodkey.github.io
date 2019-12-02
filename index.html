@@ -199,8 +199,10 @@
 				</template>
 				<template v-if="noarrow === false">
 					&nbsp;
-					<span v-show="open" class="icon icon-collapse-up"></span>
-					<span v-show="open === false" class="icon icon-collapse-down"></span>
+					<small>
+						<span v-show="open" class="icon icon-triangle-top"></span>
+						<span v-show="open === false" class="icon icon-triangle-bottom"></span>
+					</small>
 				</template>
 			</button>
 			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" autocomplete="off"/>

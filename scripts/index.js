@@ -789,21 +789,24 @@
 		},
 		//initialise the application
 		startApp = function (resumeBool) {
-			function doneStartApp() {
-				app.updateCurrentView();
-				matchSystemTheme();
-				setAccentColor(app.accentColor);
-				layout();
+			function doneLoadingApp() {
 				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
-				checkDBLoaded(function (callback) {
-					app.syncAll();
-					if (callback instanceof Function) return callback();
+				checkDBLoaded(function (nextInQueue) {
+					app.syncAll();//adds this to the queue to run after DB is loaded, or run immediately if it is loaded
+					if (nextInQueue instanceof Function) return nextInQueue();
 				});
 				if (!cordova && !app.cookieAgree) {
 					app.notify("By continuing to use this site, you agree to the use of first party, non-tracking cookies for personalised content", false);
 					app.cookieAgree = true;
 					app.storeState();
 				}
+			}
+			function setupUI(callback) {
+				app.updateCurrentView();
+				matchSystemTheme();
+				setAccentColor(app.accentColor);
+				layout();
+				return callback();
 			}
 			function tryDropbox(cachedStoKey) {
 				function applyUser(user) {
@@ -813,7 +816,7 @@
 						app.loggedIn = true;
 						dbid = user.dbid;
 					}
-					doneStartApp();
+					setupUI(doneLoadingApp);
 				}
 				APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
 			}
@@ -846,24 +849,23 @@
 								}
 							}
 							APP.Sto.deleteItem("state");
-							doneStartApp();
+							setupUI(doneLoadingApp);
 						}
 					}
 					else if (error) {
 						debug(error, "error getting app state");
-						doneStartApp();
+						setupUI(doneLoadingApp);
 					}
 					else {
 						APP.Sto.deleteItem("state");
-						doneStartApp();
+						setupUI(doneLoadingApp);
 					}
-				}, doneStartApp);
+				}, function () { setupUI(doneLoadingApp); });
 			}
-			checkDBLoaded(function (callback) {
-				if (callback instanceof Function) return callback();
+			checkDBLoaded(function (nextInQueue) {
+				if (nextInQueue instanceof Function) return nextInQueue();
 			});
-			getLocalState();//TODO temp commented out testing iOS
-			//doneStartApp();//TODO remove line
+			getLocalState();
 		},
 		/*colorLuminance 
 		* @craigbuckler
@@ -1327,7 +1329,7 @@
 				});
 				if (cb instanceof Function) return cb();
 			}
-			function afterDBLoaded(cb) {
+			function afterDBLoaded(nextInQueue) {
 				app.spin(true, "Loading contact data...");
 				app.storeState();
 				var cmd = {
@@ -1335,7 +1337,7 @@
 					"title": obj.table
 				};
 				if (obj.id) cmd.args = [obj.id];
-				wwManager(cmd, function (row, error) { processDetailsReturnData(row, error, cb); });
+				wwManager(cmd, function (row, error) { processDetailsReturnData(row, error, nextInQueue); });
 			}
 			checkDBLoaded(afterDBLoaded);
 		},
@@ -1431,7 +1433,7 @@
 			app.showNewGroupUI = true;
 		},
 		initializeGroups = function (callback) {
-			function getGroups(cb) {
+			function getGroups(nextInQueue) {
 				wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
 					var ids = [];
 					for (var a = 0; a < length; a++) ids[a] = a;
@@ -1439,7 +1441,7 @@
 						for (var a = 0, len = vals.length; a < len; a++) {
 							app.groups[a] = vals[a][1];
 						}
-						if (cb instanceof Function) cb();
+						if (nextInQueue instanceof Function) nextInQueue();
 						if (callback instanceof Function) return callback();
 					});
 				});
@@ -1452,7 +1454,7 @@
 				app.searchResultsTitle = title;
 			}
 			app.spin(true, "Generating list...");
-			checkDBLoaded(function (callback) {
+			checkDBLoaded(function (nextInQueue) {
 				options = options || {};
 				options.pageNumber = options.pageNumber || 1;
 				options.numberPerPage = options.numberPerPage || 100;
@@ -1465,13 +1467,13 @@
 						app.searchResultsError = list.length === 0 ? "Nothing to display" : "";
 						app.navigate("search", app.currentQuery);
 						app.spin(false, "Generating list...");
-						if (callback instanceof Function) return callback();
+						if (nextInQueue instanceof Function) return nextInQueue();
 					});
 				}
 				else {
 					app.spin(false, "Generating list...");
 					debug(tableTitle, "error generating list view");
-					if (callback instanceof Function) return callback();
+					if (nextInQueue instanceof Function) return nextInQueue();
 				}
 			});
 		},
@@ -2439,7 +2441,7 @@
 							}
 						}.bind(this));
 					}
-					function processInput(callback) {
+					function processInput(nextInQueue) {
 						if (value !== "") {
 							var find = String(value);
 							find = VAL.removeHTMLTags(find);
@@ -2455,7 +2457,7 @@
 								}
 							}
 						}
-						if (callback instanceof Function) return callback();
+						if (nextInQueue instanceof Function) return nextInQueue();
 					}
 					var value = e ? e.target.value : this.groupSearchBox;
 					checkDBLoaded(processInput.bind(this));
@@ -3449,7 +3451,7 @@
 					}
 					else {
 						this.spin(true, "Searching...");
-						checkDBLoaded(function (callback) {
+						checkDBLoaded(function (nextInQueue) {
 							function displayResults(searchResults, errors, table) {
 								if (errors) debug(errors, "search error");
 								else if (searchResults) generateList(table, searchResults, null, function (list) {
@@ -3477,7 +3479,7 @@
 											addToRecentlyViewed(results[1]);
 										}
 										else this.navigate("search", this.currentQuery);
-										if (callback instanceof Function) return callback();
+										if (nextInQueue instanceof Function) return nextInQueue();
 									}
 								}.bind(this));
 							}
@@ -3509,7 +3511,7 @@
 										);
 									})(this, table);
 								}
-							} else console.log("empty query field");
+							} else if (nextInQueue instanceof Function) return nextInQueue();
 						}.bind(this));
 					}
 				}
@@ -3586,8 +3588,8 @@
 							wwManager({ "cmd": "getSearchSuggestions", "title": table, "args": [str, { colNames: searchableColumns }] }, displaySuggestions.bind(this));
 						}
 					}
-					else checkDBLoaded(function (callback) {
-						if (callback instanceof Function) return callback();
+					else checkDBLoaded(function (nextInQueue) {
+						if (nextInQueue instanceof Function) return nextInQueue();
 					});
 				}
 				else {
@@ -3742,7 +3744,7 @@
 			newStoKey: function () {
 				var key = document.getElementById("stoKeyInput"),
 					confirmKey = document.getElementById("stoKeyInputConfirm");
-				checkDBLoaded(function (callback) {
+				checkDBLoaded(function (nextInQueue) {
 					if (key.value === "") {
 						this.stoKeyWarning = "Required";
 					}
@@ -3773,7 +3775,7 @@
 					else {
 						this.stoKeyWarning = "Passwords don't match";
 					}
-					if (callback instanceof Function) return callback();
+					if (nextInQueue instanceof Function) return nextInQueue();
 				}.bind(this));
 			},
 			updateStoKey: function () {
@@ -3784,13 +3786,13 @@
 				}
 				this.showUpdateKey = true;
 				confirm("Please input your current password", function () {
-					checkDBLoaded(function (callback) {
+					checkDBLoaded(function (nextInQueue) {
 						var key = document.getElementById("updateStoKeyInput");
 						if (dbid) {
 							this.stoKey = Base64.hash(dbid + key.value);
 						}
 						else debug("use of dropboxEmail as a key has been depricated", "error");//_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
-						return storeKey.call(this, this.stoKey, callback);
+						return storeKey.call(this, this.stoKey, nextInQueue);
 					}.bind(this));
 				}.bind(this));
 			},
@@ -3914,8 +3916,8 @@
 					document.getElementById(fileInputId).click();
 					if (callback instanceof Function) return callback();
 				}
-				checkDBLoaded(function (callback) {
-					init.call(this, function () { click(callback); });
+				checkDBLoaded(function (nextInQueue) {
+					init.call(this, function () { click(nextInQueue); });
 				}.bind(this));
 			},
 			/*options = {
@@ -4060,13 +4062,13 @@
 					count = 0,
 					syncfileNeedsUpdated = false;
 				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
-				checkDBLoaded(function (callback) {
+				checkDBLoaded(function (nextInQueue) {
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
 					options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
 					this.spin(true, "Synchronising with Dropbox");
 					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
-					if (callback instanceof Function) return callback();
+					if (nextInQueue instanceof Function) return nextInQueue();
 				}.bind(this));
 			},
 			setAccentColor: setAccentColor,

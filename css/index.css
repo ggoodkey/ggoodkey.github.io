@@ -1529,17 +1529,13 @@ html.desk .dropdown-container .textbox {
 
 html.desk .cardExpand,
 html.tabl .cardExpand {
-	border-left: 1px solid #e2e2e2;
+	border-left: 1px solid #478cdb; /*accent blue*/
 	margin-left: 8px;
 }
 
 html.phon .cardExpand {
 	border-top: 1px solid #e2e2e2;
-}
-
-html.desk .dark-theme .cardExpand,
-html.tabl .dark-theme .cardExpand {
-	border-left: 1px solid #232323;
+	padding-top: 12px;
 }
 
 html.phon .dark-theme .cardExpand {
@@ -1653,7 +1649,8 @@ html.phon .dark-theme .cards {
 	border: none;
 }
 
-.jumplink {
+.jumplink,
+.cardHeading {
 	font-weight: bold;
 }
 
@@ -1694,7 +1691,10 @@ button,
 	.jumplink:active,
 	html.desk .jumplink:hover,
 	.dark-theme .jumplink,
-	html.desk .dark-theme .jumplink:hover {
+	html.desk .dark-theme .jumplink:hover,
+	html.phon .cardHeading,
+	html.phon .cardHeading:active,
+	html.phon .dark-theme .cardHeading {
 		border-bottom: 1px solid #478cdb; /*accent blue*/
 	}
 
