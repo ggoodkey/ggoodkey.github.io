@@ -1950,6 +1950,8 @@
 			methods: {
 				moreDropdownActions: function (action) {
 					switch (action) {
+						case "":
+							break;
 						case "sort":
 							break;
 						case "filter":
@@ -2044,8 +2046,9 @@
 				updateDropdownLinks: function () {
 					function newEmailLink() {
 						var bccIds = [];
+						debug(this.list, "list");
 						for (let a = 0, len = this.list.length; a < len; a++) {
-							if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true)) bccIds.push(this.list[a].id);
+							if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true) && this.list[a].table === "Contacts") bccIds.push(this.list[a].id);
 						}
 						getEmails.call(this, bccIds);
 					}
@@ -2058,9 +2061,6 @@
 								"E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
 						}, function (vals, errors) {
 								if (!vals || errors) {
-									wwManager({ cmd: "forEachRow", title: "Contacts" }, function (id) {
-										debug(id);
-									});
 									return debug(errors, "get email errors");
 								}
 							var type, email, name, primary = false;
