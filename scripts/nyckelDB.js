@@ -2952,7 +2952,7 @@ var NyckelDB = (function () {
                 x++;
             }
             else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
-                return callback instanceof Function ? callback.call(this, false, rowIds[a] + " is not a valid rowId") : false;
+                return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
             }
         }
         return callback instanceof Function ? callback.call(this, ret, ERRORS[this.id]) : ret;
