@@ -1299,8 +1299,8 @@
 					title = "Item not found :´(",
 					subtitle = "Sorry, we couldn't locate this item in the database",
 					image = "";
+				debug(row);
 				if (row) {
-					
 					if (display.heading) {
 						if (display.heading.title) title = getHeading(display.heading.title);
 						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
@@ -1317,7 +1317,7 @@
 						}
 					}
 				}
-				app.spin(false, "Loading contact data...");
+				app.spin(false, "Loading data...");
 				if (callback instanceof Function) callback({
 					id: obj.id,
 					table: obj.table,
@@ -1330,7 +1330,7 @@
 				if (cb instanceof Function) return cb();
 			}
 			function afterDBLoaded(nextInQueue) {
-				app.spin(true, "Loading contact data...");
+				app.spin(true, "Loading data...");
 				app.storeState();
 				var cmd = {
 					"cmd": obj.id ? "getRow" : "getRowTemplate",
@@ -3841,7 +3841,7 @@
 						}
 						else this.notify("File type not supported! Expected " + fileExtension, false);
 					}
-					function notify() { this.notify("Loading file...", false, init.bind(this)); }
+					function notify() { this.spin(true, "Loading file..."); init.call(this); }
 					function showError(e) { this.notify("Error loading file: " + e); }
 					if (!fileReaderInitiated[fileInputId]) {
 						if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -3874,6 +3874,7 @@
 					name = name.join(".");
 					modified = typeof modified === "number" ? modified : new Date(modified).getTime();
 					var ret = [displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents];
+					this.spin(false, "Loading file...");
 					if (callback instanceof Function) return callback(ret);
 					else return ret;
 				}
