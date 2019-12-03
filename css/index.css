@@ -1043,14 +1043,15 @@ html.phon .searchBar_open #searchBar {
 	width: 100%;
 	z-index: 35;
 	background-color: transparent;
+	-webkit-appearance: none; /*ios fix*/
 	-webkit-border-radius: 0; /*ios fix*/
 	border-radius: 0; /*ios fix*/
 }
 
-input[type="search"]::-webkit-search-decoration,
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-results-button,
-input[type="search"]::-webkit-search-results-decoration {
+#searchBox::-webkit-search-decoration,
+#searchBox::-webkit-search-cancel-button,
+#searchBox::-webkit-search-results-button,
+#searchBox::-webkit-search-results-decoration {
 	-webkit-appearance: none; /*ios fix*/
 	display: none;
 }
