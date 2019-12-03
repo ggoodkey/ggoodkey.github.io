@@ -1052,6 +1052,7 @@ input[type="search"]::-webkit-search-results-decoration {
 	-webkit-appearance: none; /*ios fix*/
 	-webkit-border-radius: 0; /*ios fix*/
 	border-radius: 0; /*ios fix*/
+	display: none;
 }
 
 #searchBox,
