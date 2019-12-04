@@ -646,6 +646,7 @@ html.dark-theme,
 .dark-theme #stoKeyInput,
 .dark-theme #stoKeyInputConfirm,
 .dark-theme #searchBox,
+.dark-theme #searchAutoComplete,
 .dark-theme .textbox,
 .dark-theme .cancelButton {
 	color: lightgray; /*dark-theme main text color*/
@@ -1038,10 +1039,13 @@ html.phon .searchBar_open #searchBar {
 	width: auto;
 	left: 8px;
 }
-
 #searchBox {
-	width: 100%;
 	z-index: 35;
+}
+
+#searchBox,
+#searchAutoComplete {
+	width: 100%;
 	background-color: transparent;
 	-webkit-appearance: none; /*ios fix*/
 	-webkit-border-radius: 0; /*ios fix*/
@@ -1051,12 +1055,17 @@ html.phon .searchBar_open #searchBar {
 #searchBox::-webkit-search-decoration,
 #searchBox::-webkit-search-cancel-button,
 #searchBox::-webkit-search-results-button,
-#searchBox::-webkit-search-results-decoration {
+#searchBox::-webkit-search-results-decoration,
+#searchAutoComplete::-webkit-search-decoration,
+#searchAutoComplete::-webkit-search-cancel-button,
+#searchAutoComplete::-webkit-search-results-button,
+#searchAutoComplete::-webkit-search-results-decoration {
 	-webkit-appearance: none; /*ios fix*/
 	display: none;
 }
 
 #searchBox,
+#searchAutoComplete,
 #stoKeyInput,
 #stoKeyInputConfirm {
 	height: 38px;
@@ -1089,9 +1098,11 @@ html.desk #searchBar {
 
 #searchAutoComplete {
 	position: absolute;
-	top: 8.5px;
-	left: 2px;
+	top: 0;
+	right: 0;
 	z-index: 30;
+	pointer-events: none;
+	opacity: 0.5;
 }
 
 html.tabl .dark-theme #search:before,
@@ -1689,7 +1700,6 @@ html.desk .navlink:hover,
 .navlink:active,
 a,
 button,
-#searchAutoComplete,
 .jumplink,
 .cardHeading {
 	color: #478cdb; /*accent blue*/

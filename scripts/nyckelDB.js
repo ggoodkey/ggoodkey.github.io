@@ -3349,7 +3349,7 @@ var NyckelDB = (function () {
                         i = i.concat(SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]);
                     }
                 }
-                tempIds = DELETE_DUPLICATES(tempIds.concat(i));
+                tempIds = tempIds.concat(DELETE_DUPLICATES(i));
             }
             ids = DELETE_DUPLICATES(ids.concat(findMatches.call(this, tempIds, aLen)));
             if (ids.length > 0) {

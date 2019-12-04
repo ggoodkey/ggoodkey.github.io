@@ -671,7 +671,7 @@
 				function applyCallback(callback) {
 					var hasCallback = ["addColumn", "advancedSearch", "deleteColumn", "deleteTable", "getHeaders", "getRow", "getRowTemplate", "getSearchSuggestions", "getVals",
 						"importJSON", "isSyncPending", "NUKEALL", "renameColumn", "search", "setSyncCompleted", "setTitle", "setType", "setVal", "setVals", "sync", "validate"];
-					if (hasCallback.indexOf(obj.cmd)) return appData[title][obj.cmd].apply(appData[title], obj.args);
+					if (hasCallback.indexOf(obj.cmd) > -1) return appData[title][obj.cmd].apply(appData[title], obj.args);
 					else return callback(appData[title][obj.cmd].apply(appData[title], obj.args));
 				}
 				if (obj.args && callback) obj.args.push(callback);
@@ -1142,8 +1142,10 @@
 					cb = function (success, errors) {//final callback function for last NyckelDB to initialise
 						if (errors) defaultErrorHandler(success, errors);
 						app.spin(false, "Loading data...");
-						loadDB = false;
-						if (loadDBQueue.length === 1) return loadDBQueue.pop()();
+						if (loadDBQueue.length === 1) {
+							loadDBQueue.pop()();
+							loadDB = false;
+						}
 						else loadDBQueue.pop()(cb);
 					};
 				}
@@ -1441,8 +1443,8 @@
 						for (var a = 0, len = vals.length; a < len; a++) {
 							app.groups[a] = vals[a][1];
 						}
-						if (nextInQueue instanceof Function) nextInQueue();
-						if (callback instanceof Function) return callback();
+						if (callback instanceof Function) callback();
+						if (nextInQueue instanceof Function) return nextInQueue();
 					});
 				});
 			}
@@ -3322,8 +3324,8 @@
 				function search() {
 					if (to.query.search !== encodeURIComponent(this.currentQuery)) {
 						initializeGroups(function () {
-							this.currentQuery = to.query.search;
-							this.search(null, to.query.search);
+							this.currentQuery = decodeURIComponent(to.query.search);
+							this.search(null, this.currentQuery);
 						}.bind(this));
 					}
 				}

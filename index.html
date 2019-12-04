@@ -70,7 +70,7 @@
 			<form id="searchBar" class="right">
 				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
 				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
-				<div id="searchAutoComplete"> {{ searchAutoComplete }}</div>
+				<input id="searchAutoComplete" type="search" autocomplete="off" v-model="searchAutoComplete" disabled />
 				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
 					<ul id="searchSuggestions">
 						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
