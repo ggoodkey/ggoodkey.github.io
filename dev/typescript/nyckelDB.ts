@@ -2707,12 +2707,13 @@ var NyckelDB = (function () {
 			}
 		}
 		else searchQueryArr = [searchQuery];
-		for (let a = 0, len = searchQueryArr.length; a < len; a++) {
+		for (let a = 0, b = 0, len = searchQueryArr.length; a < len; a++) {
 			(function (self, a) {
 				self.search.call(self, searchQueryArr[a], options, function (result: string[], errors: tableErrors) {
+					b++;
 					if (!errors) ids = ids.concat(result);
 					else return callback instanceof Function ? callback.call(self, [], errors) : undefined;
-					if (a === len - 1) {
+					if (b >= len - 1) {
 						ids = DELETE_DUPLICATES(ids);
 						filter.call(self, ids, filterOutQueries);
 					}
