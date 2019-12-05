@@ -1,7 +1,7 @@
 ﻿var APP, VAL, Base64, appData = {}, NyckelDB, Vue, VueRouter, getWidth, getHeight, csv2json, Windows, WinJS, cordova; //dependancies
 (function () {
 	"use strict";
-	APP.setDebugMode(true);//TODO set to false
+	APP.setDebugMode(false);//TODO set to false
 	APP.setDebugToConsole(true);//set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
 	const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx",//get new client id from https://www.dropbox.com/developers
 		APP_VERSION = "0.5 beta",//increment on major (esp breaking) changes, to force localStorage app state to refresh on load
@@ -3833,6 +3833,7 @@
 								}
 							}.bind(this);
 							reader.onload = function () {
+								app.spin(false, "Loading file...");
 								callback(reader.result, file);
 							};
 							if (readAs === "image") reader.readAsDataURL(file);
@@ -3841,7 +3842,10 @@
 							else reader.readAsBinaryString(file);
 							fileReaderInitiated[fileInputId] = true;
 						}
-						else this.notify("File type not supported! Expected " + fileExtension, false);
+						else {
+							this.notify("File type not supported! Expected " + fileExtension, false);
+							this.spin(false, "Loading file...");
+						}
 					}
 					function notify() { this.spin(true, "Loading file..."); init.call(this); }
 					function showError(e) { this.notify("Error loading file: " + e); }

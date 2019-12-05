@@ -972,6 +972,10 @@ html.desk .splitViewLeft {
 	transition: width cubic-bezier(0.1, 0.9, 0.2, 1) 0.3s;
 }
 
+html.desk .splitViewLeft::-webkit-scrollbar {
+    display: none;
+}
+
 html.desk .splitViewRight {
 	width: 37%;
 	padding-right: 4%;
