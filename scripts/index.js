@@ -538,7 +538,7 @@
 				showSettings: false,
 				windows: false,
 				darkTheme: false,
-				useSystemTheme: false,
+				useSystemTheme: true,
 				systemDarkTheme: false,
 				accentColor: null,
 				showConfirm: false,
