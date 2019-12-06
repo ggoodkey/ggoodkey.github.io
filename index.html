@@ -68,9 +68,9 @@
 			<div id="menu" class="navlink right" v-on:click="showSettings = false; toggle('showSideNav');" tabindex="6"><span class="icon icon-menu-hamburger"></span></div>
 			<div id="search" class="navlink right" v-on:click="search" tabindex="11"><span class="icon icon-search"></span></div>
 			<form id="searchBar" class="right">
+				<input id="searchAutoComplete" type="search" autocomplete="off" v-model="searchAutoComplete" disabled />
 				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
 				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
-				<input id="searchAutoComplete" type="search" autocomplete="off" v-model="searchAutoComplete" disabled />
 				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
 					<ul id="searchSuggestions">
 						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>

@@ -553,7 +553,7 @@ html.phon #searchSuggestions-container,
 
 	html.dark-theme,
 	#app.dark-theme,
-	.dark-theme #searchBar,
+	.dark-theme #searchAutoComplete,
 	html.phon .dark-theme #searchSuggestions-container,
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm,
@@ -645,11 +645,17 @@ html.dark-theme,
 .dark-theme #currentView,
 .dark-theme #stoKeyInput,
 .dark-theme #stoKeyInputConfirm,
-.dark-theme #searchBox,
-.dark-theme #searchAutoComplete,
 .dark-theme .textbox,
 .dark-theme .cancelButton {
 	color: lightgray; /*dark-theme main text color*/
+}
+
+#searchAutoComplete {
+	color: #99b9df; /*accent blue 30% lighter*/
+}
+
+.dark-theme #searchAutoComplete {
+	color: #2661a4; /*accent blue 30% darker*/
 }
 
 nav {
@@ -997,23 +1003,29 @@ html.tabl .searchBar_open .navButtons.tabl.desk {
 
 #searchBar {
 	position: relative;
-	margin: 8px 0;
+	left: 10px;
 	min-height: 38px;
 	overflow: hidden;
 	width: 0;
-	will-change: width;
+	opacity: 0;
+	will-change: width, opacity;
 	-webkit-transition: none;
 	-moz-transition: none;
 	-o-transition: none;
 	transition: none;
-	background-color: #fafafa;
+}
+
+html.tabl #searchBar,
+html.desk #searchBar {
+	padding: 8px 10px;
 }
 
 html.phon #searchBar {
 	position: absolute;
+	padding-top: 8px;
 	left: 400px;
 	right: 114px;
-	will-change: left;
+	will-change: left, opacity;
 	-webkit-transition: left 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 	-moz-transition: left 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 	-o-transition: left 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
@@ -1031,6 +1043,7 @@ html.desk #searchSuggestions-container {
 	-moz-transition: width 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 	-o-transition: width 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
 	transition: width 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+	opacity: 1;
 }
 
 .searchBar_closing #searchBar {
@@ -1044,13 +1057,15 @@ html.phon .searchBar_open #searchBar {
 	left: 8px;
 }
 #searchBox {
+	background-color: transparent;
 	z-index: 35;
+	position: relative;
+	bottom: 38px;
 }
 
 #searchBox,
 #searchAutoComplete {
 	width: 100%;
-	background-color: transparent;
 }
 
 #searchBox::-webkit-search-decoration,
@@ -1099,12 +1114,9 @@ html.desk #searchBar {
 }
 
 #searchAutoComplete {
-	position: absolute;
-	top: 0;
-	right: 0;
 	z-index: 30;
 	pointer-events: none;
-	opacity: 0.5;
+	background-color: #fafafa;
 }
 
 html.tabl .dark-theme #search:before,
@@ -1138,13 +1150,14 @@ input[type="search"]::-webkit-search-results-decoration {
 
 #searchReset {
 	position: absolute;
-	right: 0;
-	top: 0;
+	right: 10px;
+	top: 8px;
 	height: 38px;
 	background: none;
 	border: none;
 	width: 40px;
 	z-index: 40;
+	opacity: 0.33;
 }
 
 html.desk .searchBar_open #searchReset {
@@ -1165,15 +1178,14 @@ html.desk .searchBar_open #searchReset {
 
 html.desk #searchSuggestions-container,
 html.tabl #searchSuggestions-container {
-	position: static;
+	position: relative;
+	top: -38px;
 	max-height: 300px;
 	z-index: 30;
-
+	width: 280px;
 }
 
 html.tabl #searchSuggestions-container {
-	width: 330px; /*hide scrollbar hack*/
-	padding-right: 30px;
 	scrollbar-width: none;
 }
 
@@ -1703,7 +1715,8 @@ html.desk .navlink:hover,
 a,
 button,
 .jumplink,
-.cardHeading {
+.cardHeading,
+#searchBox {
 	color: #478cdb; /*accent blue*/
 }
 
@@ -1758,7 +1771,7 @@ html.desk .dark-theme .button-link:hover:active {
 	background-color: white;
 }
 .dark-theme .textbox:focus {
-	background-color:black;
+	background-color: black;
 }
 
 html.desk .switch label:focus {
