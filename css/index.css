@@ -651,11 +651,11 @@ html.dark-theme,
 }
 
 #searchAutoComplete {
-	color: #99b9df; /*accent blue 30% lighter*/
+	color: #aaa;
 }
 
 .dark-theme #searchAutoComplete {
-	color: #2661a4; /*accent blue 30% darker*/
+	color: #555;
 }
 
 nav {
