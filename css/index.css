@@ -546,7 +546,7 @@ html.desk .tabl {
 
 html,
 #app,
-html.phon #searchSuggestions-container,
+html.phon .searchSuggestions-container,
 .views{
 	background-color: #eee; /*page color*/
 }
@@ -554,7 +554,7 @@ html.phon #searchSuggestions-container,
 	html.dark-theme,
 	#app.dark-theme,
 	.dark-theme #searchAutoComplete,
-	html.phon .dark-theme #searchSuggestions-container,
+	html.phon .dark-theme .searchSuggestions-container,
 	.dark-theme #stoKeyInput,
 	.dark-theme #stoKeyInputConfirm,
 	.dark-theme .views{
@@ -627,7 +627,7 @@ html,
 #app,
 #confirm,
 #searchReset,
-#searchSuggestions,
+.searchSuggestions,
 #searchResults,
 #currentView,
 #stoKeyInput,
@@ -640,7 +640,7 @@ html.dark-theme,
 #app.dark-theme,
 .dark-theme #confirm,
 .dark-theme #searchReset,
-.dark-theme #searchSuggestions,
+.dark-theme .searchSuggestions,
 .dark-theme #searchResults,
 .dark-theme #currentView,
 .dark-theme #stoKeyInput,
@@ -674,7 +674,7 @@ nav {
 
 nav,
 nav .switch label,
-#searchSuggestions-container,
+.searchSuggestions-container,
 #sidenav button,
 .dropdown-container button.selected,
 html.desk .dropdown-container button.selected:hover,
@@ -688,7 +688,7 @@ html.desk .dropdown-container button.selected:hover,
 
 .dark-theme nav,
 .dark-theme nav .switch label,
-.dark-theme #searchSuggestions-container,
+.dark-theme .searchSuggestions-container,
 .dark-theme #sidenav button,
 .dark-theme .dropdown-container button.selected,
 html.desk .dark-theme .dropdown-container button.selected:hover,
@@ -706,15 +706,15 @@ html.desk .dark-theme .dropdown-container button.selected:hover,
 }
 
 #navbar,
-html.tabl #searchSuggestions-container,
-html.desk #searchSuggestions-container,
+html.tabl .searchSuggestions-container,
+html.desk .searchSuggestions-container,
 .dropdown {
 	box-shadow: 0 0 10px lightgray;
 }
 
 .dark-theme #navbar,
-html.tabl .dark-theme #searchSuggestions-container,
-html.desk .dark-theme #searchSuggestions-container,
+html.tabl .dark-theme .searchSuggestions-container,
+html.desk .dark-theme .searchSuggestions-container,
 .dark-theme .dropdown {
 	box-shadow: 0 0 10px black;
 }
@@ -1033,8 +1033,8 @@ html.phon #searchBar {
 }
 
 .searchBar_open #searchBar,
-html.tabl #searchSuggestions-container,
-html.desk #searchSuggestions-container {
+html.tabl .searchSuggestions-container,
+html.desk .searchSuggestions-container {
 	width: 300px;
 }
 
@@ -1164,8 +1164,8 @@ html.desk .searchBar_open #searchReset {
 	display: block;
 }
 
-#searchSuggestions-container,
-#searchSuggestions,
+.searchSuggestions-container,
+.searchSuggestions,
 .dropdown {
 	list-style: none;
 	margin: 0;
@@ -1176,20 +1176,17 @@ html.desk .searchBar_open #searchReset {
 	overflow-x: hidden;
 }
 
-html.desk #searchSuggestions-container,
-html.tabl #searchSuggestions-container {
+html.desk .searchSuggestions-container,
+html.tabl .searchSuggestions-container {
 	position: relative;
 	top: -38px;
 	max-height: 300px;
 	z-index: 30;
 	width: 280px;
-}
-
-html.tabl #searchSuggestions-container {
 	scrollbar-width: none;
 }
 
-html.phon #searchSuggestions-container {
+html.phon .searchSuggestions-container {
 	position: fixed;
 	top: 54px;
 	bottom: 0;
@@ -1808,7 +1805,7 @@ html.desk .cardHeading:hover:active {
 	color: #5498e7; /*accent blue 10% lighter*/
 }
 
-#searchSuggestions .link:active,
+.searchSuggestions .link:active,
 .link.selected,
 html.desk .link.selected:hover,
 .button-link.selected,
@@ -1822,7 +1819,7 @@ html.desk .navlink:hover:active {
 	background-color: #99b9df; /*accent blue 30% lighter*/
 }
 
-.dark-theme #searchSuggestions .link:active,
+.dark-theme .searchSuggestions .link:active,
 .dark-theme .link.selected,
 html.desk .dark-theme .link.selected:hover,
 .dark-theme .button-link.selected,

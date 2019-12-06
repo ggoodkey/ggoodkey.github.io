@@ -71,8 +71,8 @@
 				<input id="searchAutoComplete" type="search" autocomplete="off" v-model="searchAutoComplete" disabled />
 				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
 				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
-				<div id="searchSuggestions-container" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
-					<ul id="searchSuggestions">
+				<div class="searchSuggestions-container desk tabl" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
+					<ul class="searchSuggestions">
 						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
 					</ul>
 				</div>
@@ -82,6 +82,11 @@
 				<div id="topIndicator" class="navlinkIndicator desk" v-bind:style="{ right: indicatorRight + 'px', width: indicatorWidth + 'px' }"></div>
 			</div>
 		</nav>
+		<div class="searchSuggestions-container phon" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
+				<ul class="searchSuggestions">
+					<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
+				</ul>
+			</div>
 		<nav id="sidenav">
 			<div id="sidenav-container">
 				<div class="navButtons">
