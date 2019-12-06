@@ -540,7 +540,7 @@
 				darkTheme: false,
 				useSystemTheme: true,
 				systemDarkTheme: false,
-				accentColor: null,
+				accentColor: "#478cdb",
 				showConfirm: false,
 				confirmMsg: "Are you sure?",
 				confirmDetails: null,

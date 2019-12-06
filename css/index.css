@@ -1051,9 +1051,6 @@ html.phon .searchBar_open #searchBar {
 #searchAutoComplete {
 	width: 100%;
 	background-color: transparent;
-	-webkit-appearance: none; /*ios fix*/
-	-webkit-border-radius: 0; /*ios fix*/
-	border-radius: 0; /*ios fix*/
 }
 
 #searchBox::-webkit-search-decoration,
@@ -1094,6 +1091,7 @@ html.desk #searchBar {
 }
 
 .dark-theme #searchBox,
+.dark-theme #searchAutoComplete,
 .dark-theme #stoKeyInput,
 .dark-theme #stoKeyInputConfirm,
 .dark-theme #sidenav button {
@@ -1744,10 +1742,12 @@ html.desk .dark-theme .button-link:hover:active {
 }
 
 #searchBox:focus,
+#searchAutoComplete:focus,
 #stoKeyInput:focus,
 #stoKeyInputConfirm:focus,
 .textbox:focus,
 .dark-theme #searchBox:focus,
+.dark-theme #searchAutoComplete:focus,
 .dark-theme #stoKeyInput:focus,
 .dark-theme #stoKeyInputConfirm:focus,
 .dark-theme .textbox:focus {
