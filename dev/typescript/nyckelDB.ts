@@ -2707,7 +2707,8 @@ var NyckelDB = (function () {
 			}
 		}
 		else searchQueryArr = [searchQuery];
-		for (let a = 0, b = 0, len = searchQueryArr.length; a < len; a++) {
+		var b = 0;
+		for (let a = 0, len = searchQueryArr.length; a < len; a++) {
 			(function (self, a) {
 				self.search.call(self, searchQueryArr[a], options, function (result: string[], errors: tableErrors) {
 					b++;
