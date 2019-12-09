@@ -914,7 +914,7 @@
 				return true;
 			}
 			catch (error) {
-				console.log(error);
+			//	console.log(error);
 				return false;
 			}
 		},
@@ -937,19 +937,21 @@
 					new RegExp(windowsAccentColor[4] || "84, 152, 231", "g"),
 					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
-				];
-			for (let a = 0, len = colors.length; a < len; a++) {
-				updateCSSColor(colors[a], oldColorString[a]);
-			}
-			var metaThemeColor = document.querySelector("meta[name=theme-color]"),
+				],
+				metaThemeColor = document.querySelector("meta[name=theme-color]"),
 				appleThemeColor = document.querySelector("meta[name=apple-mobile-web-app-status-bar-style]"),
-				windowsThemeColor = document.querySelector("meta[name=msapplication-navbutton-color]");
+				windowsThemeColor = document.querySelector("meta[name=msapplication-navbutton-color]"),
+				success = false;
 			metaThemeColor.setAttribute("content", hex);
 			appleThemeColor.setAttribute("content", hex);
 			windowsThemeColor.setAttribute("content", hex);
 			windowsAccentColor = colors;
 			app.accentColor = hex;
 			app.storeState();
+			for (let a = 0, len = colors.length; a < len; a++) {
+				success = updateCSSColor(colors[a], oldColorString[a]);
+			}
+			return success;
 		},
 		//Windows specific functions
 		windowsAccentColor = [false, false, false, false, false, false, false],
