@@ -1467,7 +1467,7 @@ html.desk .itemLabel {
 
 html.tabl .dropdown-container.itemLabel,
 html.desk .dropdown-container.itemLabel {
-	padding: 0;
+	padding: 0 0 0 12px;
 	top: 10px;
 }
 

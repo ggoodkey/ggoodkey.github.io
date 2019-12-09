@@ -466,6 +466,11 @@
 				Share Link: {{ sharedFileLink }}
 				<br />
 				<a class="button" v-on:click="receiveFile('https://www.dropbox.com/s/kdislb8rhya2ymx/README.txt?dl=0')">Receive test file</a><br />
+				<br />
+				Test SMS links
+				<a href="sms:1234567890">1234567890</a><br>
+				<a v-on:click="externalLink(1234567890,'sms')">click 1234567890</a><br>
+				<a v-bind:href="externalLink(1234567890,'sms')">href 1234567890</a><br>
 			</div>
 		</div>
 	</script>
@@ -564,27 +569,27 @@
 						<br />
 					</template>
 					<template v-if="item.type === 'email'">
-						<a v-bind:href="externalLink(line, item.column, 'email')">
+						<a v-bind:href="externalLink(line, 'email')">
 							<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
 						</a>
 					</template>
 					<template v-else-if="item.type === 'phoneNumber'">
 						<template v-if="item.label && /home/i.test(item.label.value)">
-							<a v-bind:href="externalLink(line, item.column, 'phone')">
+							<a v-bind:href="externalLink(line, 'phone')">
 								<span class="icon icon-phone-alt"></span>&nbsp;&nbsp;{{ line }}
 							</a>
 						</template>
 						<template v-else>
-							<a v-bind:href="externalLink(line, item.column, 'phone')" title="Dial">
+							<a v-bind:href="externalLink(line, 'phone')" title="Dial">
 								<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
 							</a>&nbsp;&nbsp;&nbsp;&nbsp;
-							<a v-bind:href="externalLink(line, item.column, 'sms')" title="Text Message">
+							<a v-bind:href="externalLink(line, 'sms')" title="Text Message">
 								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
 							</a>
 						</template>
 					</template>
 					<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
-						<a v-bind:href="externalLink(line, item.column, 'address', item.value)">
+						<a v-bind:href="externalLink(line, 'address', item.value)">
 							<span class="icon icon-mappin"></span>&nbsp;&nbsp;
 							<template v-for="(addressLine, addressLineIndex) in item.value">
 								<template v-if="addressLineIndex > 0">
@@ -598,11 +603,11 @@
 						<!--skip additional formattedAddress lines-->
 					</template>
 					<template v-else-if="item.label && item.label.value === 'GPS'">
-						<a v-bind:href="externalLink(line, item.column, 'www')" title="Open in Web Browser">
+						<a v-bind:href="externalLink(line, 'www')" title="Open in Web Browser">
 							<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
 						</a>
 						<br /><br />
-						<a v-bind:href="externalLink(line, item.column, 'gps')" title="Open in Maps App">
+						<a v-bind:href="externalLink(line, 'gps')" title="Open in Maps App">
 							<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps App
 						</a>
 					</template>

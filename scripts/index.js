@@ -699,8 +699,8 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			//if (typeof Worker !== "undefined" && !localTestingMode) startWorker();
-			//else
+			if (!!window.Worker && !localTestingMode) startWorker();
+			else
 				noWebWorker();
 		},
 		wwReadMessage = function (e) {
@@ -1522,6 +1522,43 @@
 			app.confirmDetails = options && options.details ? options.details : null;
 			app.showConfirm = true;
 			app.confirmFunction = callback;
+		},
+		externalLink = function (text, type, multilineText) {
+			var link;
+			if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+			else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
+			else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
+			else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
+			else if (type === "www") link = text;
+			if (link) return link;
+			else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
+				var googlemaps = "http://maps.google.com/?q=",
+					bing = "http://www.bing.com/maps/?q=",
+					bingmaps = "bingmaps:?q=",
+					applemaps = "http://maps.apple.com/?q=",
+					userAgent = navigator.userAgent;
+				if (type === "gps") {
+					link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
+				}
+				else if (multilineText) link = multilineText.join(" ");
+				else link = text;
+				if (/\d/.test(link)) {
+					link = encodeURIComponent(trim(link));
+					if (/Windows/.test(userAgent)) {
+						if (/NT|Phone 10/.test(userAgent)) {
+							link = bingmaps + link;
+						}
+						else link = bing + link;
+					}
+					else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
+						link = applemaps + link;
+					}
+					else link = googlemaps + link;
+					return link;
+				}
+				else return false;
+			}
+			else return false;
 		};
 	//Components
 	const dropdown_button = {
@@ -2612,6 +2649,7 @@
 				};
 			},
 			methods: {
+				externalLink: externalLink,
 				generateListView: generateListView,
 				importFile: importFile,
 				createNewItem: createNewItem,
@@ -2657,43 +2695,7 @@
 				};
 			},
 			methods: {
-				externalLink: function (text, column, type, multilineText) {
-					var link;
-					if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-					else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-					else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-					else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
-					else if (type === "www") link = text;
-					if (link) return link;
-					else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-						var googlemaps = "http://maps.google.com/?q=",
-							bing = "http://www.bing.com/maps/?q=",
-							bingmaps = "bingmaps:?q=",
-							applemaps = "http://maps.apple.com/?q=",
-							userAgent = navigator.userAgent;
-						if (type === "gps") {
-							link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
-						}
-						else if (multilineText) link = multilineText.join(" ");
-						else link = text;
-						if (/\d/.test(link)) {
-							link = encodeURIComponent(trim(link));
-							if (/Windows/.test(userAgent)) {
-								if (/NT|Phone 10/.test(userAgent)) {
-									link = bingmaps + link;
-								}
-								else link = bing + link;
-							}
-							else if (/Macintosh|iPad|iPod|iPhone/.test(userAgent)) {
-								link = applemaps + link;
-							}
-							else link = googlemaps + link;
-							return link;
-						}
-						else return false;
-					}
-					else return false;
-				}
+				externalLink: externalLink
 			},
 			template: "#details-card-lineitem"
 		},
