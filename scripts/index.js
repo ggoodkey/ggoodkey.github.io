@@ -914,7 +914,6 @@
 				return true;
 			}
 			catch (error) {
-				if (!localTestingMode) app.notify("Error setting color theme: This browser doesn't allow direct access to styles in this way");
 				console.log(error);
 				return false;
 			}
@@ -939,9 +938,8 @@
 					new RegExp(windowsAccentColor[5] || "112, 166, 228", "g"),
 					new RegExp(windowsAccentColor[6] || "153, 185, 223", "g")
 				];
-			var success = true;
 			for (let a = 0, len = colors.length; a < len; a++) {
-				if (success) success = updateCSSColor(colors[a], oldColorString[a]);
+				updateCSSColor(colors[a], oldColorString[a]);
 			}
 			var metaThemeColor = document.querySelector("meta[name=theme-color]"),
 				appleThemeColor = document.querySelector("meta[name=apple-mobile-web-app-status-bar-style]"),
@@ -950,8 +948,7 @@
 			appleThemeColor.setAttribute("content", hex);
 			windowsThemeColor.setAttribute("content", hex);
 			windowsAccentColor = colors;
-			app.accentColor = success ? hex : null;
-			debug(app.accentColor);
+			app.accentColor = hex;
 			app.storeState();
 		},
 		//Windows specific functions
