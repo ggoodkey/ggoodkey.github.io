@@ -651,11 +651,14 @@ html.dark-theme,
 }
 
 #searchAutoComplete {
-	opacity: 1; /* required on iOS */
+	-webkit-opacity: 1; /* iOS override */
+	opacity: 1; /* iOS override */
+	-webkit-text-fill-color:#aaa; /* iOS override */
 	color: #aaa;
 }
 
 .dark-theme #searchAutoComplete {
+	-webkit-text-fill-color:#555; /* iOS override */
 	color: #555;
 }
 
