@@ -804,7 +804,6 @@
 			function setupUI(callback) {
 				app.updateCurrentView();
 				matchSystemTheme();
-				debug(app.accentColor,"setting accentColor");
 				setAccentColor(app.accentColor);
 				layout();
 				return callback();
@@ -1742,10 +1741,6 @@
 					type: String,
 					default: "left"
 				},
-				noinputcolor: {
-					type: String,
-					default: "#478cdb"
-				},
 				color: {
 					type: String,
 					default: "#478cdb"
@@ -1755,7 +1750,6 @@
 				return {
 					open: false,
 					clickOutside: null,
-					colorSelected: this.color,
 					options: [//hex color themes
 						"#478cdb",
 						"#ffb900",
@@ -1824,7 +1818,6 @@
 					else app.removeEventListener("click", this.clickOutside);
 				},
 				select: function (color) {
-					this.colorSelected = color;
 					this.toggle(false);
 					this.$emit("color-select", color);
 				}

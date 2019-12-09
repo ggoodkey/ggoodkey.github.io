@@ -234,7 +234,7 @@
 	</script>
 	<script type="text/x-template" id="color-select">
 		<div class="dropdownButton dropdown-container">
-			<button class="dropdownButton" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:style="{ backgroundColor: colorSelected || noinputcolor }"></button>
+			<button class="dropdownButton" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:style="{ backgroundColor: color }"></button>
 			<div v-show="open" class="dropdownButton dropdown grid" v-bind:class="align">
 				<div class="left button-link dropdownButton" v-for="option in options" v-on:click="select(option)" v-bind:style="{ backgroundColor:option }"></div>
 			</div>
