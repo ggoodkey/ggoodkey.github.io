@@ -651,11 +651,12 @@ html.dark-theme,
 }
 
 #searchAutoComplete {
-	color: #666;
+	opacity: 1; /* required on iOS */
+	color: #aaa;
 }
 
 .dark-theme #searchAutoComplete {
-	color: #999;
+	color: #555;
 }
 
 nav {
