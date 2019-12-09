@@ -4050,6 +4050,7 @@
 						this.spin(false, "Synchronising with Dropbox");
 					}
 					function success() {
+						APP.Sto.setItem("lastSyncAll", new Date().getTime());
 						this.spin(false, "Synchronising with Dropbox");
 					}
 					if (syncfileNeedsUpdated) {
@@ -4074,13 +4075,19 @@
 				var err = false,
 					count = 0,
 					syncfileNeedsUpdated = false;
+				
 				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
 				checkDBLoaded(function (nextInQueue) {
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
 					options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-					this.spin(true, "Synchronising with Dropbox");
-					APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+					APP.Sto.getItem("lastSyncAll", function (time) {
+						debug(time);
+						if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) {//5 minutes between sync attempts
+							this.spin(true, "Synchronising with Dropbox");
+							APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+						}
+					});
 					if (nextInQueue instanceof Function) return nextInQueue();
 				}.bind(this));
 			},
