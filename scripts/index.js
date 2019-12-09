@@ -804,6 +804,7 @@
 			function setupUI(callback) {
 				app.updateCurrentView();
 				matchSystemTheme();
+				debug(app.accentColor,"setting accentColor");
 				setAccentColor(app.accentColor);
 				layout();
 				return callback();
@@ -950,6 +951,7 @@
 			windowsThemeColor.setAttribute("content", hex);
 			windowsAccentColor = colors;
 			app.accentColor = success ? hex : null;
+			debug(app.accentColor);
 			app.storeState();
 		},
 		//Windows specific functions

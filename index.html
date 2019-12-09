@@ -115,7 +115,7 @@
 						</div>
 						<div v-show="useSystemTheme === false && windows === true || windows === false" class="clear">
 							Accent Color
-							<color-select class="right menu-button" align="right" v-bind:noinputcolor="accentColor" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
+							<color-select class="right menu-button" align="right" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
 						</div>
 						<h6>Dropbox</h6>
 						<div class="clear" v-if="loggedIn === false">
