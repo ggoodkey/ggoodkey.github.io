@@ -487,7 +487,21 @@
 					listView: {
 						text: ["Display Name"]
 					},
-					detailsView: {}
+					heading: {
+						title: "Display Name"
+					},
+					detailsView: [
+						{ value: "Display Name", hidden: true },
+						{ value: "Extension", readonly: true },
+						{ value: "Type", readonly: true },
+						{ value: "Original Size", readonly: true },
+						{ value: "Compressed Size", readonly: true },
+						{ value: "Compression", readonly: true },
+						{ value: "Created", readonly: true },
+						{ value: "Modified", readonly: true },
+						{ value: "Hash", readonly: true, hidden: true },
+						{ value: "Compressed Contents", hidden: true, readonly: true }
+					]
 				}
 			},
 			Groups: {
@@ -508,7 +522,7 @@
 					listView: {
 						text: ["groupName"]
 					},
-					detailsView: {}
+					detailsView: []
 				}
 			}
 		},
@@ -1198,7 +1212,7 @@
 			else value = [value];
 			return value;
 		},
-		getDetails = function (obj, callback) {
+		getDetails = function (returnedJSON, callback) {
 			function processDetailsReturnData(row, error, cb) {
 				function getValue(template, splitter, labelOptions) {
 					function getDropdownList(optionsObj) {
@@ -1212,57 +1226,58 @@
 						return options;
 					}
 					function applyValueStr() {
-						obj = row[template];
-						obj.orig = obj.value;
-						obj.value = formatValue(obj.value, obj.type, splitter);
-						obj.splitter = splitter;
+						vueDetailsObj = row[VAL.toPropName(template)];
+						vueDetailsObj.orig = vueDetailsObj.value;
+						vueDetailsObj.value = formatValue(vueDetailsObj.value, vueDetailsObj.type, splitter);
+						vueDetailsObj.splitter = splitter;
 					}
 					function applyValueArr() {
-						obj.value = [];
+						vueDetailsObj.value = [];
 						for (let a = 0, lenA = template.value.length; a < lenA; a++) {
-							if (row[template.value[a]].value) obj.value[a] = row[template.value[a]].value;
+							if (row[template.value[a]].value) vueDetailsObj.value[a] = row[template.value[a]].value;
 						}
-						obj.value = obj.value.join(template.joiner || " ");
-						obj.readonly = true;
+						vueDetailsObj.value = vueDetailsObj.value.join(template.joiner || " ");
+						vueDetailsObj.readonly = true;
 					}
 					function applyValueObj() {
-						obj = {
-							type: row[template.value].type,
-							column: row[template.value].column,
-							value: row[template.value].value
+						var a = VAL.toPropName(template.value);
+						vueDetailsObj = {
+							type: row[a].type,
+							column: row[a].column,
+							value: row[a].value
 						};
 						if (template.options) {
-							if (template.options.dropdownList) obj.options = getDropdownList(template.options);
-							if (template.options.customLabel) obj.customize = true;
+							if (template.options.dropdownList) vueDetailsObj.options = getDropdownList(template.options);
+							if (template.options.customLabel) vueDetailsObj.customize = true;
 						}
 					}
 					function applyLabel() {
-						obj.label = {
+						var a = VAL.toPropName(template.label);
+						vueDetailsObj.label = {
 							column: template.label,
-							orig: row[template.label].value,
-							value: row[template.label].value,
-							type: row[template.label].type
+							orig: row[a].value,
+							value: row[a].value,
+							type: row[a].type
 						};
 						if (labelOptions) {
-							if (labelOptions.dropdownList) obj.label.options = getDropdownList(labelOptions);
-							if (labelOptions.customLabel) obj.label.customize = true;
+							if (labelOptions.dropdownList) vueDetailsObj.label.options = getDropdownList(labelOptions);
+							if (labelOptions.customLabel) vueDetailsObj.label.customize = true;
 						}
-						//if (obj.label.value === "") obj.label.value = obj.label.column.replace(/_/g, " ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1");
 					}
-					var obj = {};
+					var vueDetailsObj = {};
 					labelOptions = labelOptions || template.labelOptions;
 					if (typeof template === "string") applyValueStr();
 					else if (template.value) {
 						if (template.value.constructor === Array) applyValueArr();
 						else applyValueObj();
 						if (template.label) applyLabel();
-						if (template.readonly) obj.readonly = true;
-						if (template.hidden) obj.hidden = true;
-						obj.orig = obj.value;
-						obj.value = formatValue(obj.value, obj.type, splitter);
-						obj.splitter = splitter;
+						if (template.readonly) vueDetailsObj.readonly = true;
+						if (template.hidden) vueDetailsObj.hidden = true;
+						vueDetailsObj.orig = vueDetailsObj.value;
+						vueDetailsObj.value = formatValue(vueDetailsObj.value, vueDetailsObj.type, splitter);
+						vueDetailsObj.splitter = splitter;
 					}
-					return obj;
+					return vueDetailsObj;
 				}
 				function getGroup(template) {
 					var ret = {
@@ -1285,7 +1300,7 @@
 				}
 				function getHeading(template) {
 					var ret;
-					if (typeof template === "string") ret = row[template].value;
+					if (typeof template === "string") ret = row[VAL.toPropName(template)].value;
 					else if (template.value) {
 						ret = [];
 						for (let a = 0, lenA = template.value.length; a < lenA; a++) {
@@ -1297,32 +1312,35 @@
 				}
 				var data = [],
 					b = 0,
-					display = dataTemplates[obj.table].display,
+					display = dataTemplates[returnedJSON.table].display,
 					title = "Item not found :´(",
 					subtitle = "Sorry, we couldn't locate this item in the database",
 					image = "";
-				debug(row);
 				if (row) {
+					var detailsView = display.detailsView && display.detailsView.length > 0 ? display.detailsView : dataTemplates[returnedJSON.table].headers;
 					if (display.heading) {
 						if (display.heading.title) title = getHeading(display.heading.title);
+						else title = false;
 						if (display.heading.subtitle) subtitle = getHeading(display.heading.subtitle);
+						else subtitle = "";
 						if (display.heading.image) image = row[display.heading.image].value;
 					}
-					for (let a = 0, lenA = display.detailsView.length; a < lenA; a++) {
-						if (typeof display.detailsView[a] === "string" || display.detailsView[a].value) {
-							data[b] = getValue(display.detailsView[a], display.detailsView[a].splitter);
+					else title = false;
+					for (let a = 0, lenA = detailsView.length; a < lenA; a++) {
+						if (typeof detailsView[a] === "string" && detailsView[a] !== "id" || detailsView[a].value) {
+							data[b] = getValue(detailsView[a], detailsView[a].splitter);
 							b++;
 						}
-						else if (display.detailsView[a].group) {
-							data[b] = getGroup(display.detailsView[a]);
+						else if (detailsView[a].group) {
+							data[b] = getGroup(detailsView[a]);
 							b++;
 						}
 					}
 				}
 				app.spin(false, "Loading data...");
 				if (callback instanceof Function) callback({
-					id: obj.id,
-					table: obj.table,
+					id: returnedJSON.id,
+					table: returnedJSON.table,
 					title: title,
 					subtitle: subtitle,
 					image: image,
@@ -1335,10 +1353,10 @@
 				app.spin(true, "Loading data...");
 				app.storeState();
 				var cmd = {
-					"cmd": obj.id ? "getRow" : "getRowTemplate",
-					"title": obj.table
+					"cmd": returnedJSON.id ? "getRow" : "getRowTemplate",
+					"title": returnedJSON.table
 				};
-				if (obj.id) cmd.args = [obj.id];
+				if (returnedJSON.id) cmd.args = [returnedJSON.id];
 				wwManager(cmd, function (row, error) { processDetailsReturnData(row, error, nextInQueue); });
 			}
 			checkDBLoaded(afterDBLoaded);
@@ -2804,6 +2822,145 @@
 						debug("delete not done");
 					});
 				},
+				exportItem: function () {
+					function saveFile(str, fileName, mimeType) {
+						function saveToWindows(str, fileName) {	
+							// Verify that we are currently not snapped, or that we can unsnap to open the picker
+							var currentState = Windows.UI.ViewManagement.ApplicationView.value;
+							if (currentState === Windows.UI.ViewManagement.ApplicationViewState.snapped &&
+								!Windows.UI.ViewManagement.ApplicationView.tryUnsnap()) {
+								// Fail silently if we can't unsnap
+								debug("Some kind of Windows 8 bug prevented saving this file.");
+								return false;
+							}
+							// Create the picker object and set options
+							var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+							savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Downloads;
+							// Dropdown of file types the user can save the file as
+							savePicker.fileTypeChoices.insert("JSON (Javascript Object Notation) File", [".json"]);
+							savePicker.fileTypeChoices.insert("Table of Comma Separated Values", [".csv"]);
+							savePicker.fileTypeChoices.insert("vCard Contact File", [".vcf"]);
+							savePicker.fileTypeChoices.insert("Plain Text", [".txt"]);
+							// Default file name if the user does not type one in or select a file to replace
+							savePicker.suggestedFileName = fileName;
+							return savePicker.pickSaveFileAsync().then(function (file) {
+								function setComplete () {
+									// Let Windows know that we're finished changing the file so the other app can update the remote version of the file.
+									// Completing updates may require Windows to ask for user input.
+									Windows.Storage.CachedFileManager.completeUpdatesAsync(file).done(function (updateStatus) {
+										if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
+											return true;
+										} else {
+											debug("File " + file.name + " couldn't be saved.");
+											return false;
+										}
+									});
+								}
+								if (file === undefined) return false;
+								// Prevent updates to the remote version of the file until we finish making changes and call completeUpdatesAsync.
+								Windows.Storage.CachedFileManager.deferUpdates(file);
+								// write to file
+								Windows.Storage.FileIO.writeTextAsync(file, str).done(setComplete);
+								return true;
+							});
+						}
+						function saveToCordova(str, fileName) {
+							var fileApi = cordova.file,
+								path;
+							if (fileApi.externalDataDirectory) path = fileApi.externalDataDirectory;//Android SD Card
+							else if (fileApi.documentsDirectory) path = fileApi.documentsDirectory;	//iPhone
+							else path = fileApi.dataDirectory;										//Android
+							fileApi.writeFile(path, fileName, str, true);
+							return true;
+						}
+						function b64toBlob(b64Data, mimeType, sliceSize) {
+							mimeType = mimeType || "";
+							sliceSize = sliceSize || 512;
+							const byteCharacters = atob(b64Data);
+							const byteArrays = [];
+						  
+							for (let offset = 0, slice, byteNumbers, byteArray; offset < byteCharacters.length; offset += sliceSize) {
+							  slice = byteCharacters.slice(offset, offset + sliceSize);
+							  byteNumbers = new Array(slice.length);
+							  for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);						  
+							  byteArray = new Uint8Array(byteNumbers);
+							  byteArrays.push(byteArray);
+							}
+						  
+							const blob = new Blob(byteArrays, {type: mimeType});
+							return blob;
+						  }
+						function downloadToBrowser(str, fileName, mimeType) {
+							//create link
+							if (!mimeType) mimeType = "text/plain";
+							var url = "",
+								b64Img = /^data:image\/\w+;base64,/;
+							if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
+								var blobObject;
+								if (str.match(b64Img)) {
+									str = str.replace(b64Img, '');
+									blobObject = b64toBlob(str, mimeType, 512);
+								}
+								else blobObject = new Blob([str], { type: mimeType });
+								if (window.navigator.msSaveOrOpenBlob) {
+									window.navigator.msSaveOrOpenBlob(blobObject, fileName);
+									return true;
+								}
+								else if (URL && URL.createObjectURL) {
+									url = URL.createObjectURL(blobObject);
+									debug(blobObject, "createObjectURL");
+								}
+							}
+							else {
+								url = "data:" + mimeType + ";charset=utf-8," + encodeURIComponent(str);
+								debug(url,"no blob");
+							}
+							var link = document.getElementById("hiddenDownloadLink");
+							if (link) {
+								link.download = fileName;
+								link.href = url;
+								link.click();
+							}
+							else {
+								var msg = "depends on a hidden link with id='hiddenDownloadLink'";
+								msg += " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
+								msg += " somewhere in the page to create a web browser download link";
+								debug("html download link missing", msg);
+								return false;
+							}
+							if (URL) URL.revokeObjectURL(url);
+							return true;
+						}
+						if (Windows) return saveToWindows.call(this, str, fileName);
+						else if (cordova && cordova.file) return saveToCordova(str, fileName);
+						else return downloadToBrowser.call(this, str, fileName, mimeType);
+					}
+					if (this.details.table === "Files") {
+						var contents,
+							extension,
+							name,
+							type,
+							hash;
+						for (let a = 0, i, aLen = this.details.data.length; a < aLen; a++) {
+							i = this.details.data[a];
+							if (i.column === "Extension") extension = i.value[0];
+							if (i.column === "Display Name") name = i.value[0];
+							if (i.column === "Type") type = i.value[0];
+							if (i.column === "Hash") hash = i.value[0];
+							if (i.column === "Compressed Contents") contents = i.value[0];
+						}
+						if (hash === Base64.hash(Base64.hash(app.stoKey))) {
+							contents = Base64.read(contents, Base64.hash(app.stoKey));
+							return saveFile(contents, name, type || extension);
+						}
+						else {
+							var msg = "You do not have access to this file's contents";
+							app.notify(msg);
+							debug(msg, "hashes do not match");
+							return false;
+						}
+					}
+				},
 				detailsViewHelp: function () {
 					confirm("Item not found. Would you like to remove this listing?", function () {
 						app.recentlyViewed.splice(1, 1);
@@ -3753,7 +3910,7 @@
 					else if (key.value.length < 8) {
 						this.stoKeyWarning = "8 characters minimum";
 					}
-					else if (!(/[A-Z]/.test(key.value) && /\d/.test(key.value) && /[a-z]/.test(key.value) && /[^A-z0-9]/.test(key.value))){
+					else if (!(/[A-Z]/.test(key.value) && /\d/.test(key.value) && /[a-z]/.test(key.value) && /[^A-z0-9]/.test(key.value))) {
 						this.stoKeyWarning = "Uppercase, lowercase, digit and special character required";
 					}
 					else if (key.value === confirmKey.value) {
@@ -3810,7 +3967,9 @@
 					function init() {
 						var file = fileInputElem.files[0],/* FileList object*/
 							path = fileInputElem.value.replace(/\\/g, "/"),
-							ext;
+							ext,
+							// eslint-disable-next-line max-len
+							imageTypes = /^image\/(?:bmp|cis\-cod|gif|ief|jpeg|pipeg|png|svg\+xml|tiff|x\-(cmu\-raster|cmx|icon|portable\-(anymap|bitmap|graymap|pixmap)|rgb|xbitmap|xpixmap|xwindowdump))$/i;
 						if (fileExtension) ext = new RegExp(fileExtension + "$", "gi");
 						if (!fileExtension || path.match(ext) instanceof Array && path.match(ext)[0] === fileExtension) /* verify file extension*/ {
 							var reader = new FileReader();
@@ -3832,7 +3991,10 @@
 								app.spin(false, "Loading file...");
 								callback(reader.result, file);
 							};
-							if (readAs === "image") reader.readAsDataURL(file);
+							if (readAs === "image" || imageTypes.test(file.type)) {
+								debug(file, "reading as image");
+								reader.readAsDataURL(file);
+							}
 							else if (readAs === "text") reader.readAsText(file);
 							else if (readAs === "array") reader.readAsArrayBuffer(file);
 							else reader.readAsBinaryString(file);
@@ -3857,11 +4019,13 @@
 					if (fileExtension && /csv/i.test(fileExtension)) initFileReader.call(this, 'text', parseCSV.bind(this));
 					else if (fileExtension && /vcf/i.test(fileExtension)) initFileReader.call(this, 'text', parseVCF.bind(this));
 					else if (fileExtension && /json/i.test(fileExtension)) initFileReader.call(this, 'text', parseJSON.bind(this));
+					else if (fileExtension && /^(jpe?g|png|gif|bmp|svg|tiff)$/i.test(fileExtension)) initFileReader.call(this, 'image', saveFile.bind(this));
 					else initFileReader.call(this, "binary", saveFile.bind(this));
 					return cb();
 				}
 				function saveFile(source, details) {
-					var contents = Base64.write(source, Base64.hash(this.stoKey)),
+					debug(source);
+					var contents = Base64.write_and_verify(source, Base64.hash(this.stoKey)),
 						displayName = details.name,
 						extension = /(?:\.([^.]+))?$/.exec(details.name)[1] || "No file extension",
 						name = details.name.split("."),
@@ -3872,6 +4036,7 @@
 						modified = details.lastModified || new Date().getTime(),
 						owner = this.dropboxEmail || "unknown",
 						hash = Base64.hash(Base64.hash(this.stoKey));
+					console.log("contents read", source === Base64.read(contents, Base64.hash(this.stoKey)));
 					name.pop();
 					name = name.join(".");
 					modified = typeof modified === "number" ? modified : new Date(modified).getTime();

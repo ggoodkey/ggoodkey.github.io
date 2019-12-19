@@ -187,6 +187,10 @@
 			</transition>
 		</div>
 		<input type="file" class="hidden" id="hiddenCSVInput" />
+		<div class="hidden" id="comboBoxDiv">
+			<input type="file" accept=".json" name="json[]" id="json" size="10" />
+			<a id="hiddenDownloadLink" download="" href="" style="display:none"></a>
+		</div>
 	</div>
 
 	<!-- Vue.js Templates -->
@@ -506,7 +510,7 @@
 	<script type="text/x-template" id="details-card">
 		<div>
 			<div v-if="details.data.length > 0">
-				<div>
+				<div v-if="details.title">
 					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
 					<div>
 						<h3>{{ details.title }}</h3>
@@ -537,6 +541,7 @@
 								 v-bind:noarrow="true"
 								 align="right">
 				</dropdown-button>
+				<button v-if="details.table === 'Files'" v-on:click="exportItem" v-bind:title="'Export ' + details.title" class="left tabl desk"><span class="icon icon-share"></span>&nbsp;&nbsp;Export</button>
 				<button v-on:click="editDetails" v-bind:title="'Edit ' + details.title" class="left tabl desk"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
 				<button v-on:click="deleteItem" v-bind:title="'Delete ' + details.title" class="left tabl desk"><span class="icon icon-delete"></span>&nbsp;&nbsp;Delete</button>
 				<br />
@@ -616,6 +621,9 @@
 					</template>
 					<template v-else-if="item.type === 'multilineString' && /^-\s/.test(line)">
 						&nbsp;&nbsp;&nbsp;{{line.replace(/^-\s/g,'')}}
+					</template>
+					<template v-else-if="item.type === 'date'">
+						Date: {{ new Date(Number(line)).toDateString() }}
 					</template>
 					<template v-else>
 						{{ line }}
