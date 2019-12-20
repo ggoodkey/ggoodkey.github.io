@@ -2891,44 +2891,50 @@
 							return blob;
 						  }
 						function downloadToBrowser(str, fileName, mimeType) {
+							//possible iOS solution???
+							//window.open('data:' + mimeType + ';base64,' + escape(str), '_blank');
+
 							//create link
 							if (!mimeType) mimeType = "text/plain";
 							var url = "",
 								b64Img = /^data:image\/\w+;base64,/;
-							if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
-								var blobObject;
-								if (str.match(b64Img)) {
-									str = str.replace(b64Img, '');
-									blobObject = b64toBlob(str, mimeType, 512);
-								}
-								else blobObject = new Blob([str], { type: mimeType });
-								if (window.navigator.msSaveOrOpenBlob) {
-									window.navigator.msSaveOrOpenBlob(blobObject, fileName);
-									return true;
-								}
-								else if (URL && URL.createObjectURL) {
-									url = URL.createObjectURL(blobObject);
-									debug(blobObject, "createObjectURL");
-								}
-							}
+							if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) window.open(str, '_blank');
 							else {
-								url = "data:" + mimeType + ";charset=utf-8," + encodeURIComponent(str);
-								debug(url,"no blob");
+								if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
+									var blobObject;
+									if (str.match(b64Img)) {
+										str = str.replace(b64Img, '');
+										blobObject = b64toBlob(str, mimeType, 512);
+									}
+									else blobObject = new Blob([str], { type: mimeType });
+									if (window.navigator.msSaveOrOpenBlob) {
+										window.navigator.msSaveOrOpenBlob(blobObject, fileName);
+										return true;
+									}
+									else if (URL && URL.createObjectURL) {
+										url = URL.createObjectURL(blobObject);
+										debug(blobObject, "createObjectURL");
+									}
+								}
+								else {
+									url = "data:" + mimeType + ";charset=utf-8," + encodeURIComponent(str);
+									debug(url, "no blob");
+								}
+								var link = document.getElementById("hiddenDownloadLink");
+								if (link) {
+									link.download = fileName;
+									link.href = url;
+									link.click();
+								}
+								else {
+									var msg = "depends on a hidden link with id='hiddenDownloadLink'";
+									msg += " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
+									msg += " somewhere in the page to create a web browser download link";
+									debug("html download link missing", msg);
+									return false;
+								}
+								if (URL) URL.revokeObjectURL(url);
 							}
-							var link = document.getElementById("hiddenDownloadLink");
-							if (link) {
-								link.download = fileName;
-								link.href = url;
-								link.click();
-							}
-							else {
-								var msg = "depends on a hidden link with id='hiddenDownloadLink'";
-								msg += " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
-								msg += " somewhere in the page to create a web browser download link";
-								debug("html download link missing", msg);
-								return false;
-							}
-							if (URL) URL.revokeObjectURL(url);
 							return true;
 						}
 						if (Windows) return saveToWindows.call(this, str, fileName);
