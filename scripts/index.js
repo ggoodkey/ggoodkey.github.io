@@ -2898,7 +2898,10 @@
 							if (!mimeType) mimeType = "text/plain";
 							var url = "",
 								b64Img = /^data:image\/\w+;base64,/;
-							if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) window.open(str, '_blank');
+							if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) {
+								alert("hi");
+							//	window.open(str, '_blank');
+							}
 							else {
 								if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
 									var blobObject;
