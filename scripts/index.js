@@ -2878,7 +2878,6 @@
 							sliceSize = sliceSize || 512;
 							const byteCharacters = atob(b64Data);
 							const byteArrays = [];
-						  
 							for (let offset = 0, slice, byteNumbers, byteArray; offset < byteCharacters.length; offset += sliceSize) {
 							  slice = byteCharacters.slice(offset, offset + sliceSize);
 							  byteNumbers = new Array(slice.length);
@@ -2886,9 +2885,7 @@
 							  byteArray = new Uint8Array(byteNumbers);
 							  byteArrays.push(byteArray);
 							}
-						  
-							const blob = new Blob(byteArrays, {type: mimeType});
-							return blob;
+							return new Blob(byteArrays, {type: mimeType});
 						  }
 						function downloadToBrowser(str, fileName, mimeType) {
 							//possible iOS solution???
@@ -2899,7 +2896,8 @@
 							var url = "",
 								b64Img = /^data:image\/\w+;base64,/;
 							if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) {
-								window.open(str, '_blank');
+								if (str.match(b64Img)) window.open(str, '_blank');
+								else window.open('data:' + mimeType + ';base64,' + escape(str), '_blank');
 							}
 							else {
 								if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
