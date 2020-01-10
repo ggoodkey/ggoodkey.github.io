@@ -63,26 +63,6 @@
 				<td id=output11 class="output"></td>
 				<td id=output12 class="output"></td>
 			</tr>
-			<tr>
-				<td>7</td>
-				<td id=output13 class="output"></td>
-				<td id=output14 class="output"></td>
-			</tr>
-			<tr>
-				<td>8</td>
-				<td id=output15 class="output"></td>
-				<td id=output16 class="output"></td>
-			</tr>
-			<tr>
-				<td>9</td>
-				<td id=output17 class="output"></td>
-				<td id=output18 class="output"></td>
-			</tr>
-			<tr>
-				<td>10</td>
-				<td id=output19 class="output"></td>
-				<td id=output20 class="output"></td>
-			</tr>
 		</tbody>
 	</table>
 	<div class="hidden" id="comboBoxDiv">
@@ -101,20 +81,52 @@
 	<script type="text/javascript" src="../scripts/nyckelDB.js"></script>
 
 	<script>
-		function test(n) {
-			testNum++;
-			tableTitle = "Test " + n;
+		function test(n, title, description) {
+			var tableTitle = "Test " + n + ": " + title;
 			if (options && options.importData) options.importData.title = tableTitle;
 			callback = function (ret, err) { document.getElementById('output' + n * 2).innerHTML = "returned: " + ret + ", errors: " + err; };
 			db[n] = new NyckelDB(tableTitle);
-			db[n].init(tableHeaders, headerTypes, options, callback);
+			db[n].init(tableHeaders, columnProperties, options, callback);
 			document.getElementById('output' + (n * 2 - 1)).innerHTML = JSON.stringify(db[n]);
+			dbNum++;
+		}
+		function testMethods(testName, method, showLastModBool, callbackBool) {
+			testNum++;
+			var cell;
+			table.insertRow();
+			table.rows[0].insertCell(table.rows[0].cells.length).innerHTML = testName;
+			results[testNum] = [];
+			for (a = 1, len = dbNum; a < len; a++) {
+				cell = table.rows[a].insertCell(table.rows[a].cells.length);
+				cell.setAttribute("class", "output");
+
+				//execute test method with callback
+				if (callbackBool){
+					 method(a, function (result, error) {
+						if (error) results[testNum][a] = "Error: " + error;
+						else results[testNum][a] = result;
+					});
+				}
+				//without callback
+				else  results[testNum][a] = method(a);
+
+				if (typeof results[testNum][a] === "object" && results[testNum][a] !== null && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
+				cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + new Date((Number(db[a].getLastModified()) * 6e4) + 15e11).toLocaleString() : results[testNum][a];
+				var handler = (function (a, testNum) {
+					return function () {
+						results[testNum][a] = method(a);
+						if (typeof results[testNum][a] === "object" && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
+						cell = table.rows[a].cells[testNum + 2];
+						cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + db[a].getLastModified() : results[testNum][a];
+					};
+				}(a, testNum));
+				cell.addEventListener("click", handler);
+			}
 		}
 		APP.setDebugMode(true);
-		var tableTitle = "Test 1",
-			tableHeaders = { "column_1": "string", "column_2": "number", "column_3": "bool"},
-			headerTypes,
-			options = { customProperties: ["prop1", "prop_2", "prop_3"] },
+		var tableHeaders = ["column_1", "column_2", "column 3"],
+			columnProperties = ["string", "number", "boolean"],
+			options = { customProperties: ["prop1", "prop_2", "prop 3"] },
 			callback,
 			db = [],
 			a = 1,
@@ -123,20 +135,23 @@
 			results = [],
 			runTime = Math.floor((new Date().getTime() - 15e11) / 6e4),
 			testNum = 0,
+			dbNum = 1,
 			debug = APP.debug;
 
-		test(1);
+		//test 1: headers and customProperties as array
+		test(1, "Arrays", "Initiate table column headers as an Array");
 
-		tableHeaders = { "column_1": "string", "column 2": "num", "column_3": "boolean" };
-		test(2);
+		//test 2: headers and customProperties as columnName(key): columnType(value) pairs (including id)
+		options.customProperties = { prop1: "string", prop_2: "number", "prop 3": "boolean" };
+		tableHeaders = { column_1: "string", column_2: "numbers", "column 3": "boolean", id: "string" };
+		test(2, "Key:Value Pairs", "Initiate table column headers, column types, and custom propertes as key:value pairs");
 
-		tableHeaders = ["column 1", "column 2", "column_3"];
-		headerTypes = ["String", "Number", "Boolean"];
-		test(3);
+		//test 3: headers and customProperties as object with "type" property
+		options.customProperties = {prop1: { type: "string" }, prop_2: { type: "number" }, "prop 3": { type: "boolean"} };
+		tableHeaders = { "column_1": { type: "String" }, "column_2": { type: "Number" }, "column 3": { type: "Boolean" } };
+		test(3, "Key:Object Pairs", "Initiate table column headers, column type and custom properties as key:object pairs containing 'type' property");
 
-		tableHeaders = { "column 1": "string", "column_2": "numbers", "column_3": "boolean", "id": "string" };
-		test(4);
-
+		//test 4: headers and customProperties as mixed object with additional properties
 		options = {
 			customProperties: {
 				prop1: "string",
@@ -147,13 +162,10 @@
 				}
 			}
 		};
-		test(5);
+		tableHeaders = { "column_1": "str", "column_2": {type: "num" }, "column_3": { type: "bool", search: false, initialValue: true } };
+		test(4, "Mixed", "Initiate table column headers, types and properties as a mixture of key:value and key:object pairs, including an 'initialValue' property");
 
-		options = {
-			customProperties: ["prop1", "prop 2", "prop_3"]
-		};
-		test(6);
-
+		//test 5: deleted table
 		options = {
 			importData: {
 				created: runTime,
@@ -161,54 +173,24 @@
 				deleted: runTime
 			}
 		};
-		test(7);
+		test(5, "Deleted", 'Initiate a deleted table');
 
+		//test 6: backwards compatibility with version 0.3
 		options = {
 			importData: {//version 0.3 formated import data
 				created: runTime,
 				lastModified: runTime,
-				title: "Test_8",
+				title: "Test_6",
 				version: "0.1",
 				ids: { "aaa": [0, 0, 0, 0], "aab": [0, 0, 0, 0] },
 				headers: ["id", "column_1", "column 1", "column 3"],
 				types: { column_1: "string", "column 1": "number", "column 3": "boolean" },
 				table: [["aaa", "hello", 1, true], ["aab", "world", 2, false]],
-				properties: { "prop1": ["hello", 0, "string"], "prop 2": [10, 0, "number"], "prop_2": [true, 0, "bool"] }
+				properties: { "prop1": ["hello", 0, "string"], "prop 2": [10, 0, "number"], "prop_3": [true, 0, "bool"] }
 			}
 		};
-		test(8);
-		options.importData.properties = ["prop1", "prop 2", "prop_3"];
-		test(9);
+		test(6, "Backwards Compatibility","Backwards compatibility test importing < v0.3 data");
 
-		options.importData.properties = { "prop1": "string", "prop 2": "number", "prop_3": "boolean" };
-		test(10);
-
-		function testMethods(testName, method, showLastModBool, callbackBool) {
-			testNum++;
-			var cell;
-			table.insertRow();
-			table.rows[0].insertCell(table.rows[0].cells.length).innerHTML = testName;
-			results[testNum] = [];
-			for (a = 1, len = 11; a < len; a++) {
-				cell = table.rows[a].insertCell(table.rows[a].cells.length);
-				cell.setAttribute("class", "output");
-				callbackBool ? method(a, function (result, error) {
-					if (error) results[testNum][a] = "Error: " + error;
-					else results[testNum][a] = result;
-				}) : results[testNum][a] = method(a);
-				if (typeof results[testNum][a] === "object" && results[testNum][a] !== null && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
-				cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + new Date((Number(db[a].getLastModified()) * 6e4) + 15e11).toLocaleString() : results[testNum][a];
-				var handler = (function (a, testNum) {
-					return function () {
-						results[testNum][a] = method(a);
-						if (typeof results[testNum][a] === "object" && results[testNum][a].getLength) results[testNum][a] = "Len=" + results[testNum][a].getLength();
-						cell = table.rows[a].cells[testNum - 8];
-						cell.innerHTML = showLastModBool ? results[testNum][a] + "<br>" + db[a].getLastModified() : results[testNum][a];
-					};
-				}(a, testNum));
-				cell.addEventListener("click", handler);
-			}
-		}
 		//getTitle()	DONE
 		testMethods("title", function (a) { return db[a].getTitle(); });
 		//getLastModified()
@@ -218,15 +200,16 @@
 		//addRow(array, id)	DONE
 		testMethods("addRow", function (a) { return db[a].addRow(["hello", 2, false], "aaa"); }, true);
 		//addColumn(colName, position, options, callback)
-		testMethods("addColumn", function (a) { return db[a].addColumn("column 4", 4, { type: "string", initialValue: "hello, I'm new here", search: true }); }, true);
+		testMethods("addColumn", function (a) { return db[a].addColumn("column_4", 4, { type: "string", initialValue: "hello, I'm new here", search: true }); }, true);
 		//setType(colName, type, data, callback)
 		testMethods("setType", function (a) {
-			return db[a].setType("column_4", "any", null, function (data, err) {
+			db[a].addColumn("column_5", 5, { type: "any", initialValue: false });
+			return db[a].setType("column_5", "boolean", null, function (data, err) {
 				if (err === "cannot apply type to this row, please update data and try again" && data) {
 					for (let row in data.column_4) {
 						data.column_4[row] = true;
 					}
-					db[a].setType("column_2", "boolean", data, function (data, err) {
+					db[a].setType("column_5", "boolean", data, function (data, err) {
 						return data;
 					});
 				}
@@ -234,13 +217,13 @@
 			});
 		}, true);
 		//deleteColumn(colName)
-		testMethods("deleteColumn", function (a) { return db[a].deleteColumn("column 4"); }, true);
+		testMethods("deleteColumn", function (a) { db[a].addColumn("column_6"); return db[a].deleteColumn("column 6"); }, true);
 		//getLength()	DONE
 		testMethods("length", function (a) { return db[a].getLength(); });
 		//setVal(rowId, colName, newValue)
-		testMethods("setVal", function (a) { return db[a].setVal(results[14][a], "column_1", "yes"); }, true);
+		testMethods("setVal", function (a) { return db[a].setVal(results[4][a], "column_1", "yes"); }, true);
 		//getVal(rowId, colName)
-		testMethods("getVal", function (a) { return db[a].getVal(results[14][a], "column_1"); });
+		testMethods("getVal", function (a) { return db[a].getVal(results[4][a], "column_1"); });
 		//getIndexOf(id, orValue, colName)
 		testMethods("indexOf", function (a) { return db[a].getIndexOf("aaa"); });
 		testMethods("indexOf2", function (a) { return db[a].getIndexOf(null, "yes", "column_1"); });
@@ -256,7 +239,7 @@
 		//advancedSearch(searchTerms, options)
 		testMethods("advancedSearch", function (a, callback) { return db[a].advancedSearch("hello", null, callback); }, false, true);
 		//forEach(funct, callback)
-		testMethods("forEachRow", function (a) { return db[a].forEachRow(function (id) { return db[a].getVal(id, "column_2"); }, function (a, b) { console.log("a", a); if (b) console.log("error", b); }); });
+		testMethods("forEachRow", function (a) { return db[a].forEachRow(function (id) { return db[a].getVal(id, "column_2"); }, function (a, b) { if (b) console.log("error", b); }); });
 		//shuffle()
 		testMethods("shuffle", function (a) { return db[a].shuffle(); });
 		//hideRow(rowId)
@@ -268,7 +251,7 @@
 		//unfilter()
 		testMethods("unfilter", function (a) { return db[a].unfilter(); });
 		//deleteRow(rowId)
-		testMethods("delRow", function (a) { return db[a].deleteRow(results[14][a]); }, true);
+		testMethods("delRow", function (a) { return db[a].deleteRow(results[4][a]); }, true);
 		testMethods("length", function (a) { return db[a].getLength(); });
 		//toCSV()
 		testMethods("toCSV", function (a) { return db[a].toCSV(); });
@@ -279,9 +262,15 @@
 		//sync(forceSyncBool, callback)
 		testMethods("sync", function (a) { return db[a].sync(true, callback); }, true);
 		//setTitle(newTitle, callback)
-		//testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
+		testMethods("setTitle", function (a) { return db[a].setTitle("Test2-" + a, callback); }, true);
 		//deleteTable(callback)
-		//testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
+		testMethods("deleteTable", function (a) { return db[a].deleteTable(callback); }, true);
+
+		//cleanup
+		for(let a = 1,lenA = db.length; a < lenA; a++){
+			db[a].deleteColumn("column_4");
+			db[a].deleteColumn("column_5");
+		}
 	</script>
 </body>
 </html>

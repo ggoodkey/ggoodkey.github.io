@@ -2888,14 +2888,12 @@
 							return new Blob(byteArrays, {type: mimeType});
 						  }
 						function downloadToBrowser(str, fileName, mimeType) {
-							//possible iOS solution???
-							//window.open('data:' + mimeType + ';base64,' + escape(str), '_blank');
-
 							//create link
 							if (!mimeType) mimeType = "text/plain";
 							var url = "",
 								b64Img = /^data:image\/\w+;base64,/;
 							if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) {
+								//no blob support in safari
 								if (str.match(b64Img)) window.open(str, '_blank');
 								else window.open('data:' + mimeType + ';base64,' + escape(str), '_blank');
 							}

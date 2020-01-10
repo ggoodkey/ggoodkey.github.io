@@ -623,7 +623,7 @@
 						&nbsp;&nbsp;&nbsp;{{line.replace(/^-\s/g,'')}}
 					</template>
 					<template v-else-if="item.type === 'date'">
-						Date: {{ new Date(Number(line)).toDateString() }}
+						{{ new Date(Number(line)).toDateString() }}
 					</template>
 					<template v-else>
 						{{ line }}

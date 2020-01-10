@@ -12,6 +12,11 @@ var NyckelDB = (function () {
             return true;
         return false;
     }
+    function IS_STRING(s) {
+        if (typeof s === "string")
+            return true;
+        return false;
+    }
     function TABLE_IS_DELETED(obj) {
         return obj && obj.deleted !== undefined && obj.deleted !== false ? true : false;
     }
@@ -2058,180 +2063,172 @@ var NyckelDB = (function () {
             if (basicTypeBool)
                 CACHE_ERROR.call(this, type, "customProperties can only be set to string, number, boolean, or any, not");
             else
-                CACHE_ERROR.call(this, type, "invalid Header type");
+                CACHE_ERROR.call(this, type, "invalid data type");
             return "any";
         }
     }
-    function VALIDATE_COLUMN_PROPERTY(value, propertyName, columnType) {
-        if (propertyName === "type")
-            return VALIDATE_TYPE.call(this, value);
-        else if (propertyName === "deleted" || propertyName === "search")
-            return value === false ? value : true;
-        else if (propertyName === "initialValue") {
-            var obj = VALIDATE.call(this, value, columnType, "validate " + propertyName + " prop " + columnType);
-            if (obj.valid && !obj.error)
-                return obj.value;
-            else
-                return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
-        }
-        else
-            return String(value);
-    }
     function APPLY_COLUMN_PROPERTIES(tableHeaders, columnProperties, tableCreated, doNotIndex) {
-        function applyHeaders(headers) {
-            if (IS_ARRAY(headers)) {
-                return CHECK_HEADERS_ARRAY(headers);
+        function applyArray(uncheckedHeaders, headers, props) {
+            for (let a = 1, len = uncheckedHeaders.length; a < len; a++) {
+                //if given tableHeader name contains a space or invalid character
+                if (!props[headers[a]]) {
+                    let _badHeader = uncheckedHeaders[a];
+                    props[headers[a]] = props[_badHeader];
+                    delete props[_badHeader];
+                }
+                obj.meta[headers[a]] = props[headers[a]] ? props[headers[a]] : { type: ["any", time], timestamp: [time, time] };
+                if (!obj.meta[headers[a]].exportAs && headers[a] !== uncheckedHeaders[a])
+                    obj.meta[headers[a]].exportAs = [String(uncheckedHeaders[a]), time];
             }
-            else if (!headers || typeof headers !== "object")
-                return ["id"];
-            var headersArr = ["id"], b = 1;
-            for (let a in headers) {
+            return obj;
+        }
+        function applyObject(uncheckedHeaders, headers, props) {
+            var b = 1;
+            for (let a in uncheckedHeaders) {
                 if (a !== "id") {
-                    headersArr[b] = CHECK_HEADER_VALUE(a, headersArr);
-                    if (!_columnProperties[headersArr[b]] && _columnProperties[a]) {
-                        _columnProperties[headersArr[b]] = _columnProperties[a];
-                        delete _columnProperties[a];
+                    if (!props[obj.headers[b]] && props[a]) {
+                        props[obj.headers[b]] = props[a];
+                        delete props[a];
                     }
-                    _columnProperties[headersArr[b]] = _columnProperties[headersArr[b]] || {};
-                    if (!_columnProperties[headersArr[b]].type && typeof headers[a] === "string") {
-                        _columnProperties[headersArr[b]].type = VALIDATE_TYPE.call(this, headers[a]);
+                    props[obj.headers[b]] = props[obj.headers[b]] || {};
+                    if (!props[obj.headers[b]].type) {
+                        var val = uncheckedHeaders[a];
+                        props[obj.headers[b]] = validateColumnProperties.call(this, val);
                     }
                     b++;
                 }
             }
-            b = null;
-            return headersArr;
-        }
-        function apply_Simple_Array(tableHeadersArr, headers) {
-            for (let a = 1, b = 0, len = tableHeadersArr.length; a < len; a++, b++) {
-                obj.meta[headers[a]] = {
-                    type: [VALIDATE_TYPE.call(this, _columnProperties[b]), time],
-                    timestamp: [time, time]
-                };
-                if (headers[a] !== tableHeadersArr[a])
-                    obj.meta[headers[a]].exportAs = [String(tableHeadersArr[a]), time];
-            }
-            console.log("simple_Array " + db.title, obj);
-            return obj;
-        }
-        function applyArray(tableHeadersArr, headers) {
-            for (let a = 1, len = tableHeadersArr.length; a < len; a++) {
-                //if given tableHeader name contains a space or invalid character
-                if (!_columnProperties[headers[a]]) {
-                    let _badHeader = tableHeadersArr[a];
-                    _columnProperties[headers[a]] = _columnProperties[_badHeader];
-                    delete _columnProperties[_badHeader];
-                }
-                if (_columnProperties[headers[a]]) {
-                    if (typeof _columnProperties[headers[a]] === "string") {
-                        //migrate old version of types data forward to be held in an object
-                        obj.meta[headers[a]] = {
-                            type: [VALIDATE_TYPE.call(this, _columnProperties[headers[a]]), time],
-                            timestamp: [time, time]
-                        };
-                    }
-                    else if (_columnProperties[headers[a]].type) {
-                        if (IS_ARRAY(_columnProperties[headers[a]].type))
-                            obj.meta[headers[a]] = {
-                                type: [VALIDATE_TYPE.call(this, _columnProperties[headers[a]].type[0]), _columnProperties[headers[a]].type[1]],
-                                timestamp: _columnProperties[headers[a]].timestamp || [time, time]
-                                //TODO add other properties
-                                //initialValue: 
-                            };
-                        else
-                            obj.meta[headers[a]] = {
-                                type: [VALIDATE_TYPE.call(this, _columnProperties[headers[a]].type), time],
-                                timestamp: _columnProperties[headers[a]].timestamp || [time, time]
-                                //TODO add other properties
-                                //initialValue: 
-                            };
-                    }
-                    else
-                        console.log(_columnProperties[headers[a]], "error");
-                    if (_columnProperties[headers[a]].exportAs)
-                        obj.meta[headers[a]].exportAs = _columnProperties[headers[a]].exportAs;
-                    else if (headers[a] !== tableHeadersArr[a])
-                        obj.meta[headers[a]].exportAs = [String(tableHeadersArr[a]), time];
-                }
-                else {
-                    obj.meta[headers[a]] = {
-                        type: ["any", time],
-                        timestamp: [time, time]
-                    };
-                    if (headers[a] !== tableHeadersArr[a])
-                        obj.meta[headers[a]].exportAs = [String(tableHeadersArr[a]), time];
-                }
-            }
-            console.log("applied array " + db.title, obj);
-            return obj;
-        }
-        function applyObject(headers) {
-            //TODO rewrite
-            var b = 1;
-            for (let a in tableHeaders) {
+            b = 1;
+            for (let a in uncheckedHeaders) {
                 if (a !== "id") {
-                    obj.meta[headers[b]] = {
-                        type: ["any", time],
-                        timestamp: [time, time]
-                    };
-                    if (typeof _columnProperties[a] === "string") {
-                        obj.meta[headers[b]].type[0] = VALIDATE_TYPE.call(this, _columnProperties[a]);
-                    }
-                    else if (typeof _columnProperties[a] === "object") {
-                        for (let c in _columnProperties[a]) {
-                            if (_columnProperties[a].hasOwnProperty(c)) {
-                                obj.meta[headers[b]][c] = obj.meta[headers[b]][c] || ["", VALIDATE_EDIT_TIME.call(this, 0, "column", "apply column type")];
-                                if (IS_ARRAY(_columnProperties[a][c])) {
-                                    obj.meta[headers[b]][c][0] = VALIDATE_COLUMN_PROPERTY.call(this, _columnProperties[a][c][0], c, _columnProperties[a].type[0]);
-                                    obj.meta[headers[b]][c][1] = VALIDATE_EDIT_TIME.call(this, _columnProperties[a][c][1], "column", "apply column type");
-                                }
-                                else if (VALUE_IS_VALID.call(this, _columnProperties[a][c], "any", true, "applying table properties")) {
-                                    obj.meta[headers[b]][c][0] = VALIDATE_COLUMN_PROPERTY.call(this, _columnProperties[a][c], c, _columnProperties[a].type);
-                                }
-                                else
-                                    console.log("found invalid table property", _columnProperties[a][c], a, c);
-                            }
-                        }
-                    }
-                    else {
-                        //console.log("error: invalid type of column properties", _columnProperties[a]);
-                    }
+                    obj.meta[headers[b]] = props[a] ? props[a] : { type: ["any", time], timestamp: [time, time] };
                     if (headers[b] !== a && !obj.meta[headers[b]].exportAs)
                         obj.meta[headers[b]].exportAs = [a, time];
+                    b++;
                 }
-                b++;
             }
             b = null;
-            console.log("applied obj " + db.title, obj);
             return obj;
         }
-        var time = TIMESTAMP(tableCreated), _columnProperties = columnProperties || {}, obj = {
+        function setVal(val) {
+            if (IS_ARRAY(val))
+                return val;
+            else
+                return [val, time];
+        }
+        function validateColumnProperties(val) {
+            function validateInitialValue(value, columnType) {
+                var obj = VALIDATE.call(this, value, columnType, "validate initialValue prop " + columnType);
+                if (obj.valid && !obj.error)
+                    return obj.value;
+                else
+                    return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
+            }
+            var ret;
+            if (IS_STRING(val))
+                ret = {
+                    type: setVal(VALIDATE_TYPE.call(this, val)),
+                    timestamp: [time, time]
+                };
+            else if (val && typeof val === "object") {
+                ret = {
+                    type: val.type ? setVal(VALIDATE_TYPE.call(this, val.type)) : ["any", time],
+                    timestamp: [time, time]
+                };
+                if (val.search !== undefined) {
+                    ret.search = setVal(val.search);
+                    ret.search[0] = ret.search[0];
+                }
+                if (val.deleted)
+                    ret.deleted = [true, time];
+                if (val.formula) {
+                    ret.formula = setVal(val.formula);
+                    ret.formula[0] = String(ret.formula[0]);
+                }
+                if (val.initialValue !== undefined) {
+                    ret.initialValue = setVal(val.initialValue);
+                    ret.initialValue[0] = validateInitialValue.call(this, ret.initialValue[0], ret.type[0]);
+                }
+                if (val.exportAs) {
+                    ret.exportAs = setVal(val.exportAs);
+                    ret.exportAs[0] = String(ret.exportAs[0]);
+                }
+            }
+            else
+                ret = {
+                    type: ["any", time],
+                    timestamp: [time, time]
+                };
+            return ret;
+        }
+        function formatProperties(props) {
+            var ret = {};
+            if (!props) {
+                for (let a = 1, lenA = obj.headers.length; a < lenA; a++) {
+                    ret[obj.headers[a]] = {
+                        type: ["any", time],
+                        timestamp: [time, time]
+                    };
+                }
+            }
+            else if (IS_ARRAY(props)) {
+                for (let a = 0, lenA = props.length; a < lenA; a++) {
+                    ret[obj.headers[a + 1]] = {
+                        type: setVal(VALIDATE_TYPE.call(this, props[a])),
+                        timestamp: [time, time]
+                    };
+                }
+            }
+            else if (typeof props === "object") {
+                for (const a in props) {
+                    if (props.hasOwnProperty(a)) {
+                        const val = props[a];
+                        ret[a] = validateColumnProperties.call(this, val);
+                    }
+                }
+            }
+            return ret;
+        }
+        function setIndexable() {
+            if (IS_ARRAY(doNotIndex)) {
+                for (let a = 0, len = doNotIndex.length; a < len; a++) {
+                    doNotIndex[a] = TO_PROP_NAME(doNotIndex[a]);
+                }
+            }
+            else
+                doNotIndex = [];
+            for (let a = 1, len = obj.headers.length, i = 0; a < len; a++) {
+                if (doNotIndex.indexOf(obj.headers[a]) === -1)
+                    obj.indexable[i++] = obj.headers[a];
+            }
+        }
+        var time = TIMESTAMP(tableCreated), props = columnProperties || {}, obj = {
             meta: {},
-            headers: applyHeaders.call(this, tableHeaders),
+            headers: [],
             indexable: []
         }, db = DB[this.id];
         if (TABLE_IS_DELETED(db))
             return obj;
-        obj.indexable = obj.headers.join("|").split("|");
-        obj.indexable.splice(0, 1); //remove id
-        if (IS_ARRAY(doNotIndex)) {
-            for (let a = 0, len = doNotIndex.length, i; a < len; a++) {
-                i = obj.indexable.indexOf(TO_PROP_NAME(doNotIndex[a]));
-                if (i > -1)
-                    obj.indexable.splice(i, 1);
-            }
-        }
         if (IS_ARRAY(tableHeaders)) {
             //tableHeaders is an array, so all data to apply comes from columnProperties
-            if (tableHeaders[0] !== "id" && obj.headers.length === tableHeaders.length + 1)
+            if (tableHeaders[0] !== "id")
                 tableHeaders.unshift("id");
-            if (IS_ARRAY(_columnProperties))
-                return apply_Simple_Array.call(this, tableHeaders, obj.headers); //old db code with types array
-            else
-                return applyArray.call(this, tableHeaders, obj.headers);
+            obj.headers = CHECK_HEADERS_ARRAY(tableHeaders);
+            setIndexable();
+            props = formatProperties.call(this, props);
+            return applyArray.call(this, tableHeaders, obj.headers, props);
         }
-        else
-            return applyObject.call(this, obj.headers);
+        else {
+            obj.headers = ["id"];
+            var b = 1;
+            for (let a in tableHeaders) {
+                if (a !== "id")
+                    obj.headers[b++] = CHECK_HEADER_VALUE(a, obj.headers);
+            }
+            setIndexable();
+            props = formatProperties.call(this, props);
+            return applyObject.call(this, tableHeaders, obj.headers, props);
+        }
     }
     function DELETE_COLUMN(colName, storeBool, editTime, callback) {
         var db = DB[this.id];
@@ -2279,16 +2276,19 @@ var NyckelDB = (function () {
             return IS_ARRAY(val) ? val : [val, validatedEditTime];
         }
         function applyProps(table, cb) {
-            if (opt.initialValue && VALUE_IS_VALID.call(this, timestamp(opt.initialValue)[0], props.type[0], false, "applyProps"))
+            props.type[0] = VALIDATE_TYPE.call(this, type);
+            if (colName !== orig)
+                props.exportAs = [orig, validatedEditTime];
+            if (opt.initialValue !== undefined && VALUE_IS_VALID.call(this, timestamp(opt.initialValue)[0], props.type[0], false, "applyProps"))
                 props.initialValue = timestamp(opt.initialValue);
             if (opt.search !== undefined && VALUE_IS_VALID.call(this, timestamp(opt.search)[0], "boolean", false, "applyProps2"))
                 props.search = timestamp(opt.search);
-            //TODO: add more poroperties here
+            //TODO: add more properties here
             cols[colName] = props;
             return cb(table);
         }
         function updateTable(db) {
-            if (!opt.initialValue || opt.initialValue && !VALUE_IS_VALID.call(this, opt.initialValue, props.type[0], true, "updateTable")) {
+            if (opt.initialValue === undefined || opt.initialValue !== undefined && !VALUE_IS_VALID.call(this, opt.initialValue, props.type[0], true, "updateTable")) {
                 if (props.type[0] === "boolean")
                     opt.initialValue = false;
                 else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(props.type[0]))
@@ -2343,9 +2343,6 @@ var NyckelDB = (function () {
             colName = TO_PROP_NAME(orig.replace(/_\d$/, "")) + "_" + i;
             i++;
         }
-        props.type[0] = VALIDATE_TYPE.call(this, type);
-        if (colName !== orig)
-            props.exportAs = [orig, validatedEditTime];
         //insert colName to headers
         position = position && position > 0 && position < headers.length ? position : headers.length;
         //		DB[this.id].created.splice(position, 0, validatedEditTime);
@@ -3048,7 +3045,7 @@ var NyckelDB = (function () {
         function applyData(json) {
             function setColumns(json) {
                 if (json) {
-                    return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns, json.created, opt.doNotIndex) :
+                    return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns.meta, json.created, opt.doNotIndex) :
                         APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
                 }
                 else
@@ -3118,7 +3115,7 @@ var NyckelDB = (function () {
                         }
                         else
                             _props[propName] = [0, 0, "any"];
-                        if (propValue.initialValue && VALUE_IS_VALID.call(this, propValue.initialValue, _props[propName][2], false, "applyCustomProperties2")) {
+                        if (propValue.initialValue !== undefined && VALUE_IS_VALID.call(this, propValue.initialValue, _props[propName][2], false, "applyCustomProperties2")) {
                             _props[propName][0] = propValue.initialValue;
                         }
                         else {
