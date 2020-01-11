@@ -2067,6 +2067,99 @@ var NyckelDB = (function () {
             return "any";
         }
     }
+    function DELETE_COLUMN(colName, storeBool, editTime, callback) {
+        var db = DB[this.id];
+        if (TABLE_IS_DELETED(db))
+            return callback instanceof Function ? callback.call(this, false, "cannot delete " + colName + " column in deleted table") : false;
+        var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+        if (colIndex > 0) {
+            var columns = db.columns.meta, col = db.columns.headers[colIndex], time = VALIDATE_EDIT_TIME.call(this, editTime, "column", "deleteColumn");
+            for (let a = 0, len = db.table.length; a < len; a++) {
+                db.table[a].splice(colIndex, 1);
+                db.ids[db.table[a][0]].splice(colIndex, 1);
+            }
+            if (HIDDEN_TABLE_DATA[this.id]) {
+                for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
+                    HIDDEN_TABLE_DATA[this.id][a].splice(colIndex, 1);
+                    HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][a][0]].splice(colIndex, 1);
+                }
+            }
+            db.columns.headers.splice(colIndex, 1);
+            columns[col] = {
+                type: columns[col].type,
+                timestamp: [columns[col].timestamp[0], time],
+                search: [false, time],
+                deleted: [true, time]
+            };
+            colIndex = null;
+            //update search index
+            var i = db.columns.indexable.indexOf(col);
+            if (i > -1) {
+                db.columns.indexable.splice(i, 1);
+            }
+            DB[this.id].lastModified = time + DB[this.id].created > DB[this.id].lastModified ? time + DB[this.id].created : DB[this.id].lastModified;
+            this.syncPending = true;
+            TO_LOCAL_STORAGE.call(this, storeBool);
+            if (callback instanceof Function)
+                return callback.call(this, true, ERRORS[this.id]);
+            else
+                return true;
+        }
+        else
+            return callback instanceof Function ? callback.call(this, false, colName + " column not found") : false;
+    }
+    function TIMESTAMP_COLUMN_PROP(val, editTime) {
+        return IS_ARRAY(val) ? val : [val, editTime];
+    }
+    function VALIDATE_COLUMN_PROPS(props, editTime) {
+        function validateInitialValue(value, columnType) {
+            var obj = VALIDATE.call(this, value, columnType, "validate initialValue prop " + columnType);
+            if (obj.valid && !obj.error)
+                return obj.value;
+            else
+                return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
+        }
+        var ret;
+        if (IS_STRING(props))
+            ret = {
+                type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props), editTime),
+                timestamp: [editTime, editTime]
+            };
+        else if (props && typeof props === "object") {
+            ret = {
+                type: props.type ? TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props.type), editTime) : ["any", editTime],
+                timestamp: [editTime, editTime]
+            };
+            if ("timestamp" in props && IS_ARRAY(props.timestamp)) {
+                props.timestamp[0] = VALIDATE_EDIT_TIME.call(this, props.timestamp[0], "column", "validateColProps");
+                props.timestamp[1] = VALIDATE_EDIT_TIME.call(this, props.timestamp[1], "column", "validateColProps");
+            }
+            if (props.search !== undefined) {
+                ret.search = TIMESTAMP_COLUMN_PROP(props.search, editTime);
+                ret.search[0] = ret.search[0];
+            }
+            if (props.deleted)
+                ret.deleted = TIMESTAMP_COLUMN_PROP(IS_ARRAY(props.deleted) ? props.deleted : true, editTime);
+            if (props.formula) {
+                ret.formula = TIMESTAMP_COLUMN_PROP(props.formula, editTime);
+                ret.formula[0] = String(ret.formula[0]);
+            }
+            if (props.initialValue !== undefined) {
+                ret.initialValue = TIMESTAMP_COLUMN_PROP(props.initialValue, editTime);
+                ret.initialValue[0] = validateInitialValue.call(this, ret.initialValue[0], ret.type[0]);
+            }
+            if (props.exportAs) {
+                ret.exportAs = TIMESTAMP_COLUMN_PROP(props.exportAs, editTime);
+                ret.exportAs[0] = String(ret.exportAs[0]);
+            }
+        }
+        else
+            ret = {
+                type: ["any", editTime],
+                timestamp: [editTime, editTime]
+            };
+        return ret;
+    }
     function APPLY_COLUMN_PROPERTIES(tableHeaders, columnProperties, tableCreated, doNotIndex) {
         function applyArray(uncheckedHeaders, headers, props) {
             for (let a = 1, len = uncheckedHeaders.length; a < len; a++) {
@@ -2093,7 +2186,7 @@ var NyckelDB = (function () {
                     props[obj.headers[b]] = props[obj.headers[b]] || {};
                     if (!props[obj.headers[b]].type) {
                         var val = uncheckedHeaders[a];
-                        props[obj.headers[b]] = validateColumnProperties.call(this, val);
+                        props[obj.headers[b]] = VALIDATE_COLUMN_PROPS.call(this, val, time);
                     }
                     b++;
                 }
@@ -2110,57 +2203,6 @@ var NyckelDB = (function () {
             b = null;
             return obj;
         }
-        function setVal(val) {
-            if (IS_ARRAY(val))
-                return val;
-            else
-                return [val, time];
-        }
-        function validateColumnProperties(val) {
-            function validateInitialValue(value, columnType) {
-                var obj = VALIDATE.call(this, value, columnType, "validate initialValue prop " + columnType);
-                if (obj.valid && !obj.error)
-                    return obj.value;
-                else
-                    return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
-            }
-            var ret;
-            if (IS_STRING(val))
-                ret = {
-                    type: setVal(VALIDATE_TYPE.call(this, val)),
-                    timestamp: [time, time]
-                };
-            else if (val && typeof val === "object") {
-                ret = {
-                    type: val.type ? setVal(VALIDATE_TYPE.call(this, val.type)) : ["any", time],
-                    timestamp: [time, time]
-                };
-                if (val.search !== undefined) {
-                    ret.search = setVal(val.search);
-                    ret.search[0] = ret.search[0];
-                }
-                if (val.deleted)
-                    ret.deleted = [true, time];
-                if (val.formula) {
-                    ret.formula = setVal(val.formula);
-                    ret.formula[0] = String(ret.formula[0]);
-                }
-                if (val.initialValue !== undefined) {
-                    ret.initialValue = setVal(val.initialValue);
-                    ret.initialValue[0] = validateInitialValue.call(this, ret.initialValue[0], ret.type[0]);
-                }
-                if (val.exportAs) {
-                    ret.exportAs = setVal(val.exportAs);
-                    ret.exportAs[0] = String(ret.exportAs[0]);
-                }
-            }
-            else
-                ret = {
-                    type: ["any", time],
-                    timestamp: [time, time]
-                };
-            return ret;
-        }
         function formatProperties(props) {
             var ret = {};
             if (!props) {
@@ -2174,7 +2216,7 @@ var NyckelDB = (function () {
             else if (IS_ARRAY(props)) {
                 for (let a = 0, lenA = props.length; a < lenA; a++) {
                     ret[obj.headers[a + 1]] = {
-                        type: setVal(VALIDATE_TYPE.call(this, props[a])),
+                        type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props[a]), time),
                         timestamp: [time, time]
                     };
                 }
@@ -2182,8 +2224,7 @@ var NyckelDB = (function () {
             else if (typeof props === "object") {
                 for (const a in props) {
                     if (props.hasOwnProperty(a)) {
-                        const val = props[a];
-                        ret[a] = validateColumnProperties.call(this, val);
+                        ret[a] = VALIDATE_COLUMN_PROPS.call(this, props[a], time);
                     }
                 }
             }
@@ -2230,61 +2271,11 @@ var NyckelDB = (function () {
             return applyObject.call(this, tableHeaders, obj.headers, props);
         }
     }
-    function DELETE_COLUMN(colName, storeBool, editTime, callback) {
-        var db = DB[this.id];
-        if (TABLE_IS_DELETED(db))
-            return callback instanceof Function ? callback.call(this, false, "cannot delete " + colName + " column in deleted table") : false;
-        var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-        if (colIndex > 0) {
-            var columns = db.columns.meta, col = db.columns.headers[colIndex], time = VALIDATE_EDIT_TIME.call(this, editTime, "column", "deleteColumn");
-            for (let a = 0, len = db.table.length; a < len; a++) {
-                db.table[a].splice(colIndex, 1);
-                db.ids[db.table[a][0]].splice(colIndex, 1);
-            }
-            if (HIDDEN_TABLE_DATA[this.id]) {
-                for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
-                    HIDDEN_TABLE_DATA[this.id][a].splice(colIndex, 1);
-                    HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][a][0]].splice(colIndex, 1);
-                }
-            }
-            db.columns.headers.splice(colIndex, 1);
-            columns[col] = {
-                type: columns[col].type,
-                timestamp: [columns[col].timestamp[0], time],
-                search: [false, time],
-                deleted: [true, time]
-            };
-            colIndex = null;
-            //update search index
-            var i = db.columns.indexable.indexOf(col);
-            if (i > -1) {
-                db.columns.indexable.splice(i, 1);
-            }
-            DB[this.id].lastModified = time + DB[this.id].created > DB[this.id].lastModified ? time + DB[this.id].created : DB[this.id].lastModified;
-            this.syncPending = true;
-            TO_LOCAL_STORAGE.call(this, storeBool);
-            if (callback instanceof Function)
-                return callback.call(this, true, ERRORS[this.id]);
-            else
-                return true;
-        }
-        else
-            return callback instanceof Function ? callback.call(this, false, colName + " column not found") : false;
-    }
     function ADD_COLUMN(colName, type, position, options, storeBool, editTime, metadata, callback) {
-        function timestamp(val) {
-            return IS_ARRAY(val) ? val : [val, validatedEditTime];
-        }
         function applyProps(table, cb) {
-            props.type[0] = VALIDATE_TYPE.call(this, type);
             if (colName !== orig)
                 props.exportAs = [orig, validatedEditTime];
-            if (opt.initialValue !== undefined && VALUE_IS_VALID.call(this, timestamp(opt.initialValue)[0], props.type[0], false, "applyProps"))
-                props.initialValue = timestamp(opt.initialValue);
-            if (opt.search !== undefined && VALUE_IS_VALID.call(this, timestamp(opt.search)[0], "boolean", false, "applyProps2"))
-                props.search = timestamp(opt.search);
-            //TODO: add more properties here
-            cols[colName] = props;
+            cols[colName] = VALIDATE_COLUMN_PROPS.call(this, props, validatedEditTime);
             return cb(table);
         }
         function updateTable(db) {
@@ -2330,8 +2321,7 @@ var NyckelDB = (function () {
             else
                 return; //don't add deleted columns to table
         }
-        var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "column", "addColumn");
-        var orig = String(colName), i = 1, props = {
+        var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "column", "addColumn"), orig = String(colName), i = 1, props = {
             type: ["any", validatedEditTime],
             timestamp: [validatedEditTime, validatedEditTime]
         }, cols = db.columns.meta, headers = db.columns.headers;
@@ -2345,8 +2335,6 @@ var NyckelDB = (function () {
         }
         //insert colName to headers
         position = position && position > 0 && position < headers.length ? position : headers.length;
-        //		DB[this.id].created.splice(position, 0, validatedEditTime);
-        //		DB[this.id].modified.splice(position, 0, 0);
         headers.splice(position, 0, colName);
         //add column properties
         return applyProps.call(this, db, updateTable.bind(this));
