@@ -4245,13 +4245,16 @@
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
 					options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-					APP.Sto.getItem("lastSyncAll", function (time) {
+					APP.Sto.getItem("lastSyncAll", null, function (time) {
 						debug(time);
 						if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) {//5 minutes between sync attempts
 							this.spin(true, "Synchronising with Dropbox");
 							APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 						}
-					});
+					}.bind(this), function () {
+						this.spin(true, "Synchronising with Dropbox");
+						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+					}.bind(this));
 					if (nextInQueue instanceof Function) return nextInQueue();
 				}.bind(this));
 			},
