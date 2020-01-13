@@ -432,7 +432,7 @@ var NyckelDB = (function () {
                     colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
                     if (colIndex === -1) {
                         console.log(colName, "adding colname");
-                        ADD_COLUMN.call(this, colName, columns.meta[colName].type[0], a, undefined, false, columns.meta[colName].timestamp[0], columns.meta[colName]);
+                        ADD_COLUMN.call(this, colName, a, columns.meta[colName], false, columns.meta[colName].timestamp[0]);
                     }
                     if (colIndex > 0) { //make changes
                         if (colIndex !== a)
@@ -795,7 +795,7 @@ var NyckelDB = (function () {
                     }
                 }
                 if (foundMatch === false) {
-                    ADD_COLUMN.call(this, headers[a], "any", a, undefined, false); //TODO set column type to something more specific than "any"
+                    ADD_COLUMN.call(this, headers[a], a, undefined, false); //TODO set column type to something more specific than "any"
                 }
             }
             //try match rows with existing data
@@ -1039,6 +1039,22 @@ var NyckelDB = (function () {
             }
             BUILDING_SEARCH_INDEX[this.id] = false;
         }
+        function getIndexableColumns(db, colNamesToIndex) {
+            var ret = [], b = 0;
+            if (colNamesToIndex) {
+                for (let c = 0, lenC = colNamesToIndex.length, colName; c < lenC; c++) {
+                    colName = TO_PROP_NAME(colNamesToIndex[c]);
+                    if (db.columns.meta[colName] && (db.columns.meta[colName].search === undefined || db.columns.meta[colName].search[0] === true))
+                        ret[b++] = colName;
+                }
+            }
+            else
+                for (let a in db.columns.meta) {
+                    if (db.columns.meta[a].search === undefined || db.columns.meta[a].search && db.columns.meta[a].search[0] === true)
+                        ret[b++] = a;
+                }
+            return ret;
+        }
         var db = DB[this.id];
         if (TABLE_IS_DELETED(db))
             return;
@@ -1049,24 +1065,7 @@ var NyckelDB = (function () {
         }
         BUILDING_SEARCH_INDEX_QUEUE[this.id] = [];
         BUILDING_SEARCH_INDEX[this.id] = true;
-        if (db.columns.indexable !== undefined) {
-            if (!colNamesToIndex)
-                colNamesToIndex = db.columns.indexable.join("|").split("|");
-            //refine colNames list
-            else
-                for (let c = 0, d = 0; c < colNamesToIndex.length; c++, d++) {
-                    colNamesToIndex[c] = TO_PROP_NAME(colNamesToIndex[c]);
-                    if (colNamesToIndex[c] && colNamesToIndex[c] !== "" && db.columns.indexable.indexOf(colNamesToIndex[c]) === -1) {
-                        colNamesToIndex.splice(d, 1);
-                        d--;
-                    }
-                }
-        }
-        COL_NAMES_INDEXED[this.id] = colNamesToIndex ?
-            colNamesToIndex.join("|").split("|") :
-            db.columns.indexable ?
-                db.columns.indexable.join("|").split("|") :
-                db.columns.headers.join("|").split("|");
+        COL_NAMES_INDEXED[this.id] = getIndexableColumns(db, colNamesToIndex);
         APP.Sto.getItem("searchIndex_" + DB[this.id].title, null, function (obj) {
             if (typeof obj === "string")
                 obj = JSON.parse(obj);
@@ -2092,11 +2091,6 @@ var NyckelDB = (function () {
                 deleted: [true, time]
             };
             colIndex = null;
-            //update search index
-            var i = db.columns.indexable.indexOf(col);
-            if (i > -1) {
-                db.columns.indexable.splice(i, 1);
-            }
             DB[this.id].lastModified = time + DB[this.id].created > DB[this.id].lastModified ? time + DB[this.id].created : DB[this.id].lastModified;
             this.syncPending = true;
             TO_LOCAL_STORAGE.call(this, storeBool);
@@ -2173,34 +2167,32 @@ var NyckelDB = (function () {
                 if (!obj.meta[headers[a]].exportAs && headers[a] !== uncheckedHeaders[a])
                     obj.meta[headers[a]].exportAs = [String(uncheckedHeaders[a]), time];
             }
+            setIndexable();
             return obj;
         }
         function applyObject(uncheckedHeaders, headers, props) {
             var b = 1;
             for (let a in uncheckedHeaders) {
                 if (a !== "id") {
-                    if (!props[obj.headers[b]] && props[a]) {
-                        props[obj.headers[b]] = props[a];
+                    if (!props[headers[b]] && props[a]) {
+                        props[headers[b]] = props[a];
                         delete props[a];
                     }
-                    props[obj.headers[b]] = props[obj.headers[b]] || {};
-                    if (!props[obj.headers[b]].type) {
+                    props[headers[b]] = props[headers[b]] || {};
+                    if (a !== headers[b] && !props[headers[b]].exportAs)
+                        props[headers[b]].exportAs = [a, time];
+                    if (!props[headers[b]].type) {
                         var val = uncheckedHeaders[a];
-                        props[obj.headers[b]] = VALIDATE_COLUMN_PROPS.call(this, val, time);
+                        props[headers[b]] = VALIDATE_COLUMN_PROPS.call(this, val, time);
                     }
                     b++;
                 }
             }
-            b = 1;
-            for (let a in uncheckedHeaders) {
-                if (a !== "id") {
-                    obj.meta[headers[b]] = props[a] ? props[a] : { type: ["any", time], timestamp: [time, time] };
-                    if (headers[b] !== a && !obj.meta[headers[b]].exportAs)
-                        obj.meta[headers[b]].exportAs = [a, time];
-                    b++;
-                }
+            for (let b = 1, len = headers.length; b < len; b++) {
+                obj.meta[headers[b]] = props[headers[b]] ? props[headers[b]] : { type: ["any", time], timestamp: [time, time] };
             }
             b = null;
+            setIndexable();
             return obj;
         }
         function formatProperties(props) {
@@ -2238,15 +2230,14 @@ var NyckelDB = (function () {
             }
             else
                 doNotIndex = [];
-            for (let a = 1, len = obj.headers.length, i = 0; a < len; a++) {
-                if (doNotIndex.indexOf(obj.headers[a]) === -1)
-                    obj.indexable[i++] = obj.headers[a];
+            for (let a = 1, len = obj.headers.length; a < len; a++) {
+                if (doNotIndex.indexOf(obj.headers[a]) > -1)
+                    obj.meta[obj.headers[a]].search = [false, time];
             }
         }
         var time = TIMESTAMP(tableCreated), props = columnProperties || {}, obj = {
             meta: {},
             headers: [],
-            indexable: []
         }, db = DB[this.id];
         if (TABLE_IS_DELETED(db))
             return obj;
@@ -2255,7 +2246,6 @@ var NyckelDB = (function () {
             if (tableHeaders[0] !== "id")
                 tableHeaders.unshift("id");
             obj.headers = CHECK_HEADERS_ARRAY(tableHeaders);
-            setIndexable();
             props = formatProperties.call(this, props);
             return applyArray.call(this, tableHeaders, obj.headers, props);
         }
@@ -2266,45 +2256,41 @@ var NyckelDB = (function () {
                 if (a !== "id")
                     obj.headers[b++] = CHECK_HEADER_VALUE(a, obj.headers);
             }
-            setIndexable();
             props = formatProperties.call(this, props);
             return applyObject.call(this, tableHeaders, obj.headers, props);
         }
     }
-    function ADD_COLUMN(colName, type, position, options, storeBool, editTime, metadata, callback) {
+    function ADD_COLUMN(colName, position, options, storeBool, editTime, callback) {
         function applyProps(table, cb) {
             if (colName !== orig)
-                props.exportAs = [orig, validatedEditTime];
-            cols[colName] = VALIDATE_COLUMN_PROPS.call(this, props, validatedEditTime);
+                opt.exportAs = [orig, validatedEditTime];
+            cols[colName] = VALIDATE_COLUMN_PROPS.call(this, opt, validatedEditTime);
             return cb(table);
         }
         function updateTable(db) {
-            if (opt.initialValue === undefined || opt.initialValue !== undefined && !VALUE_IS_VALID.call(this, opt.initialValue, props.type[0], true, "updateTable")) {
-                if (props.type[0] === "boolean")
-                    opt.initialValue = false;
-                else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(props.type[0]))
-                    opt.initialValue = 0;
-                else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(props.type[0]))
-                    opt.initialValue = "";
+            var initialValue = cols[colName].initialValue !== undefined ? TIMESTAMP_COLUMN_PROP(cols[colName].initialValue, validatedEditTime)[0] : undefined;
+            if (initialValue === undefined || initialValue !== undefined && !VALUE_IS_VALID.call(this, initialValue, cols[colName].type[0], true, "updateTable")) {
+                if (cols[colName].type[0] === "boolean")
+                    initialValue = false;
+                else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(cols[colName].type[0]))
+                    initialValue = 0;
+                else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(cols[colName].type[0]))
+                    initialValue = "";
                 else {
-                    CACHE_ERROR.call(this, props.type.toString(), "initial value not found for data type");
-                    opt.initialValue = "";
+                    CACHE_ERROR.call(this, cols[colName].type.toString(), "initial value not found for data type");
+                    initialValue = "";
                 }
             }
             //insert empty cell to every row in table
             for (let a = 0, len = db.table.length; a < len; a++) {
-                db.table[a].splice(position, 0, opt.initialValue);
+                db.table[a].splice(position, 0, initialValue);
                 db.ids[db.table[a][0]].splice(position + 1, 0, validatedEditTime);
             }
             if (HIDDEN_TABLE_DATA[this.id]) {
                 for (let a = 0, len = HIDDEN_TABLE_DATA[this.id].length; a < len; a++) {
-                    HIDDEN_TABLE_DATA[this.id][a].splice(position, 0, opt.initialValue);
+                    HIDDEN_TABLE_DATA[this.id][a].splice(position, 0, initialValue);
                     HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][a][0]].splice(position + 1, 0, validatedEditTime);
                 }
-            }
-            //update search index
-            if (!props.search || props.search[0] !== false) {
-                db.columns.indexable.push(colName);
             }
             DB[this.id].lastModified = validatedEditTime + DB[this.id].created > DB[this.id].lastModified ? validatedEditTime + DB[this.id].created : DB[this.id].lastModified;
             this.syncPending = true;
@@ -2315,16 +2301,13 @@ var NyckelDB = (function () {
                 return true;
         }
         var opt = options || {}, db = DB[this.id];
-        if (TABLE_IS_DELETED(db) || opt.deleted === true) {
+        if (TABLE_IS_DELETED(db) || TIMESTAMP_COLUMN_PROP(opt.deleted, 0)[0] === true) {
             if (callback instanceof Function)
                 return callback.call(this, false, "cannot add deleted column");
             else
                 return; //don't add deleted columns to table
         }
-        var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "column", "addColumn"), orig = String(colName), i = 1, props = {
-            type: ["any", validatedEditTime],
-            timestamp: [validatedEditTime, validatedEditTime]
-        }, cols = db.columns.meta, headers = db.columns.headers;
+        var validatedEditTime = VALIDATE_EDIT_TIME.call(this, editTime, "column", "addColumn"), orig = String(colName), i = 1, cols = db.columns.meta, headers = db.columns.headers;
         colName = TO_PROP_NAME(colName);
         if (colName === "id")
             colName = "_id";
@@ -2464,7 +2447,6 @@ var NyckelDB = (function () {
             "columns": {
                 "meta": {},
                 "headers": [],
-                "indexable": []
             },
             "ids": {},
             "table": [],
@@ -2510,7 +2492,7 @@ var NyckelDB = (function () {
      * @since 0.4
      */
     NyckelDBObj.prototype.addColumn = function (colName, position, options, callback) {
-        return ADD_COLUMN.call(this, colName, options && options.type ? options.type : "any", position, options, true, undefined, undefined, callback);
+        return ADD_COLUMN.call(this, colName, position, options, true, undefined, callback);
     };
     /**
      * Add a new row to the table.

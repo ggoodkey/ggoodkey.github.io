@@ -1,7 +1,9 @@
 # ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
 #### NyckelDB Version 0.5 beta
+
 ##### October 22, 2019
+
 NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated 
@@ -30,6 +32,7 @@ according to data type, and data can be imported or exported as JSON or CSV (com
 * [Dependencies](#dependencies)
 
 # Overview
+
 Nyckel (nick-ale) is a Swedish word that means "key".
 
 The basic concept of NyckelDB is to create a portable JavaScript client-side data store with data type validation.
@@ -84,26 +87,31 @@ LZString compression is used so you can fit many MB of data in the very limited 
 All data written to the data store is automatically validated before being written, taking care of much of your form validation work for you such as names, email addresses and phone numbers. 
 
 # Features
+
 Other than the basic read/write functionality that would be expected in any type of data storage solution, NyckelDB also contains the following features:
 
 ### Sort, Shuffle and Filter
+
 Like a table, data can be sorted alphabetically/numerically by any column in the table, or conversely, shuffled to be completely random &ndash; useful if you want to create a playlist, or stack of flashcards.
 
 The table can also be filtered by column, based on matching a given regular expression.
 
 ### Search
+
 NyckelDB contains a basic search engine. Data is search indexed for fast search results based on whole, and multiple words,
 returning results in order of best match. 
 Complex searches can be created with the + and - operators, which correspond to AND and NOT respectively.
 Fuzzy matching can be used in some cases to return near matches, for example, common names or spelling mistakes.
 
 ### Search Suggestions
+
 NyckelDB can aid, or hint to a user what they might be able to search for by returning search suggestions based on partial word matches.
 This is surprisingly fast and can be used to create an as-you-type experience to fill in a search box and/or the dropdown list under the search box.
 Recent successful searches are cached and returned at the top of the next search suggestion, giving you search history as well (though
 this cache isn't saved anywhere so will be gone the next time you access the app/webpage).
 
 ### Sync and Share
+
 Data can be exported as a JSON file which can be saved or transferred somewhere and reimported
 without worrying about overwriting more recent data because all data (in every single cell) is stored with accompanying LastModified attributes
 
@@ -113,6 +121,7 @@ Conflict resolution follows the assumption that the most recent data in each cel
 Sharing data securely based on a Diffie-Hellman key exchange system coming soon... (maybe)
 
 ### Data Validation
+
 Data that you input into a NyckelDB object is validated before it is saved, at a minimum, by verifying that it is either a String, Number, or Boolean value. 
 All data *must* fall into one of these three categories. Other types of data, such as JavaScript Objects, Arrays or the values 'null' and 'undefined'
 are not allowed in a NyckelDB and will throw an error.
@@ -127,11 +136,17 @@ If you want the most flexibility you can specify *any*, which will allow any typ
 The data type for each column in the table is best specified on creation of the table, but in some cases can be changed afterwards.
 
 ### Formulas
+
 Coming soon
 
 # Types
-The following types can be applied to any column:
+
+The following types can be applied to any column: 
+
+> Note: not all types listed are currently fully implementated in this Beta version, specifically uniqueString, password, country, initeger, posInteger, negInteger, and date
+
 ### String types
+
 * **any** is the default type if no type is specified. Use it if you want to accept input data that could be String, Number, or Boolean values
 * **string** accepts any String value
 * **uniqueString** can be used for things like ids or usernames. It wont accept a value if it already exists in that column of the table.
@@ -149,6 +164,7 @@ The following types can be applied to any column:
 * **geoLocation** for complete formatted GPS position in decimal coordinates
 
 ### Numeric types
+
 * **any** see [String types: any](#string-types)
 * **number** accepts any numeric value, whether positive, negative, or decimal, up to the JavaScript physical size limit
 * **integer** checks that it is a number, and rounds numbers to the nearest integer value
@@ -162,10 +178,12 @@ The following types can be applied to any column:
 * **latitude** checks that it is a valid latitudinal decimal coordinate
 
 ### Boolean types
+
 * **any** see [String types: any](#string-types)
 * **boolean** accepts only true or false
 
 # Getting started
+
 To start using NyckelDB, download a copy of `nyckelDB.min.js`, `base64.min.js`, `storage.js`, `Lawnchair.js`, and the Lawnchair adaptors that you want to use (`dom.js`, `indexed-db.js` for starters), and insert them into your html file with script tags, loading them in this order:
 ```html
     <script type="text/javascript" src="scripts/base64.min.js"></script>
@@ -177,6 +195,7 @@ To start using NyckelDB, download a copy of `nyckelDB.min.js`, `base64.min.js`, 
 ```
 
 ### Setting up a new NyckelDB Object
+
 Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
 
 > [See more details about the NyckelDB API below](#full-api-documentation)
@@ -246,6 +265,7 @@ var types = {
 ```
 
 ### The Options Parameter
+
 The 'options' parameter accepts an Object. It may contain data to import immediately after the database is
 created in the form of a CSV file (string), or JSON object, and custom properties that you would like to add to your table.
 
@@ -268,6 +288,7 @@ var options = {
 ```
 
 ##### Importing Data
+
 CSV, or JSON data can be imported into the table in the 'options' parameter in one of 3 forms:
 
 ```javascript
@@ -282,6 +303,7 @@ CSV, or JSON data can be imported into the table in the 'options' parameter in o
 ```
 
 ##### Custom Properties
+
 Custom properties can be used for data that doesn't quite fit into the "table" model, such as maybe some metadata that applies to the entire database. 
 The existence of a custom property must be initiated when the NyckelDB object is created, and must be given an initial value. 
 Custom properties can be given a type as well, but only "string", "number" or "boolean", or left as "any".
@@ -301,9 +323,11 @@ customProperties:{
 ```
 
 # Full API Documentation
+
 https://ggoodkey.github.io/dev/NyckelDB.html
 
 # Dependencies
+
 * base64.js
 * storage.js
 * Lawnchair.js

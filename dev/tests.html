@@ -144,6 +144,7 @@
 		//test 2: headers and customProperties as columnName(key): columnType(value) pairs (including id)
 		options.customProperties = { prop1: "string", prop_2: "number", "prop 3": "boolean" };
 		tableHeaders = { column_1: "string", column_2: "numbers", "column 3": "boolean", id: "string" };
+		columnProperties = null;
 		test(2, "Key:Value Pairs", "Initiate table column headers, column types, and custom propertes as key:value pairs");
 
 		//test 3: headers and customProperties as object with "type" property
@@ -162,7 +163,7 @@
 				}
 			}
 		};
-		tableHeaders = { "column_1": "str", "column_2": {type: "num" }, "column_3": { type: "bool", search: false, initialValue: true } };
+		tableHeaders = { "column_1": "str", "column_2": {type: "num" }, "column 3": { type: "bool", search: false, initialValue: true } };
 		test(4, "Mixed", "Initiate table column headers, types and properties as a mixture of key:value and key:object pairs, including an 'initialValue' property");
 
 		//test 5: deleted table
