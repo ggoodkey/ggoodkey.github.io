@@ -4240,6 +4240,7 @@
 					syncfileNeedsUpdated = false;
 				
 				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
+				else console.log("beginning sync");
 				checkDBLoaded(function (nextInQueue) {
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
