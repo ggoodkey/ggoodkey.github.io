@@ -440,8 +440,9 @@ var NyckelDB = (function () {
                         //go through all properties and update
                         for (prop in columns.meta[colName]) {
                             if (columns.meta[colName].hasOwnProperty(prop) &&
-                                columns.meta[colName][prop][0] !== DB[this.id].columns.meta[colName][prop][0] &&
-                                columns.meta[colName][prop][1] > DB[this.id].columns.meta[colName][prop][1]) {
+                                (!DB[this.id].columns.meta[colName][prop] ||
+                                    columns.meta[colName][prop][0] !== DB[this.id].columns.meta[colName][prop][0] &&
+                                        columns.meta[colName][prop][1] > DB[this.id].columns.meta[colName][prop][1])) {
                                 switch (prop) {
                                     case "deleted": //shouldn't find an unsynced deleted column here!!!
                                         CACHE_ERROR.call(this, colName, "deleted column not synced");
