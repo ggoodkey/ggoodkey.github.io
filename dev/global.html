@@ -239,10 +239,10 @@
             
 
             <td class="description last"><p>an Object of column properties: {
-    type: String,
-    initialValue: the initial value for every new cell in the new column,
-    formula: String,
-    search: Boolean whether to index column for searches
+type: String,
+initialValue: the initial value for every new cell in the new column,
+formula: String,
+searchable: Boolean whether to index column for searches
 }</p></td>
         </tr>
 
@@ -325,6 +325,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -511,6 +513,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -553,7 +557,7 @@
 
 <div class="description">
     <p>Same as search, but accepts join (+) and filter (-) between search terms to create more specific queries
-     Possible future deprication and merge functionality into search</p>
+Possible future deprication and merge functionality into search</p>
 </div>
 
 
@@ -649,8 +653,8 @@
             
 
             <td class="description last"><p>{
-    &quot;colNames&quot;: Array, an Array of columns to search in
-    &quot;fuzzyMatch&quot;: Boolean
+&quot;colNames&quot;: Array, an Array of columns to search in
+&quot;fuzzyMatch&quot;: Boolean
 }</p></td>
         </tr>
 
@@ -730,6 +734,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -919,6 +925,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -1061,6 +1069,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -1238,6 +1248,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -1400,6 +1412,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -1608,6 +1622,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -1803,6 +1819,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -1954,6 +1972,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -2203,6 +2223,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -2306,6 +2328,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -2396,6 +2420,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -2548,6 +2574,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -2768,6 +2796,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -2928,6 +2958,8 @@
 
 
 
+
+
         
             
 
@@ -3038,7 +3070,7 @@
             
 
             <td class="description last"><p>{
-    &quot;colNames&quot;: Array, an Array of columns to search in
+&quot;colNames&quot;: Array, an Array of columns to search in
 }</p></td>
         </tr>
 
@@ -3118,6 +3150,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -3221,6 +3255,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -3376,6 +3412,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -3554,6 +3592,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -3805,6 +3845,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -3963,6 +4005,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -3996,7 +4040,7 @@
     
 
     
-    <h4 class="name" id="importJSON"><span class="type-signature"></span>importJSON<span class="signature">(json, syncKey, syncToken, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="importJSON"><span class="type-signature"></span>importJSON<span class="signature">(json, syncKey, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -4104,37 +4148,6 @@
 
         <tr>
             
-                <td class="name"><code>syncToken</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>the obfuscated version number, hashed message authentication code (HMAC), and lastSync timestamp of the NyckelDB json object</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
                 <td class="name"><code>callback</code></td>
             
 
@@ -4225,6 +4238,8 @@
 
 
 
+
+
         
             
 
@@ -4288,6 +4303,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -4483,6 +4500,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -4696,6 +4715,8 @@
 
 
 
+
+
         
             
 
@@ -4711,7 +4732,7 @@
 
 <div class="description">
     <p>Change the name of a column
-      Function not complete</p>
+Function not complete</p>
 </div>
 
 
@@ -4899,6 +4920,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -5019,8 +5042,8 @@
             
 
             <td class="description last"><p>{
-    &quot;colNames&quot;: Array, an Array of columns to search in
-    &quot;fuzzyMatch&quot;: Boolean
+&quot;colNames&quot;: Array, an Array of columns to search in
+&quot;fuzzyMatch&quot;: Boolean
 }</p></td>
         </tr>
 
@@ -5103,6 +5126,223 @@
 
 
 
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="setColumnProp"><span class="type-signature"></span>setColumnProp<span class="signature">(colName, propName, propValue)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Change the value of a column property</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>colName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the name of the column to modify</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the name of the column property to modify</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>propValue</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">number</span>
+|
+
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>the new value to set the column property to</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>the validated property value that was applied</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+|
+
+<span class="param-type">number</span>
+|
+
+<span class="param-type">boolean</span>
+|
+
+<span class="param-type">undefined</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -5249,6 +5489,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -5466,6 +5708,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -5508,10 +5752,10 @@
 
 <div class="description">
     <p>Change the title of the table.
-       note: This actually deletes the table and creates a new one
-    with the new name – something to be aware of if you try
-       to access the table by it's old name and see that it has
-       been deleted!</p>
+note: This actually deletes the table and creates a new one
+with the new name – something to be aware of if you try
+to access the table by it's old name and see that it has
+been deleted!</p>
 </div>
 
 
@@ -5665,6 +5909,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -5707,7 +5953,7 @@
 
 <div class="description">
     <p>Change the column's data validation 'type'
-    Not complete</p>
+Not complete</p>
 </div>
 
 
@@ -5910,6 +6156,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -6167,6 +6415,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -6410,6 +6660,8 @@
 
 
 
+
+
         
             
 
@@ -6473,6 +6725,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -6623,8 +6877,8 @@
             
 
             <td class="description last"><p>{
-    &quot;reverse&quot;: sort Z-A, (true or false)
-    &quot;fromEndOfStr&quot;: sort xA-xZ, (true or false) }</p></td>
+&quot;reverse&quot;: sort Z-A, (true or false)
+&quot;fromEndOfStr&quot;: sort xA-xZ, (true or false) }</p></td>
         </tr>
 
     
@@ -6670,6 +6924,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -6820,11 +7076,11 @@
             
 
             <td class="description last"><p>{
-    forceSync: true, (false is default)
-    key: string,
- initialKey: string,
-    oldKey: string,
-    token: string
+forceSync: true, (false is default)
+key: string,
+initialKey: string,
+oldKey: string,
+token: string
 }</p></td>
         </tr>
 
@@ -6904,6 +7160,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -7020,6 +7278,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -7110,6 +7370,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -7226,6 +7488,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -7329,6 +7593,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -7419,6 +7685,8 @@
 
     
 </dl>
+
+
 
 
 
@@ -7667,6 +7935,8 @@
 
 
 
+
+
 <h5>Returns:</h5>
 
         
@@ -7710,13 +7980,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a>
 </footer>
 
 <script> prettyPrint(); </script>

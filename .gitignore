@@ -268,6 +268,13 @@ tsc
 *.cmd
 tsserver
 
+# JSDoc
+jsdoc
+jsdoc2md
+jsdocconf.json
+package.json
+out/*
+
 # Other
 *.bac.js
 *.ods
