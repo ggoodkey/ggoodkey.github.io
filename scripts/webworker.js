@@ -50,6 +50,7 @@ self.addEventListener('message', function (e) {
 		var obj = { "type": "result", "message": msg, "cmd": data.cmd, "time": data.time };
 		if (args) obj.args = JSON.stringify(args);
 		if (callbackIndex) obj.callbackIndex = callbackIndex;
+		obj.len = JSON.stringify(obj).length;
 		var arrBuffer = str2ab(JSON.stringify(obj));
 		self.postMessage(arrBuffer, [arrBuffer]);
 		obj = null;
@@ -60,7 +61,11 @@ self.addEventListener('message', function (e) {
 	};
 	APP.Sto = {
 		setItem: function (refName, value, key) {
-			var arrBuffer = str2ab(JSON.stringify({ "type": "setItem", "args": [refName, value, key] }));
+			var arrBuffer = str2ab(JSON.stringify({
+				"type": "setItem",
+				"args": [refName, value, key],
+				"len": JSON.stringify({ "type": "setItem", "args": [refName, value, key] })
+			}));
 			self.postMessage(arrBuffer, [arrBuffer]);
 		},
 		getItem: function (refName, key, callback, doesntExistCallback) {
@@ -73,7 +78,13 @@ self.addEventListener('message', function (e) {
 				callbackQueue.push(doesntExistCallback);
 				doesntExistCallbackIndex = callbackQueue.length - 1;
 			}
-			var arrBuffer = str2ab(JSON.stringify({ "type": "getItem", "args": [refName, key], "callbackIndex": callbackIndex, "doesntExistCallbackIndex": doesntExistCallbackIndex }));
+			var arrBuffer = str2ab(JSON.stringify({
+				"type": "getItem",
+				"args": [refName, key],
+				"callbackIndex": callbackIndex,
+				"doesntExistCallbackIndex": doesntExistCallbackIndex,
+				"len": JSON.stringify({ "type": "getItem", "args": [refName, key], "callbackIndex": callbackIndex, "doesntExistCallbackIndex": doesntExistCallbackIndex })
+			}));
 			self.postMessage(arrBuffer, [arrBuffer]);
 		},
 		nuke: noop,
@@ -89,7 +100,7 @@ self.addEventListener('message', function (e) {
 	var data = ab2str(e.data);
 	data = JSON.parse(data);
 	if (data) {
-	//	if (data.time) console.log((new Date().getTime() - data.time) / 1000 + "s", "to post message to webWorker", data.cmd);
+		if (data.time) console.log((new Date().getTime() - data.time) / 1000 + "s", "to post message to webWorker", data.cmd, data.len);
 		if (data.title) data.title = VAL.toPropName(data.title);
 		switch (data.cmd) {
 			case "initNewNyckelDB":
