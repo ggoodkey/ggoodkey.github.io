@@ -676,6 +676,7 @@
 					obj.finalCallbackIndex = ++wwCallbackIndex;
 					wwCallbackQueue[wwCallbackIndex] = finalCallback;
 				}
+				obj.len = JSON.stringify(obj).length;
 				obj.time = new Date().getTime();
 				var arrBuffer = str2ab(JSON.stringify(obj));
 				webWorker.postMessage(arrBuffer, [arrBuffer]);
