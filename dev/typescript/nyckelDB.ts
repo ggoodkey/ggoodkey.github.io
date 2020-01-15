@@ -22,7 +22,7 @@ type addColumnOptions = {
 	type?: typeString;
 	initialValue?: tableValue;
 	formula?: string;
-	search?: boolean;
+	searchable?: boolean;
 	deleted?: boolean;
 	exportAs?: string;
 };
@@ -31,7 +31,7 @@ type columnMetadata = {
 	[prop: string]: [typeString | number | boolean | string, number] | undefined;
 	type: [typeString, number];
 	timestamp: [number, number];//[created, modified]
-	search?: [boolean, number];
+	searchable?: [boolean, number];
 	initialValue?: [tableValue, number];
 	formula?: [string, number];
 	deleted?: [true, number];
@@ -711,7 +711,9 @@ var NyckelDB = (function () {
 						if (colIndex !== a) MOVE_COLUMN.call(this, colName, colIndex, false);
 						//go through all properties and update
 						for (prop in columns.meta[colName]) {
-							if (columns.meta[colName].hasOwnProperty(prop) && columns.meta[colName][prop]![1] > (DB[this.id] as nyckelDB_uncompressed).columns.meta[colName][prop]![1]) {
+							if (columns.meta[colName].hasOwnProperty(prop) &&
+								columns.meta[colName][prop]![0] !== (DB[this.id] as nyckelDB_uncompressed).columns.meta[colName][prop]![0] &&
+								columns.meta[colName][prop]![1] > (DB[this.id] as nyckelDB_uncompressed).columns.meta[colName][prop]![1]) {
 								switch (prop) {
 									case "deleted"://shouldn't find an unsynced deleted column here!!!
 										CACHE_ERROR.call(this, colName, "deleted column not synced");
@@ -722,10 +724,7 @@ var NyckelDB = (function () {
 										//do nothing, update timestamp on prop change
 										console.log("column timestamp compare (new, old): ", columns.meta[colName][prop], (DB[this.id] as nyckelDB_uncompressed).columns.meta[colName][prop]);
 										break;
-									//TODO add more props here
-									default:
-										CACHE_ERROR.call(this, prop, "unknown column property not being synced");
-									//report sync not handling this property
+									default: SET_COLUMN_PROP.call(this, colName, prop, columns.meta[colName][prop]![0], false, columns.meta[colName][prop]![1]);
 								}
 							}
 						}
@@ -1013,6 +1012,7 @@ var NyckelDB = (function () {
 				if (json.lastModified instanceof Date) json.lastModified = json.lastModified.getTime();
 				if (IS_NUMERIC(json.lastModified)) json.lastModified = Math.round((json.lastModified - 15e11) / 6e4);
 				//	else json.lastModified = null; //TODO: why is this null? should it pop an error instead?
+				else console.log("cannot set lastModified to", json.lastModified);
 			}
 			//check for matching headers
 			for (let a = 0, lenA = headers.length, b, lenB, existingHeaders = db.columns.headers, foundMatch = false; a < lenA; a++) {
@@ -1263,12 +1263,12 @@ var NyckelDB = (function () {
 			if (colNamesToIndex) {
 				for (let c = 0, lenC = colNamesToIndex.length, colName; c < lenC; c++){
 					colName = TO_PROP_NAME(colNamesToIndex[c]);
-					if (db.columns.meta[colName] && (db.columns.meta[colName].search === undefined || db.columns.meta[colName].search![0] === true))
+					if (db.columns.meta[colName] && (db.columns.meta[colName].searchable === undefined || db.columns.meta[colName].searchable![0] === true))
 						ret[b++] = colName;
 				}
 			}
 			else for (let a in db.columns.meta) {
-				if (db.columns.meta[a].search === undefined || db.columns.meta[a].search && db.columns.meta[a].search![0] === true)
+				if (db.columns.meta[a].searchable === undefined || db.columns.meta[a].searchable && db.columns.meta[a].searchable![0] === true)
 					ret[b++] = a;
 			}
 			return ret;
@@ -2222,7 +2222,7 @@ var NyckelDB = (function () {
 			columns[col] = {
 				type: columns[col].type,
 				timestamp: [columns[col].timestamp[0], time],
-				search: [false, time],
+				searchable: [false, time],
 				deleted: [true, time]
 			};
 			colIndex = null!;
@@ -2237,12 +2237,12 @@ var NyckelDB = (function () {
 	function TIMESTAMP_COLUMN_PROP<T>(val: T | [T, number], editTime: number):[T, number] {
 		return IS_ARRAY(val) ? val : [val, editTime];
 	}
-	function VALIDATE_COLUMN_PROPS(this: API, props: string | addColumnOptions | columnMetadata, editTime: number): columnMetadata {
-		function validateInitialValue(this: API, value: any, columnType: typeString): tableValue {
-			var obj = VALIDATE.call(this, value, columnType, "validate initialValue prop " + columnType);
+	function VALIDATE_PROP_INITIAL_VALUE(this: API, value: any, columnType: typeString): tableValue {
+		var obj = VALIDATE.call(this, value, columnType, "validate initialValue prop " + columnType);
 			if (obj.valid && !obj.error) return obj.value;
 			else return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
-		}
+	}
+	function VALIDATE_COLUMN_PROPS(this: API, props: string | addColumnOptions | columnMetadata, editTime: number): columnMetadata {
 		var ret: columnMetadata;
 		if (IS_STRING(props)) ret = {
 			type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props), editTime),
@@ -2257,9 +2257,9 @@ var NyckelDB = (function () {
 				props.timestamp[0] = VALIDATE_EDIT_TIME.call(this, props.timestamp[0], "column", "validateColProps");
 				props.timestamp[1] = VALIDATE_EDIT_TIME.call(this, props.timestamp[1], "column", "validateColProps");
 			}
-			if (props.search !== undefined) {
-				ret.search = TIMESTAMP_COLUMN_PROP(props.search, editTime);
-				ret.search![0] = ret.search![0]!!;
+			if (props.searchable !== undefined) {
+				ret.searchable = TIMESTAMP_COLUMN_PROP(props.searchable, editTime);
+				ret.searchable![0] = ret.searchable![0]!!;
 			}
 			if (props.deleted) ret.deleted = TIMESTAMP_COLUMN_PROP(IS_ARRAY(props.deleted) ? props.deleted : true, editTime);
 			if (props.formula) {
@@ -2268,7 +2268,7 @@ var NyckelDB = (function () {
 			}
 			if (props.initialValue !== undefined) {
 				ret.initialValue = TIMESTAMP_COLUMN_PROP(props.initialValue, editTime);
-				ret.initialValue![0] = validateInitialValue.call(this, ret.initialValue![0], ret.type[0]);
+				ret.initialValue![0] =  VALIDATE_PROP_INITIAL_VALUE.call(this, ret.initialValue![0], ret.type[0]);
 			}
 			if (props.exportAs) {
 				ret.exportAs = TIMESTAMP_COLUMN_PROP(props.exportAs, editTime);
@@ -2357,7 +2357,7 @@ var NyckelDB = (function () {
 			else doNotIndex = [];
 			for (let a = 1, len = obj.headers.length; a < len; a++){
 				if (doNotIndex.indexOf(obj.headers[a]) > -1)
-					obj.meta[obj.headers[a]].search = [false, time];
+					obj.meta[obj.headers[a]].searchable = [false, time];
 			}
 		}
 		var time = TIMESTAMP(tableCreated),
@@ -2463,7 +2463,9 @@ var NyckelDB = (function () {
 			if (data) CACHE_ERROR.call(this, err);
 			if(callback instanceof Function) return callback.call(this, returnData, err);
 		}
-		function retSuccess(this:API, a: true, b: tableErrors): void {
+		function retSuccess(this: API, a: true, b: tableErrors): void {
+			(DB[this.id] as nyckelDB_uncompressed).columns.meta[colName].timestamp[1] = editTime!;
+			TO_LOCAL_STORAGE.call(this, storeBool);
 			if (callback instanceof Function) return callback.call(this, a, b);
 		}
 		function checkRows(this: API, rowId: string, i: number): void {
@@ -2521,6 +2523,38 @@ var NyckelDB = (function () {
 	}
 	function MOVE_COLUMN(this: API, colName: string, position: number, storeBool: boolean) {
 		//TODO
+		TO_LOCAL_STORAGE.call(this, storeBool);
+	}
+	function SET_COLUMN_PROP(this: API, colName: string, propName: string, propValue: tableValue, storeBool: boolean, editTime?: number): tableValue | undefined{
+		function setBoolean(value: tableValue): boolean{
+			if (value === "false" || value === 0) value = false;
+			return value ? true : false;
+		}
+		editTime = editTime ? VALIDATE_EDIT_TIME.call(this, editTime, "column", "set column prop") : TIMESTAMP(DB[this.id].created);
+		var db = DB[this.id];
+		if (TABLE_IS_DELETED(db)) return undefined;
+		if (propName === "exportAs") {
+			propValue = this.renameColumn(colName, propValue);
+		}
+		else if (propName === "formula") {
+			propValue = "formulas not complete";
+			//TODO
+		}
+		else if (propName === "searchable") {
+			propValue = setBoolean(propValue);
+			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime);
+		}
+		else if (propName === "initialValue") {
+			propValue = VALIDATE_PROP_INITIAL_VALUE.call(this, propValue, db.columns.meta[colName].type[0]);
+			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime);
+		}
+		else {
+			CACHE_ERROR.call(this, propName, "unknown column property not being synced");
+			return undefined;
+		}
+		db.columns.meta[colName].timestamp[1] = editTime!;
+		TO_LOCAL_STORAGE.call(this, storeBool);
+		return propValue;
 	}
 	/**
 	 * Initialise a new instance of NyckelDB
@@ -2604,7 +2638,7 @@ var NyckelDB = (function () {
 	 *	type: String,
 	 *	initialValue: the initial value for every new cell in the new column,
 	 *	formula: String,
-	 *	search: Boolean whether to index column for searches
+	 *	searchable: Boolean whether to index column for searches
 	 * }
 	 * @param {successCallback} [callback] callback function
 	 * @since 0.4
@@ -2982,8 +3016,8 @@ var NyckelDB = (function () {
 	 * @param {string} colName the name of the column
 	 * @return {string} a column type
 	 */
-	NyckelDBObj.prototype.getType = function (colName: string) {
-		return GET_COL_PROP.call(this, colName, "type");
+	NyckelDBObj.prototype.getType = function (colName: string): typeString {
+		return (GET_COL_PROP.call(this, colName, "type") as typeString);
 	};
 	/**
 	 * Get the value of a cell
@@ -3360,6 +3394,7 @@ var NyckelDB = (function () {
 	 * @since 0.4
 	 */
 	NyckelDBObj.prototype.renameColumn = function (colName: string, newName: string, callback: setCallback): string | false {
+		var orig = String(newName);
 		colName = TO_PROP_NAME(colName);
 		newName = TO_PROP_NAME(newName);
 		//TODO check for other columns of the same name
@@ -3470,6 +3505,18 @@ var NyckelDB = (function () {
 		//check for search index
 		BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQueryArr, options));
 	};
+	/**
+	 * Change the value of a column property
+	 * @function setColumnProp
+	 * @param {string} colName the name of the column to modify
+	 * @param {string} propName the name of the column property to modify
+	 * @param {string | number | boolean} propValue the new value to set the column property to
+	 * @returns { string | number | boolean | undefined} the validated property value that was applied
+	 */
+	NyckelDBObj.prototype.setColumnProp = function (colName: string, propName: string, propValue: tableValue): tableValue | undefined {
+		if (propName === "type") return this.setType(colName, propValue);
+		else return SET_COLUMN_PROP.call(this, colName, propName, propValue, true);
+	}
 	/**
 	 * Change the value of a table's custom property
 	 * @function setProp

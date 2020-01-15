@@ -2911,12 +2911,10 @@
 									}
 									else if (URL && URL.createObjectURL) {
 										url = URL.createObjectURL(blobObject);
-										debug(blobObject, "createObjectURL");
 									}
 								}
 								else {
 									url = "data:" + mimeType + ";charset=utf-8," + encodeURIComponent(str);
-									debug(url, "no blob");
 								}
 								var link = document.getElementById("hiddenDownloadLink");
 								if (link) {
@@ -4161,7 +4159,7 @@
 								return;
 							}
 						}
-						console.log("syncing...", json, options);
+						//console.log("syncing...", json, options);
 						wwManager({ "cmd": "sync", "title": title, "args": [json, options] }, function (success, errors, obj) {
 							console.log("sunk", success, errors, obj);
 							done.call(this, success, errors, obj, title, b === count);
@@ -4240,13 +4238,13 @@
 					syncfileNeedsUpdated = false;
 				
 				if (!(APP.Dbx && APP.Dbx.isAuthenticated)) return console.log("cannot sync to Dropbox now");
-				else console.log("beginning sync");
+				//else console.log("beginning sync");
 				checkDBLoaded(function (nextInQueue) {
 					options = options || {};
 					options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
 					options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
 					APP.Sto.getItem("lastSyncAll", null, function (time) {
-						debug(time);
+						//debug(time);
 						if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) {//5 minutes between sync attempts
 							this.spin(true, "Synchronising with Dropbox");
 							APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
