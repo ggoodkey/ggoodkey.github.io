@@ -4249,6 +4249,7 @@
 							this.spin(true, "Synchronising with Dropbox");
 							APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
 						}
+						else console.log("db was recently synced");
 					}.bind(this), function () {
 						this.spin(true, "Synchronising with Dropbox");
 						APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
