@@ -714,8 +714,9 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			if (/iPod|iPhone/.test(navigator.userAgent)) noWebWorker();//temp iPhone fix: Safari crashing when transfering large amounts of data to webworker
-			else if (!!window.Worker && !localTestingMode) startWorker();
+		//	if (/iPod|iPhone/.test(navigator.userAgent)) noWebWorker();//temp iPhone fix: Safari crashing when transfering large amounts of data to webworker
+		//	else
+				if (!!window.Worker && !localTestingMode) startWorker();
 			else noWebWorker();
 		},
 		wwReadMessage = function (e) {
@@ -766,7 +767,7 @@
 					}
 					else debug(data.message, "finished but no callback found");
 					break;
-				case "setItem":
+			/*	case "setItem":
 				case "deleteItem":
 					APP.Sto[data.type].apply(null, data.args);
 					break;
@@ -777,7 +778,7 @@
 						if (data.doesntExistCallbackIndex !== false) wwManager({ "cmd": "getItemDoesntExistCallback", "doesntExistCallbackIndex": data.doesntExistCallbackIndex });
 					});
 					break;
-				case "progress":
+			*/	case "progress":
 				case "confirm":
 				default://other types of data
 					debug(data.type, "webworker response type not supported");

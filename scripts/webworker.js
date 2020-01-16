@@ -3,6 +3,9 @@ importScripts('base64.min.js');
 importScripts('validate.min.js');
 importScripts('lists.min.js');
 importScripts('nyckelDB.js');
+importScripts('Lawnchair.js');
+importScripts('adapters/indexed-db.js');
+importScripts('storage.js');
 
 function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),
@@ -59,6 +62,7 @@ self.addEventListener('message', function (e) {
 		var arrBuffer = str2ab(JSON.stringify({ "type": "notify", "message": msg, "fadeOut": fadeOut }));
 		self.postMessage(arrBuffer, [arrBuffer]);
 	};
+	/*
 	APP.Sto = {
 		setItem: function (refName, value, key) {
 			var arrBuffer = str2ab(JSON.stringify({
@@ -92,7 +96,7 @@ self.addEventListener('message', function (e) {
 			var arrBuffer = str2ab(JSON.stringify({ "type": "deleteItem", "args": [key] }));
 			self.postMessage(arrBuffer, [arrBuffer]);
 		}
-	};
+	};*/
 	function initNewNyckelDB(title, args, callback) {
 		appData[title] = new NyckelDB(args[0]);
 		appData[title].init(args[1], args[2], args[3], callback);
