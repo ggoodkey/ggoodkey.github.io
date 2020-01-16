@@ -714,9 +714,9 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			//if (!!window.Worker && !localTestingMode) startWorker();
-			//else
-				noWebWorker();
+			if (/iPod|iPhone/.test(navigator.userAgent)) noWebWorker();//temp iPhone fix: Safari crashing when transfering large amounts of data to webworker
+			else if (!!window.Worker && !localTestingMode) startWorker();
+			else noWebWorker();
 		},
 		wwReadMessage = function (e) {
 			function ab2str(buffer) {
