@@ -11,7 +11,9 @@ Lawnchair.adapter('indexed-db', (function(){
 
   // update the STORE_VERSION when the schema used by this adapter changes
   // (for example, if you change the STORE_NAME above)
-  var STORE_VERSION = 3;
+    var STORE_VERSION = 3;
+    
+    if (!window) var window = self;
 
   var getIDB = function() {
     return window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.oIndexedDB || window.msIndexedDB;
