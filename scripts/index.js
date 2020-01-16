@@ -714,8 +714,8 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-			if (!!window.Worker && !localTestingMode) startWorker();
-			else
+			//if (!!window.Worker && !localTestingMode) startWorker();
+			//else
 				noWebWorker();
 		},
 		wwReadMessage = function (e) {
