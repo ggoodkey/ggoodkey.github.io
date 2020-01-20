@@ -784,6 +784,7 @@ html.desk .dark-theme .searchSuggestions-container,
 
 #topnav-container{
 	position: relative;
+	left: 20px;
 }
 
 #sidenav-container {

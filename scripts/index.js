@@ -542,7 +542,7 @@
 				spinner: false,
 				spinnerMsg: ["Working..."],
 				spinIndex: 0,
-				indicatorRight: -164,
+				indicatorRight: -116,
 				indicatorWidth: 0,
 				indicatorTop: 53,
 				showSearchBar: false,
@@ -632,7 +632,7 @@
 					topnavlink = document.getElementById("topnavlink_" + location).getBoundingClientRect(),
 					views = document.getElementById("topnav-container").getBoundingClientRect(),
 					viewsWidth = views.right - views.left,
-					extra = app.showSearchBar ? viewsWidth + 410 : viewsWidth + 110;//width of navbar buttons + searchbar (300) + search and menu buttons (110)
+					extra = app.showSearchBar ? viewsWidth + 393 : viewsWidth + 113;//width of navbar buttons + searchbar (320) + search and menu buttons (110)
 				app.indicatorTop = sidenavlink.top - 54;
 				app.indicatorWidth = topnavlink.right - topnavlink.left;
 				app.indicatorRight = getWidth() - topnavlink.left - extra;
@@ -714,9 +714,7 @@
 					Base64[obj.cmd].apply(null, obj.args);
 				}
 			}
-		//	if (/iPod|iPhone/.test(navigator.userAgent)) noWebWorker();//temp iPhone fix: Safari crashing when transfering large amounts of data to webworker
-		//	else
-				if (!!window.Worker && !localTestingMode) startWorker();
+			if (!!window.Worker && !localTestingMode) startWorker();
 			else noWebWorker();
 		},
 		wwReadMessage = function (e) {
@@ -806,7 +804,10 @@
 		//initialise the application
 		startApp = function (resumeBool) {
 			function doneLoadingApp() {
-				document.getElementById("loading").className = "done"; //app is rendered so fade in from black
+				setTimeout(function () {
+					setNavLinkIndicatorPosition(app.currentView.path);
+					document.getElementById("loading").className = "done"; //app is rendered so fade in from black
+				}, 150);
 				checkDBLoaded(function (nextInQueue) {
 					app.syncAll();//adds this to the queue to run after DB is loaded, or run immediately if it is loaded
 					if (nextInQueue instanceof Function) return nextInQueue();
