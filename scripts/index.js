@@ -186,6 +186,14 @@
 						"localization": {
 							initialValue: "en-CA",
 							type: "string"
+						},
+						"icon": {
+							initialValue: "icon-user",
+							type: "string"
+						},
+						"color": {
+							initialValue: "#0078d7",
+							type: "string"
 						}
 					},
 					initialIndex: ["Name", "GivenName", "AdditionalName", "FamilyName", "Nickname", "ShortName", "MaidenName",
@@ -204,8 +212,7 @@
 						"Relation1_Type", "Relation2_Type", "Relation3_Type", "Relation4_Type", "Relation5_Type",
 						"Relation6_Type", "Relation7_Type", "Relation8_Type", "Relation9_Type", "Relation10_Type",
 						"Website1_Type", "Website2_Type", "Website3_Type", "Website4_Type", "Website5_Type",
-						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"],
-					icon: "icon-user"
+						"Website6_Type", "Website7_Type", "Website8_Type", "Website9_Type", "Website10_Type"]
 				},
 				display: {
 					listView: {
@@ -433,10 +440,17 @@
 				types: ["string", "string", "string", "string", "date"],//when headers are an array, types are given as a corresponding array
 				options: {
 					customProperties: {
+						"icon": {
+							initialValue: "icon-lock",
+							type: "string"
+						},
+						"color": {
+							initialValue: "#018574",
+							type: "string"
+						}
 					},
 					doNotIndex: ["Password", "DateCreated"],
-					initialIndex: ["Site", "Username", "Alias"],
-					icon: "icon-lock"
+					initialIndex: ["Site", "Username", "Alias"]
 				},
 				display: {
 					listView: {
@@ -478,10 +492,17 @@
 				},
 				options: {
 					customProperties: {
+						"icon": {
+							initialValue: "icon-folder-open",
+							type: "string"
+						},
+						"color": {
+							initialValue: "#d13438",
+							type: "string"
+						}
 					},
 					doNotIndex: ["Display Name", "Extension", "Type", "Original Size", "Compression", "Compressed Size", "Created", "Modified", "Hash", "Compressed Contents"],
-					initialIndex: ["Name"],
-					icon: "icon-folder-open"
+					initialIndex: ["Name"]
 				},
 				display: {
 					listView: {
@@ -514,6 +535,14 @@
 				},
 				options: {
 					customProperties: {
+						"icon": {
+							initialValue: "",
+							type: "string"
+						},
+						"color": {
+							initialValue: "",
+							type: "string"
+						}
 					},
 					doNotIndex: ["groupIds", "searchTerms", "excludeIds"],
 					initialIndex: ["groupName"]
@@ -533,15 +562,17 @@
 			"Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department", "groupName"],
 		freshStateObj = function () {
 			return {//vue.js variables
+
 				cookieAgree: false,
 				version: APP_VERSION,
+
+				//platform
+				windows: false,
+
+				//navigation
 				views: views,
 				backArrow: false,
 				currentView: views[startView],
-				transitionName: "forward", //or "back"
-				spinner: false,
-				spinnerMsg: ["Working..."],
-				spinIndex: 0,
 				indicatorRight: -116,
 				indicatorWidth: 0,
 				indicatorTop: 53,
@@ -550,11 +581,16 @@
 				showSearchSuggestions: false,
 				showSideNav: false,
 				showSettings: false,
-				windows: false,
-				darkTheme: false,
-				useSystemTheme: true,
-				systemDarkTheme: false,
-				accentColor: "#478cdb",
+
+				//page animations
+				transitionName: "forward", //or "back"
+
+				//Spinner
+				spinner: false,
+				spinnerMsg: ["Working..."],
+				spinIndex: 0,
+
+				//confirm dialog box
 				showConfirm: false,
 				confirmMsg: "Are you sure?",
 				confirmDetails: null,
@@ -562,12 +598,28 @@
 				confirmCancel: "Cancel",
 				confirmFunction: function () { },
 				confirmShake: false,
+
+				//notify dialog box
 				showNotify: false,
 				notifyActivated: 0,
 				notifyMsg: "Notification",
+
+				//settings
 				dropboxUsername: "",
 				dropboxEmail: "",
 				loggedIn: false,
+				stoKey: "unknown",
+				showStoKeyInput: false,
+				stoKeyWarning: "",
+				showUpdateKey: false,
+
+				//theme
+				darkTheme: false,
+				useSystemTheme: true,
+				systemDarkTheme: false,
+				accentColor: "#478cdb",
+
+				//search
 				searchBox: "",
 				searchAutoComplete: "",
 				searchSuggestions: [],
@@ -576,9 +628,8 @@
 				searchResultsTitle: "Search Results",
 				searchResultsError: "Nothing here yet... try searching for something.",
 				currentQuery: "",
-				stoKey: "unknown",
-				showStoKeyInput: false,
-				stoKeyWarning: "",
+
+				//details view
 				details: {
 					id: null,
 					table: null,
@@ -588,7 +639,8 @@
 					subtitleH2: null
 				},
 				recentlyViewed: [],
-				showUpdateKey: false,
+
+				//groups
 				addItemToGroupDropdown: false,
 				groupDropdown: false,
 				groupSearchBox: "",
@@ -612,7 +664,7 @@
 			if (str === " ") return "";
 			return str.replace(/^\s+|\s+$/gm, "");
 		},
-		layout = function () {
+		refreshResponsiveLayout = function () {
 			var width = getWidth(),
 				height = getHeight(),
 				type = "tabl",
@@ -620,10 +672,10 @@
 				theme = "",
 				htmlTag = document.getElementsByTagName("html")[0];
 			if (width > 1280) type = "desk";
-			if (width <= 640) type = "phon";
+			else if (width <= 640) type = "phon";
 			if (height < width && width > 640) orientation = " land ";
-			if (app.useSystemTheme && app.systemDarkTheme || app.useSystemTheme === false && app.darkTheme) theme = "dark-theme ";
-			htmlTag.className = trim(type + orientation + theme + htmlTag.className.replace(/desk|tabl|phon|port|land|dark\-theme/g, ""));
+			if (app.useSystemTheme && app.systemDarkTheme || app.useSystemTheme === false && app.darkTheme) theme = "dark ";
+			htmlTag.className = trim(type + orientation + theme + htmlTag.className.replace(/desk|tabl|phon|port|land|dark/g, ""));
 		},
 		setNavLinkIndicatorPosition = function (location) {
 			location = location ? location.replace(/\//, "") : startView;
@@ -822,7 +874,7 @@
 				app.updateCurrentView();
 				matchSystemTheme();
 				setAccentColor(app.accentColor);
-				layout();
+				refreshResponsiveLayout();
 				return callback();
 			}
 			function tryDropbox(cachedStoKey) {
@@ -1058,7 +1110,7 @@
 					} else if (media === LIGHT) {
 						app.systemDarkTheme = false;
 					}
-					layout();
+					refreshResponsiveLayout();
 				}
 				const DARK = '(prefers-color-scheme: dark)';
 				const LIGHT = '(prefers-color-scheme: light)';
@@ -1546,17 +1598,18 @@
 		},
 		externalLink = function (text, type, multilineText) {
 			var link;
-			if (type === "phone") link = "tel:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-			else if (type === "sms") link = "sms:" + encodeURIComponent(String(text).replace(/[^0-9]/g, ""));
-			else if (type === "email") link = "mailto:" + encodeURIComponent(String(text));
-			else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", String(text));
+			text = String(text);
+			if (type === "phone") link = "tel:" + text.replace(/[^\+\-\.0-9]/g, "");
+			else if (type === "sms") link = "sms:" + text.replace(/[^\+\-\.0-9]/g, "");
+			else if (type === "email") link = "mailto:" + encodeURIComponent(text);
+			else if (type === "bcc") link = buildMailtoUri(app.dropboxEmail || "", text);
 			else if (type === "www") link = text;
 			if (link) return link;
 			else if (type === "gps" || type === "address" && !/mail/i.test(text)) {
-				var googlemaps = "http://maps.google.com/?q=",
-					bing = "http://www.bing.com/maps/?q=",
+				var googlemaps = "https://maps.google.com/?q=",
+					bing = "https://www.bing.com/maps/?q=",
 					bingmaps = "bingmaps:?q=",
-					applemaps = "http://maps.apple.com/?q=",
+					applemaps = "https://maps.apple.com/?q=",
 					userAgent = navigator.userAgent;
 				if (type === "gps") {
 					link = text.replace("https://www.google.com/maps/search/?api=1&query=", "").replace(/%2C/g, ",").replace(/%2B|\+/g, "");
@@ -1602,7 +1655,7 @@
 				type: Boolean,
 				default: false
 			},
-			custominput: {
+			customtextinput: {
 				type: Boolean,
 				default: false
 			},
@@ -1650,16 +1703,25 @@
 					}
 					app.addEventListener("click", this.clickOutside);
 					this.$emit("dropdown-open");
-					if (this.custominput) Vue.nextTick(function () {
+					if (this.customtextinput) Vue.nextTick(function () {
 						this.$refs.input.focus();
 					}.bind(this));
 				}
 				else app.removeEventListener("click", this.clickOutside);
 			},
-			action: function (event, value) {
-				if (this.select || this.custominput && value) this.buttonValue = value.replace(/<[^>]+>/g, "");
+			action: function (event, actionName) {
+				if (this.select || this.customtextinput && actionName) {
+					var text = String(actionName).replace(/<[^>]+>/g, "");
+					for (let a = 0, len = this.links.length; a < len; a++){
+						if (this.links[a].action !== undefined && this.links[a].action === actionName && this.links[a].text) {
+							text = this.links[a].text;
+							break;
+						}
+					}
+					this.buttonValue = text;
+				}
 				this.toggle(false);
-				this.$emit("dropdown-action", value);
+				this.$emit("dropdown-action", actionName);
 			}
 		},
 		template: "#dropdown-button"
@@ -2200,32 +2262,60 @@
 		new_table_page = {
 			components: {
 				"dropdown-button": dropdown_button,
-				"icon-select": icon_select
+				"icon-select": icon_select,
+				"color-select": color_select
 			},
 			data: function () {
 				return {
 					newTable: {
 						title: "",
 						headers: ["Column 1", "Column 2", "Column 3"],
-						types: ["string", "string", "string"],
+						types: ["Any", "Any", "Any"],
 
 						searchableDropdown: -1,
 						typesDropdown: -1,
 
-						searchableDefault: true,
-						typesDefault: 'string',
+						searchableDefault: "True",
+						typesDefault: "Any",
 
-						searchableDropdownOptions: [true, false, 'optional'],
-						typesDropdownOptions: ["any", "number", "integer", "posInteger", "negInteger", "boolean", "string", "uniqueString",
-							"multilineString", "date", "email", "phoneNumber", "password", "streetAddress", "mailAddress", "cityCounty",
-							"provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation", "longitude", "latitude"],
-
+						searchableDropdownOptions: [
+							{ action: true, text: "True" },
+							{ action: false, text: "False" },
+							{ action: 'optional', text: "Optional" }]
+						,
+						typesDropdownOptions: [
+							{ action: "Any", text: "Any", description: "Any text, number or boolean value" },
+							{ action: "Number", text: "Number", description: "Any positive or negative number, including decimal values" },
+							{ action: "Integer", text: "Integer", description: "Any positive or negative integer value" },
+							{ action: "PosInteger", text: "Positive Integer", description: "Any positive integer value, including 0" },
+							{ action: "NegInteger", text: "Negative Integer", description: "Any negative integer value, including 0" },
+							{ action: "Boolean", text: "Boolean Value", description: "True or False values" },
+							{ action: "String:", text: "Text", description: "Alphanumeric text and symbols without formatting" },
+							{ action: "MultilineString", text: "Multiline Text", description: "Formatted lines of aphanumeric text and symbols" },
+							{ action: "Date", text: "Date or Time", description: "A UTC formatted date/time" },
+							{ action: "UniqueString", text: "Username or ID", description: "A text based unique identifier" },
+							{ action: "Password", text: "Password", description: "The validation hash of a password, secret code or access token" },
+							{ action: "GivenName", text: "First Name", description: "A person's given name" },
+							{ action: "FamilyName", text: "Last Name", description: "A person's family name" },
+							{ action: "Email", text: "E-mail Address" },
+							{ action: "PhoneNumber", text: "Phone Number" },
+							{ action: "StreetAddress", text: "Street Address"},
+							{ action: "MailAddress", text: "Mailing Address" },
+							{ action: "CityCounty", text: "City or County" },
+							{ action: "ProvinceStateRegion", text: "Province, State or Region" },
+							{ action: "Country", text: "Country" },
+							{ action: "PostalZipCode", text: "Postal/Zip Code" },
+							{ action: "GeoLocation", text: "GPS Coordinates", description: "Decimal format GPS Coordinates" },
+							{ action: "Longitude", text: "Longitude Coordinate" },
+							{ action: "Latitude", text: "Latitude Coordinate" }
+						],
 						options: {
 							customProperties: {},
 							doNotIndex: [],
 							initialIndex: [],
-							searchable: [true, true, true],
-							icon: null
+							searchable: ["True", "True", "True"],
+							icon: null,
+							color: "#ff4343"
 						},
 						display: {
 							listView: {
@@ -2239,20 +2329,34 @@
 						fullscreen: false
 					},
 					icon: null,
+					color: "#ff4343",
 					customProperties: [],
 					showCustomPropertyInput: false,
 					customPropertyName: "",
 					customPropertyType: "",
-					customPropertyTypes: [{ text: "Any", action: "Any" }, { text: "String", action: "String" }, { text: "Number", action: "Number" }, { text: "Boolean", action: "Boolean" }],
+					customPropertyTypes: [
+						{ text: "Any", action: "Any" },
+						{ text: "String", action: "String" },
+						{ text: "Number", action: "Number" },
+						{ text: "Boolean", action: "Boolean" }],
 					customPropertyInitialValue: "",
 					initialValueInputType: "text",
-					customPropertyError: null
+					customPropertyError: null,
+					thLinks: [
+						{ text: "Insert Column Left", action: "insertColumnLeft" },
+						{ text: "Insert Column Right", action: "insertColumnRight" },
+						{ text: "Delete Column", action: "deleteColumn" }
+					]
 				};
 			},
 			methods: {
 				setIcon: function (icon) {
 					this.icon = icon;
-					this.newTable.options.icon = icon;
+					this.newTable.options.customProperties.icon = { initialValue: icon, type: "string" };
+				},
+				setColor: function (color) {
+					this.color = color;
+					this.newTable.options.customProperties.color = { initialValue: color, type: "string" };
 				},
 				setCustomPropertyType: function (value) {
 					this.customPropertyType = value;
@@ -2350,7 +2454,8 @@
 						this.newTable.options = dataTemplates[templateName].options;
 						this.newTable.display = dataTemplates[templateName].display;
 						this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
-						this.icon = this.newTable.options.icon || null;
+						this.icon = this.newTable.options.customProperties.icon.initialValue || null;
+						this.color = this.newTable.options.customProperties.color.initialValue || "#ff4343";
 					}
 					else {
 						this.newTable.title = "";
@@ -2361,7 +2466,8 @@
 							doNotIndex: [],
 							initialIndex: [],
 							searchable: [],
-							icon: null
+							icon: null,
+							color: "#ff4343"
 						};
 						this.newTable.display = {
 							listView: {
@@ -2373,29 +2479,29 @@
 							}
 						};
 						this.icon = null;
+						this.color = "#ff4343";
 					}
 					for (let a = 0, len = this.newTable.types.length; a < len; a++) {
 						this.newTable.options.searchable[a] = this.newTable.options.searchable[a] !== undefined ?
 							this.newTable.options.searchable[a] : this.newTable.searchableDefault;
 					}
 				},
-				toggleDropdown: function (rowName, colIndex) {
-					if (this.newTable[rowName] !== undefined) {
-						this.newTable[rowName] = this.newTable[rowName] === colIndex ? -1 : colIndex;
+				thAction: function (action, index) {
+					if (action === "insertColumnLeft") {
+						this.insertColumn(index);
+					 }
+					else if (action === "insertColumnRight") { 
+						this.insertColumn(index + 1);
 					}
-					else debug(rowName, "no such row in table");
-				},
-				sortbyColumn: function (index) {
-					debug(index, "sortByColumn function not done");
-				},
-				deleteColumn: function (index) {
-					this.newTable.headers.splice(index, 1);
-					this.newTable.types.splice(index, 1);
-					this.newTable.options.searchable.splice(index, 1);
-					this.newTable.optionsDropdown = -1;
+					else if (action === "deleteColumn") { 
+						this.newTable.headers.splice(index, 1);
+						this.newTable.types.splice(index, 1);
+						this.newTable.options.searchable.splice(index, 1);
+						this.newTable.optionsDropdown = -1;
+					} 
 				},
 				insertColumn: function (index) {
-					if (!index) {
+					if (index === false) {
 						this.newTable.headers.push("");
 						this.newTable.types.push(this.newTable.typesDefault);
 						this.newTable.options.searchable.push(this.newTable.searchableDefault);
@@ -2406,6 +2512,12 @@
 						this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
 					}
 					this.newTable.optionsDropdown = -1;
+				},
+				typesAction: function (action, index) {
+					this.newTable.types[index] = action;
+				},
+				searchableAction: function (action, index) {
+					this.newTable.options.searchable[index] = action;
 				}
 			},
 			template: "#new-table-page"
@@ -2704,9 +2816,7 @@
 			},
 			data: function () {
 				return {
-					clipboard: function () {
-						return navigator.clipboard ? true : false;
-					}
+					
 				};
 			},
 			methods: {
@@ -2748,6 +2858,9 @@
 							action: "delete"
 						}
 					],
+					clipboard: function () {
+						return navigator.clipboard ? true : false;
+					},
 					copyDropdownLinks: []
 				};
 			},
@@ -3590,7 +3703,7 @@
 				}
 			},
 			setTheme: function (event) {
-				var theme = event.target.checked ? "dark-theme " : "",
+				var theme = event.target.checked ? "dark " : "",
 					htmlTag = document.getElementsByTagName("html")[0];
 				htmlTag.className = trim(theme + htmlTag.className.replace(/dark\-theme/g, ""));
 			},
@@ -3867,7 +3980,7 @@
 			},
 			toggleUseSystemTheme: function () {
 				matchSystemTheme();
-				layout();
+				refreshResponsiveLayout();
 				this.storeState();
 			},
 			login: function (callback) {
@@ -4322,7 +4435,7 @@
 	APP.confirm = confirm;
 	APP.localTestingMode = localTestingMode;
 
-	window.onresize = layout;//recalc layout on resize for a responsive experience
+	window.onresize = refreshResponsiveLayout;//recalc layout on resize for a responsive experience
 
 	if (Windows && WinJS) {
 		console.log("Windows");
@@ -4333,7 +4446,7 @@
 		var uiSettings = new Windows.UI.ViewManagement.UISettings();
 		var onVisibilityChanged = function (/*args*/) {
 			if (!document.hidden) {
-				layout();
+				refreshResponsiveLayout();
 			}
 		};
 		winApp.onactivated = function (args) {

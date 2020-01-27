@@ -56,10 +56,7 @@
 </head>
 <body>
 	<div id="loading"></div>
-	<div id="app" v-bind:class="{
-		 'sidenav_open': showSideNav,
-		 'dark-theme': useSystemTheme && systemDarkTheme || useSystemTheme === false && darkTheme
-		 }">
+	<div id="app" v-bind:class="{ 'sidenav_open': showSideNav }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
 			<div id="currentView"> {{ currentView.name }}</div>
@@ -196,29 +193,16 @@
 	<!-- Vue.js Templates -->
 	<script type="text/x-template" id="dropdown-button">
 		<div class="dropdownButton dropdown-container">
-			<button class="dropdownButton" v-if="custominput && open === false || custominput === false" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
+			<button class="dropdownButton" v-if="customtextinput && open === false || customtextinput === false" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
 				<template v-if="icon">
-					<span class="dropdownButton icon" v-bind:class="icon"></span>
-					<template v-if="noinputtext || buttonValue !== '' || noarrow === false">
-						&nbsp;&nbsp;
-					</template>
-				</template>
-				<template v-if="noinputtext || buttonValue !== ''">
-					{{ buttonValue || noinputtext }}
-				</template>
-				<template v-if="noarrow === false">
-					&nbsp;
-					<small>
-						<span v-show="open" class="dropdownButton icon icon-triangle-top"></span>
-						<span v-show="open === false" class="dropdownButton icon icon-triangle-bottom"></span>
-					</small>
+					<span class="dropdownButton icon" v-bind:class="icon"></span><template v-if="noinputtext || buttonValue !== '' || noarrow === false">&nbsp;&nbsp;</template></template><template v-if="noinputtext || buttonValue !== ''">{{ buttonValue || noinputtext }}</template><template v-if="noarrow === false">&nbsp;<small><span v-show="open" class="dropdownButton icon icon-triangle-top"></span><span v-show="open === false" class="dropdownButton icon icon-triangle-bottom"></span></small>
 				</template>
 			</button>
-			<input ref="input" v-if="custominput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" autocomplete="off"/>
+			<input ref="input" v-if="customtextinput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" autocomplete="off"/>
 			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
 				<a class="dropdownButton link" v-for="link in links" v-on:click="action($event, link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
 					<span class="dropdownButton icon left" v-bind:class="link.icon"></span>
-					<div class="dropdownButton" v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
+					<div class="dropdownButton" v-bind:title="link.description" v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
 						{{ link.text }}
 					</div>
 				</a>
@@ -279,55 +263,52 @@
 		<div class="view">
 			<div class="view-container">
 				<h3>Create a New Table</h3>
-				<label class="itemLabel">Table Name</label>
+				<label class="itemLabel">Title</label>
 				<input type="text" class="textbox" autocomplete="off" v-model="newTable.title" />
-				<label class="itemLabel">Table Icon</label>
+				<label class="itemLabel">Icon</label>
 				<div class="itemInput"><icon-select v-on:icon-select="setIcon" v-bind:icon="icon"></icon-select></div>
-				<label class="itemLabel">Templates</label>
+				<label class="itemLabel">Icon Color</label>
+				<div class="itemInput"><color-select id="setColorButton" v-on:color-select="setColor" v-bind:color="color"></color-select></div>
+				<label class="itemLabel">Predefined Templates</label>
 				<div class="itemInput"><button v-on:click="template('Blank')"><span class="icon icon-page"></span>&nbsp;&nbsp;Blank Template</button><button v-on:click="template('Contacts')"><span class="icon icon-user"></span>&nbsp;&nbsp;Contacts Template</button> <button v-on:click="template('Passwords')"><span class="icon icon-lock"></span>&nbsp;&nbsp;Passwords Template</button> <button v-on:click="template('Files')"><span class="icon icon-folder-open"></span>&nbsp;&nbsp;Files Template</button></div>
 				<label class="itemLabel">Table Setup</label>
 				<div class="table-container" v-bind:class="{ 'fullscreen': newTable.fullscreen }">
 					<table>
-						<tr>
+						<thead>
 							<th>
 								<a v-show="newTable.fullscreen" v-on:click="newTable.fullscreen = false"><span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen</a>
 								<a v-show="newTable.fullscreen === false" v-on:click="newTable.fullscreen = true"><span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen</a>
 							</th>
 							<th v-for="(column, index) in newTable.headers">
-								<div class="dropdown-container">
-									<a v-on:click="toggleDropdown('optionsDropdown', index)">Column {{ index + 1 }}</a>
-									<ul v-show="newTable.optionsDropdown === index" class="dropdown">
-										<li v-on:click="sortbyColumn(index)">Sort By Column</li>
-										<li v-on:click="deleteColumn(index)">Delete Column</li>
-										<li v-on:click="insertColumn(index)">Insert Column Left</li>
-										<li v-on:click="insertColumn(index + 1)">Insert Column Right</li>
-									</ul>
-								</div>
+								<dropdown-button
+									v-bind:buttontext="'Column ' + (index + 1)"
+									v-on:dropdown-action="thAction($event, index)"
+									v-bind:links="thLinks"></dropdown-button>
 							</th>
 							<th><a v-on:click="insertColumn(false)"><span class="icon icon-plus" title="Add New Column"></span></a></th>
-						</tr>
+						</thead>
 						<tr><th title="These are the headers of the columns in your table">Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-model="newTable.headers[index]" /></td><td></td></tr>
 						<tr>
 							<th>Column&nbsp;Data&nbsp;Type</th>
 							<td v-for="(type, index) in newTable.types">
-								<div class="dropdown-container">
-									<a v-on:click="toggleDropdown('typesDropdown', index)">{{ type }}</a>
-									<ul v-show="newTable.typesDropdown === index" class="dropdown">
-										<li v-for="validType in newTable.typesDropdownOptions" v-on:click="newTable.types[index] = validType; newTable.typesDropdown = -1;">{{ validType }}</li>
-									</ul>
-								</div>
+								<dropdown-button
+									v-bind:buttontext="newTable.types[index]"
+									v-on:dropdown-action="typesAction($event, index)"
+									v-bind:links="newTable.typesDropdownOptions"
+									select
+								></dropdown-button>
 							</td>
 							<td></td>
 						</tr>
 						<tr>
 							<th title="Do you want data from this column to show up in search results?">Searchable</th>
 							<td v-for="(value, index) in newTable.options.searchable">
-								<div class="dropdown-container">
-									<a v-on:click="toggleDropdown('searchableDropdown', index)">{{ value }}</a>
-									<ul v-show="newTable.searchableDropdown === index" class="dropdown">
-										<li v-for="option in newTable.searchableDropdownOptions" v-on:click="newTable.options.searchable[index] = option; newTable.searchableDropdown = -1;">{{ option }}</li>
-									</ul>
-								</div>
+								<dropdown-button
+									v-bind:buttontext="newTable.options.searchable[index]"
+									v-on:dropdown-action="searchableAction($event, index)"
+									v-bind:links="newTable.searchableDropdownOptions"
+									select
+								></dropdown-button>
 							</td>
 							<td></td>
 						</tr>
@@ -346,7 +327,11 @@
 					<label class="itemLabel">Property Name</label>
 					<input type="text" class="textbox" autocomplete="off" v-model="customPropertyName" />
 					<label class="itemLabel">Property Type</label>
-					<dropdown-button class="left" v-on:dropdown-action="setCustomPropertyType" v-bind:links="customPropertyTypes" noinputtext="[ Select a data type (required) ]" select v-bind:buttontext="customPropertyType"></dropdown-button>
+					<dropdown-button class="left" select
+						v-on:dropdown-action="setCustomPropertyType" 
+						v-bind:links="customPropertyTypes" 
+						noinputtext="[ Select a data type (required) ]"
+						v-bind:buttontext="customPropertyType"></dropdown-button>
 					<label class="itemLabel">Initial Value</label>
 					<input v-bind:type="initialValueInputType" class="textbox" autocomplete="off" v-model="customPropertyInitialValue" />
 					<div class="alert">{{ customPropertyError }}</div>
@@ -465,12 +450,6 @@
 				<a class="button" v-on:click="generateListView('Contacts')">See all contacts</a>
 				<br />
 				<br />
-				<!-- <a class="button" v-on:click="shareFile('README.txt','Readme')">Share test file</a>
-				<br />
-				Share Link: {{ sharedFileLink }}
-				<br />
-				<a class="button" v-on:click="receiveFile('https://www.dropbox.com/s/kdislb8rhya2ymx/README.txt?dl=0')">Receive test file</a><br />
-				<br /> -->
 			</div>
 		</div>
 	</script>
@@ -527,7 +506,7 @@
 								 v-on:dropdown-action="groupsDropdownActions"
 								 v-on:dropdown-open="initializeGroups">
 				</dropdown-button>
-				<dropdown-button v-if="details.table !== 'Files'" class="left"
+				<dropdown-button v-if="details.table !== 'Files' && clipboard" class="left"
 								 v-bind:links="copyDropdownLinks"
 								 icon="icon-copy"
 								 buttontext="Copy"
@@ -692,7 +671,7 @@
 							 class="itemLabel"
 							 v-bind:buttontext="item.label.value"
 							 v-bind:noinputtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-							 v-bind:custominput="item.label.customize"
+							 v-bind:customtextinput="item.label.customize"
 							 select
 							 v-bind:links="item.label.options"
 							 v-on:dropdown-action="setLabel"
@@ -721,7 +700,7 @@
 								 class="left"
 								 v-bind:buttontext="value"
 								 v-bind:noinputtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-								 v-bind:custominput="item.customize"
+								 v-bind:customtextinput="item.customize"
 								 select
 								 v-bind:links="item.options"
 								 v-on:dropdown-action="setValue"
