@@ -3,7 +3,7 @@
 //depenancies
 var APP, Base64, Windows, cordova, Spelling;
 ;
-var NyckelDB = (function () {
+const NyckelDB = (function () {
     function IS_NUMERIC(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
     }
@@ -1116,7 +1116,7 @@ var NyckelDB = (function () {
                 }
                 else
                     CACHE_ERROR.call(this, value, "cannot set " + propName);
-                return;
+                return undefined;
             }
         }
         function apply(propName, value, type) {
@@ -1130,7 +1130,7 @@ var NyckelDB = (function () {
             return value;
         }
         if (TABLE_IS_DELETED(DB[this.id]))
-            return;
+            return undefined;
         if (typeof value === "string")
             value = value.replace(/<[^>]+>/g, ""); //remove html markup
         propName = TO_PROP_NAME(propName);
@@ -1142,7 +1142,7 @@ var NyckelDB = (function () {
         }
         else
             CACHE_ERROR.call(this, propName, "invalid property name");
-        return;
+        return undefined;
     }
     function ADD_ROW(array, id, storeBool, editTimesArr) {
         //creates a 3 digit id from custom alphabet one step higher than the given starting point
@@ -2180,13 +2180,9 @@ var NyckelDB = (function () {
                         props[headers[b]] = props[a];
                         delete props[a];
                     }
-                    props[headers[b]] = props[headers[b]] || {};
+                    props[headers[b]] = props[headers[b]] || VALIDATE_COLUMN_PROPS.call(this, uncheckedHeaders[a], time);
                     if (a !== headers[b] && !props[headers[b]].exportAs)
                         props[headers[b]].exportAs = [a, time];
-                    if (!props[headers[b]].type) {
-                        var val = uncheckedHeaders[a];
-                        props[headers[b]] = VALIDATE_COLUMN_PROPS.call(this, val, time);
-                    }
                     b++;
                 }
             }
@@ -2927,7 +2923,7 @@ var NyckelDB = (function () {
         if (rowIndex > -1 && colIndex > 0)
             return DB[this.id].table[rowIndex][colIndex];
         else
-            return;
+            return undefined;
     };
     /**
      * Get a number of cell values from the table at once
@@ -3059,7 +3055,7 @@ var NyckelDB = (function () {
                 else
                     return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
             }
-            if (json && TABLE_IS_DELETED(json))
+            if (json && TABLE_IS_DELETED(json)) {
                 return {
                     "title": DB[this.id].title,
                     "created": json.created || TIMESTAMP(),
@@ -3067,7 +3063,8 @@ var NyckelDB = (function () {
                     "deleted": true,
                     "version": this.version + "_" + Base64.Version
                 };
-            else
+            }
+            else {
                 return {
                     "title": DB[this.id].title,
                     "created": json && json.created !== undefined ? json.created : TIMESTAMP(),
@@ -3079,6 +3076,7 @@ var NyckelDB = (function () {
                     "table": json && json.table ? json.table : [],
                     "properties": json && json.properties ? json.properties : properties
                 };
+            }
         }
         function decompress(data, key) {
             return JSON.parse(Base64.read(data, key));
@@ -3114,7 +3112,7 @@ var NyckelDB = (function () {
                         var propArr = propValue;
                         _type = VALIDATE_BASIC_TYPE.call(this, propArr[2]);
                         if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties"))
-                            _props[propName] = [propValue[0], propValue[1], _type];
+                            _props[propName] = [propArr[0], propArr[1], _type];
                         propArr = null;
                     }
                     else if (!IS_ARRAY(propValue) && typeof propValue === "object") {

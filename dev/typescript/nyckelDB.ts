@@ -71,10 +71,7 @@ type searchIndex = { [searchWord: string]: { [columnName: string]: string; }; };
 
 type searchOptions = { colNames?: string[], fuzzyMatch?: boolean };
 
-interface API {
-	id: number;
-	syncPending: boolean;
-	version: string;
+type nyckelFunctions = {
 	readonly addColumn: Function;
 	readonly addRow: Function;
 	readonly advancedSearch: Function;
@@ -97,13 +94,14 @@ interface API {
 	readonly getVal: Function;
 	readonly getVals: Function;
 	readonly hideRow: Function;
-	readonly init: Function;
 	readonly importJSON: Function;
+	readonly init: Function;
 	readonly isDeleted: Function;
 	readonly isSyncPending: Function;
 	readonly NUKEALL: Function;
 	readonly renameColumn: Function;
 	readonly search: Function;
+	readonly setColumnProp: Function;
 	readonly setProp: Function;
 	readonly setSyncCompleted: Function;
 	readonly setTitle: Function;
@@ -119,6 +117,12 @@ interface API {
 	readonly unfilter: Function;
 	readonly unhideRows: Function;
 	readonly validate: Function;
+}
+
+interface API extends nyckelFunctions {
+	id: number;
+	syncPending: boolean;
+	version: string;
 }
 
 interface base64File {
@@ -316,7 +320,7 @@ type setTypeCallback = (this: API, returnData: {[columnName: string]:{[rowId: st
  */
 type syncCallback = (success: boolean, errors: string | false, base64File: base64File | false) => void;
 
-var NyckelDB = (function () {
+const NyckelDB = (function () {
 	function IS_NUMERIC(n: any): n is number {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	}
@@ -864,7 +868,7 @@ var NyckelDB = (function () {
 						if (DB1.columns.meta.hasOwnProperty(c)) {
 							for (a in DB1.columns.meta[c]) {
 								if (DB1.columns.meta[c].hasOwnProperty(a)) {
-									if (a === "timestamp") DB1.columns.meta[c][a]![0] = DB1.columns.meta[c][a]![0] - createdDiff;
+									if (a === "timestamp") DB1.columns.meta[c][a]![0] = (DB1.columns.meta[c][a]![0] as number) - createdDiff;
 									DB1.columns.meta[c][a]![1] = DB1.columns.meta[c][a]![1] - createdDiff;
 								}
 							}
@@ -1259,10 +1263,10 @@ var NyckelDB = (function () {
 			BUILDING_SEARCH_INDEX[this.id] = false;
 		}
 		function getIndexableColumns(db: nyckelDB_uncompressed, colNamesToIndex?: string[]): string[] {
-			var ret = [],
+			var ret: string[] = [],
 				b = 0;
 			if (colNamesToIndex) {
-				for (let c = 0, lenC = colNamesToIndex.length, colName; c < lenC; c++){
+				for (let c = 0, lenC = colNamesToIndex.length, colName: string; c < lenC; c++){
 					colName = TO_PROP_NAME(colNamesToIndex[c]);
 					if (db.columns.meta[colName] && (db.columns.meta[colName].searchable === undefined || db.columns.meta[colName].searchable![0] === true))
 						ret[b++] = colName;
@@ -1328,20 +1332,20 @@ var NyckelDB = (function () {
 					return apply.call(this, propName, value, type);
 				}
 				else CACHE_ERROR.call(this, value, "cannot set " + propName);
-				return;
+				return undefined;
 			}
 		}
 		function apply(this: API, propName: string, value: tableValue, type: basicTypeString): tableValue{
 			editTime = VALIDATE_EDIT_TIME.call(this, editTime, "property", "setProp");
 			(DB[this.id] as nyckelDB_uncompressed).properties[propName][0] = value;
-			(DB[this.id] as nyckelDB_uncompressed).properties[propName][1] = editTime;
+			(DB[this.id] as nyckelDB_uncompressed).properties[propName][1] = editTime!;
 			(DB[this.id] as nyckelDB_uncompressed).properties[propName][2] = type;
-			DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
+			DB[this.id].lastModified = editTime! + DB[this.id].created > DB[this.id].lastModified ? editTime! + DB[this.id].created : DB[this.id].lastModified;
 			this.syncPending = true;
 			TO_LOCAL_STORAGE.call(this, storeBool);
 			return value;
 		}
-		if (TABLE_IS_DELETED(DB[this.id])) return;
+		if (TABLE_IS_DELETED(DB[this.id])) return undefined;
 		if (typeof value === "string") value = value.replace(/<[^>]+>/g, "");//remove html markup
 		propName = TO_PROP_NAME(propName);
 		if ((DB[this.id] as nyckelDB_uncompressed).properties[propName]) {
@@ -1351,7 +1355,7 @@ var NyckelDB = (function () {
 			return validate.call(this, propName, value, type);
 		}
 		else CACHE_ERROR.call(this, propName, "invalid property name");
-		return;
+		return undefined;
 	}
 	function ADD_ROW(this: API, array: any[], id: string | null, storeBool: boolean, editTimesArr?: number[]): string | false {
 		//creates a 3 digit id from custom alphabet one step higher than the given starting point
@@ -1931,10 +1935,10 @@ var NyckelDB = (function () {
 			var thisModified: number;
 			editTime = VALIDATE_EDIT_TIME.call(this, editTime, "cell", "setVal", toTable[rowIndex][0]);
 			toTable[rowIndex][colIndex] = newValue;
-			toIds[toTable[rowIndex][0]][colIndex] = editTime;
+			toIds[toTable[rowIndex][0]][colIndex] = editTime!;
 			thisModified = (toIds[toTable[rowIndex][0]] as deletedId)[0] === "del" ?
-				editTime + Number(toIds[toTable[rowIndex][0]][1]) + DB[this.id].created :
-				editTime + Number(toIds[toTable[rowIndex][0]][0]) + DB[this.id].created;
+				editTime! + Number(toIds[toTable[rowIndex][0]][1]) + DB[this.id].created :
+				editTime! + Number(toIds[toTable[rowIndex][0]][0]) + DB[this.id].created;
 			if (thisModified > DB[this.id].lastModified) DB[this.id].lastModified = thisModified;
 			thisModified = null!;
 			this.syncPending = true;
@@ -1993,15 +1997,15 @@ var NyckelDB = (function () {
 		//if found
 		editTime = VALIDATE_EDIT_TIME.call(this, editTime, "row", "deleteRow");
 		//set deleted in id registry
-		if (rowIsHidden) (HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][index][0]] as deletedId) = ["del", editTime];
-		else ((DB[this.id] as nyckelDB_uncompressed).ids[(DB[this.id] as nyckelDB_uncompressed).table[index][0]] as deletedId) = ["del", editTime];
+		if (rowIsHidden) (HIDDEN_IDS[this.id][HIDDEN_TABLE_DATA[this.id][index][0]] as deletedId) = ["del", editTime!];
+		else ((DB[this.id] as nyckelDB_uncompressed).ids[(DB[this.id] as nyckelDB_uncompressed).table[index][0]] as deletedId) = ["del", editTime!];
 		//delete the row
 		if (rowIsHidden) HIDDEN_TABLE_DATA[this.id].splice(index, 1);
 		else (DB[this.id] as nyckelDB_uncompressed).table.splice(index, 1);
 		//clear the row cache
 		ROW_INDEX_CACHE[this.id] = {};
 		//update lastModified and syncPending
-		DB[this.id].lastModified = editTime + DB[this.id].created > DB[this.id].lastModified ? editTime + DB[this.id].created : DB[this.id].lastModified;
+		DB[this.id].lastModified = editTime! + DB[this.id].created > DB[this.id].lastModified ? editTime! + DB[this.id].created : DB[this.id].lastModified;
 		this.syncPending = true;
 		//save changes to localStorage
 		TO_LOCAL_STORAGE.call(this, storeBool);
@@ -2306,12 +2310,8 @@ var NyckelDB = (function () {
 						props[headers[b]] = props[a];
 						delete props[a];
 					}
-					props[headers[b]] = props[headers[b]] || {};
+					props[headers[b]] = props[headers[b]] || VALIDATE_COLUMN_PROPS.call(this, uncheckedHeaders[a], time);
 					if (a !== headers[b] && !props[headers[b]].exportAs) props[headers[b]].exportAs = [a, time];
-					if (!props[headers[b]].type) {
-						var val = uncheckedHeaders[a];
-						props[headers[b]] = VALIDATE_COLUMN_PROPS.call(this, val, time);
-					}						
 					b++;
 				}	
 			}
@@ -2543,11 +2543,11 @@ var NyckelDB = (function () {
 		}
 		else if (propName === "searchable") {
 			propValue = setBoolean(propValue);
-			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime);
+			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime!);
 		}
 		else if (propName === "initialValue") {
 			propValue = VALIDATE_PROP_INITIAL_VALUE.call(this, propValue, db.columns.meta[colName].type[0]);
-			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime);
+			db.columns.meta[colName][propName] = TIMESTAMP_COLUMN_PROP(propValue, editTime!);
 		}
 		else {
 			CACHE_ERROR.call(this, propName, "unknown column property not being synced");
@@ -3031,7 +3031,7 @@ var NyckelDB = (function () {
 		var rowIndex = GET_INDEX_OF_ROW.call(this, rowId),
 			colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
 		if (rowIndex > -1 && colIndex > 0) return (DB[this.id] as nyckelDB_uncompressed).table[rowIndex][colIndex];
-		else return;
+		else return undefined;
 	};
 	/**
 	 * Get a number of cell values from the table at once
@@ -3167,24 +3167,28 @@ var NyckelDB = (function () {
 				}
 				else return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
 			}
-			if (json && TABLE_IS_DELETED(json)) return {
-				"title": DB[this.id].title,
-				"created": json.created || TIMESTAMP(),
-				"lastModified": json.lastModified || TIMESTAMP(),
-				"deleted": true,
-				"version": this.version + "_" + Base64.Version
-			};
-			else return {
-				"title": DB[this.id].title,
-				"created": json && json.created !== undefined ? json.created : TIMESTAMP(),
-				"lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
-				"deleted": false,
-				"version": this.version + "_" + Base64.Version,
-				"ids": json && json.ids ? json.ids : {},
-				"columns": setColumns.call(this, json),
-				"table": json && json.table ? json.table : [],
-				"properties": json && json.properties ? json.properties : properties
-			};
+			if (json && TABLE_IS_DELETED(json)) {
+				return {
+					"title": DB[this.id].title,
+					"created": json.created || TIMESTAMP(),
+					"lastModified": json.lastModified || TIMESTAMP(),
+					"deleted": true,
+					"version": this.version + "_" + Base64.Version
+				};
+			}
+			else {
+				return {
+					"title": DB[this.id].title,
+					"created": json && json.created !== undefined ? json.created : TIMESTAMP(),
+					"lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
+					"deleted": false,
+					"version": this.version + "_" + Base64.Version,
+					"ids": json && (json as nyckelDB_uncompressed).ids ? (json as nyckelDB_uncompressed).ids : {},
+					"columns": setColumns.call(this, json),
+					"table": json && (json as nyckelDB_uncompressed).table ? (json as nyckelDB_uncompressed).table : [],
+					"properties": json && (json as nyckelDB_uncompressed).properties ? (json as nyckelDB_uncompressed).properties : properties
+				};
+			}
 		}
 		function decompress(data: string, key: string | undefined): nyckelDB_uncompressed{
 			return JSON.parse(Base64.read(data, key));
@@ -3218,7 +3222,7 @@ var NyckelDB = (function () {
 					else if (IS_ARRAY(propValue) && propValue.length === 3) {
 						var propArr: [tableValue, number, string] = (propValue as [tableValue, number, string]);
 						_type = VALIDATE_BASIC_TYPE.call(this, propArr[2]);
-						if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties")) _props[propName] = [propValue[0], propValue[1], _type];
+						if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties")) _props[propName] = [propArr[0], propArr[1], _type];
 						propArr = null!;
 					}
 					else if (!IS_ARRAY(propValue) && typeof propValue === "object") {

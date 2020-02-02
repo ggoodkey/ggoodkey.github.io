@@ -278,3 +278,5 @@ out/*
 # Other
 *.bac.js
 *.ods
+scripts/winjs.js
+scripts/vuejs.js
