@@ -6,7 +6,7 @@ importScripts('nyckelDB.js');
 importScripts('Lawnchair.js');
 importScripts('adapters/indexed-db.js');
 importScripts('storage.js');
-
+/*global NyckelDB, Base64*/
 function ab2str(buffer) {
 	var bufView = new Uint16Array(buffer),
 		length = bufView.length,
@@ -37,7 +37,7 @@ var method,
 	appData = {},
 	callbackQueue = [],
 	//globals
-	APP = APP || {}, VAL, Base64, NyckelDB;
+	APP = APP || {}, VAL;
 while (length--) {
 	method = methods[length];
 	if (!APP[method]) {

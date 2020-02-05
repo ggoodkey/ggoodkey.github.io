@@ -1,36 +1,36 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 
 	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com/2/ https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com/2/ https://dropbox-api.arkoselabs.com/ https://www.dropbox.com https://*.googleusercontent.com/ 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
-	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-	<meta name="format-detection" content="telephone=no" />
-	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
 
-	<title>Nyckel (Beta)</title>
-	<meta name="description" content="Nyckel Database Application" />
+    <title>Nyckel (Beta)</title>
+    <meta name="description" content="Nyckel Database Application" />
 
 	<!--Favicons-->
 	<link rel="icon" type="image/ico" href="favicon.ico" />
 	<link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
 	<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
 	<link rel="icon" type="image/png" href="images/android/android-launchericon-96-96.png" sizes="96x96" />
-	<link rel="shortcut icon" href="favicon.ico" />
+    <link rel="shortcut icon" href="favicon.ico" />
+ 
+    <!--web app manifest-->
+    <link rel="manifest" href="manifest.json" />
 
-	<!--web app manifest-->
-	<link rel="manifest" href="manifest.json" />
-
-	<!-- Fallback application metadata for legacy browsers -->
+    <!-- Fallback application metadata for legacy browsers -->
 	<meta name="application-name" content="Nyckel" />
-
+    
 	<!--microsoft-->
 	<link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico?v=2" />
 	<meta name="msapplication-tooltip" content="Nyckel Database Application" />
 	<meta name="msapplication-navbutton-color" content="#478cdb" />
 	<meta name="msapplication-tap-highlight" content="no" />
-	<meta name="msapplication-config" content="none" />
+    <meta name="msapplication-config" content="none" />
 
-	<!--apple-->
+    <!--apple-->
 	<!-- Place 180x180px apple-touch-icon.png in the root directory -->
 	<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 	<!--ipad-->
@@ -47,16 +47,19 @@
 	<link rel="icon" type="image/png" sizes="192x192" href="icon.png" />
 
 	<!-- Chrome, Firefox OS and Opera -->
-	<meta name="theme-color" content="#478cdb" />
-
-	<!--css-->
+    <meta name="theme-color" content="#478cdb" />
+   
+    <!--css-->
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
 	<link rel="stylesheet" type="text/css" href="css/icons.css" id="default-icons"/>
-	<link rel="stylesheet alternate" type="text/css" href="css/icons-mdl2.css" id="segoe-icons"/>
+    <link rel="stylesheet alternate" type="text/css" href="css/icons-mdl2.css" id="segoe-icons"/>   
 </head>
 <body>
-	<div id="loading"></div>
-	<div id="app" v-bind:class="{ 'sidenav_open': showSideNav }">
+    <noscript>
+        <strong>We're sorry but Nyckel doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="loading"></div>
+    <div id="app" v-bind:class="{ 'sidenav_open': showSideNav }">
 		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
 			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
 			<div id="currentView"> {{ currentView.name }}</div>
@@ -188,8 +191,8 @@
 			<input type="file" accept=".json" name="json[]" id="json" size="10" />
 			<a id="hiddenDownloadLink" download="" href="" style="display:none"></a>
 		</div>
-	</div>
-
+    </div>
+    
 	<!-- Vue.js Templates -->
 	<script type="text/x-template" id="dropdown-button">
 		<div class="dropdownButton dropdown-container">
@@ -750,5 +753,7 @@
 	<script type="text/javascript" src="scripts/lists.min.js"></script>
 	<script type="text/javascript" src="scripts/index.js"></script>
 	<script type="text/javascript" src="sw.js"></script>
+    <!-- The 'async' attribute is needed for RequireJS to work in a Windows app -->
+    <script type="text/javascript" data-main="scripts/startup" src="lib/require.2.1.8.js" async></script>
 </body>
 </html>

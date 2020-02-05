@@ -1,28 +1,14 @@
-"use strict";
-//external dependencies
-// vue.min.js
-// vue-router.min.js
-// debugmode.min.js
-// base64.min.js
-// dropbox.min.js
-// Lawnchair.js
-// adapters/dom.js
-// adapters/indexed-db.js
-// storage.js
-// validate.min.js
-// nyckelDB.min.js
-// ./cordova.js
-// common.min.js
-// winjs/base.min.js
-// lists.min.js
-/*global WinJS, NyckelDB, VueRouter, Base64*/
-var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova; //dependancies
+﻿//external dependencies
+// vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
+// storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
+/*global WinJS, NyckelDB, Base64*/
+var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windows, cordova; //dependancies
 (function () {
     "use strict";
     APP.setDebugMode(false); //TODO set to false
     APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
     const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
-    APP_VERSION = "0.5 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+    APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
     views = {
         new: {
             name: "Tables",
@@ -1626,9 +1612,26 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             ret.shift();
         }
         return ret;
+    }, is_outsideClick = function (e) {
+        var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
+        if (e.path) {
+            //for non UWP
+            //check to see if it is exactly the same button that was clicked, 
+            //or another dropdown button
+            outsideClick = !this.$el.contains(e.target);
+            var a = e.path.length || 0;
+            if (this.$el.id && outsideClick)
+                while (a--) {
+                    if (e.path[a].id === this.$el.id) {
+                        outsideClick = false;
+                        break;
+                    }
+                }
+        }
+        return outsideClick;
     };
     //Components
-    const dropdown_button = {
+    const dropdown_button = Vue.extend({
         props: {
             buttontext: {
                 type: String,
@@ -1666,7 +1669,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 open: false,
                 inputValue: this.buttontext || this.noinputtext,
                 buttonValue: this.buttontext,
-                clickOutside: null
+                clickOutside: function (e) { }
             };
         },
         methods: {
@@ -1679,22 +1682,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 if (this.open) {
                     if (!this.clickOutside) {
                         this.clickOutside = function clickOutside(e) {
-                            var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
-                            if (e.path) {
-                                //for non UWP
-                                //check to see if it is exactly the same button that was clicked, 
-                                //or another dropdown button
-                                outsideClick = !this.$el.contains(e.target);
-                                var a = e.path.length || 0;
-                                if (this.$el.id && outsideClick)
-                                    while (a--) {
-                                        if (e.path[a].id === this.$el.id) {
-                                            outsideClick = false;
-                                            break;
-                                        }
-                                    }
-                            }
-                            if (outsideClick)
+                            if (is_outsideClick.call(this, e))
                                 this.action(null, this.buttonValue);
                         }.bind(this);
                     }
@@ -1724,7 +1712,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#dropdown-button"
-    }, icon_select = {
+    }), icon_select = Vue.extend({
         props: {
             align: {
                 type: String,
@@ -1742,7 +1730,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
         data: function () {
             return {
                 open: false,
-                clickOutside: null,
+                clickOutside: function (e) { },
                 iconSelected: this.icon,
                 options: [
                     "icon-favorite-star",
@@ -1789,22 +1777,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 if (this.open) {
                     if (!this.clickOutside) {
                         this.clickOutside = function clickOutside(e) {
-                            var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
-                            if (e.path) {
-                                //for non UWP
-                                //check to see if it is exactly the same button that was clicked, 
-                                //or another dropdown button
-                                outsideClick = !this.$el.contains(e.target);
-                                var a = e.path.length || 0;
-                                if (this.$el.id && outsideClick)
-                                    while (a--) {
-                                        if (e.path[a].id === this.$el.id) {
-                                            outsideClick = false;
-                                            break;
-                                        }
-                                    }
-                            }
-                            if (outsideClick)
+                            if (is_outsideClick.call(this, e))
                                 this.toggle(false);
                         }.bind(this);
                     }
@@ -1820,7 +1793,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#icon-select"
-    }, color_select = {
+    }), color_select = Vue.extend({
         props: {
             align: {
                 type: String,
@@ -1834,7 +1807,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
         data: function () {
             return {
                 open: false,
-                clickOutside: null,
+                clickOutside: function (e) { },
                 options: [
                     "#478cdb",
                     "#ffb900",
@@ -1883,22 +1856,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 if (this.open) {
                     if (!this.clickOutside) {
                         this.clickOutside = function clickOutside(e) {
-                            var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
-                            if (e.path) {
-                                //for non UWP
-                                //check to see if it is exactly the same button that was clicked, 
-                                //or another dropdown button
-                                outsideClick = !this.$el.contains(e.target);
-                                var a = e.path.length || 0;
-                                if (this.$el.id && outsideClick)
-                                    while (a--) {
-                                        if (e.path[a].id === this.$el.id) {
-                                            outsideClick = false;
-                                            break;
-                                        }
-                                    }
-                            }
-                            if (outsideClick)
+                            if (is_outsideClick.call(this, e))
                                 this.toggle(false);
                         }.bind(this);
                     }
@@ -1913,7 +1871,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#color-select"
-    }, jump_list = {
+    }), jump_list = Vue.extend({
         props: {
             details: Object,
             links: Array,
@@ -2277,7 +2235,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#jump-list"
-    }, new_table_page = {
+    }), new_table_page = Vue.extend({
         components: {
             "dropdown-button": dropdown_button,
             "icon-select": icon_select,
@@ -2503,7 +2461,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 else if (action === "deleteColumn") {
                     this.newTable.headers.splice(index, 1);
                     this.newTable.types.splice(index, 1);
-                    this.newTable.options.searchable.splice(index, 1);
+                    //	this.newTable.options.searchable.splice(index, 1);
                     this.newTable.optionsDropdown = -1;
                 }
             },
@@ -2511,12 +2469,12 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 if (index === false) {
                     this.newTable.headers.push("");
                     this.newTable.types.push(this.newTable.typesDefault);
-                    this.newTable.options.searchable.push(this.newTable.searchableDefault);
+                    //	this.newTable.options.searchable.push(this.newTable.searchableDefault);
                 }
                 else {
                     this.newTable.headers.splice(index, 0, "");
                     this.newTable.types.splice(index, 0, this.newTable.typesDefault);
-                    this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
+                    //	this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
                 }
                 this.newTable.optionsDropdown = -1;
             },
@@ -2524,11 +2482,11 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 this.newTable.types[index] = action;
             },
             searchableAction: function (action, index) {
-                this.newTable.options.searchable[index] = action;
+                //	this.newTable.options.searchable[index] = action;
             }
         },
         template: "#new-table-page"
-    }, groups_page = {
+    }), groups_page = Vue.extend({
         components: {
             "jump-list": jump_list
         },
@@ -2541,7 +2499,9 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
                 activeGroup: state.activeGroup,
                 groupPage: 1,
                 groupHelp: false,
-                groupSearchBox: state.groupSearchBox
+                groupSearchBox: state.groupSearchBox,
+                addItemToGroupDropdown: state.addItemToGroupDropdown,
+                groupDropdown: state.groupDropdown
             };
         },
         methods: {
@@ -2759,7 +2719,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#groups-page"
-    }, view1_page = {
+    }), view1_page = Vue.extend({
         data: function () {
             return {
                 sharedFileLink: ""
@@ -2783,14 +2743,14 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#view1-page"
-    }, view3_page = {
+    }), view3_page = Vue.extend({
         methods: {
             generateListView: generateListView,
             importFile: importFile,
             createNewItem: createNewItem
         },
         template: "#view3-page"
-    }, details_card_lineitem = {
+    }), details_card_lineitem = Vue.extend({
         props: {
             item: Object
         },
@@ -2801,7 +2761,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             externalLink: externalLink
         },
         template: "#details-card-lineitem"
-    }, details_card = {
+    }), details_card = Vue.extend({
         props: {
             details: Object
         },
@@ -3082,7 +3042,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             addToGroup: addToGroup
         },
         template: "#details-card"
-    }, details_view_container = {
+    }), details_view_container = Vue.extend({
         props: {
             details: Object
         },
@@ -3090,7 +3050,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             "details-card": details_card
         },
         template: '<details-card class="view-container" v-bind:details="details"></details-card>'
-    }, details_page = {
+    }), details_page = Vue.extend({
         components: {
             "details-card": details_card
         },
@@ -3100,7 +3060,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             };
         },
         template: "#details-page"
-    }, recent_page = {
+    }), recent_page = Vue.extend({
         components: {
             "jump-list": jump_list,
             "v-a": details_view_container,
@@ -3163,7 +3123,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#recent-page"
-    }, search_results_page = {
+    }), search_results_page = Vue.extend({
         components: {
             "jump-list": jump_list,
             "v-a": details_view_container,
@@ -3199,7 +3159,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             addToNewGroup: addToNewGroup
         },
         template: "#search-results-page"
-    }, edit_details_card_lineitem = {
+    }), edit_details_card_lineitem = Vue.extend({
         props: { item: Object },
         data: function () {
             return {
@@ -3245,7 +3205,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#edit-details-card-lineitem"
-    }, edit_details_card_collapse = {
+    }), edit_details_card_collapse = Vue.extend({
         props: {
             item: Object,
             collapse: {
@@ -3280,7 +3240,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#edit-details-card-collapse"
-    }, edit_details_card = {
+    }), edit_details_card = Vue.extend({
         props: {
             details: Object
         },
@@ -3434,7 +3394,7 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             }
         },
         template: "#edit-details-card"
-    }, edit_details_page = {
+    }), edit_details_page = Vue.extend({
         components: {
             "edit-details-card": edit_details_card
         },
@@ -3444,9 +3404,9 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
             };
         },
         template: "#edit-details-page"
-    }, page_not_found_page = {
+    }), page_not_found_page = Vue.extend({
         template: "#page-not-found"
-    }, routes = [
+    }), routes = [
         {
             path: '/new',
             name: "new",
@@ -3554,7 +3514,13 @@ var APP, VAL, appData = {}, Vue, getWidth, getHeight, csv2json, Windows, cordova
         router: router,
         el: '#app',
         components: {
-            "color-select": color_select
+            "dropdown-button": dropdown_button,
+            "icon-select": icon_select,
+            "color-select": color_select,
+            "jump-list": jump_list,
+            //	"edit-details-card-lineitem": edit_details_card_lineitem,
+            "edit-details-page": edit_details_page,
+            "page-not-found-page": page_not_found_page
         },
         data: state,
         watch: {

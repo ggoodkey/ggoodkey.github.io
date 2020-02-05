@@ -2445,47 +2445,1382 @@ const NyckelDB = (function () {
      * @constructs NyckelDB
      * @param {string} tableTitle the name of the new database
      */
-    function NyckelDBObj(tableTitle) {
-        if (tableTitle == null) { // eslint-disable-line
-            console.log("no title");
-            return CACHE_ERROR.call(this, "title not defined");
+    class NyckelDBObj {
+        constructor(tableTitle) {
+            if (tableTitle == null) { // eslint-disable-line
+                console.log("no title");
+                return CACHE_ERROR.call(this, "title not defined");
+            }
+            NUM = NUM || 0;
+            DB = DB || new Array(Math.pow(2, 32) - 1);
+            DBS = DBS || [];
+            DBX_SYNC_OBJ = DBX_SYNC_OBJ || {};
+            SEARCH_INDEX = SEARCH_INDEX || [];
+            SEARCH_SUGGESTIONS = SEARCH_SUGGESTIONS || [];
+            RECENTLY_SEARCHED = RECENTLY_SEARCHED || [];
+            COL_NAMES_INDEXED = COL_NAMES_INDEXED || [];
+            BUILDING_SEARCH_INDEX = BUILDING_SEARCH_INDEX || [];
+            BUILDING_SEARCH_INDEX_QUEUE = BUILDING_SEARCH_INDEX_QUEUE || [];
+            ROW_INDEX_CACHE = ROW_INDEX_CACHE || [];
+            ERRORS = ERRORS || [];
+            HIDDEN_TABLE_DATA = HIDDEN_TABLE_DATA || [];
+            HIDDEN_IDS = HIDDEN_IDS || [];
+            this.syncPending = true;
+            this.version = "0.6.0";
+            //declare private DB object and unique this.id for every new instance of NyckelBDObj()
+            this.id = Base64.number_hash(tableTitle + Base64.rand(), 12);
+            SEARCH_INDEX[this.id] = {};
+            SEARCH_SUGGESTIONS[this.id] = [];
+            RECENTLY_SEARCHED[this.id] = [];
+            ROW_INDEX_CACHE[this.id] = {};
+            DB[this.id] = {
+                "title": tableTitle,
+                "created": 0,
+                "deleted": false,
+                "lastModified": 0,
+                "version": this.version + "_" + Base64.Version,
+                "columns": {
+                    "meta": {},
+                    "headers": [],
+                },
+                "ids": {},
+                "table": [],
+                "properties": {}
+            };
         }
-        NUM = NUM || 0;
-        DB = DB || new Array(Math.pow(2, 32) - 1);
-        DBS = DBS || [];
-        DBX_SYNC_OBJ = DBX_SYNC_OBJ || {};
-        SEARCH_INDEX = SEARCH_INDEX || [];
-        SEARCH_SUGGESTIONS = SEARCH_SUGGESTIONS || [];
-        RECENTLY_SEARCHED = RECENTLY_SEARCHED || [];
-        COL_NAMES_INDEXED = COL_NAMES_INDEXED || [];
-        BUILDING_SEARCH_INDEX = BUILDING_SEARCH_INDEX || [];
-        BUILDING_SEARCH_INDEX_QUEUE = BUILDING_SEARCH_INDEX_QUEUE || [];
-        ROW_INDEX_CACHE = ROW_INDEX_CACHE || [];
-        ERRORS = ERRORS || [];
-        HIDDEN_TABLE_DATA = HIDDEN_TABLE_DATA || [];
-        HIDDEN_IDS = HIDDEN_IDS || [];
-        this.syncPending = true;
-        this.version = "0.5";
-        //declare private DB object and unique this.id for every new instance of NyckelBDObj()
-        this.id = Base64.number_hash(tableTitle + Base64.rand(), 12);
-        SEARCH_INDEX[this.id] = {};
-        SEARCH_SUGGESTIONS[this.id] = [];
-        RECENTLY_SEARCHED[this.id] = [];
-        ROW_INDEX_CACHE[this.id] = {};
-        DB[this.id] = {
-            "title": tableTitle,
-            "created": 0,
-            "deleted": false,
-            "lastModified": 0,
-            "version": this.version + "_" + Base64.Version,
-            "columns": {
-                "meta": {},
-                "headers": [],
-            },
-            "ids": {},
-            "table": [],
-            "properties": {}
-        };
+        /**
+         * Add a new column to the table
+         * @function addColumn
+         * @param {string} colName new column name
+         * @param {number} position insert new column before column number, ie 1 adds it before the 1st column. If 0 or not specified, adds to end of table
+         * @param {object} [options] an Object of column properties: {
+         *	type: String,
+         *	initialValue: the initial value for every new cell in the new column,
+         *	formula: String,
+         *	searchable: Boolean whether to index column for searches
+         * }
+         * @param {successCallback} [callback] callback function
+         * @since 0.4
+         */
+        addColumn(colName, position, options, callback) {
+            return ADD_COLUMN.call(this, colName, position, options, true, undefined, callback);
+        }
+        ;
+        /**
+         * Add a new row to the table.
+         * @function addRow
+         * @param {array} array a complete array, or a JSON object in form {[colName]: {value: [value]},..}
+         * @param {string} [id] id is optional and will only be used if it doesn't already exist
+         * @returns {string} new row id
+         */
+        addRow(array, id) {
+            if (array && !IS_ARRAY(array) && typeof array === "object") {
+                //convert object to array
+                var _array = [], a = 0;
+                return this.forEachCol.call(this, function (col) {
+                    if (array[col] && array[col].value)
+                        _array[a] = array[col].value;
+                    a++;
+                }, function () {
+                    return ADD_ROW.call(this, _array, id, true);
+                }.bind(this));
+            }
+            else
+                return ADD_ROW.call(this, array, id, true);
+        }
+        ;
+        /**
+         * Same as search, but accepts join (+) and filter (-) between search terms to create more specific queries
+         *      Possible future deprication and merge functionality into search
+         * @function advancedSearch
+         * @param {string} searchQuery words to search for in the database
+         * @param {object} [options] {
+         *	"colNames": Array, an Array of columns to search in
+         *	"fuzzyMatch": Boolean
+         * }
+         * @param {searchCallback} [callback] callback function
+         */
+        advancedSearch(searchQuery, options, callback) {
+            function filter(ids, filterOutQueries) {
+                if (filterOutQueries.length === 0) {
+                    return callback instanceof Function ? callback.call(this, ids, ERRORS[this.id]) : undefined;
+                }
+                for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
+                    (function (self, b) {
+                        self.search.call(self, filterOutQueries[b], options, function (result, err) {
+                            if (!err)
+                                filterIds = filterIds.concat(result);
+                            else
+                                return callback instanceof Function ? callback.call(self, [], err) : undefined;
+                            if (b === lenB - 1) {
+                                filterIds = DELETE_DUPLICATES(filterIds);
+                                if (filterIds.length > 0) {
+                                    for (let c = 0, lenC = filterIds.length, t = "", d, lenD; c < lenC; c++) {
+                                        t = String(filterIds[c]);
+                                        for (d = 0, lenD = ids.length; d < lenD; d++) {
+                                            if (t === String(ids[d])) {
+                                                ids.splice(d, 1);
+                                                d--;
+                                                lenD--;
+                                            }
+                                        }
+                                    }
+                                }
+                                return callback instanceof Function ? callback.call(self, ids, ERRORS[self.id]) : undefined;
+                            }
+                        });
+                    })(this, b);
+                }
+            }
+            if (!searchQuery)
+                return callback instanceof Function ? callback.call(this, [], "no query supplied") : undefined;
+            var ids = [], filterIds = [], filterOutQueries = [], searchQueryArr = [];
+            if (/\s\+|\s\-/.test(searchQuery)) {
+                searchQueryArr = searchQuery.split(" +");
+                for (let a = 0; a < searchQueryArr.length; a++) {
+                    if (/\s\-/.test(searchQueryArr[a])) {
+                        var f = searchQueryArr[a].split(" -");
+                        searchQueryArr[a] = f.shift();
+                        filterOutQueries.push.apply(filterOutQueries, f);
+                    }
+                }
+            }
+            else
+                searchQueryArr = [searchQuery];
+            var b = 0;
+            for (let a = 0, len = searchQueryArr.length; a < len; a++) {
+                (function (self, a) {
+                    self.search.call(self, searchQueryArr[a], options, function (result, errors) {
+                        b++;
+                        if (!errors)
+                            ids = ids.concat(result);
+                        else
+                            return callback instanceof Function ? callback.call(self, [], errors) : undefined;
+                        if (b >= len - 1) {
+                            ids = DELETE_DUPLICATES(ids);
+                            filter.call(self, ids, filterOutQueries);
+                        }
+                    });
+                })(this, a);
+            }
+        }
+        ;
+        /**
+         * Delete a column from the table
+         * @function deleteColumn
+         * @param {string} colName the name of the column to delete
+         * @param {function} [callback] callback
+         * @returns {boolean} success
+         * @since 0.4
+         */
+        deleteColumn(colName, callback) {
+            return DELETE_COLUMN.call(this, colName, true, undefined, callback);
+        }
+        ;
+        /**
+         * Delete a row along with all the data that it contains
+         * @function deleteRow
+         * @param {string|number} rowId the row's id, or its current index
+         * @returns {boolean} success
+         */
+        deleteRow(rowId) {
+            return DELETE_ROW.call(this, rowId, true);
+        }
+        ;
+        /**
+         * Delete a table along with all the data that it contains, including custom properties
+         * @function deleteTable
+         * @param {function} [callback] callback function
+         * @returns {object} this
+         */
+        deleteTable(callback) {
+            return DELETE_TABLE.call(this, callback, undefined, true);
+        }
+        ;
+        /**
+         * Hide all rows who's value in a specific column don't match the given regular expression
+         * @function filter
+         * @param {string} colName is the column name from the table header
+         * @param {regExp} regExp the regular expression to match
+         * @returns {object} this
+         */
+        filter(colName, regExp) {
+            if (this.getLength() > 0) {
+                var colIndex = GET_INDEX_OF_COLUMN.call(this, colName), val;
+                if (colIndex > 0) {
+                    for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
+                        val = String(DB[this.id].table[a][colIndex]);
+                        if (!val.match(regExp)) {
+                            this.hideRow(a);
+                            a--;
+                            arrLen--;
+                        }
+                    }
+                    a = null;
+                    arrLen = null;
+                }
+                colIndex = null;
+                val = null;
+            }
+            return this;
+        }
+        ;
+        /**
+         * Iterate through all columns in a table. Passes the column name to funct in sequence and executes funct
+         * @function forEachCol
+         * @param {eachColCallback} funct the function to execute for each column in the table
+         * @param {successCallback} [callback] callback function to execute after everything is finished
+         * @returns {object} this
+         */
+        forEachCol(funct, callback) {
+            if (TABLE_IS_DELETED(DB[this.id]))
+                return callback instanceof Function ? (callback.call(this, false, "forEach table is deleted"), this) : this;
+            if (funct instanceof Function) {
+                for (let a = 1, headers = DB[this.id].columns.headers, len = headers.length; a < len; a++) {
+                    funct.call(this, headers[a], a - 1, len - 1);
+                }
+                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
+            }
+            else
+                return callback instanceof Function ? (callback.call(this, false, "forEach requires a function"), this) : this;
+        }
+        ;
+        /**
+         * Iterate through all (unhidden) rows in a table (in the current sorted order). Passes row ids to funct in sequence and executes funct
+         * @function forEachRow
+         * @param {eachRowCallback} funct the function to execute for each row in the table, parameters: rowId, rowIndex, tableLength
+         * @param {successCallback} [callback] callback function to execute when everything is finished
+         * @returns {object} this
+         */
+        forEachRow(funct, callback) {
+            if (TABLE_IS_DELETED(DB[this.id]))
+                return callback instanceof Function ? (callback.call(this, false, "forEach table is deleted"), this) : this;
+            if (funct instanceof Function) {
+                for (let a = 0, len = this.getLength(); a < len; a++) {
+                    funct.call(this, DB[this.id].table[a][0], a, len);
+                }
+                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
+            }
+            else
+                return callback instanceof Function ? (callback.call(this, false, "forEach requires a function"), this) : this;
+        }
+        ;
+        /**
+* Get the row header names as an Array
+* @function getHeaders
+* @param {getHeadersCallback} [callback] callback
+* @returns {string[]} header names
+*/
+        getHeaders(callback) {
+            var ret = [];
+            if (this.isDeleted())
+                return ret;
+            for (let a = 1, headers = DB[this.id].columns.headers, len = headers.length; a < len; a++) {
+                ret[a - 1] = headers[a];
+            }
+            return callback instanceof Function ? (callback.call(this, ret, false), ret) : ret;
+        }
+        ;
+        /**
+         * Get a row's current position in the table. You can supply either a row id, or else both a value and colName to find the first row that contains that value in the given column.
+         * @function getIndexOf
+         * @param {string} [id] row id
+         * @param {string|number|boolean} [orValue] cell value
+         * @param {string} [colName] is the column name from the table header
+         * @returns {number} zero based index of a row's current position in the table, -1 if not found
+         */
+        getIndexOf(id, orValue, colName) {
+            if (TABLE_IS_DELETED(DB[this.id]))
+                return -1;
+            else if (id) {
+                return GET_INDEX_OF_ROW.call(this, id);
+            }
+            else if (orValue && colName) {
+                var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+                if (colIndex > 0) {
+                    for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
+                        if (orValue === DB[this.id].table[a][colIndex]) {
+                            return a;
+                        }
+                    }
+                    return -1;
+                }
+                else
+                    return -1;
+            }
+            else
+                return -1;
+        }
+        ;
+        /**
+         * Get the timestamp of when the table was most recently changed
+         * @function getLastModified
+         * @return {number} database modified timestamp
+         */
+        getLastModified() {
+            return DB[this.id].lastModified;
+        }
+        ;
+        /**
+         * Get the number of (unhidden, unfiltered) rows in the table
+         * @function getLength
+         * @returns {number} the number of rows in the table
+         */
+        getLength() {
+            return !DB[this.id] || TABLE_IS_DELETED(DB[this.id]) ? 0 : DB[this.id].table.length;
+        }
+        ;
+        /**
+         * Get the value of a table custom property
+         * @function getProp
+         * @param {string} propName the name of the custom property
+         * @returns {string | number | boolean | undefined} the property value
+         */
+        getProp(propName) {
+            propName = TO_PROP_NAME(propName);
+            if (DB[this.id].properties) {
+                return DB[this.id].properties[propName] ? DB[this.id].properties[propName][0] : undefined;
+            }
+            else
+                return undefined;
+        }
+        ;
+        /**
+         * Get an entire row from the table as JSON arranged by column name. Returns column name, column type and value
+         * @function getRow
+         * @param {string|number} rowId the row's id, or its current index
+         * @param {getRowCallback} [callback] callback
+         * @returns {object | undefined} json formatted data, or undefined if nothing found
+         */
+        getRow(rowId, callback) {
+            var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), ret = {};
+            if (rowIndex > -1) {
+                this.forEachCol(function (colName, is) {
+                    ret[colName] = {
+                        column: colName,
+                        type: DB[this.id].columns.meta[colName].type[0],
+                        value: DB[this.id].table[rowIndex][is + 1]
+                    };
+                    if (DB[this.id].columns.meta[colName].exportAs)
+                        ret[colName].column = DB[this.id].columns.meta[colName].exportAs[0];
+                }.bind(this), function (success, errors) {
+                    return callback instanceof Function ? callback.call(this, ret, errors) : ret;
+                });
+            }
+            else
+                return callback instanceof Function ? callback.call(this, undefined, "row id not found") : undefined;
+        }
+        ;
+        /**
+        * Get an blank row from the table as JSON arranged by column name
+        * @function getRowTemplate
+        * @param {getRowTemplateCallback} callback callback
+        */
+        getRowTemplate(callback) {
+            var ret = {};
+            if (this.isDeleted())
+                return;
+            this.forEachCol(function (colName) {
+                ret[colName] = {
+                    column: colName,
+                    type: DB[this.id].columns.meta[colName].type[0]
+                };
+                if (DB[this.id].columns.meta[colName].exportAs) {
+                    ret[colName].column = DB[this.id].columns.meta[colName].exportAs[0];
+                }
+            }.bind(this), function (success, errors) {
+                return callback instanceof Function ? callback.call(this, ret, errors) : ret;
+            });
+        }
+        ;
+        /**
+         * Get search suggestions from partial words, for example, as you type in a search box
+         * @function getSearchSuggestions
+         * @param {string} searchQuery partial search query
+         * @param {object} [options] {
+         *	"colNames": Array, an Array of columns to search in
+         * }
+         * @param {searchCallback} [callback] callback function
+         * @returns {array} an Array of search queries that would return a match
+         */
+        getSearchSuggestions(searchQuery, options, callback) {
+            function buildSuggestionsList() {
+                searchQuery = String(searchQuery).split(" ");
+                var last = searchQuery.pop(), suggest = [], a = 0, prefix = last.charAt(0);
+                prefix = prefix.match(/\+|\-/) ? prefix : "";
+                last = SEARCH_VALIDATE(last)[0];
+                if (last) {
+                    var matchesThis = new RegExp("^" + last);
+                    searchQuery = searchQuery.join(" ");
+                    for (let b = 0, len = SEARCH_SUGGESTIONS[this.id].length; b < len; b++) {
+                        if (SEARCH_SUGGESTIONS[this.id][b].match(matchesThis)) {
+                            if (SEARCH_SUGGESTIONS[this.id][b] === last) { //found exact match, suggest at top of list
+                                suggest.unshift(searchQuery === "" ? prefix + last : searchQuery + " " + prefix + last);
+                                suggest[0] = TRIM(suggest[0].replace(/[^0-9a-z\s\+\-]/g, ""));
+                            }
+                            else {
+                                suggest[a] = searchQuery === "" ? prefix + SEARCH_SUGGESTIONS[this.id][b] : searchQuery + " " + prefix + SEARCH_SUGGESTIONS[this.id][b];
+                                suggest[a] = TRIM(suggest[a].replace(/[^0-9a-z\s\+\-]/g, ""));
+                            }
+                            a++;
+                        }
+                    }
+                    for (let c = 0, lenC = RECENTLY_SEARCHED[this.id].length, i, item; c < lenC; c++) {
+                        i = suggest.indexOf(RECENTLY_SEARCHED[this.id][c]);
+                        if (i !== -1) {
+                            item = suggest.splice(i, 1)[0];
+                            suggest.unshift(item);
+                        }
+                    }
+                }
+                last = null;
+                a = null;
+                searchQuery = null;
+                return callback instanceof Function ? (callback.call(this, suggest, ERRORS[this.id]), suggest) : suggest;
+            }
+            if (SEARCH_SUGGESTIONS[this.id].length > 0) {
+                return buildSuggestionsList.call(this);
+            }
+            else {
+                var cols = options.colNames ? options.colNames.join("|").split("|") : undefined;
+                if (callback instanceof Function)
+                    callback.call(this, [], "currently busy building search index");
+                BUILD_SEARCH_INDEX.call(this, cols);
+                return [];
+            }
+        }
+        ;
+        /**
+         * Get the title of the table
+         * @function getTitle
+         * @returns {string | undefined } table title
+         */
+        getTitle() { return DB[this.id] ? DB[this.id].title : undefined; }
+        ;
+        /**
+         * Get the 'type' that has been set on a particular column
+         * @function getType
+         * @param {string} colName the name of the column
+         * @return {string} a column type
+         */
+        getType(colName) {
+            return GET_COL_PROP.call(this, colName, "type");
+        }
+        ;
+        /**
+         * Get the value of a cell
+         * @function getVal
+         * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
+         * @param {string} colName is the column name from the table header
+         * @returns {string | number | boolean | undefined} table cell value
+         */
+        getVal(rowId, colName) {
+            var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+            if (rowIndex > -1 && colIndex > 0)
+                return DB[this.id].table[rowIndex][colIndex];
+            else
+                return undefined;
+        }
+        ;
+        /**
+         * Get a number of cell values from the table at once
+         * @function getVals
+         * @param {string[] | number[]} rowIds can be an Array of the index of the row, or it's 3 digit identifier
+         * @param {string[]} colNames is an Array the column names from the table header
+         * @param {getValsCallback} [callback] callback function
+         * @returns {array | false} 2d array of table values, or false if nothing found
+         */
+        getVals(rowIds, colNames, callback) {
+            if (!rowIds || rowIds.constructor !== Array || !colNames || colNames.constructor !== Array) {
+                return callback instanceof Function ? callback.call(this, false, "invalid inputs") : false;
+            }
+            var ret = [];
+            for (let a = 0, x = 0, b, y, rowIndex, colIndex, len = rowIds.length, lenB = colNames.length; a < len; a++) {
+                rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
+                if (rowIndex > -1) {
+                    ret[x] = [rowIds[a]];
+                    for (b = 0, y = 1; b < lenB; b++) {
+                        colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
+                        if (colIndex > 0) {
+                            ret[x][y] = DB[this.id].table[rowIndex][colIndex];
+                            y++;
+                        }
+                        else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
+                            return callback instanceof Function ? callback.call(this, false, colNames[b] + " is not a valid colName") : false;
+                        }
+                    }
+                    x++;
+                }
+                else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
+                    return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
+                }
+            }
+            return callback instanceof Function ? callback.call(this, ret, ERRORS[this.id]) : ret;
+        }
+        ;
+        /**
+         * Hide a row. The row will not be accessible at all until you call unHideRows.
+         * @function hideRow
+         * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
+         * @returns {object} this
+         */
+        hideRow(rowId) {
+            if (!TABLE_IS_DELETED(DB[this.id])) {
+                var index = GET_INDEX_OF_ROW.call(this, rowId);
+                if (index > -1) {
+                    var row = DB[this.id].table[index];
+                    HIDDEN_IDS[this.id] = HIDDEN_IDS[this.id] || {};
+                    HIDDEN_IDS[this.id][row[0]] = JSON.parse(JSON.stringify(DB[this.id].ids[row[0]]));
+                    delete DB[this.id].ids[row[0]];
+                    HIDDEN_TABLE_DATA[this.id] = HIDDEN_TABLE_DATA[this.id] || [];
+                    HIDDEN_TABLE_DATA[this.id].push(DB[this.id].table.splice(index, 1)[0]);
+                    ROW_INDEX_CACHE[this.id] = {};
+                }
+                index = null;
+            }
+            return this;
+        }
+        ;
+        /**
+         * Merge two copys of the same NyckelDB table (same title, column headers and column types) into one
+         * @function importJSON
+         * @param {json} json an exported NyckelDB object
+         * @param {string} syncKey the key used to obfuscate the data
+         * @param {successCallback} [callback] callback function
+         */
+        importJSON(json, syncKey, callback) {
+            return IMPORT_JSON.call(this, json, callback.bind(this), syncKey, false);
+        }
+        ;
+        //columnProperties could be an Array ["string","number"...] or
+        //an Object like this {Column_1: "string", Column_2: "number"...} or
+        //an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
+        //an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
+        /**
+         * Initiate the database. Required to call this right after creating a new NyckelDB obj. Sets initial values, checks for cached data and builds the search index
+         * @param {string[] | object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
+         * @param {string[] | object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
+         * @param {object} [options] {
+         *	customProperties: {
+         *	  <property1Name>: {
+         *	    initialValue: <value>,
+         *	    type: "String", "Boolean" or "Number" <String>
+         *	  },
+         *	  <property2Name>...
+         *	},
+         *	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
+         *	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
+         *	key: <string>,
+         * 	importData: <json>, table data that is ready to drop in to the database without parsing
+         *	importJSON: <json>, json data that needs to be parsed
+         *	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
+         * }
+         * @param {successCallback} [callback]
+         */
+        init(tableHeaders, columnProperties, options, callback) {
+            function validateData() {
+                var db = DB[this.id];
+                if (!TABLE_IS_DELETED(db)) {
+                    var columns = db.columns.meta;
+                    if (columns) {
+                        for (let a = 1, headers = db.columns.headers, len = headers.length, colProp; a < len; a++) {
+                            for (colProp in columns[headers[a]]) {
+                                if (columns[headers[a]].hasOwnProperty(colProp)) {
+                                    columns[headers[a]][colProp][1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp][1], "column", "didn't get cached table");
+                                }
+                            }
+                        }
+                    }
+                    //validate ids
+                    for (let id in db.ids) {
+                        if (db.ids.hasOwnProperty(id)) {
+                            for (let a = 0; a < db.ids[id].length; a++) {
+                                db.ids[id][a] = VALIDATE_EDIT_TIME.call(this, db.ids[id][a], a === 0 ? "row" : "cell", "validating ids", id);
+                            }
+                        }
+                    }
+                    for (let prop in db.properties) {
+                        if (db.properties.hasOwnProperty(prop)) {
+                            db.properties[prop][1] = VALIDATE_EDIT_TIME.call(this, db.properties[prop][1], "property", "didn't get cached table");
+                        }
+                    }
+                }
+            }
+            function applyData(json) {
+                function setColumns(json) {
+                    if (json) {
+                        return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns.meta, json.created, opt.doNotIndex) :
+                            APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
+                    }
+                    else
+                        return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
+                }
+                if (json && TABLE_IS_DELETED(json)) {
+                    return {
+                        "title": DB[this.id].title,
+                        "created": json.created || TIMESTAMP(),
+                        "lastModified": json.lastModified || TIMESTAMP(),
+                        "deleted": true,
+                        "version": this.version + "_" + Base64.Version
+                    };
+                }
+                else {
+                    return {
+                        "title": DB[this.id].title,
+                        "created": json && json.created !== undefined ? json.created : TIMESTAMP(),
+                        "lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
+                        "deleted": false,
+                        "version": this.version + "_" + Base64.Version,
+                        "ids": json && json.ids ? json.ids : {},
+                        "columns": setColumns.call(this, json),
+                        "table": json && json.table ? json.table : [],
+                        "properties": json && json.properties ? json.properties : properties
+                    };
+                }
+            }
+            function decompress(data, key) {
+                return JSON.parse(Base64.read(data, key));
+            }
+            function applyCustomProperties(props) {
+                function setInitialValue(type) {
+                    return type === "string" ? "" : type === "boolean" ? false : 0;
+                }
+                if (!props)
+                    return {};
+                var _props = {};
+                if (IS_ARRAY(props)) {
+                    for (let a = 0, len = props.length; a < len; a++) {
+                        _props[TO_PROP_NAME(props[a])] = [0, 0, "any"];
+                    }
+                    return _props;
+                }
+                else if (typeof props !== "object") {
+                    CACHE_ERROR.call(this, "Please supply properties in proper format");
+                    return {};
+                }
+                var _type = "any", _initialValue = 0, propName, propValue;
+                for (let prop in props) {
+                    if (props.hasOwnProperty(prop)) {
+                        propName = TO_PROP_NAME(prop);
+                        propValue = props[prop];
+                        if (typeof propValue === "string") {
+                            _type = VALIDATE_BASIC_TYPE.call(this, propValue);
+                            _initialValue = setInitialValue(_type);
+                            _props[propName] = [_initialValue, 0, _type];
+                        }
+                        else if (IS_ARRAY(propValue) && propValue.length === 3) {
+                            var propArr = propValue;
+                            _type = VALIDATE_BASIC_TYPE.call(this, propArr[2]);
+                            if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties"))
+                                _props[propName] = [propArr[0], propArr[1], _type];
+                            propArr = null;
+                        }
+                        else if (!IS_ARRAY(propValue) && typeof propValue === "object") {
+                            if (propValue.type) {
+                                _props[propName] = [0, 0, VALIDATE_BASIC_TYPE.call(this, propValue.type)];
+                            }
+                            else
+                                _props[propName] = [0, 0, "any"];
+                            if (propValue.initialValue !== undefined && VALUE_IS_VALID.call(this, propValue.initialValue, _props[propName][2], false, "applyCustomProperties2")) {
+                                _props[propName][0] = propValue.initialValue;
+                            }
+                            else {
+                                _type = _props[propName][2];
+                                _initialValue = setInitialValue(_type);
+                                _props[propName][0] = _initialValue;
+                            }
+                        }
+                        else
+                            CACHE_ERROR.call(this, prop, "invalid customProperty");
+                    }
+                }
+                _type = null;
+                _initialValue = null;
+                propName = null;
+                return _props;
+            }
+            function initiateTable(options) {
+                if (options && options.importData && options.importData.properties)
+                    options.importData.properties = applyCustomProperties.call(this, options.importData.properties);
+                else if (options && options.customProperties)
+                    properties = applyCustomProperties.call(this, options.customProperties);
+                //try to get cached table
+                if (APP.Sto)
+                    APP.Sto.getItem(DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
+                else
+                    return callback instanceof Function ? callback.call(this, false, "localStorage not found", false) : "localStorage not found";
+            }
+            function gotCachedTable(json) {
+                if (!json) {
+                    didntGetCachedTable.call(this);
+                    return;
+                }
+                if (typeof json === "string")
+                    json = JSON.parse(json);
+                if (!json.title || json.title !== DB[this.id].title || !json.version || json.created === undefined) {
+                    didntGetCachedTable.call(this);
+                    return;
+                }
+                var version = String(json.version).split("_");
+                if (String(version[0]) !== String(this.version) && String(version[0]) !== "0.5") {
+                    console.log("versions do not match", String(version[0]), String(this.version));
+                    didntGetCachedTable.call(this);
+                    return;
+                }
+                if ("data" in json) {
+                    if (String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, opt.key) === json.signature) {
+                        json = Base64.read(json.data, opt.key);
+                        return IMPORT_JSON.call(this, json, callback.bind(this), false, true);
+                    }
+                    else {
+                        console.log("compressed data is corrupted");
+                        didntGetCachedTable.call(this);
+                        return;
+                    }
+                }
+                else { //loading directly from local storage
+                    DB[this.id] = applyData.call(this, json);
+                    validateData.call(this);
+                    BUILD_SEARCH_INDEX.call(this, opt.initialIndex);
+                    return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
+                }
+            }
+            function didntGetCachedTable() {
+                //creating a brand new table
+                DB[this.id] = applyData.call(this, opt.importData);
+                validateData.call(this);
+                if (opt.importJSON)
+                    return IMPORT_JSON.call(this, opt.importJSON, callback.bind(this), opt.key || false, false);
+                else {
+                    TO_LOCAL_STORAGE.call(this, true);
+                    return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
+                }
+            }
+            var opt = options ? JSON.parse(JSON.stringify(options)) : {};
+            var properties = {};
+            if (typeof opt.importData === "string")
+                opt.importData = JSON.parse(opt.importData);
+            if (opt.importData && (opt.importData.lastModified < opt.importData.created && opt.importData.lastModified !== 0 || opt.importData.lastModified > TIMESTAMP())) {
+                console.log("importData modified dates are corrupted: " + opt.importData.lastModified);
+                return callback instanceof Function ? callback.call(this, false, "importData modified dates are corrupted: " + opt.importData.lastModified, null, false) : CACHE_ERROR.call(this, "importData modified dates are corrupted: " + opt.importData.lastModified);
+            }
+            if (opt.importData && opt.importData.data) {
+                if (opt.importData.version !== this.version + "_" + Base64.Version && opt.importData.version !== this.version + "." + Base64.Version) {
+                    return callback instanceof Function ? callback.call(this, false, "imported database version not supported", null, false) : CACHE_ERROR.call(this, "imported database version not supported");
+                }
+                else if (Base64.hmac(opt.importData.data, opt.key) === opt.importData.signature) {
+                    opt.importData = decompress(opt.importData.data, opt.key);
+                    initiateTable.call(this, opt);
+                    INITIATE_DBS.call(this, DB[this.id].title);
+                }
+                else
+                    return callback instanceof Function ? callback.call(this, false, "imported databse corrupted", null, false) : CACHE_ERROR.call(this, "imported database corrupted");
+            }
+            else {
+                initiateTable.call(this, opt);
+                INITIATE_DBS.call(this, DB[this.id].title);
+            }
+        }
+        /**
+         * Check if the table has been deleted or not
+         * @function isDeleted
+         * @returns {boolean} whether or not the table has been deleted
+         */
+        isDeleted() {
+            return TABLE_IS_DELETED(DB[this.id]);
+        }
+        ;
+        /**
+         * Checks whether there are changes since the last time the database was synchronized
+         * @function isSyncPending
+         * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
+         * @param {successCallback} [callback] callback function
+         * @returns {boolean} whether or not sync is needed
+         */
+        isSyncPending(cloudSyncFile, callback) {
+            function ret(val) {
+                return callback instanceof Function ? (callback.call(this, val, ERRORS[this.id]), val) : val;
+            }
+            if (cloudSyncFile) {
+                if (typeof cloudSyncFile === "string")
+                    cloudSyncFile = JSON.parse(cloudSyncFile);
+                var title = TO_PROP_NAME(DB[this.id].title);
+                if (!cloudSyncFile[title] && cloudSyncFile[title] !== 0 || Number(cloudSyncFile[title]) !== DB[this.id].lastModified) {
+                    this.syncPending = true;
+                    return ret.call(this, true);
+                }
+                else
+                    return ret.call(this, false);
+            }
+            else
+                return ret.call(this, this.syncPending);
+        }
+        ;
+        /**
+         * Clear all the locally cached copies of all the NyckelDB databases.
+         * @function NUKEALL
+         * @param {string} msg the message that you want to tell the user before you blow everything up!
+         * @param {successCallback} [callback] callback function
+         */
+        NUKEALL(msg, callback) {
+            function nuke() {
+                if (APP.Sto) {
+                    for (let a = 0, len = DBS.length; a < len; a++) {
+                        APP.Sto.deleteItem(DBS[a]);
+                        APP.Sto.deleteItem("searchIndex_" + DBS[a]);
+                    }
+                    APP.Sto.deleteItem("tables");
+                }
+                DB = new Array(Math.pow(2, 32) - 1);
+                NUM = 0;
+                DBS = [];
+                DBX_SYNC_OBJ = {};
+                SEARCH_INDEX = [];
+                SEARCH_SUGGESTIONS = [];
+                RECENTLY_SEARCHED = [];
+                COL_NAMES_INDEXED = [];
+                BUILDING_SEARCH_INDEX = [];
+                BUILDING_SEARCH_INDEX_QUEUE = [];
+                ROW_INDEX_CACHE = [];
+                ERRORS = [];
+                SYNC_ERROR = false;
+                SYNC_ERROR_TIME = 0;
+                if (callback instanceof Function)
+                    return callback.call(this, true, false);
+            }
+            if (APP.confirm && APP.notify)
+                APP.confirm(msg, nuke.bind(this), function () {
+                    APP.notify("<b>Oi!</b> That was close!", true);
+                }, {
+                    "okButton": "Delete all of this site's saved data in this web browser or app"
+                });
+            else if (window && window.confirm(msg))
+                nuke.call(this);
+        }
+        ;
+        /**
+         * Change the name of a column
+         *       Function not complete
+         * @function renameColumn
+         * @param {string} colName is the current column name from the table header
+         * @param {string} newName the new name to apply to the column
+         * @param {setCallback} [callback] callback function
+         * @returns {string | false} actual name set
+         * @since 0.4
+         */
+        renameColumn(colName, newName, callback) {
+            var orig = String(newName);
+            colName = TO_PROP_NAME(colName);
+            newName = TO_PROP_NAME(newName);
+            //TODO check for other columns of the same name
+            //check for other columns exportAs name of the same name
+            //TODO change name in search index
+            return newName;
+        }
+        ;
+        /**
+         * Search for rows that contain all of the words given in the search query
+         * @function search
+         * @param {string} searchQuery words to search for in the database
+         * @param {object} options {
+         *	"colNames": Array, an Array of columns to search in
+         *	"fuzzyMatch": Boolean
+         * }
+         * @param {searchCallback} callback callback function
+         */
+        search(searchQuery, options, callback) {
+            function findMatches(arr, min) {
+                min = min || 2;
+                if (min === 1)
+                    return arr;
+                var ret = []; /*return array*/
+                arr = arr.sort();
+                for (let a = 0, found = false, x = 0, y = x + 1, len = arr.length, b; x < len - min + 1; x++, y = x + 1) {
+                    if (String(arr[x]) === String(arr[y])) {
+                        found = true;
+                        for (b = 0; b < min - 1; b++) {
+                            if (arr[x] !== arr[y + b])
+                                found = false;
+                        }
+                        if (found === true) {
+                            ret[a] = arr[x];
+                            x = x + min - 1;
+                            a++;
+                        }
+                    }
+                }
+                return ret;
+            }
+            function querySearchIndex(searchQuery, lastRoundBool) {
+                var aLen = searchQuery.length, tempIds = [];
+                for (let a = 0, b, bLen = COL_NAMES_INDEXED[this.id].length, i; a < aLen; a++) {
+                    for (b = 0, i = []; b < bLen; b++) {
+                        if (SEARCH_INDEX[this.id][searchQuery[a]] && SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]) {
+                            i = i.concat(SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]);
+                        }
+                    }
+                    tempIds = tempIds.concat(DELETE_DUPLICATES(i));
+                }
+                ids = DELETE_DUPLICATES(ids.concat(findMatches.call(this, tempIds, aLen)));
+                if (ids.length > 0) {
+                    RECENTLY_SEARCHED[this.id] = DELETE_DUPLICATES(searchQuery.concat(RECENTLY_SEARCHED[this.id]));
+                    RECENTLY_SEARCHED[this.id] = RECENTLY_SEARCHED[this.id].slice(0, 25);
+                    STO_SEARCH_INDEX.call(this);
+                }
+                if (lastRoundBool)
+                    if (callback instanceof Function)
+                        return callback.call(this, ids, ERRORS[this.id]);
+            }
+            function fuzzyMatch(searchQueryArr) {
+                var arr = [];
+                //collect all possible alternate queries
+                for (let a = 0, lenA = searchQueryArr.length; a < lenA; a++) {
+                    if (Spelling[searchQueryArr[a]]) {
+                        arr[a] = Spelling[searchQueryArr[a]].split(" ");
+                    }
+                    else
+                        arr[a] = [searchQueryArr[a]];
+                }
+                //combine them in all possible combinations
+                var queries = [], a = 0, n = 0, cursor = [], len = arr.length;
+                while (len)
+                    cursor[--len] = 0; //initialize cursors
+                len = arr.length;
+                //while the last item in the last column has not been reached
+                while (arr[n]) {
+                    //initiate the new combination
+                    queries[a] = [arr[0][cursor[0]]];
+                    //write the new combination
+                    for (let c = 1; c < len; c++) {
+                        queries[a].push(arr[c][cursor[c]]);
+                    }
+                    a++;
+                    n = 0;
+                    cursor[n]++;
+                    while (n <= len && cursor[n] === arr[n].length) {
+                        cursor[n] = 0;
+                        cursor[n + 1]++;
+                        n++;
+                        if (n === len)
+                            break;
+                    }
+                }
+                arr = null;
+                for (let a = 0, len = queries.length - 1; a < len; a++) {
+                    querySearchIndex.call(this, queries[a], false);
+                }
+                return querySearchIndex.call(this, queries[queries.length - 1], true);
+            }
+            function search(searchQueryArr, options) {
+                if (options.fuzzyMatch)
+                    return fuzzyMatch.call(this, searchQueryArr);
+                else
+                    return querySearchIndex.call(this, searchQueryArr, true);
+            }
+            if (TABLE_IS_DELETED(DB[this.id]))
+                if (callback instanceof Function)
+                    return callback.call(this, [], "no data");
+            options = options || {};
+            var cols = options.colNames ? options.colNames.join("|").split("|") : undefined, ids = [], searchQueryArr = SEARCH_VALIDATE(searchQuery);
+            //check for search index
+            BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQueryArr, options));
+        }
+        ;
+        /**
+         * Change the value of a column property
+         * @function setColumnProp
+         * @param {string} colName the name of the column to modify
+         * @param {string} propName the name of the column property to modify
+         * @param {string | number | boolean} propValue the new value to set the column property to
+         * @returns { string | number | boolean | undefined} the validated property value that was applied
+         */
+        setColumnProp(colName, propName, propValue) {
+            if (propName === "type") {
+                var type = VALIDATE_TYPE.call(this, propValue);
+                return this.setType(colName, type);
+            }
+            else
+                return SET_COLUMN_PROP.call(this, colName, propName, propValue, true);
+        }
+        /**
+         * Change the value of a table's custom property
+         * @function setProp
+         * @param {string} propName the name of the property to change
+         * @param {string | number | boolean} value new value
+         * @returns {string | number | boolean | undefined} the validated property value that was applied
+         */
+        setProp(propName, value) {
+            return SET_PROP.call(this, propName, value, undefined, undefined, true);
+        }
+        ;
+        /**
+         * Same as isSyncPending but sets the value of syncPending to true if the cloudSyncFile validates
+         * @function setSyncCompleted
+         * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
+         * @param {successCallback} [callback] callback function
+         * @returns {boolean} whether or not sync is successfully set to complete
+         */
+        setSyncCompleted(cloudSyncFile, callback) {
+            var json = typeof cloudSyncFile === "string" ? JSON.parse(cloudSyncFile) : cloudSyncFile;
+            if (cloudSyncFile && this.isSyncPending(json)) {
+                if (callback instanceof Function) {
+                    return (callback.call(this, false, "database has been modified since last sync and requires sync again"), false);
+                }
+                else
+                    return false;
+            }
+            else {
+                this.syncPending = false;
+                if (callback instanceof Function) {
+                    return (callback.call(this, true, false), true);
+                }
+                else
+                    return true;
+            }
+        }
+        ;
+        /**
+         * Change the title of the table.
+         * 	   note: This actually deletes the table and creates a new one
+         *     with the new name – something to be aware of if you try
+         * 	   to access the table by it's old name and see that it has
+         * 	   been deleted!
+         * @function setTitle
+         * @param {string} newTitle the new title to apply
+         * @param {successCallback} [callback] callback function
+         * @returns {string} the new title
+         */
+        setTitle(newTitle, callback) {
+            var oldId = this.id, oldTitle = DB[this.id].title, y = DBS.indexOf(oldTitle);
+            //applyTitle creates a new id from title
+            INITIATE_DBS.call(this, newTitle, function (newTitle) {
+                //copy table and newTitle to new id
+                DB[this.id] = JSON.parse(JSON.stringify(DB[oldId]));
+                DB[this.id].title = newTitle;
+                // //cache oldTitle to maintain syncability
+                // if (DB[this.id].previousTitle) DB[this.id].previousTitle!.push(TO_PROP_NAME(oldTitle));
+                // else DB[this.id].previousTitle = [TO_PROP_NAME(oldTitle)];
+                //delete old table
+                DELETE_TABLE_BY_ID.call(this, oldId, TIMESTAMP());
+                oldId = null;
+                //update modified
+                DB[this.id].lastModified = TIMESTAMP();
+                this.syncPending = true;
+                //swap database references to refer to the new table
+                var x = DBS.indexOf(newTitle);
+                DBS[y] = DBS[x];
+                DBS[x] = oldTitle;
+                oldTitle = null;
+                y = null;
+                x = null;
+                TO_LOCAL_STORAGE.call(this, true);
+                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
+            }.bind(this));
+        }
+        ;
+        /**
+         * Change the column's data validation 'type'
+         *     Not complete
+         * @function setType
+         * @param {string} colName is the column name from the table header
+         * @param {string} type the type of data validation to set for the given column
+         * @param {array} data updated column data that validates to the new type
+         * @param {setTypeCallback} [callback] callback function
+         */
+        setType(colName, type, data, callback) {
+            return SET_TYPE.call(this, colName, type, data, true, undefined, callback);
+        }
+        ;
+        /**
+         * Change the value of a cell
+         * @function setVal
+         * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
+         * @param {string} colName is the column name from the table header
+         * @param {string | number | boolean} newValue the new value to apply to the cell
+         * @param {setCallback} [callback] callback function
+         * @returns {string | number | boolean | undefined} the actual value that was set after passing through data validation
+         */
+        setVal(rowId, colName, newValue, callback) {
+            return SET_VAL.call(this, rowId, colName, newValue, true, undefined, callback);
+        }
+        ;
+        /**
+        * Change multiple values at once
+        * @function setVals
+        * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
+        * @param {object} newValues object in the form {[colName]:{value:[value]},...}
+        * @param {setCallback} [callback] callback function
+        */
+        setVals(rowId, newValues, callback) {
+            function ret() {
+                a++;
+                if (a === len && callback instanceof Function)
+                    return callback.call(this, true, ERRORS[this.id]);
+            }
+            var len = 0, a = 0;
+            for (let i in newValues) {
+                len++;
+            }
+            for (let column in newValues) {
+                if (COL_NAME_IS_VALID.call(this, column)) {
+                    SET_VAL.call(this, rowId, column, newValues[column].value, true, undefined, ret.bind(this));
+                }
+            }
+        }
+        ;
+        /**
+         * Shuffle the order of the rows in the table
+         * @function shuffle
+         * @returns {object} this
+         */
+        shuffle() {
+            function shuffle(array) {
+                var len = array.length, halfLen = Math.ceil(len / 2), random = Base64.rand(halfLen).split(""), r = 0;
+                //shuffle cards
+                if (len > 0) {
+                    var array1, array2;
+                    for (var reps = 0, a, lenA; reps < 2 || reps < len / 10; reps++) {
+                        //split the deck
+                        array1 = array.slice(0, halfLen);
+                        array2 = array.slice(halfLen, len);
+                        for (a = 0, lenA = array1.length; a < lenA; a++) {
+                            array2.splice(a + Number(random[r]), 0, array1[a]);
+                            r++;
+                            if (r > len / 2)
+                                r = 0;
+                        }
+                        array = array2;
+                        array.push(array.shift());
+                        r = 0;
+                    }
+                    reps = null;
+                    a = null;
+                    lenA = null;
+                    array1 = null;
+                    array2 = null;
+                }
+                len = null;
+                halfLen = null;
+                random = null;
+                r = null;
+                return array;
+            }
+            if (!TABLE_IS_DELETED(DB[this.id])) {
+                var len = this.getLength(), shuffled = shuffle(DB[this.id].table);
+                if (shuffled.length !== len) {
+                    CACHE_ERROR.call(this, "shuffle error " + len + " != " + this.getLength());
+                    len = null;
+                    shuffled = null;
+                    return this;
+                }
+                else {
+                    DB[this.id].table = shuffled;
+                    ROW_INDEX_CACHE[this.id] = {};
+                    len = null;
+                    shuffled = null;
+                    return this;
+                }
+            }
+            else
+                return this;
+        }
+        ;
+        /**
+         * Sort the table alphabetically or numerically by a particular column.
+         * @function sortByCol
+         * @param {string} colName is the column name from the table header
+         * @param {object} [options] {
+         *	"reverse": sort Z-A, (true or false)
+         *	"fromEndOfStr": sort xA-xZ, (true or false) }
+         * @returns {object} this
+         */
+        sortByCol(colName, options) {
+            function reverseStr(str) {
+                str = String(str);
+                var ret = [];
+                for (var a = 0, len = str.length; a < len; a++) {
+                    ret[a] = str[len - a - 1];
+                }
+                a = null;
+                len = null;
+                return ret.join("");
+            }
+            function sortFunction(a, b) {
+                var _a = a[colIndex];
+                var _b = b[colIndex];
+                //try to compare items as numbers
+                if (!isNaN(Number(_a)) && !isNaN(Number(_b))) {
+                    _a = Number(_a);
+                    _b = Number(_b);
+                }
+                //optionally sort string backwards <-- (from this end)
+                if (options && options.fromEndOfStr) {
+                    _a = reverseStr(_a);
+                    _b = reverseStr(_b);
+                }
+                return _a === _b ? 0 : _a < _b ? -1 : 1;
+            }
+            options = options || {};
+            var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
+            if (colIndex > 0) {
+                DB[this.id].table.sort(sortFunction);
+                if (options.reverse)
+                    DB[this.id].table.reverse();
+                ROW_INDEX_CACHE[this.id] = {};
+                colIndex = null;
+                return this;
+            }
+            else
+                return this;
+        }
+        ;
+        /**
+         * Synchronize with an external copy of the database.
+         * @function sync
+         * @param {json} json nyckeldb json
+         * @param {json} [options] {
+         *	forceSync: true, (false is default)
+         *	key: string,
+         *  initialKey: string,
+         *	oldKey: string,
+         *	token: string
+         * }
+         * @param {successCallback} [callback] syncCallback function
+         * @return {object} this
+         */
+        sync(json, options, callback) {
+            function retError(msg) {
+                if (callback instanceof Function)
+                    return callback.call(this, false, msg, false);
+            }
+            function sync() {
+                function read(data, key, change) {
+                    if (change) {
+                        DB[this.id].lastModified = TIMESTAMP();
+                        this.syncPending = true;
+                    }
+                    return Base64.read(data, key);
+                }
+                switch (json.signature) {
+                    case Base64.hmac(json.data, readKey):
+                        json = read.call(this, json.data, readKey, false);
+                        break;
+                    case Base64.hmac(json.data, opt.initialKey):
+                        json = read.call(this, json.data, opt.initialKey || null, true);
+                        break;
+                    case Base64.hmac(json.data, null):
+                        json = read.call(this, json.data, null, true);
+                        break;
+                    default:
+                        //wrong key, put user through key update ui and try again
+                        SYNC_ERROR = true;
+                        SYNC_ERROR_TIME = new Date().getTime();
+                        return retError.call(this, "wrong key used");
+                }
+                return IMPORT_JSON.call(this, json, function (success, errors, changes) {
+                    if (success && !errors && (changes || this.syncPending === true || forceSync === true)) {
+                        return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
+                    }
+                    else
+                        return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id], false), this) : this;
+                }.bind(this), false, false);
+            }
+            function keyMigration() {
+                if (opt.oldKey !== undefined && opt.key && opt.oldKey !== opt.key) {
+                    readKey = opt.oldKey;
+                    DB[this.id].lastModified = TIMESTAMP();
+                    this.syncPending = true;
+                }
+            }
+            var opt = options || {}, forceSync = opt.forceSync || false, readKey = opt.key || null, writeKey = opt.key || null, wait = MAX_SYNC_FREQUENCY + DBX_SYNC_OBJ[DB[this.id].title] - TIMESTAMP();
+            keyMigration.call(this);
+            if (wait > 0 && !forceSync)
+                return retError.call(this, "rate limited, try again in " + wait + " minutes");
+            else if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 15e3)
+                return retError.call(this, "try again later"); //15 seconds
+            else if (!json)
+                return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
+            else if (typeof json === "string")
+                json = JSON.parse(json);
+            if (!json.data || !(json.version === this.version + "_" + Base64.Version)) {
+                return retError.call(this, "unsupported version:" + json.version);
+            }
+            return sync.call(this);
+        }
+        ;
+        /**
+         * Exports table as CSV string. Not implemented yet
+         * @function toCSV
+         * @returns {string} database in CSV string format
+         */
+        toCSV() {
+            //TODO
+            return "function not complete";
+        }
+        ;
+        /**
+         * exports table as JSON 2d array
+         * @function toJSON_Array
+         * @returns {array} database in array format
+         */
+        toJSON_Array() {
+            return SAVE_FILE.call(this, JSON.stringify(DB[this.id]), DB[this.id].title + "_" + READABLE_TIMESTAMP() + ".json");
+        }
+        ;
+        /**
+         * Exports table as JSON key value pairs. Not implemented (and may not...?)
+         * @function toJSON_KeyValuePairs
+         * @returns {json} database in json format
+         */
+        toJSON_KeyValuePairs() {
+            //TODO
+            return "function not complete";
+        }
+        ;
+        /**
+         * Make all hidden rows accessible again (another way to call unHideRows)
+         * @function unfilter
+         * @returns {object} this
+         */
+        unfilter() {
+            return this.unhideRows();
+        }
+        ;
+        /**
+         * Make all hidden rows accessible again
+         * @function unhideRows
+         * @returns {object} this
+         */
+        unhideRows() {
+            if (HIDDEN_TABLE_DATA[this.id] !== undefined && !TABLE_IS_DELETED(DB[this.id])) {
+                var row;
+                while (HIDDEN_TABLE_DATA[this.id].length > 0) {
+                    row = HIDDEN_TABLE_DATA[this.id][0];
+                    DB[this.id].ids[row[0]] = JSON.parse(JSON.stringify(HIDDEN_IDS[this.id][row[0]]));
+                    delete HIDDEN_IDS[this.id][row[0]];
+                    DB[this.id].table.push(HIDDEN_TABLE_DATA[this.id].splice(0, 1)[0]);
+                }
+                row = null;
+                delete HIDDEN_TABLE_DATA[this.id];
+                delete HIDDEN_IDS[this.id];
+                ROW_INDEX_CACHE[this.id] = {};
+            }
+            return this;
+        }
+        ;
+        /**
+         * Check if a value is an acceptable input
+         * @function validate
+         * @param {string|number|boolean} value to check
+         * @param {string} valueType an input type, such as "number", "emailAddress"...
+         * @param {validateCallback} [callback] callback function
+         * @returns {object} valid(boolean), value, errorMsg, errorDetails
+         * @since 0.4
+         */
+        validate(value, valueType, callback) {
+            return VALIDATE.call(this, value, valueType, "validate", callback);
+        }
+        ;
     }
     //ALL CAPS "PRIVATE" VARIABLES
     var DB; //all databases
@@ -2511,1293 +3846,6 @@ const NyckelDB = (function () {
     const VALID_STRING_TYPES = new RegExp("^(" + STRING_TYPES.split(" ").join("|") + ")$");
     const VALID_NUMBER_TYPES = new RegExp("^(" + NUMBER_TYPES.split(" ").join("|") + ")$");
     const FORBIDDEN = GET_FORBIDDEN(); //property names that shouldn't be used (?)
-    /**
-     * Add a new column to the table
-     * @function addColumn
-     * @param {string} colName new column name
-     * @param {number} position insert new column before column number, ie 1 adds it before the 1st column. If 0 or not specified, adds to end of table
-     * @param {object} [options] an Object of column properties: {
-     *	type: String,
-     *	initialValue: the initial value for every new cell in the new column,
-     *	formula: String,
-     *	searchable: Boolean whether to index column for searches
-     * }
-     * @param {successCallback} [callback] callback function
-     * @since 0.4
-     */
-    NyckelDBObj.prototype.addColumn = function (colName, position, options, callback) {
-        return ADD_COLUMN.call(this, colName, position, options, true, undefined, callback);
-    };
-    /**
-     * Add a new row to the table.
-     * @function addRow
-     * @param {array} array a complete array, or a JSON object in form {[colName]: {value: [value]},..}
-     * @param {string} [id] id is optional and will only be used if it doesn't already exist
-     * @returns {string} new row id
-     */
-    NyckelDBObj.prototype.addRow = function (array, id) {
-        if (array && !IS_ARRAY(array) && typeof array === "object") {
-            //convert object to array
-            var _array = [], a = 0;
-            return this.forEachCol.call(this, function (col) {
-                if (array[col] && array[col].value)
-                    _array[a] = array[col].value;
-                a++;
-            }, function () {
-                return ADD_ROW.call(this, _array, id, true);
-            }.bind(this));
-        }
-        else
-            return ADD_ROW.call(this, array, id, true);
-    };
-    /**
-     * Same as search, but accepts join (+) and filter (-) between search terms to create more specific queries
-     *      Possible future deprication and merge functionality into search
-     * @function advancedSearch
-     * @param {string} searchQuery words to search for in the database
-     * @param {object} [options] {
-     *	"colNames": Array, an Array of columns to search in
-     *	"fuzzyMatch": Boolean
-     * }
-     * @param {searchCallback} [callback] callback function
-     */
-    NyckelDBObj.prototype.advancedSearch = function (searchQuery, options, callback) {
-        function filter(ids, filterOutQueries) {
-            if (filterOutQueries.length === 0) {
-                return callback instanceof Function ? callback.call(this, ids, ERRORS[this.id]) : undefined;
-            }
-            for (let b = 0, lenB = filterOutQueries.length; b < lenB; b++) {
-                (function (self, b) {
-                    self.search.call(self, filterOutQueries[b], options, function (result, err) {
-                        if (!err)
-                            filterIds = filterIds.concat(result);
-                        else
-                            return callback instanceof Function ? callback.call(self, [], err) : undefined;
-                        if (b === lenB - 1) {
-                            filterIds = DELETE_DUPLICATES(filterIds);
-                            if (filterIds.length > 0) {
-                                for (let c = 0, lenC = filterIds.length, t = "", d, lenD; c < lenC; c++) {
-                                    t = String(filterIds[c]);
-                                    for (d = 0, lenD = ids.length; d < lenD; d++) {
-                                        if (t === String(ids[d])) {
-                                            ids.splice(d, 1);
-                                            d--;
-                                            lenD--;
-                                        }
-                                    }
-                                }
-                            }
-                            return callback instanceof Function ? callback.call(self, ids, ERRORS[self.id]) : undefined;
-                        }
-                    });
-                })(this, b);
-            }
-        }
-        if (!searchQuery)
-            return callback instanceof Function ? callback.call(this, [], "no query supplied") : undefined;
-        var ids = [], filterIds = [], filterOutQueries = [], searchQueryArr = [];
-        if (/\s\+|\s\-/.test(searchQuery)) {
-            searchQueryArr = searchQuery.split(" +");
-            for (let a = 0; a < searchQueryArr.length; a++) {
-                if (/\s\-/.test(searchQueryArr[a])) {
-                    var f = searchQueryArr[a].split(" -");
-                    searchQueryArr[a] = f.shift();
-                    filterOutQueries.push.apply(filterOutQueries, f);
-                }
-            }
-        }
-        else
-            searchQueryArr = [searchQuery];
-        var b = 0;
-        for (let a = 0, len = searchQueryArr.length; a < len; a++) {
-            (function (self, a) {
-                self.search.call(self, searchQueryArr[a], options, function (result, errors) {
-                    b++;
-                    if (!errors)
-                        ids = ids.concat(result);
-                    else
-                        return callback instanceof Function ? callback.call(self, [], errors) : undefined;
-                    if (b >= len - 1) {
-                        ids = DELETE_DUPLICATES(ids);
-                        filter.call(self, ids, filterOutQueries);
-                    }
-                });
-            })(this, a);
-        }
-    };
-    /**
-     * Delete a column from the table
-     * @function deleteColumn
-     * @param {string} colName the name of the column to delete
-     * @param {function} [callback] callback
-     * @returns {boolean} success
-     * @since 0.4
-     */
-    NyckelDBObj.prototype.deleteColumn = function (colName, callback) {
-        return DELETE_COLUMN.call(this, colName, true, undefined, callback);
-    };
-    /**
-     * Delete a row along with all the data that it contains
-     * @function deleteRow
-     * @param {string|number} rowId the row's id, or its current index
-     * @returns {boolean} success
-     */
-    NyckelDBObj.prototype.deleteRow = function (rowId) {
-        return DELETE_ROW.call(this, rowId, true);
-    };
-    /**
-     * Delete a table along with all the data that it contains, including custom properties
-     * @function deleteTable
-     * @param {function} [callback] callback function
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.deleteTable = function (callback) {
-        return DELETE_TABLE.call(this, callback, undefined, true);
-    };
-    /**
-     * Hide all rows who's value in a specific column don't match the given regular expression
-     * @function filter
-     * @param {string} colName is the column name from the table header
-     * @param {regExp} regExp the regular expression to match
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.filter = function (colName, regExp) {
-        if (this.getLength() > 0) {
-            var colIndex = GET_INDEX_OF_COLUMN.call(this, colName), val;
-            if (colIndex > 0) {
-                for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
-                    val = String(DB[this.id].table[a][colIndex]);
-                    if (!val.match(regExp)) {
-                        this.hideRow(a);
-                        a--;
-                        arrLen--;
-                    }
-                }
-                a = null;
-                arrLen = null;
-            }
-            colIndex = null;
-            val = null;
-        }
-        return this;
-    };
-    /**
-     * Iterate through all columns in a table. Passes the column name to funct in sequence and executes funct
-     * @function forEachCol
-     * @param {eachColCallback} funct the function to execute for each column in the table
-     * @param {successCallback} [callback] callback function to execute after everything is finished
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.forEachCol = function (funct, callback) {
-        if (TABLE_IS_DELETED(DB[this.id]))
-            return callback instanceof Function ? (callback.call(this, false, "forEach table is deleted"), this) : this;
-        if (funct instanceof Function) {
-            for (let a = 1, headers = DB[this.id].columns.headers, len = headers.length; a < len; a++) {
-                funct.call(this, headers[a], a - 1, len - 1);
-            }
-            return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
-        }
-        else
-            return callback instanceof Function ? (callback.call(this, false, "forEach requires a function"), this) : this;
-    };
-    /**
-     * Iterate through all (unhidden) rows in a table (in the current sorted order). Passes row ids to funct in sequence and executes funct
-     * @function forEachRow
-     * @param {eachRowCallback} funct the function to execute for each row in the table, parameters: rowId, rowIndex, tableLength
-     * @param {successCallback} [callback] callback function to execute when everything is finished
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.forEachRow = function (funct, callback) {
-        if (TABLE_IS_DELETED(DB[this.id]))
-            return callback instanceof Function ? (callback.call(this, false, "forEach table is deleted"), this) : this;
-        if (funct instanceof Function) {
-            for (let a = 0, len = this.getLength(); a < len; a++) {
-                funct.call(this, DB[this.id].table[a][0], a, len);
-            }
-            return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
-        }
-        else
-            return callback instanceof Function ? (callback.call(this, false, "forEach requires a function"), this) : this;
-    };
-    /**
-    * Get the row header names as an Array
-    * @function getHeaders
-    * @param {getHeadersCallback} [callback] callback
-    * @returns {string[]} header names
-    */
-    NyckelDBObj.prototype.getHeaders = function (callback) {
-        var ret = [];
-        if (this.isDeleted())
-            return ret;
-        for (let a = 1, headers = DB[this.id].columns.headers, len = headers.length; a < len; a++) {
-            ret[a - 1] = headers[a];
-        }
-        return callback instanceof Function ? (callback.call(this, ret, false), ret) : ret;
-    };
-    /**
-     * Get a row's current position in the table. You can supply either a row id, or else both a value and colName to find the first row that contains that value in the given column.
-     * @function getIndexOf
-     * @param {string} [id] row id
-     * @param {string|number|boolean} [orValue] cell value
-     * @param {string} [colName] is the column name from the table header
-     * @returns {number} zero based index of a row's current position in the table, -1 if not found
-     */
-    NyckelDBObj.prototype.getIndexOf = function (id, orValue, colName) {
-        if (TABLE_IS_DELETED(DB[this.id]))
-            return -1;
-        else if (id) {
-            return GET_INDEX_OF_ROW.call(this, id);
-        }
-        else if (orValue && colName) {
-            var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-            if (colIndex > 0) {
-                for (var a = 0, arrLen = DB[this.id].table.length; a < arrLen; a++) {
-                    if (orValue === DB[this.id].table[a][colIndex]) {
-                        return a;
-                    }
-                }
-                return -1;
-            }
-            else
-                return -1;
-        }
-        else
-            return -1;
-    };
-    /**
-     * Get the timestamp of when the table was most recently changed
-     * @function getLastModified
-     * @return {number} database modified timestamp
-     */
-    NyckelDBObj.prototype.getLastModified = function () {
-        return DB[this.id].lastModified;
-    };
-    /**
-     * Get the number of (unhidden, unfiltered) rows in the table
-     * @function getLength
-     * @returns {number} the number of rows in the table
-     */
-    NyckelDBObj.prototype.getLength = function () {
-        return !DB[this.id] || TABLE_IS_DELETED(DB[this.id]) ? 0 : DB[this.id].table.length;
-    };
-    /**
-     * Get the value of a table custom property
-     * @function getProp
-     * @param {string} propName the name of the custom property
-     * @returns {string | number | boolean | undefined} the property value
-     */
-    NyckelDBObj.prototype.getProp = function (propName) {
-        propName = TO_PROP_NAME(propName);
-        if (DB[this.id].properties) {
-            return DB[this.id].properties[propName] ? DB[this.id].properties[propName][0] : undefined;
-        }
-        else
-            return undefined;
-    };
-    /**
-     * Get an entire row from the table as JSON arranged by column name. Returns column name, column type and value
-     * @function getRow
-     * @param {string|number} rowId the row's id, or its current index
-     * @param {getRowCallback} [callback] callback
-     * @returns {object | undefined} json formatted data, or undefined if nothing found
-     */
-    NyckelDBObj.prototype.getRow = function (rowId, callback) {
-        var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), ret = {};
-        if (rowIndex > -1) {
-            this.forEachCol(function (colName, is) {
-                ret[colName] = {
-                    column: colName,
-                    type: DB[this.id].columns.meta[colName].type[0],
-                    value: DB[this.id].table[rowIndex][is + 1]
-                };
-                if (DB[this.id].columns.meta[colName].exportAs)
-                    ret[colName].column = DB[this.id].columns.meta[colName].exportAs[0];
-            }.bind(this), function (success, errors) {
-                return callback instanceof Function ? callback.call(this, ret, errors) : ret;
-            });
-        }
-        else
-            return callback instanceof Function ? callback.call(this, undefined, "row id not found") : undefined;
-    };
-    /**
-    * Get an blank row from the table as JSON arranged by column name
-    * @function getRowTemplate
-    * @param {getRowTemplateCallback} callback callback
-    */
-    NyckelDBObj.prototype.getRowTemplate = function (callback) {
-        var ret = {};
-        if (this.isDeleted())
-            return;
-        this.forEachCol(function (colName) {
-            ret[colName] = {
-                column: colName,
-                type: DB[this.id].columns.meta[colName].type[0]
-            };
-            if (DB[this.id].columns.meta[colName].exportAs) {
-                ret[colName].column = DB[this.id].columns.meta[colName].exportAs[0];
-            }
-        }.bind(this), function (success, errors) {
-            return callback instanceof Function ? callback.call(this, ret, errors) : ret;
-        });
-    };
-    /**
-     * Get search suggestions from partial words, for example, as you type in a search box
-     * @function getSearchSuggestions
-     * @param {string} searchQuery partial search query
-     * @param {object} [options] {
-     *	"colNames": Array, an Array of columns to search in
-     * }
-     * @param {searchCallback} [callback] callback function
-     * @returns {array} an Array of search queries that would return a match
-     */
-    NyckelDBObj.prototype.getSearchSuggestions = function (searchQuery, options, callback) {
-        function buildSuggestionsList() {
-            searchQuery = String(searchQuery).split(" ");
-            var last = searchQuery.pop(), suggest = [], a = 0, prefix = last.charAt(0);
-            prefix = prefix.match(/\+|\-/) ? prefix : "";
-            last = SEARCH_VALIDATE(last)[0];
-            if (last) {
-                var matchesThis = new RegExp("^" + last);
-                searchQuery = searchQuery.join(" ");
-                for (let b = 0, len = SEARCH_SUGGESTIONS[this.id].length; b < len; b++) {
-                    if (SEARCH_SUGGESTIONS[this.id][b].match(matchesThis)) {
-                        if (SEARCH_SUGGESTIONS[this.id][b] === last) { //found exact match, suggest at top of list
-                            suggest.unshift(searchQuery === "" ? prefix + last : searchQuery + " " + prefix + last);
-                            suggest[0] = TRIM(suggest[0].replace(/[^0-9a-z\s\+\-]/g, ""));
-                        }
-                        else {
-                            suggest[a] = searchQuery === "" ? prefix + SEARCH_SUGGESTIONS[this.id][b] : searchQuery + " " + prefix + SEARCH_SUGGESTIONS[this.id][b];
-                            suggest[a] = TRIM(suggest[a].replace(/[^0-9a-z\s\+\-]/g, ""));
-                        }
-                        a++;
-                    }
-                }
-                for (let c = 0, lenC = RECENTLY_SEARCHED[this.id].length, i, item; c < lenC; c++) {
-                    i = suggest.indexOf(RECENTLY_SEARCHED[this.id][c]);
-                    if (i !== -1) {
-                        item = suggest.splice(i, 1)[0];
-                        suggest.unshift(item);
-                    }
-                }
-            }
-            last = null;
-            a = null;
-            searchQuery = null;
-            return callback instanceof Function ? (callback.call(this, suggest, ERRORS[this.id]), suggest) : suggest;
-        }
-        if (SEARCH_SUGGESTIONS[this.id].length > 0) {
-            return buildSuggestionsList.call(this);
-        }
-        else {
-            var cols = options.colNames ? options.colNames.join("|").split("|") : undefined;
-            if (callback instanceof Function)
-                callback.call(this, [], "currently busy building search index");
-            BUILD_SEARCH_INDEX.call(this, cols);
-            return [];
-        }
-    };
-    /**
-     * Get the title of the table
-     * @function getTitle
-     * @returns {string | undefined } table title
-     */
-    NyckelDBObj.prototype.getTitle = function () { return DB[this.id] ? DB[this.id].title : undefined; };
-    /**
-     * Get the 'type' that has been set on a particular column
-     * @function getType
-     * @param {string} colName the name of the column
-     * @return {string} a column type
-     */
-    NyckelDBObj.prototype.getType = function (colName) {
-        return GET_COL_PROP.call(this, colName, "type");
-    };
-    /**
-     * Get the value of a cell
-     * @function getVal
-     * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
-     * @param {string} colName is the column name from the table header
-     * @returns {string | number | boolean | undefined} table cell value
-     */
-    NyckelDBObj.prototype.getVal = function (rowId, colName) {
-        var rowIndex = GET_INDEX_OF_ROW.call(this, rowId), colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-        if (rowIndex > -1 && colIndex > 0)
-            return DB[this.id].table[rowIndex][colIndex];
-        else
-            return undefined;
-    };
-    /**
-     * Get a number of cell values from the table at once
-     * @function getVals
-     * @param {string[] | number[]} rowIds can be an Array of the index of the row, or it's 3 digit identifier
-     * @param {string[]} colNames is an Array the column names from the table header
-     * @param {getValsCallback} [callback] callback function
-     * @returns {array | false} 2d array of table values, or false if nothing found
-     */
-    NyckelDBObj.prototype.getVals = function (rowIds, colNames, callback) {
-        if (!rowIds || rowIds.constructor !== Array || !colNames || colNames.constructor !== Array) {
-            return callback instanceof Function ? callback.call(this, false, "invalid inputs") : false;
-        }
-        var ret = [];
-        for (let a = 0, x = 0, b, y, rowIndex, colIndex, len = rowIds.length, lenB = colNames.length; a < len; a++) {
-            rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
-            if (rowIndex > -1) {
-                ret[x] = [rowIds[a]];
-                for (b = 0, y = 1; b < lenB; b++) {
-                    colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
-                    if (colIndex > 0) {
-                        ret[x][y] = DB[this.id].table[rowIndex][colIndex];
-                        y++;
-                    }
-                    else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
-                        return callback instanceof Function ? callback.call(this, false, colNames[b] + " is not a valid colName") : false;
-                    }
-                }
-                x++;
-            }
-            else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
-                return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
-            }
-        }
-        return callback instanceof Function ? callback.call(this, ret, ERRORS[this.id]) : ret;
-    };
-    /**
-     * Hide a row. The row will not be accessible at all until you call unHideRows.
-     * @function hideRow
-     * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.hideRow = function (rowId) {
-        if (!TABLE_IS_DELETED(DB[this.id])) {
-            var index = GET_INDEX_OF_ROW.call(this, rowId);
-            if (index > -1) {
-                var row = DB[this.id].table[index];
-                HIDDEN_IDS[this.id] = HIDDEN_IDS[this.id] || {};
-                HIDDEN_IDS[this.id][row[0]] = JSON.parse(JSON.stringify(DB[this.id].ids[row[0]]));
-                delete DB[this.id].ids[row[0]];
-                HIDDEN_TABLE_DATA[this.id] = HIDDEN_TABLE_DATA[this.id] || [];
-                HIDDEN_TABLE_DATA[this.id].push(DB[this.id].table.splice(index, 1)[0]);
-                ROW_INDEX_CACHE[this.id] = {};
-            }
-            index = null;
-        }
-        return this;
-    };
-    /**
-     * Merge two copys of the same NyckelDB table (same title, column headers and column types) into one
-     * @function importJSON
-     * @param {json} json an exported NyckelDB object
-     * @param {string} syncKey the key used to obfuscate the data
-     * @param {successCallback} [callback] callback function
-     */
-    NyckelDBObj.prototype.importJSON = function (json, syncKey, callback) {
-        return IMPORT_JSON.call(this, json, callback.bind(this), syncKey, false);
-    };
-    //columnProperties could be an Array ["string","number"...] or
-    //an Object like this {Column_1: "string", Column_2: "number"...} or
-    //an Object like this {Column_1:{type: "string"...}, Column_2:{type: "number"...}...} or
-    //an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
-    /**
-     * Initiate the database. Required to call this right after creating a new NyckelDB obj. Sets initial values, checks for cached data and builds the search index
-     * @param {string[] | object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
-     * @param {string[] | object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
-     * @param {object} [options] {
-     *	customProperties: {
-     *	  <property1Name>: {
-     *	    initialValue: <value>,
-     *	    type: "String", "Boolean" or "Number" <String>
-     *	  },
-     *	  <property2Name>...
-     *	},
-     *	doNotIndex: <Array of tableHeaders>, any columns that do not need to ever be search indexed. Can speed up load times
-     *	initialIndex: <Array of tableHeaders>, columns to be search indexed on load. Specifying this value can speed up load times
-     *	key: <string>,
-     * 	importData: <json>, table data that is ready to drop in to the database without parsing
-     *	importJSON: <json>, json data that needs to be parsed
-     *	importCSV: <string>, CSV data that needs to be converted to JSON and then parsed
-     * }
-     * @param {successCallback} [callback]
-     */
-    NyckelDBObj.prototype.init = function (tableHeaders, columnProperties, options, callback) {
-        function validateData() {
-            var db = DB[this.id];
-            if (!TABLE_IS_DELETED(db)) {
-                var columns = db.columns.meta;
-                if (columns) {
-                    for (let a = 1, headers = db.columns.headers, len = headers.length, colProp; a < len; a++) {
-                        for (colProp in columns[headers[a]]) {
-                            if (columns[headers[a]].hasOwnProperty(colProp)) {
-                                columns[headers[a]][colProp][1] = VALIDATE_EDIT_TIME.call(this, columns[headers[a]][colProp][1], "column", "didn't get cached table");
-                            }
-                        }
-                    }
-                }
-                //validate ids
-                for (let id in db.ids) {
-                    if (db.ids.hasOwnProperty(id)) {
-                        for (let a = 0; a < db.ids[id].length; a++) {
-                            db.ids[id][a] = VALIDATE_EDIT_TIME.call(this, db.ids[id][a], a === 0 ? "row" : "cell", "validating ids", id);
-                        }
-                    }
-                }
-                for (let prop in db.properties) {
-                    if (db.properties.hasOwnProperty(prop)) {
-                        db.properties[prop][1] = VALIDATE_EDIT_TIME.call(this, db.properties[prop][1], "property", "didn't get cached table");
-                    }
-                }
-            }
-        }
-        function applyData(json) {
-            function setColumns(json) {
-                if (json) {
-                    return json.columns ? APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, json.columns.meta, json.created, opt.doNotIndex) :
-                        APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
-                }
-                else
-                    return APPLY_COLUMN_PROPERTIES.call(this, tableHeaders, columnProperties, TIMESTAMP(), opt.doNotIndex);
-            }
-            if (json && TABLE_IS_DELETED(json)) {
-                return {
-                    "title": DB[this.id].title,
-                    "created": json.created || TIMESTAMP(),
-                    "lastModified": json.lastModified || TIMESTAMP(),
-                    "deleted": true,
-                    "version": this.version + "_" + Base64.Version
-                };
-            }
-            else {
-                return {
-                    "title": DB[this.id].title,
-                    "created": json && json.created !== undefined ? json.created : TIMESTAMP(),
-                    "lastModified": json && json.lastModified !== undefined ? json.lastModified : 0,
-                    "deleted": false,
-                    "version": this.version + "_" + Base64.Version,
-                    "ids": json && json.ids ? json.ids : {},
-                    "columns": setColumns.call(this, json),
-                    "table": json && json.table ? json.table : [],
-                    "properties": json && json.properties ? json.properties : properties
-                };
-            }
-        }
-        function decompress(data, key) {
-            return JSON.parse(Base64.read(data, key));
-        }
-        function applyCustomProperties(props) {
-            function setInitialValue(type) {
-                return type === "string" ? "" : type === "boolean" ? false : 0;
-            }
-            if (!props)
-                return {};
-            var _props = {};
-            if (IS_ARRAY(props)) {
-                for (let a = 0, len = props.length; a < len; a++) {
-                    _props[TO_PROP_NAME(props[a])] = [0, 0, "any"];
-                }
-                return _props;
-            }
-            else if (typeof props !== "object") {
-                CACHE_ERROR.call(this, "Please supply properties in proper format");
-                return {};
-            }
-            var _type = "any", _initialValue = 0, propName, propValue;
-            for (let prop in props) {
-                if (props.hasOwnProperty(prop)) {
-                    propName = TO_PROP_NAME(prop);
-                    propValue = props[prop];
-                    if (typeof propValue === "string") {
-                        _type = VALIDATE_BASIC_TYPE.call(this, propValue);
-                        _initialValue = setInitialValue(_type);
-                        _props[propName] = [_initialValue, 0, _type];
-                    }
-                    else if (IS_ARRAY(propValue) && propValue.length === 3) {
-                        var propArr = propValue;
-                        _type = VALIDATE_BASIC_TYPE.call(this, propArr[2]);
-                        if (VALUE_IS_VALID.call(this, propArr[0], _type, false, "applyCustomProperties"))
-                            _props[propName] = [propArr[0], propArr[1], _type];
-                        propArr = null;
-                    }
-                    else if (!IS_ARRAY(propValue) && typeof propValue === "object") {
-                        if (propValue.type) {
-                            _props[propName] = [0, 0, VALIDATE_BASIC_TYPE.call(this, propValue.type)];
-                        }
-                        else
-                            _props[propName] = [0, 0, "any"];
-                        if (propValue.initialValue !== undefined && VALUE_IS_VALID.call(this, propValue.initialValue, _props[propName][2], false, "applyCustomProperties2")) {
-                            _props[propName][0] = propValue.initialValue;
-                        }
-                        else {
-                            _type = _props[propName][2];
-                            _initialValue = setInitialValue(_type);
-                            _props[propName][0] = _initialValue;
-                        }
-                    }
-                    else
-                        CACHE_ERROR.call(this, prop, "invalid customProperty");
-                }
-            }
-            _type = null;
-            _initialValue = null;
-            propName = null;
-            return _props;
-        }
-        function initiateTable(options) {
-            if (options && options.importData && options.importData.properties)
-                options.importData.properties = applyCustomProperties.call(this, options.importData.properties);
-            else if (options && options.customProperties)
-                properties = applyCustomProperties.call(this, options.customProperties);
-            //try to get cached table
-            if (APP.Sto)
-                APP.Sto.getItem(DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
-            else
-                return callback instanceof Function ? callback.call(this, false, "localStorage not found", false) : "localStorage not found";
-        }
-        function gotCachedTable(json) {
-            if (!json) {
-                didntGetCachedTable.call(this);
-                return;
-            }
-            if (typeof json === "string")
-                json = JSON.parse(json);
-            if (!json.title || json.title !== DB[this.id].title || !json.version || json.created === undefined) {
-                didntGetCachedTable.call(this);
-                return;
-            }
-            var version = String(json.version).split("_");
-            if (String(version[0]) !== String(this.version)) {
-                console.log("versions do not match", String(version[0]), String(this.version));
-                didntGetCachedTable.call(this);
-                return;
-            }
-            if ("data" in json) {
-                if (String(version[1]) === String(Base64.Version) && Base64.hmac(json.data, opt.key) === json.signature) {
-                    json = Base64.read(json.data, opt.key);
-                    return IMPORT_JSON.call(this, json, callback.bind(this), false, true);
-                }
-                else {
-                    console.log("compressed data is corrupted");
-                    didntGetCachedTable.call(this);
-                    return;
-                }
-            }
-            else { //loading directly from local storage
-                DB[this.id] = applyData.call(this, json);
-                validateData.call(this);
-                BUILD_SEARCH_INDEX.call(this, opt.initialIndex);
-                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
-            }
-        }
-        function didntGetCachedTable() {
-            //creating a brand new table
-            DB[this.id] = applyData.call(this, opt.importData);
-            validateData.call(this);
-            if (opt.importJSON)
-                return IMPORT_JSON.call(this, opt.importJSON, callback.bind(this), opt.key || false, false);
-            else {
-                TO_LOCAL_STORAGE.call(this, true);
-                return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
-            }
-        }
-        var opt = options ? JSON.parse(JSON.stringify(options)) : {};
-        var properties = {};
-        if (typeof opt.importData === "string")
-            opt.importData = JSON.parse(opt.importData);
-        if (opt.importData && (opt.importData.lastModified < opt.importData.created && opt.importData.lastModified !== 0 || opt.importData.lastModified > TIMESTAMP())) {
-            console.log("importData modified dates are corrupted: " + opt.importData.lastModified);
-            return callback instanceof Function ? callback.call(this, false, "importData modified dates are corrupted: " + opt.importData.lastModified, null, false) : CACHE_ERROR.call(this, "importData modified dates are corrupted: " + opt.importData.lastModified);
-        }
-        if (opt.importData && opt.importData.data) {
-            if (opt.importData.version !== this.version + "_" + Base64.Version && opt.importData.version !== this.version + "." + Base64.Version) {
-                return callback instanceof Function ? callback.call(this, false, "imported database version not supported", null, false) : CACHE_ERROR.call(this, "imported database version not supported");
-            }
-            else if (Base64.hmac(opt.importData.data, opt.key) === opt.importData.signature) {
-                opt.importData = decompress(opt.importData.data, opt.key);
-                initiateTable.call(this, opt);
-                INITIATE_DBS.call(this, DB[this.id].title);
-            }
-            else
-                return callback instanceof Function ? callback.call(this, false, "imported databse corrupted", null, false) : CACHE_ERROR.call(this, "imported database corrupted");
-        }
-        else {
-            initiateTable.call(this, opt);
-            INITIATE_DBS.call(this, DB[this.id].title);
-        }
-    };
-    /**
-     * Check if the table has been deleted or not
-     * @function isDeleted
-     * @returns {boolean} whether or not the table has been deleted
-     */
-    NyckelDBObj.prototype.isDeleted = function () {
-        return TABLE_IS_DELETED(DB[this.id]);
-    };
-    /**
-     * Checks whether there are changes since the last time the database was synchronized
-     * @function isSyncPending
-     * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
-     * @param {successCallback} [callback] callback function
-     * @returns {boolean} whether or not sync is needed
-     */
-    NyckelDBObj.prototype.isSyncPending = function (cloudSyncFile, callback) {
-        function ret(val) {
-            return callback instanceof Function ? (callback.call(this, val, ERRORS[this.id]), val) : val;
-        }
-        if (cloudSyncFile) {
-            if (typeof cloudSyncFile === "string")
-                cloudSyncFile = JSON.parse(cloudSyncFile);
-            var title = TO_PROP_NAME(DB[this.id].title);
-            if (!cloudSyncFile[title] && cloudSyncFile[title] !== 0 || Number(cloudSyncFile[title]) !== DB[this.id].lastModified) {
-                this.syncPending = true;
-                return ret.call(this, true);
-            }
-            else
-                return ret.call(this, false);
-        }
-        else
-            return ret.call(this, this.syncPending);
-    };
-    /**
-     * Clear all the locally cached copies of all the NyckelDB databases.
-     * @function NUKEALL
-     * @param {string} msg the message that you want to tell the user before you blow everything up!
-     * @param {successCallback} [callback] callback function
-     */
-    NyckelDBObj.prototype.NUKEALL = function (msg, callback) {
-        function nuke() {
-            if (APP.Sto) {
-                for (let a = 0, len = DBS.length; a < len; a++) {
-                    APP.Sto.deleteItem(DBS[a]);
-                    APP.Sto.deleteItem("searchIndex_" + DBS[a]);
-                }
-                APP.Sto.deleteItem("tables");
-            }
-            DB = new Array(Math.pow(2, 32) - 1);
-            NUM = 0;
-            DBS = [];
-            DBX_SYNC_OBJ = {};
-            SEARCH_INDEX = [];
-            SEARCH_SUGGESTIONS = [];
-            RECENTLY_SEARCHED = [];
-            COL_NAMES_INDEXED = [];
-            BUILDING_SEARCH_INDEX = [];
-            BUILDING_SEARCH_INDEX_QUEUE = [];
-            ROW_INDEX_CACHE = [];
-            ERRORS = [];
-            SYNC_ERROR = false;
-            SYNC_ERROR_TIME = 0;
-            if (callback instanceof Function)
-                return callback.call(this, true, false);
-        }
-        if (APP.confirm && APP.notify)
-            APP.confirm(msg, nuke.bind(this), function () {
-                APP.notify("<b>Oi!</b> That was close!", true);
-            }, {
-                "okButton": "Delete all of this site's saved data in this web browser or app"
-            });
-        else if (window && window.confirm(msg))
-            nuke.call(this);
-    };
-    /**
-     * Change the name of a column
-     *       Function not complete
-     * @function renameColumn
-     * @param {string} colName is the current column name from the table header
-     * @param {string} newName the new name to apply to the column
-     * @param {setCallback} [callback] callback function
-     * @returns {string | false} actual name set
-     * @since 0.4
-     */
-    NyckelDBObj.prototype.renameColumn = function (colName, newName, callback) {
-        var orig = String(newName);
-        colName = TO_PROP_NAME(colName);
-        newName = TO_PROP_NAME(newName);
-        //TODO check for other columns of the same name
-        //check for other columns exportAs name of the same name
-        //TODO change name in search index
-        return newName;
-    };
-    /**
-     * Search for rows that contain all of the words given in the search query
-     * @function search
-     * @param {string} searchQuery words to search for in the database
-     * @param {object} options {
-     *	"colNames": Array, an Array of columns to search in
-     *	"fuzzyMatch": Boolean
-     * }
-     * @param {searchCallback} callback callback function
-     */
-    NyckelDBObj.prototype.search = function (searchQuery, options, callback) {
-        function findMatches(arr, min) {
-            min = min || 2;
-            if (min === 1)
-                return arr;
-            var ret = []; /*return array*/
-            arr = arr.sort();
-            for (let a = 0, found = false, x = 0, y = x + 1, len = arr.length, b; x < len - min + 1; x++, y = x + 1) {
-                if (String(arr[x]) === String(arr[y])) {
-                    found = true;
-                    for (b = 0; b < min - 1; b++) {
-                        if (arr[x] !== arr[y + b])
-                            found = false;
-                    }
-                    if (found === true) {
-                        ret[a] = arr[x];
-                        x = x + min - 1;
-                        a++;
-                    }
-                }
-            }
-            return ret;
-        }
-        function querySearchIndex(searchQuery, lastRoundBool) {
-            var aLen = searchQuery.length, tempIds = [];
-            for (let a = 0, b, bLen = COL_NAMES_INDEXED[this.id].length, i; a < aLen; a++) {
-                for (b = 0, i = []; b < bLen; b++) {
-                    if (SEARCH_INDEX[this.id][searchQuery[a]] && SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]) {
-                        i = i.concat(SEARCH_INDEX[this.id][searchQuery[a]][COL_NAMES_INDEXED[this.id][b]]);
-                    }
-                }
-                tempIds = tempIds.concat(DELETE_DUPLICATES(i));
-            }
-            ids = DELETE_DUPLICATES(ids.concat(findMatches.call(this, tempIds, aLen)));
-            if (ids.length > 0) {
-                RECENTLY_SEARCHED[this.id] = DELETE_DUPLICATES(searchQuery.concat(RECENTLY_SEARCHED[this.id]));
-                RECENTLY_SEARCHED[this.id] = RECENTLY_SEARCHED[this.id].slice(0, 25);
-                STO_SEARCH_INDEX.call(this);
-            }
-            if (lastRoundBool)
-                if (callback instanceof Function)
-                    return callback.call(this, ids, ERRORS[this.id]);
-        }
-        function fuzzyMatch(searchQueryArr) {
-            var arr = [];
-            //collect all possible alternate queries
-            for (let a = 0, lenA = searchQueryArr.length; a < lenA; a++) {
-                if (Spelling[searchQueryArr[a]]) {
-                    arr[a] = Spelling[searchQueryArr[a]].split(" ");
-                }
-                else
-                    arr[a] = [searchQueryArr[a]];
-            }
-            //combine them in all possible combinations
-            var queries = [], a = 0, n = 0, cursor = [], len = arr.length;
-            while (len)
-                cursor[--len] = 0; //initialize cursors
-            len = arr.length;
-            //while the last item in the last column has not been reached
-            while (arr[n]) {
-                //initiate the new combination
-                queries[a] = [arr[0][cursor[0]]];
-                //write the new combination
-                for (let c = 1; c < len; c++) {
-                    queries[a].push(arr[c][cursor[c]]);
-                }
-                a++;
-                n = 0;
-                cursor[n]++;
-                while (n <= len && cursor[n] === arr[n].length) {
-                    cursor[n] = 0;
-                    cursor[n + 1]++;
-                    n++;
-                    if (n === len)
-                        break;
-                }
-            }
-            arr = null;
-            for (let a = 0, len = queries.length - 1; a < len; a++) {
-                querySearchIndex.call(this, queries[a], false);
-            }
-            return querySearchIndex.call(this, queries[queries.length - 1], true);
-        }
-        function search(searchQueryArr, options) {
-            if (options.fuzzyMatch)
-                return fuzzyMatch.call(this, searchQueryArr);
-            else
-                return querySearchIndex.call(this, searchQueryArr, true);
-        }
-        if (TABLE_IS_DELETED(DB[this.id]))
-            if (callback instanceof Function)
-                return callback.call(this, [], "no data");
-        options = options || {};
-        var cols = options.colNames ? options.colNames.join("|").split("|") : undefined, ids = [], searchQueryArr = SEARCH_VALIDATE(searchQuery);
-        //check for search index
-        BUILD_SEARCH_INDEX.call(this, cols, search.bind(this, searchQueryArr, options));
-    };
-    /**
-     * Change the value of a column property
-     * @function setColumnProp
-     * @param {string} colName the name of the column to modify
-     * @param {string} propName the name of the column property to modify
-     * @param {string | number | boolean} propValue the new value to set the column property to
-     * @returns { string | number | boolean | undefined} the validated property value that was applied
-     */
-    NyckelDBObj.prototype.setColumnProp = function (colName, propName, propValue) {
-        if (propName === "type")
-            return this.setType(colName, propValue);
-        else
-            return SET_COLUMN_PROP.call(this, colName, propName, propValue, true);
-    };
-    /**
-     * Change the value of a table's custom property
-     * @function setProp
-     * @param {string} propName the name of the property to change
-     * @param {string | number | boolean} value new value
-     * @returns {string | number | boolean | undefined} the validated property value that was applied
-     */
-    NyckelDBObj.prototype.setProp = function (propName, value) {
-        return SET_PROP.call(this, propName, value, undefined, undefined, true);
-    };
-    /**
-     * Same as isSyncPending but sets the value of syncPending to true if the cloudSyncFile validates
-     * @function setSyncCompleted
-     * @param {string} cloudSyncFile token that contains the version number, hashed message authentication code (HMAC) and lastSync timestamp of the database
-     * @param {successCallback} [callback] callback function
-     * @returns {boolean} whether or not sync is successfully set to complete
-     */
-    NyckelDBObj.prototype.setSyncCompleted = function (cloudSyncFile, callback) {
-        if (cloudSyncFile && this.isSyncPending(cloudSyncFile)) {
-            if (callback instanceof Function) {
-                return (callback.call(this, false, "database has been modified since last sync and requires sync again"), false);
-            }
-            else
-                return false;
-        }
-        else {
-            this.syncPending = false;
-            if (callback instanceof Function) {
-                return (callback.call(this, true, false), true);
-            }
-            else
-                return true;
-        }
-    };
-    /**
-     * Change the title of the table.
-     * 	   note: This actually deletes the table and creates a new one
-     *     with the new name – something to be aware of if you try
-     * 	   to access the table by it's old name and see that it has
-     * 	   been deleted!
-     * @function setTitle
-     * @param {string} newTitle the new title to apply
-     * @param {successCallback} [callback] callback function
-     * @returns {string} the new title
-     */
-    NyckelDBObj.prototype.setTitle = function (newTitle, callback) {
-        var oldId = this.id, oldTitle = DB[this.id].title, y = DBS.indexOf(oldTitle);
-        //applyTitle creates a new id from title
-        INITIATE_DBS.call(this, newTitle, function (newTitle) {
-            //copy table and newTitle to new id
-            DB[this.id] = JSON.parse(JSON.stringify(DB[oldId]));
-            DB[this.id].title = newTitle;
-            // //cache oldTitle to maintain syncability
-            // if (DB[this.id].previousTitle) DB[this.id].previousTitle!.push(TO_PROP_NAME(oldTitle));
-            // else DB[this.id].previousTitle = [TO_PROP_NAME(oldTitle)];
-            //delete old table
-            DELETE_TABLE_BY_ID.call(this, oldId, TIMESTAMP());
-            oldId = null;
-            //update modified
-            DB[this.id].lastModified = TIMESTAMP();
-            this.syncPending = true;
-            //swap database references to refer to the new table
-            var x = DBS.indexOf(newTitle);
-            DBS[y] = DBS[x];
-            DBS[x] = oldTitle;
-            oldTitle = null;
-            y = null;
-            x = null;
-            TO_LOCAL_STORAGE.call(this, true);
-            return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id]), this) : this;
-        }.bind(this));
-    };
-    /**
-     * Change the column's data validation 'type'
-     *     Not complete
-     * @function setType
-     * @param {string} colName is the column name from the table header
-     * @param {string} type the type of data validation to set for the given column
-     * @param {array} data updated column data that validates to the new type
-     * @param {setTypeCallback} [callback] callback function
-     */
-    NyckelDBObj.prototype.setType = function (colName, type, data, callback) {
-        return SET_TYPE.call(this, colName, type, data, true, undefined, callback);
-    };
-    /**
-     * Change the value of a cell
-     * @function setVal
-     * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
-     * @param {string} colName is the column name from the table header
-     * @param {string | number | boolean} newValue the new value to apply to the cell
-     * @param {setCallback} [callback] callback function
-     * @returns {string | number | boolean | undefined} the actual value that was set after passing through data validation
-     */
-    NyckelDBObj.prototype.setVal = function (rowId, colName, newValue, callback) {
-        return SET_VAL.call(this, rowId, colName, newValue, true, undefined, callback);
-    };
-    /**
-    * Change multiple values at once
-    * @function setVals
-    * @param {number|string} rowId can be the index of the row, or it's 3 digit identifier
-    * @param {object} newValues object in the form {[colName]:{value:[value]},...}
-    * @param {setCallback} [callback] callback function
-    */
-    NyckelDBObj.prototype.setVals = function (rowId, newValues, callback) {
-        function ret() {
-            a++;
-            if (a === len && callback instanceof Function)
-                return callback.call(this, true, ERRORS[this.id]);
-        }
-        var len = 0, a = 0;
-        for (let i in newValues) {
-            len++;
-        }
-        for (let column in newValues) {
-            if (COL_NAME_IS_VALID.call(this, column)) {
-                SET_VAL.call(this, rowId, column, newValues[column].value, true, undefined, ret.bind(this));
-            }
-        }
-    };
-    /**
-     * Shuffle the order of the rows in the table
-     * @function shuffle
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.shuffle = function () {
-        function shuffle(array) {
-            var len = array.length, halfLen = Math.ceil(len / 2), random = Base64.rand(halfLen).split(""), r = 0;
-            //shuffle cards
-            if (len > 0) {
-                var array1, array2;
-                for (var reps = 0, a, lenA; reps < 2 || reps < len / 10; reps++) {
-                    //split the deck
-                    array1 = array.slice(0, halfLen);
-                    array2 = array.slice(halfLen, len);
-                    for (a = 0, lenA = array1.length; a < lenA; a++) {
-                        array2.splice(a + Number(random[r]), 0, array1[a]);
-                        r++;
-                        if (r > len / 2)
-                            r = 0;
-                    }
-                    array = array2;
-                    array.push(array.shift());
-                    r = 0;
-                }
-                reps = null;
-                a = null;
-                lenA = null;
-                array1 = null;
-                array2 = null;
-            }
-            len = null;
-            halfLen = null;
-            random = null;
-            r = null;
-            return array;
-        }
-        if (!TABLE_IS_DELETED(DB[this.id])) {
-            var len = this.getLength(), shuffled = shuffle(DB[this.id].table);
-            if (shuffled.length !== len) {
-                CACHE_ERROR.call(this, "shuffle error " + len + " != " + this.getLength());
-                len = null;
-                shuffled = null;
-                return this;
-            }
-            else {
-                DB[this.id].table = shuffled;
-                ROW_INDEX_CACHE[this.id] = {};
-                len = null;
-                shuffled = null;
-                return this;
-            }
-        }
-        else
-            return this;
-    };
-    /**
-     * Sort the table alphabetically or numerically by a particular column.
-     * @function sortByCol
-     * @param {string} colName is the column name from the table header
-     * @param {object} [options] {
-     *	"reverse": sort Z-A, (true or false)
-     *	"fromEndOfStr": sort xA-xZ, (true or false) }
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.sortByCol = function (colName, options) {
-        function reverseStr(str) {
-            str = String(str);
-            var ret = [];
-            for (var a = 0, len = str.length; a < len; a++) {
-                ret[a] = str[len - a - 1];
-            }
-            a = null;
-            len = null;
-            return ret.join("");
-        }
-        function sortFunction(a, b) {
-            var _a = a[colIndex];
-            var _b = b[colIndex];
-            //try to compare items as numbers
-            if (!isNaN(Number(_a)) && !isNaN(Number(_b))) {
-                _a = Number(_a);
-                _b = Number(_b);
-            }
-            //optionally sort string backwards <-- (from this end)
-            if (options && options.fromEndOfStr) {
-                _a = reverseStr(_a);
-                _b = reverseStr(_b);
-            }
-            return _a === _b ? 0 : _a < _b ? -1 : 1;
-        }
-        options = options || {};
-        var colIndex = GET_INDEX_OF_COLUMN.call(this, colName);
-        if (colIndex > 0) {
-            DB[this.id].table.sort(sortFunction);
-            if (options.reverse)
-                DB[this.id].table.reverse();
-            ROW_INDEX_CACHE[this.id] = {};
-            colIndex = null;
-            return this;
-        }
-        else
-            return this;
-    };
-    /**
-     * Synchronize with an external copy of the database.
-     * @function sync
-     * @param {json} json nyckeldb json
-     * @param {json} [options] {
-     *	forceSync: true, (false is default)
-     *	key: string,
-     *  initialKey: string,
-     *	oldKey: string,
-     *	token: string
-     * }
-     * @param {successCallback} [callback] syncCallback function
-     * @return {object} this
-     */
-    NyckelDBObj.prototype.sync = function (json, options, callback) {
-        function retError(msg) {
-            if (callback instanceof Function)
-                return callback.call(this, false, msg, false);
-        }
-        function sync() {
-            function read(data, key, change) {
-                if (change) {
-                    DB[this.id].lastModified = TIMESTAMP();
-                    this.syncPending = true;
-                }
-                return Base64.read(data, key);
-            }
-            switch (json.signature) {
-                case Base64.hmac(json.data, readKey):
-                    json = read.call(this, json.data, readKey, false);
-                    break;
-                case Base64.hmac(json.data, opt.initialKey):
-                    json = read.call(this, json.data, opt.initialKey || null, true);
-                    break;
-                case Base64.hmac(json.data, null):
-                    json = read.call(this, json.data, null, true);
-                    break;
-                default:
-                    //wrong key, put user through key update ui and try again
-                    SYNC_ERROR = true;
-                    SYNC_ERROR_TIME = new Date().getTime();
-                    return retError.call(this, "wrong key used");
-            }
-            return IMPORT_JSON.call(this, json, function (success, errors, changes) {
-                if (success && !errors && (changes || this.syncPending === true || forceSync === true)) {
-                    return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
-                }
-                else
-                    return callback instanceof Function ? (callback.call(this, true, ERRORS[this.id], false), this) : this;
-            }.bind(this), false, false);
-        }
-        function keyMigration() {
-            if (opt.oldKey !== undefined && opt.key && opt.oldKey !== opt.key) {
-                readKey = opt.oldKey;
-                DB[this.id].lastModified = TIMESTAMP();
-                this.syncPending = true;
-            }
-        }
-        var opt = options || {}, forceSync = opt.forceSync || false, readKey = opt.key || null, writeKey = opt.key || null, wait = MAX_SYNC_FREQUENCY + DBX_SYNC_OBJ[DB[this.id].title] - TIMESTAMP();
-        keyMigration.call(this);
-        if (wait > 0 && !forceSync)
-            return retError.call(this, "rate limited, try again in " + wait + " minutes");
-        else if (SYNC_ERROR && new Date().getTime() - SYNC_ERROR_TIME < 15e3)
-            return retError.call(this, "try again later"); //15 seconds
-        else if (!json)
-            return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
-        else if (typeof json === "string")
-            json = JSON.parse(json);
-        if (!json.data || !(json.version === this.version + "_" + Base64.Version)) {
-            return retError.call(this, "unsupported version:" + json.version);
-        }
-        return sync.call(this);
-    };
-    /**
-     * Exports table as CSV string. Not implemented yet
-     * @function toCSV
-     * @returns {string} database in CSV string format
-     */
-    NyckelDBObj.prototype.toCSV = function () {
-        //TODO
-        return "function not complete";
-    };
-    /**
-     * exports table as JSON 2d array
-     * @function toJSON_Array
-     * @returns {array} database in array format
-     */
-    NyckelDBObj.prototype.toJSON_Array = function () {
-        return SAVE_FILE.call(this, JSON.stringify(DB[this.id]), DB[this.id].title + "_" + READABLE_TIMESTAMP() + ".json");
-    };
-    /**
-     * Exports table as JSON key value pairs. Not implemented (and may not...?)
-     * @function toJSON_KeyValuePairs
-     * @returns {json} database in json format
-     */
-    NyckelDBObj.prototype.toJSON_KeyValuePairs = function () {
-        //TODO
-        return "function not complete";
-    };
-    /**
-     * Make all hidden rows accessible again (another way to call unHideRows)
-     * @function unfilter
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.unfilter = function () {
-        return this.unhideRows();
-    };
-    /**
-     * Make all hidden rows accessible again
-     * @function unhideRows
-     * @returns {object} this
-     */
-    NyckelDBObj.prototype.unhideRows = function () {
-        if (HIDDEN_TABLE_DATA[this.id] !== undefined && !TABLE_IS_DELETED(DB[this.id])) {
-            var row;
-            while (HIDDEN_TABLE_DATA[this.id].length > 0) {
-                row = HIDDEN_TABLE_DATA[this.id][0];
-                DB[this.id].ids[row[0]] = JSON.parse(JSON.stringify(HIDDEN_IDS[this.id][row[0]]));
-                delete HIDDEN_IDS[this.id][row[0]];
-                DB[this.id].table.push(HIDDEN_TABLE_DATA[this.id].splice(0, 1)[0]);
-            }
-            row = null;
-            delete HIDDEN_TABLE_DATA[this.id];
-            delete HIDDEN_IDS[this.id];
-            ROW_INDEX_CACHE[this.id] = {};
-        }
-        return this;
-    };
-    /**
-     * Check if a value is an acceptable input
-     * @function validate
-     * @param {string|number|boolean} value to check
-     * @param {string} valueType an input type, such as "number", "emailAddress"...
-     * @param {validateCallback} [callback] callback function
-     * @returns {object} valid(boolean), value, errorMsg, errorDetails
-     * @since 0.4
-     */
-    NyckelDBObj.prototype.validate = function (value, valueType, callback) {
-        return VALIDATE.call(this, value, valueType, "validate", callback);
-    };
     //TODO share function
     return NyckelDBObj;
 }());
