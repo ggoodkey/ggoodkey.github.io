@@ -1,10 +1,9 @@
 ﻿/* eslint-disable complexity */
-importScripts('base64.min.js');
-importScripts('validate.min.js');
-importScripts('lists.min.js');
+importScripts('base64.js');
+importScripts('validate.js');
+importScripts('lists.js');
 importScripts('nyckelDB.js');
 importScripts('Lawnchair.js');
-importScripts('adapters/indexed-db.js');
 importScripts('storage.js');
 /*global NyckelDB, Base64*/
 function ab2str(buffer) {
