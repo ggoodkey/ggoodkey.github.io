@@ -1,36 +1,37 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 	<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com https://api.dropbox.com https://api.dropboxapi.com/2/ https://api-content.dropbox.com https://cfl.dropboxstatic.com/ https://content.dropboxapi.com/2/ https://dropbox-api.arkoselabs.com/ https://www.dropbox.com https://*.googleusercontent.com/ 'unsafe-eval'; style-src 'self' 'unsafe-inline' data:; media-src *" />
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <meta name="format-detection" content="telephone=no">
-    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
 
-    <title>Nyckel (Beta)</title>
-    <meta name="description" content="Nyckel Database Application" />
+	<title>Nyckel (Beta)</title>
+	<meta name="description" content="Nyckel Database Application" />
 
 	<!--Favicons-->
 	<link rel="icon" type="image/ico" href="favicon.ico" />
 	<link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
 	<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
 	<link rel="icon" type="image/png" href="images/android/android-launchericon-96-96.png" sizes="96x96" />
-    <link rel="shortcut icon" href="favicon.ico" />
- 
-    <!--web app manifest-->
-    <link rel="manifest" href="manifest.json" />
+	<link rel="shortcut icon" href="favicon.ico" />
 
-    <!-- Fallback application metadata for legacy browsers -->
+	<!--web app manifest-->
+	<link rel="manifest" href="manifest.json" />
+
+	<!-- Fallback application metadata for legacy browsers -->
 	<meta name="application-name" content="Nyckel" />
-    
+
 	<!--microsoft-->
 	<link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico?v=2" />
 	<meta name="msapplication-tooltip" content="Nyckel Database Application" />
 	<meta name="msapplication-navbutton-color" content="#478cdb" />
 	<meta name="msapplication-tap-highlight" content="no" />
-    <meta name="msapplication-config" content="none" />
+	<meta name="msapplication-config" content="none" />
 
-    <!--apple-->
+	<!--apple-->
 	<!-- Place 180x180px apple-touch-icon.png in the root directory -->
 	<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
 	<!--ipad-->
@@ -47,215 +48,439 @@
 	<link rel="icon" type="image/png" sizes="192x192" href="icon.png" />
 
 	<!-- Chrome, Firefox OS and Opera -->
-    <meta name="theme-color" content="#478cdb" />
-   
-    <!--css-->
+	<meta name="theme-color" content="#478cdb" />
+
+	<!--css-->
 	<link rel="stylesheet" type="text/css" href="css/index.css" />
-	<link rel="stylesheet" type="text/css" href="css/icons.css" id="default-icons"/>
-    <link rel="stylesheet alternate" type="text/css" href="css/icons-mdl2.css" id="segoe-icons"/>   
+	<link rel="stylesheet" type="text/css" href="css/icons.css" id="default-icons" />
+	<link rel="stylesheet alternate" type="text/css" href="css/icons-mdl2.css" id="segoe-icons" />
 </head>
+
 <body>
-    <noscript>
-        <strong>We're sorry but Nyckel doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="loading"></div>
-    <div id="app" v-bind:class="{ 'sidenav_open': showSideNav }">
-		<nav id="navbar" v-bind:class="{searchBar_open: showSearchBar, searchBar_closing: hideSearchBar}">
-			<div id="back" class="navlink" v-show="backArrow" v-on:click="goBack" tabindex="1" title="Back"><span class="icon icon-chevron-left"></span></div>
-			<div id="currentView"> {{ currentView.name }}</div>
+	<noscript>
+		<strong>We're sorry but Nyckel doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+	</noscript>
+	<div id="loading"></div>
+	<div id="app" :class="{ 'sidenav_open': showSideNav }">
+		<nav id="navbar" :class="{ 'searchBar_open': showSearchBar, 'searchBar_closing': hideSearchBar }">
+			<div v-show="backArrow" id="back" class="navlink" tabindex="1" title="Back" @click="goBack">
+				<span class="icon icon-chevron-left"></span>
+			</div>
+			<div v-if="currentView" id="currentView">
+				{{ currentView.name }}
+			</div>
+
 			<!--right buttons (reverse order)-->
-			<div id="cancelSearch" class="navlink right" v-show="showSearchBar" v-on:click="cancelSearch" tabindex="12" title="Cancel Search"><span class="icon icon-remove"></span></div>
-			<div id="menu" class="navlink right" v-on:click="showSettings = false; toggle('showSideNav');" tabindex="6"><span class="icon icon-menu-hamburger"></span></div>
-			<div id="search" class="navlink right" v-on:click="search" tabindex="11"><span class="icon icon-search"></span></div>
+			<div v-show="showSearchBar" id="cancelSearch" class="navlink right" tabindex="12" title="Cancel Search"
+				@click="cancelSearch">
+				<span class="icon icon-remove"></span>
+			</div>
+
+			<div id="menu" class="navlink right" tabindex="6" @click="showSettings = false; toggle('showSideNav');">
+				<span class="icon icon-menu-hamburger"></span>
+			</div>
+
+			<div id="search" class="navlink right" tabindex="11" @click="search">
+				<span class="icon icon-search"></span>
+			</div>
+
 			<form id="searchBar" class="right">
-				<input id="searchAutoComplete" type="search" autocomplete="off" v-model="searchAutoComplete" disabled />
-				<input id="searchBox" type="search" autocomplete="off" tabindex="8" v-model="searchBox" v-on:keypress="searchKeyPress($event)" v-on:keyup="searchKeyUp($event)" v-on:keydown="searchKeyDown($event)" v-on:input="searchInput($event)" v-on:focus="showSearchSuggestions=true" />
-				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" v-on:click="resetSearch" />
-				<div class="searchSuggestions-container desk tabl" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
+				<input id="searchAutoComplete" v-model="searchAutoComplete" type="search" autocomplete="off" disabled>
+				<input id="searchBox" v-model="searchBox" type="search" autocomplete="off" tabindex="8"
+					@keypress="searchKeyPress($event)" @keyup="searchKeyUp($event)" @keydown="searchKeyDown($event)"
+					@input="searchInput($event)" @focus="showSearchSuggestions=true">
+				<input id="searchReset" type="reset" value="&#10005;" tabindex="9" @click="resetSearch">
+				<div v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions"
+					class="searchSuggestions-container desk tabl" tabindex="10">
 					<ul class="searchSuggestions">
-						<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
+						<li v-for="(suggestion, index) in searchSuggestions" :key="'suggest-' + index" class="link"
+							@click="applySuggestion(searchSuggestions[index])">
+							{{ searchSuggestions[index] }}
+						</li>
 					</ul>
 				</div>
 			</form>
+
 			<div id="topnav-container" class="navButtons desk right">
-				<div v-for="(navlink, key, index) in views" v-if="navlink.level === 1" v-bind:id="'topnavlink_' + key" class="navlink" v-on:click="navigate(key)" v-bind:tabindex="index + 2"><span class="icon" v-bind:class="navlink.icon"></span> &nbsp; {{ navlink.name }}</div>
-				<div id="topIndicator" class="navlinkIndicator desk" v-bind:style="{ right: indicatorRight + 'px', width: indicatorWidth + 'px' }"></div>
+				<div v-for="(navlink, key, index) in topLevelViews" :key="'topnavlink_' + key" :id="'topnavlink_' + key" class="navlink"
+					:tabindex="index + 2" @click="navigate(key)">
+					<span class="icon" :class="navlink.icon"></span>
+					&nbsp; {{ navlink.name }}
+				</div>
+				<div id="topIndicator" class="navlinkIndicator desk" :style="{ right: indicatorRight + 'px', width: indicatorWidth + 'px' }">
+				</div>
 			</div>
 		</nav>
-		<div class="searchSuggestions-container phon" tabindex="10" v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions">
-				<ul class="searchSuggestions">
-					<li v-for="(suggestion, index) in searchSuggestions" v-on:click="applySuggestion(searchSuggestions[index])" class="link">{{ searchSuggestions[index] }}</li>
-				</ul>
-			</div>
+
+		<div v-if="showSearchBar && searchSuggestions.length > 0 && showSearchSuggestions"
+			class="searchSuggestions-container phon" tabindex="10">
+			<ul class="searchSuggestions">
+				<li v-for="(suggestion, index) in searchSuggestions" :key="'phon-suggest-' + index" class="link"
+					@click="applySuggestion(searchSuggestions[index])">
+					{{ searchSuggestions[index] }}
+				</li>
+			</ul>
+		</div>
+
 		<nav id="sidenav">
 			<div id="sidenav-container">
 				<div class="navButtons">
-					<div id="sideIndicator" class="navlinkIndicator phon tabl" v-bind:style="{ top: indicatorTop + 'px' }"></div>
-					<div v-for="(navlink, key, index) in views" v-if="navlink.level === 1" v-bind:id="'sidenavlink_' + key" class="navlink phon tabl" v-on:click="navigate(key)" v-bind:tabindex="index + 13" v-bind:title="navlink.name"><span class="icon" v-bind:class="navlink.icon"></span> &nbsp;&nbsp;&nbsp;&nbsp; {{ navlink.name }}</div>
-					<div id="settings" class="navlink" v-on:click.stop="toggleSettings" tabindex="19">
-						<span class="icon icon-cog"></span> &nbsp;&nbsp;&nbsp;&nbsp; Settings
-						<span class="icon icon-menu-down right" v-show="showSettings === false">
-						</span><span class="icon icon-menu-up right" v-show="showSettings"></span>
+					<div id="sideIndicator" class="navlinkIndicator phon tabl" :style="{ top: indicatorTop + 'px' }">
 					</div>
-					<div class="text" v-show="showSettings">
+					<div v-for="(navlink, key, index) in topLevelViews" :key="'sidenavlink_' + key" :id="'sidenavlink_' + key"
+						class="navlink phon tabl" :tabindex="index + 13" :title="navlink.name" @click="navigate(key)">
+						<span class="icon" :class="navlink.icon"></span>&nbsp;&nbsp;&nbsp;&nbsp; {{ navlink.name }}
+					</div>
+
+					<div id="settings" class="navlink" tabindex="19" @click.stop="toggleSettings">
+						<span class="icon icon-cog"></span>&nbsp;&nbsp;&nbsp;&nbsp; Settings
+						<span v-show="showSettings === false" class="icon icon-menu-down right"></span>
+						<span v-show="showSettings" class="icon icon-menu-up right"></span>
+					</div>
+
+					<div v-show="showSettings" class="text">
 						<h6>Personalisation</h6>
 						<div>
 							Use System Theme
 							<div class="switch right">
-								<input type="checkbox" id="switch_useSystemTheme" v-model="useSystemTheme" v-on:change="toggleUseSystemTheme" />
+								<input id="switch_useSystemTheme" v-model="useSystemTheme" type="checkbox"
+									@change="toggleUseSystemTheme">
 								<label for="switch_useSystemTheme" tabindex="20"></label>
 							</div>
 						</div>
+
 						<div v-show="useSystemTheme === false" class="clear">
 							Dark Theme
 							<div class="switch right">
-								<input type="checkbox" id="switch_darktheme" v-model="darkTheme" v-on:change="setTheme"/>
-								<label for="switch_darktheme" v-on:click="storeState" tabindex="21"></label>
+								<input id="switch_darktheme" v-model="darkTheme" type="checkbox" @change="setTheme">
+								<label for="switch_darktheme" tabindex="21" @click="storeState"></label>
 							</div>
 						</div>
+
 						<div v-show="useSystemTheme === false && windows === true || windows === false" class="clear">
 							Accent Color
-							<color-select class="right menu-button" align="right" v-bind:color="accentColor" v-on:color-select="setAccentColor"></color-select>
+							<color-select class="right menu-button" align="right" :color="accentColor"
+								@color-select="setAccentColor" />
 						</div>
+
 						<h6>Dropbox</h6>
-						<div class="clear" v-if="loggedIn === false">
+						<div v-if="loggedIn === false" class="clear">
 							Connect App
-							<button class="right" tabindex="22" v-on:click="login">Sign in</button>
+							<button class="right" tabindex="22" @click="login">
+								Sign in
+							</button>
 						</div>
+
 						<div v-else class="clear">
-							<div align="right">{{ dropboxUsername }}</div>
-							<br />
-							<button class="right clear" tabindex="23" v-on:click="logout">Sign Out</button>
-							<button class="right clear" v-on:click="syncAll(null, {forceSync:true})">Force Sync Now</button>
-							<button class="right clear" v-if="stoKey === 'unknown' && showStoKeyInput === false" v-on:click="toggle('showStoKeyInput')">Secure your files</button>
-							<div class="clear" v-if="stoKey !== 'unknown' && showStoKeyInput === false">
-								<div>Your files have been secured</div>
-								<br />
-								<button class="clear right" v-on:click="toggle('showStoKeyInput')">Change Key</button>
+							<div align="right">
+								{{ dropboxUsername }}
 							</div>
+							<br>
+							<button class="right clear" tabindex="23" @click="logout">
+								Sign Out
+							</button>
+
+							<button class="right clear" @click="syncAll(null, {forceSync:true})">
+								Force Sync Now
+							</button>
+
+							<button v-if="stoKey === 'unknown' && showStoKeyInput === false" class="right clear" @click="toggle('showStoKeyInput')">
+								Secure your files
+							</button>
+
+							<div v-if="stoKey !== 'unknown' && showStoKeyInput === false" class="clear">
+								<div>Your files have been secured</div>
+								<br>
+								<button class="clear right" @click="toggle('showStoKeyInput')">
+									Change Key
+								</button>
+							</div>
+
 							<div v-if="showStoKeyInput" class="clear">
-								Change your key<br /><br />
-								<label for="stoKeyInput" v-bind:class="{alert:stoKeyWarning !== ''}">Create a new password</label>
-								<input id="stoKeyInput" type="password" />
-								<br /><br />
-								<label for="stoKeyInputConfirm" v-bind:class="{alert:stoKeyWarning !== ''}">Type it in again</label>
-								<input id="stoKeyInputConfirm" type="password" />
-								<span class="alert">{{stoKeyWarning}}</span>
+								Change your key
+								<br>
+								<br>
+								<label for="stoKeyInput" :class="{ 'alert': stoKeyWarning !== '' }">
+									Create a new password
+								</label>
+								<input id="stoKeyInput" type="password">
+								<br>
+								<br>
+								<label for="stoKeyInputConfirm" :class="{ 'alert': stoKeyWarning !== '' }">
+									Type it in again
+								</label>
+								<input id="stoKeyInputConfirm" type="password">
+								<span class="alert">
+									{{ stoKeyWarning }}
+								</span>
 								<div class="clear right">
-									<button v-on:click.stop="newStoKey">Create Key</button>
-									<button v-on:click.stop="toggle('showStoKeyInput')">Cancel</button>	
-								</div>									
+									<button @click.stop="newStoKey">
+										Create Key
+									</button>
+									<button @click.stop="toggle('showStoKeyInput')">
+										Cancel
+									</button>
+								</div>
 							</div>
 						</div>
+
 						<h6>Reset data and settings</h6>
 						<div class="clear">
-							<button class="right" v-on:click="resetSettings">Reset Settings</button>
-							<button v-if="loggedIn === true" class="alert right" v-on:click="wipeDropbox">Delete Cloud Data</button>
-							<button class="alert right" v-on:click="wipeApp">Delete Local Data</button>
+							<button class="right" @click="resetSettings">
+								Reset Settings
+							</button>
+
+							<button v-if="loggedIn === true" class="alert right" @click="wipeDropbox">
+								Delete Cloud Data
+							</button>
+
+							<button class="alert right" @click="wipeApp">
+								Delete Local Data
+							</button>
 						</div>
-						<br />
-						<hr />
+
+						<br>
+						<hr>
 						<div class="clear">
 							App Version
-							<div class="right">{{ version }}</div>
+							<div class="right">
+								{{ version }}
+							</div>
 						</div>
-						<a class="clear right" href="http://gapps.droppages.com/privacy.html" target="_blank">Privacy Policy</a>
-						<p id="copy" class="clear"><small>&copy; 2018 GG</small></p>
+
+						<a class="clear right" href="http://gapps.droppages.com/privacy.html" target="_blank">
+							Privacy Policy
+						</a>
+						<p id="copy" class="clear">
+							<small>&copy; 2018 GG</small>
+						</p>
 					</div>
 				</div>
 			</div>
 		</nav>
-		<div id="notification" v-show="showNotify" v-on:click="showNotify = false">
-			<div id="notification_msg">{{ notifyMsg }}</div>
-			<a id="hideNotification" class="close" aria-label="Close" v-on:click="showNotify = false"><span aria-hidden="true">&times;</span></a>
+
+		<div v-show="showNotify" id="notification" @click="showNotify = false">
+			<div id="notification_msg">
+				{{ notifyMsg }}
+			</div>
+			<a id="hideNotification" class="close" aria-label="Close" @click="showNotify = false">
+				<span aria-hidden="true">&times;</span>
+			</a>
 		</div>
-		<div id="spinner" v-show="spinner"><img width="20" height="20" src="images/spinner.gif" /> {{ spinnerMsg[spinIndex] }}</div>
-		<div id="confirmContainer" v-show="showConfirm" v-on:click="shakeConfirm"></div>
-		<div id="confirm" v-show="showConfirm" v-bind:class="{ shake: confirmShake }">
-			<h5 v-if="confirmDetails">{{ confirmMsg }}</h5>
-			<div id="confirmMessage">{{ confirmDetails || confirmMsg }}</div>
+
+		<div v-show="spinner" id="spinner">
+			<img width="20" height="20" src="images/spinner.gif">
+			{{ spinnerMsg[spinIndex] }}
+		</div>
+
+		<div v-show="showConfirm" id="confirmContainer" @click="shakeConfirm">
+		</div>
+		<div v-show="showConfirm" id="confirm" :class="{ 'shake': confirmShake }">
+			<h5 v-if="confirmDetails">
+				{{ confirmMsg }}
+			</h5>
+			<div id="confirmMessage">
+				{{ confirmDetails || confirmMsg }}
+			</div>
+
 			<form>
-				<input id="updateStoKeyInput" type="password" v-show="showUpdateKey" />
-				<button id="confirmOK" type="button" aria-label="OK" v-on:click="processConfirm(true);">{{ confirmOK }}</button>
-				<button id="confirmCancel" type="button" aria-label="Cancel" v-on:click="processConfirm(false);">{{ confirmCancel }}</button>
+				<input v-show="showUpdateKey" id="updateStoKeyInput" type="password">
+				<button id="confirmOK" type="button" aria-label="OK" @click="processConfirm(true);">
+					{{ confirmOK }}
+				</button>
+				<button id="confirmCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
+					{{ confirmCancel }}
+				</button>
 			</form>
 		</div>
-		<div id="closeSidenav" v-on:click="showSettings = false; toggle('showSideNav');"></div>
+
+		<div id="closeSidenav" @click="showSettings = false; toggle('showSideNav');">
+		</div>
 		<div id="router-views">
 			<transition :name="transitionName" mode="out-in">
-				<router-view :key='$route.fullPath' ref="router1"></router-view>
+				<router-view :key="$route.fullPath" ref="router1" />
 			</transition>
 		</div>
-		<input type="file" class="hidden" id="hiddenCSVInput" />
-		<div class="hidden" id="comboBoxDiv">
-			<input type="file" accept=".json" name="json[]" id="json" size="10" />
-			<a id="hiddenDownloadLink" download="" href="" style="display:none"></a>
+
+		<input id="hiddenCSVInput" type="file" class="hidden">
+		<div id="comboBoxDiv" class="hidden">
+			<input id="json" type="file" accept=".json" name="json[]" size="10">
+			<a id="hiddenDownloadLink" download style="display:none"></a>
 		</div>
-    </div>
-    
-	<!-- Vue.js Templates -->
+	</div>
+
+	<!-- Vue.js Templates-->
+
 	<script type="text/x-template" id="dropdown-button">
 		<div class="dropdownButton dropdown-container">
-			<button class="dropdownButton" v-if="customtextinput && open === false || customtextinput === false" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:title="title">
+			<button
+				v-if="customtextinput && open === false || customtextinput === false"
+				class="dropdownButton"
+				:class="{selected: open}"
+				:title="title"
+				@click="toggle"
+			>
 				<template v-if="icon">
-					<span class="dropdownButton icon" v-bind:class="icon"></span><template v-if="noinputtext || buttonValue !== '' || noarrow === false">&nbsp;&nbsp;</template></template><template v-if="noinputtext || buttonValue !== ''">{{ buttonValue || noinputtext }}</template><template v-if="noarrow === false">&nbsp;<small><span v-show="open" class="dropdownButton icon icon-triangle-top"></span><span v-show="open === false" class="dropdownButton icon icon-triangle-bottom"></span></small>
+					<span
+						class="dropdownButton icon"
+						:class="icon"
+					></span>
+					<template v-if="noinputtext || buttonValue !== '' || noarrow === false">&nbsp;&nbsp;</template>
+				</template>
+				<template v-if="noinputtext || buttonValue !== ''">{{ buttonValue || noinputtext }}</template>
+				<template v-if="noarrow === false">
+					&nbsp;
+					<small>
+						<span
+							v-show="open"
+							class="dropdownButton icon icon-triangle-top"
+						></span>
+						<span
+							v-show="open === false"
+							class="dropdownButton icon icon-triangle-bottom"
+						></span>
+					</small>
 				</template>
 			</button>
-			<input ref="input" v-if="customtextinput && open" type="text" class="dropdownButton textbox" v-model:value="buttonValue" v-on:keyup.enter="action($event, buttonValue)" autocomplete="off"/>
-			<div v-show="open" class="dropdownButton dropdown" v-bind:class="align">
-				<a class="dropdownButton link" v-for="link in links" v-on:click="action($event, link.action)" v-bind:class="{disabled: link.disabled}" v-bind:href="link.href ? link.href : null">
-					<span class="dropdownButton icon left" v-bind:class="link.icon"></span>
-					<div class="dropdownButton" v-bind:title="link.description" v-if="link.text !== ''" v-bind:class="{'dropdownlink-text': link.icon !== ''}">
-						{{ link.text }}
-					</div>
+			<input
+				v-if="customtextinput && open"
+				ref="input"
+				v-model="buttonValue"
+				type="text"
+				autocomplete="off"
+				class="dropdownButton textbox"
+				@keyup.enter="action($event, buttonValue)"
+			>
+			<div
+				v-show="open"
+				class="dropdownButton dropdown"
+				:class="align"
+			>
+				<a
+					v-for="link in links"
+					:key="'dropdownLink' + link.action"
+					class="dropdownButton link"
+					:class="{disabled: link.disabled}"
+					:href="link.href ? link.href : null"
+					@click="action($event, link.action)"
+				>
+					<span
+						class="dropdownButton icon left"
+						:class="link.icon"
+					></span>
+					<div
+						v-if="link.text !== ''"
+						class="dropdownButton"
+						:title="link.description"
+						:class="{'dropdownlink-text': link.icon !== ''}"
+					>{{ link.text }}</div>
 				</a>
 			</div>
 		</div>
 	</script>
+
 	<script type="text/x-template" id="icon-select">
 		<div class="dropdownButton dropdown-container">
-			<button class="dropdownButton" v-on:click="toggle" v-bind:class="{selected: open}">
-				<template v-if="iconSelected"><span class="dropdownButton icon" v-bind:class="iconSelected"></span></template>
-				<template v-else="noinputtext">{{ noinputtext }}</template>
+			<button class="dropdownButton" @click="toggle" :class="{selected: open}">
+				<template v-if="iconSelected">
+					<span class="dropdownButton icon" :class="iconSelected"></span>
+				</template>
+				<template v-else-if="noinputtext">{{ noinputtext }}</template>
 			</button>
-			<div v-show="open" class="dropdownButton dropdown grid" v-bind:class="align">
-				<a class="left button-link dropdownButton" v-for="option in options" v-on:click="select(option)"><span class="dropdownButton icon" v-bind:class="option"></span></a>
+			<div v-show="open" class="dropdownButton dropdown grid" :class="align">
+				<a
+					class="left button-link dropdownButton"
+					v-for="option in options"
+					@click="select(option)"
+					:key="'icon-select-' + option"
+				>
+					<span class="dropdownButton icon" :class="option"></span>
+				</a>
 			</div>
 		</div>
 	</script>
+
 	<script type="text/x-template" id="color-select">
 		<div class="dropdownButton dropdown-container">
-			<button class="dropdownButton" v-on:click="toggle" v-bind:class="{selected: open}" v-bind:style="{ backgroundColor: color }"></button>
-			<div v-show="open" class="dropdownButton dropdown grid" v-bind:class="align">
-				<div class="left button-link dropdownButton" v-for="option in options" v-on:click="select(option)" v-bind:style="{ backgroundColor:option }"></div>
+			<button
+				class="dropdownButton"
+				:class="{ selected: open }"
+				:style="{ backgroundColor: color }"
+				@click="toggle"
+			></button>
+			<div
+				v-show="open"
+				class="dropdownButton dropdown grid"
+				:class="align"
+			>
+				<div
+					class="left button-link dropdownButton"
+					v-for="option in options"
+					:style="{ backgroundColor:option }"
+					:key="'color-select-' + option"
+					@click="select(option)"
+				>
+				</div>
 			</div>
 		</div>
 	</script>
+
 	<script type="text/x-template" id="jump-list">
 		<div v-if="list.length > 0">
 			<div align="left">
-				<button v-show="selected === false" v-on:click="toggleSelect" class="left"><span class="icon icon-check"></span>&nbsp;&nbsp;Select</button>
-				<button v-show="selected && selectAll === false" v-on:click="toggleSelectAll" class="left"><span class="icon icon-unchecked"></span>&nbsp;&nbsp;Select All</button>
-				<button v-show="selected && selectAll" v-on:click="toggleSelectAll" class="left"><span class="icon icon-check"></span>&nbsp;&nbsp;Deselect All</button>
-				<button v-show="selected" v-on:click="toggleSelect" class="left"><span class="icon icon-cancel"></span>&nbsp;&nbsp;Cancel Select</button>
-				<button v-show="selected === false && collapsed === false" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-th"></span>&nbsp;&nbsp;Button View</button>
-				<button v-show="selected === false && collapsed" v-on:click="toggle('collapsed')" class="left"><span class="icon icon-list"></span>&nbsp;&nbsp;List View</button>
-				<dropdown-button icon="icon-more" class="left" title="Actions" align="right"
-								 v-on:dropdown-action="moreDropdownActions"
-								 v-on:dropdown-open="updateDropdownLinks"
-								 v-bind:links="moreDropdownLinks"
-								 v-bind:noarrow="true">
-				</dropdown-button>
+				<button v-show="selected === false" @click="toggleSelect" class="left">
+					<span class="icon icon-check"></span>&nbsp;&nbsp;Select
+				</button>
+				<button v-show="selected && selectAll === false" @click="toggleSelectAll" class="left">
+					<span class="icon icon-unchecked"></span>&nbsp;&nbsp;Select All
+				</button>
+				<button v-show="selected && selectAll" @click="toggleSelectAll" class="left">
+					<span class="icon icon-check"></span>&nbsp;&nbsp;Deselect All
+				</button>
+				<button v-show="selected" @click="toggleSelect" class="left">
+					<span class="icon icon-cancel"></span>&nbsp;&nbsp;Cancel Select
+				</button>
+				<button
+					v-show="selected === false && collapsed === false"
+					@click="toggle('collapsed')"
+					class="left"
+				>
+					<span class="icon icon-th"></span>&nbsp;&nbsp;Button View
+				</button>
+				<button
+					v-show="selected === false && collapsed"
+					@click="toggle('collapsed')"
+					class="left"
+				>
+					<span class="icon icon-list"></span>&nbsp;&nbsp;List View
+				</button>
+				<dropdown-button
+					icon="icon-more"
+					class="left"
+					title="Actions"
+					align="right"
+					@dropdown-action="moreDropdownActions"
+					@dropdown-open="updateDropdownLinks"
+					:links="moreDropdownLinks"
+					:noarrow="true"
+				/>
 			</div>
-			<ul class="links clear" v-bind:collapsed="collapsed">
-				<li v-for="link in list" v-bind:id="link.id" v-show="showIf(link, collapsed)" v-on:click="action(link, scrolldiv, collapsed)" v-bind:class="{
-					'link': link.type === 'link',
-					'jumplink': link.type === 'jumplink',
-					'jumplink-button': link.type === 'jumplink' && collapsed === true,
-					'icon': selected && link.type === 'link',
-					'icon-unchecked': selected && link.selected === false,
-					'icon-check': selected && link.selected,
-					'selected': selected && link.selected }">
+			<ul class="links clear" :collapsed="collapsed">
+				<li
+					v-for="link in list"
+					:id="link.id"
+					v-show="showIf(link, collapsed)"
+					@click="action(link, scrolldiv, collapsed)"
+					:class="{
+						'link': link.type === 'link',
+						'jumplink': link.type === 'jumplink',
+						'jumplink-button': link.type === 'jumplink' && collapsed === true,
+						'icon': selected && link.type === 'link',
+						'icon-unchecked': selected && link.selected === false,
+						'icon-check': selected && link.selected,
+						'selected': selected && link.selected }"
+					:key="'jump-list-' + link.id"
+				>
 					{{ link.text }}
 				</li>
 			</ul>
@@ -267,81 +492,216 @@
 			<div class="view-container">
 				<h3>Create a New Table</h3>
 				<label class="itemLabel">Title</label>
-				<input type="text" class="textbox" autocomplete="off" v-model="newTable.title" />
+				<input
+					v-model="newTableTitle"
+					type="text"
+					class="textbox"
+					autocomplete="off"
+				>
 				<label class="itemLabel">Icon</label>
-				<div class="itemInput"><icon-select v-on:icon-select="setIcon" v-bind:icon="icon"></icon-select></div>
+				<div class="itemInput">
+					<icon-select
+						:icon="icon"
+						@icon-select="setIcon"
+					/>
+				</div>
 				<label class="itemLabel">Icon Color</label>
-				<div class="itemInput"><color-select id="setColorButton" v-on:color-select="setColor" v-bind:color="iconColor"></color-select></div>
+				<div class="itemInput">
+					<color-select
+						id="setColorButton"
+						:color="iconColor"
+						@color-select="setColor"
+					/>
+				</div>
 				<label class="itemLabel">Predefined Templates</label>
-				<div class="itemInput"><button v-on:click="template('Blank')"><span class="icon icon-page"></span>&nbsp;&nbsp;Blank Template</button><button v-on:click="template('Contacts')"><span class="icon icon-user"></span>&nbsp;&nbsp;Contacts Template</button> <button v-on:click="template('Files')"><span class="icon icon-folder-open"></span>&nbsp;&nbsp;Files Template</button></div>
+				<div class="itemInput">
+					<button @click="template('Blank')">
+						<span class="icon icon-page"></span>&nbsp;&nbsp;Blank Template
+					</button>
+					<button @click="template('Contacts')">
+						<span class="icon icon-user"></span>&nbsp;&nbsp;Contacts Template
+					</button>
+					<button @click="template('Files')">
+						<span class="icon icon-folder-open"></span>&nbsp;&nbsp;Files Template
+					</button>
+				</div>
 				<label class="itemLabel">Table Setup</label>
-				<div class="table-container" v-bind:class="{ 'fullscreen': newTable.fullscreen }">
+				<div
+					class="table-container"
+					:class="{ 'fullscreen': fullscreen }"
+				>
 					<table>
 						<thead>
 							<th>
-								<a v-show="newTable.fullscreen" v-on:click="newTable.fullscreen = false"><span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen</a>
-								<a v-show="newTable.fullscreen === false" v-on:click="newTable.fullscreen = true"><span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen</a>
+								<a
+									v-show="fullscreen"
+									@click="fullscreen = false"
+								>
+									<span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen
+								</a>
+								<a
+									v-show="fullscreen === false"
+									@click="fullscreen = true"
+								>
+									<span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen
+								</a>
 							</th>
-							<th v-for="(column, index) in newTable.headers">
+							<th
+								v-for="(column, index) in newTable.headers"
+								:key="'th-' + index"
+							>
 								<dropdown-button
-									v-bind:buttontext="'Column ' + (index + 1)"
-									v-on:dropdown-action="thAction($event, index)"
-									v-bind:links="thLinks"></dropdown-button>
+									:buttontext="'Column ' + (index + 1)"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+								/>
 							</th>
-							<th><a v-on:click="insertColumn(false)"><span class="icon icon-plus" title="Add New Column"></span></a></th>
+							<th>
+								<a @click="insertColumn(false)">
+									<span
+										class="icon icon-plus"
+										title="Add New Column"
+									></span>
+								</a>
+							</th>
 						</thead>
-						<tr><th title="These are the headers of the columns in your table">Column&nbsp;Name</th><td v-for="(column, index) in newTable.headers"><input type="text" size="12" v-model="newTable.headers[index]" /></td><td></td></tr>
+						<tr>
+							<th title="These are the headers of the columns in your table">
+								Column&nbsp;Name
+							</th>
+							<td
+								v-for="(column, index) in newTable.headers"
+								:key="'td-columnname-' + index"
+							>
+								<input
+									v-model="newTable.headers[index]"
+									type="text"
+									size="12"
+								>
+							</td>
+							<td></td>
+						</tr>
 						<tr>
 							<th>Column&nbsp;Data&nbsp;Type</th>
-							<td v-for="(type, index) in newTable.types">
+							<td
+								v-for="(type, index) in newTable.types"
+								:key="'td-datatype-' + index"
+							>
 								<dropdown-button
-									v-bind:buttontext="newTable.types[index]"
-									v-on:dropdown-action="typesAction($event, index)"
-									v-bind:links="newTable.typesDropdownOptions"
+									:buttontext="newTable.types[index]"
+									:links="typesDropdownOptions"
 									select
-								></dropdown-button>
+									@dropdown-action="typesAction($event, index)"
+								/>
 							</td>
 							<td></td>
 						</tr>
 						<tr>
-							<th title="Do you want data from this column to show up in search results?">Searchable</th>
-							<td v-for="(value, index) in newTable.options.searchable">
+							<th title="Do you want data from this column to show up in search results?">
+								Searchable
+							</th>
+							<td
+								v-for="(value, index) in newTable.options.searchable"
+								:key="'td-searchable-' + index"
+							>
 								<dropdown-button
-									v-bind:buttontext="newTable.options.searchable[index]"
-									v-on:dropdown-action="searchableAction($event, index)"
-									v-bind:links="newTable.searchableDropdownOptions"
+									:buttontext="newTable.options.searchable[index]"
+									:links="searchableDropdownOptions"
 									select
-								></dropdown-button>
+									@dropdown-action="searchableAction($event, index)"
+								/>
 							</td>
 							<td></td>
 						</tr>
-						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
-						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
-						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
-						<tr><th></th><td v-for="(type, index) in newTable.types"></td><td></td></tr>
+						<tr>
+							<th></th>
+							<td
+								v-for="(type, index) in newTable.types"
+								:key="'td1-' + index"
+							></td>
+							<td></td>
+						</tr>
+						<tr>
+							<th></th>
+							<td
+								v-for="(type, index) in newTable.types"
+								:key="'td2-' + index"
+							></td>
+							<td></td>
+						</tr>
+						<tr>
+							<th></th>
+							<td
+								v-for="(type, index) in newTable.types"
+								:key="'td3-' + index"
+							></td>
+							<td></td>
+						</tr>
+						<tr>
+							<th></th>
+							<td
+								v-for="(type, index) in newTable.types"
+								:key="'td4-' + index"
+							></td>
+						<td></td>
+						</tr>
 					</table>
 				</div>
-				<label class="itemLabel" v-show="showCustomPropertyInput === false">Custom Properties</label>
-				<div class="itemText" v-show="showCustomPropertyInput === false">
-					<div v-for="property in customProperties">{{ property.name }} ({{property.type}}): {{ property.initialValue }}</div>
-					<button v-on:click="showCustomPropertyInput = true"><span class="icon icon-plus"></span>&nbsp;&nbsp;Add new property</button>
+				<label
+					v-show="showCustomPropertyInput === false"
+					class="itemLabel"
+				>Custom Properties</label>
+				<div
+					v-show="showCustomPropertyInput === false"
+					class="itemText"
+				>
+					<div
+						v-for="(property, index) in customProperties"
+						:key="'customprop-' + index"
+					>
+						{{ property.name }} ({{ property.type }}): {{ property.initialValue }}
+					</div>
+					<button @click="showCustomPropertyInput = true">
+						<span class="icon icon-plus"></span>&nbsp;&nbsp;Add new property
+					</button>
 				</div>
 				<div v-show="showCustomPropertyInput">
 					<label class="itemLabel">Property Name</label>
-					<input type="text" class="textbox" autocomplete="off" v-model="customPropertyName" />
+					<input
+						v-model="customPropertyName"
+						type="text"
+						class="textbox"
+						autocomplete="off"
+					>
 					<label class="itemLabel">Property Type</label>
-					<dropdown-button class="left" select
-						v-on:dropdown-action="setCustomPropertyType" 
-						v-bind:links="customPropertyTypes" 
+					<dropdown-button
+						class="left"
+						select
+						:links="customPropertyTypes"
 						noinputtext="[ Select a data type (required) ]"
-						v-bind:buttontext="customPropertyType"></dropdown-button>
+						:buttontext="customPropertyType"
+						@dropdown-action="setCustomPropertyType"
+					/>
 					<label class="itemLabel">Initial Value</label>
-					<input v-bind:type="initialValueInputType" class="textbox" autocomplete="off" v-model="customPropertyInitialValue" />
-					<div class="alert">{{ customPropertyError }}</div>
-					<button v-on:click="addNewProperty">Save Property</button>
+					<input
+						v-model="customPropertyInitialValue"
+						:type="initialValueInputType"
+						class="textbox"
+						autocomplete="off"
+					>
+					<div class="alert">
+						{{ customPropertyError }}
+					</div>
+					<button @click="addNewProperty">
+						Save Property
+					</button>
 				</div>
 				<label class="itemLabel">Import Data</label>
-				<div class="itemText"><button v-on:click="importNewTable('csv')"><span class="icon icon-import"></span>&nbsp;&nbsp;From CSV</button></div>
+				<div class="itemText">
+					<button @click="importNewTable('csv')">
+						<span class="icon icon-import"></span>&nbsp;&nbsp;From CSV
+					</button>
+				</div>
 				<button>Save Table</button>
 			</div>
 		</div>
@@ -349,32 +709,69 @@
 
 	<script type="text/x-template" id="recent-page">
 		<div class="views">
-			<div id="recentView" class="view" v-bind:class="{splitViewLeft: recentDetails.data.length > 0}">
-				<div v-if="loading" class="view-container">
+			<div
+				id="recentView"
+				class="view"
+				:class="{splitViewLeft: recentDetails.data.length > 0}"
+			>
+				<div
+					v-if="loading"
+					class="view-container"
+				>
 					<h5>Loading...</h5>
 				</div>
-				<div v-else-if="recentlyViewed.length > 0" class="view-container">
+				<div
+					v-else-if="recentlyViewed.length > 0"
+					class="view-container"
+				>
 					<h3>Recently Viewed</h3>
-					<jump-list v-bind:links="recentlyViewed" scrolldiv="recentView" v-bind:details="recentDetails" v-on:update-details="onDetailsUpdate" v-on:update-recently-viewed="onRecentlyViewedUpdate"></jump-list>
+					<jump-list
+						:links="recentlyViewed"
+						scrolldiv="recentView"
+						:details="recentDetails"
+						@update-details="onDetailsUpdate"
+						@update-recently-viewed="onRecentlyViewedUpdate"
+					/>
 				</div>
-				<div v-else class="view-container">
-					<h3>Nyckel <sup><small><small>(v{{ version }})</small></small></sup></h3>
+				<div
+					v-else
+					class="view-container"
+				>
+					<h3>
+						Nyckel
+						<sup>
+							<small>
+								<small>(v{{ version }})</small>
+							</small>
+						</sup>
+					</h3>
 					<h5>Store, search, view, share and sync data across devices using the cloud.</h5>
-					<p>Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications. 
-						You can read the full NyckelDB API documentation <a href="dev/index.html" target="_blank">here</a>
+					<p>
+						Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.
+						You can read the full NyckelDB API documentation
+						<a
+							href="dev/index.html"
+							target="_blank"
+						>here</a>
 					</p>
-					<br />
+					<br>
 					<p>
 						<span class="icon icon-alert alert"></span>
-						<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
+					<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
 						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it in the Settings menu.
 					</p>
 				</div>
 			</div>
 			<div class="scroll-outer-container">
 				<div class="view splitViewRight">
-					<transition name="forward" mode="out-in">
-						<component v-bind:is="detailsView" v-bind:details="recentDetails"></component>
+					<transition
+						name="forward"
+						mode="out-in"
+					>
+						<component
+							:is="detailsView"
+							:details="recentDetails"
+						/>
 					</transition>
 				</div>
 			</div>
@@ -385,17 +782,29 @@
 		<div class="view">
 			<div class="view-container">
 				<div v-if="groups.length === 0 || showNewGroupUI">
-					<button v-show="groupName !== '' && groupPage > 1" v-on:click="groupPage = 1"><span class="icon icon-arrow-left"></span>&nbsp;&nbsp;Edit Group Name: {{groupName}}</button>
-					<button v-show="groupSearchBox !== '' && groupPage > 2" v-on:click="groupPage = 2"><span class="icon icon-arrow-left"></span>&nbsp;&nbsp;Edit Search Query: {{groupSearchBox}}</button>
+					<button v-show="groupName !== '' && groupPage > 1" @click="groupPage = 1">
+						<span class="icon icon-arrow-left"></span>
+						&nbsp;&nbsp;Edit Group Name: {{ groupName }}
+					</button>
+					<button v-show="groupSearchBox !== '' && groupPage > 2" @click="groupPage = 2">
+						<span class="icon icon-arrow-left"></span>
+						&nbsp;&nbsp;Edit Search Query: {{ groupSearchBox }}
+					</button>
 					<div v-show="groupPage === 1">
 						<h3>Create a new group</h3>
 						<label class="itemLabel">Give the Group a Name</label>
-						<input type="text" class="textbox" autocomplete="off" v-model="groupName" />
-						<button type=button v-bind:disabled="groupName === ''" v-on:click="groupPage++">Next&nbsp;&nbsp;<span class="icon icon-arrow-right"></span></button>
+						<input v-model="groupName" type="text" class="textbox" autocomplete="off">
+						<button type="button" :disabled="groupName === ''" @click="groupPage++">
+							Next&nbsp;&nbsp;
+							<span class="icon icon-arrow-right"></span>
+						</button>
 					</div>
 					<div v-show="groupPage === 2">
 						<h3>Make the Group Dynamic based on a Search Query</h3>
-						<p>The group can update itself dynamically as data changes in the database. <a v-on:click='toggle("groupHelp")'>Learn how to refine your search</a></p>
+						<p>
+							The group can update itself dynamically as data changes in the database.
+							<a @click="toggle('groupHelp')">Learn how to refine your search</a>
+						</p>
 						<div v-if="groupHelp">
 							<p>
 								You can refine your search by adding to, or subtracting from your search by prefixing additional search terms with the "+" or "-" charactors.
@@ -405,25 +814,57 @@
 							<p>Note: Every word doesn't need a prefix. "Bob Johnston +Bob Dunn" also works. And the first word doesn't need a prefix (it is always +)</p>
 						</div>
 						<label class="itemLabel">Input Search Terms</label>
-						<input type="search" class="textbox" autocomplete="off" v-model="groupSearchBox" v-on:keypress="groupKeyPress($event)" v-on:keyup="groupKeyUp($event)" v-on:keypdown="groupKeyDown($event)" v-on:input="groupInput($event)" />
-						<button v-if="groupSearchBox === ''" v-on:click="groupPage++">Skip&nbsp;&nbsp;<span class="icon icon-arrow-right"></span></button>
+						<input
+							v-model="groupSearchBox"
+							type="search"
+							class="textbox"
+							autocomplete="off"
+							@keypress="groupKeyPress($event)"
+							@keyup="groupKeyUp($event)"
+							@keypdown="groupKeyDown($event)"
+							@input="groupInput($event)"
+						>
+						<button v-if="groupSearchBox === ''" @click="groupPage++">
+							Skip&nbsp;&nbsp;
+							<span class="icon icon-arrow-right"></span>
+						</button>
 					</div>
 					<div v-show="groupPage === 3">
 						<h3>Select Members</h3>
 						<label class="itemLabel">Add Members by Selection</label>
 						<div id="selectGroupItems" class="editbox">
-							<button v-if="activeGroup.length === 0" v-on:click="showSelectGroupMembers">Select Group Members</button>
-							<jump-list v-else v-bind:links="activeGroup" scrolldiv="selectGroupItems" select></jump-list>
+							<button v-if="activeGroup.length === 0" @click="showSelectGroupMembers">
+								Select Group Members
+							</button>
+							<jump-list
+								v-else
+								:links="activeGroup"
+								scrolldiv="selectGroupItems"
+								select
+							/>
 						</div>
 					</div>
 					<div v-show="groupPage > 1 && activeGroup.length > 0">
 						<label class="itemLabel">Group Preview</label>
 						<div id="groupPreview" class="editbox">
-							<div v-if="activeGroup.length === 0">Nothing to show</div>
-							<div class="groupMember" v-for="item in activeGroup" v-if="item.selected">{{ item.text }}&nbsp;<a v-on:click="item.selected = false">&nbsp;&#10005;&nbsp;</a></div>
+							<div v-if="activeGroup.length === 0">
+								Nothing to show
+							</div>
+							<div
+								v-for="(item, index) in selectedActiveGroup"
+								:key="'groupMember-' + index"
+								class="groupMember"
+							>
+								{{ item.text }}
+								<a @click="item.selected = false">&nbsp;&nbsp;&#10005;&nbsp;</a>
+							</div>
 						</div>
-						<button v-on:click="resetGroups">Cancel</button>
-						<button v-on:click="newGroup">Create Group</button>
+						<button @click="resetGroups">
+							Cancel
+						</button>
+						<button @click="newGroup">
+							Create Group
+						</button>
 					</div>
 				</div>
 				<div v-else-if="showEditGroupUI">
@@ -432,9 +873,16 @@
 				<div v-else>
 					<h3>Groups</h3>
 					<ul v-show="groups.length > 0" class="links">
-						<li v-for="(groupName, index) in groups" class="link" v-on:click="seeGroup(index)">{{ groupName }}</li>
+						<li
+							v-for="(name, index) in groups"
+							:key="'grouplink-' + index"
+							class="link"
+							@click="seeGroup(index)"
+						>
+							{{ name }}
+						</li>
 					</ul>
-					<button v-on:click="toggle('showNewGroupUI')">Create a New Group</button>
+					<button @click="toggle('showNewGroupUI')">Create a New Group</button>
 				</div>
 			</div>
 		</div>
@@ -444,36 +892,46 @@
 		<div class="view">
 			<div class="view-container">
 				<h3>Contacts</h3>
-				<a class="button" v-on:click="createNewItem('Contacts')">Create a new Contact</a>
-				<br />
-				<br />
-				<a class="button" v-on:click="importFile('Contacts')">Select a CSV file from your device</a>
-				<br />
-				<br />
-				<a class="button" v-on:click="generateListView('Contacts')">See all contacts</a>
-				<br />
-				<br />
+				<a class="button" @click="createNewItem('Contacts')">
+					Create a new Contact
+				</a>
+				<br>
+				<br>
+				<a class="button" @click="importFile('Contacts')">
+					Select a CSV file from your device
+				</a>
+				<br>
+				<br>
+				<a class="button" @click="generateListView('Contacts')">
+					See all contacts
+				</a>
+				<br>
+				<br>
 			</div>
 		</div>
 	</script>
-
+		
 	<script type="text/x-template" id="view3-page">
 		<div class="view">
 			<div class="view-container">
 				<h3>Files</h3>
-				<a class="button" v-on:click="importFile('Files')">Select a file from your device</a>
-				<input type="file" class="hidden" id="hiddenFileInput" />
-				<br />
-				<br />
-				<a class="button" v-on:click="generateListView('Files')">See all files</a>
-			</div>
+				<a class="button" @click="importFile('Files')">
+					Select a file from your device
+				</a>
+				<input id="hiddenFileInput" type="file" class="hidden">
+				<br>
+				<br>
+				<a class="button" @click="generateListView('Files')">
+					See all files
+				</a>
+			</div>		
 		</div>
 	</script>
 
 	<script type="text/x-template" id="details-page">
 		<div class="view">
 			<div class="view-container">
-				<details-card v-bind:details="details"></details-card>
+				<details-card :details="details" />
 			</div>
 		</div>
 	</script>
@@ -482,44 +940,83 @@
 		<div>
 			<div v-if="details.data.length > 0">
 				<div v-if="details.title">
-					<img v-if="details.image" v-bind:src="details.image" class="roundImage left" />
+					<img
+						v-if="details.image"
+						:src="details.image"
+						class="roundImage left"
+					>
 					<div>
 						<h3>{{ details.title }}</h3>
 						<h5 v-if="details.subtitle">{{ details.subtitle }}</h5>
 					</div>
 				</div>
-				<br />
-				<br />
-				<dropdown-button class="left"
-								 v-bind:links="groupsDropdownLinks"
-								 v-bind:title="'Add ' + details.title + ' to Group'"
-								 icon="icon-people"
-								 buttontext="Add to Group"
-								 v-on:dropdown-action="groupsDropdownActions"
-								 v-on:dropdown-open="initializeGroups">
-				</dropdown-button>
-				<dropdown-button v-if="details.table !== 'Files' && clipboard" class="left"
-								 v-bind:links="copyDropdownLinks"
-								 icon="icon-copy"
-								 buttontext="Copy"
-								 v-on:dropdown-action="copyToClipboard"
-								 v-on:dropdown-open="initializeCopyActions">
-				</dropdown-button>
-				<button v-if="details.table === 'Files'" v-on:click="exportItem" v-bind:title="'Export ' + details.title" class="left"><span class="icon icon-share"></span>&nbsp;&nbsp;Export</button>
-				<dropdown-button class="left phon"
-								 v-bind:links="moreDropdownLinks"
-								 icon="icon-more"
-								 v-on:dropdown-action="moreDropdownActions"
-								 v-bind:noarrow="true"
-								 align="right">
-				</dropdown-button>
-				<button v-on:click="editDetails" v-bind:title="'Edit ' + details.title" class="left tabl desk"><span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit</button>
-				<button v-on:click="deleteItem" v-bind:title="'Delete ' + details.title" class="left tabl desk"><span class="icon icon-delete"></span>&nbsp;&nbsp;Delete</button>
-				<br />
+				<br>
+				<br>
+				<dropdown-button
+					class="left"
+					:links="groupsDropdownLinks"
+					:title="'Add ' + details.title + ' to Group'"
+					icon="icon-people"
+					buttontext="Add to Group"
+					@dropdown-action="groupsDropdownActions"
+					@dropdown-open="initializeGroups"
+				/>
+				<dropdown-button
+					v-if="details.table !== 'Files' && clipboard"
+					class="left"
+					:links="copyDropdownLinks"
+					icon="icon-copy"
+					buttontext="Copy"
+					@dropdown-action="copyToClipboard"
+					@dropdown-open="initializeCopyActions"
+				/>
+				<button
+					v-if="details.table === 'Files'"
+					@click="exportItem"
+					:title="'Export ' + details.title"
+					class="left"
+				>
+					<span class="icon icon-share"></span>&nbsp;&nbsp;Export
+				</button>
+				<dropdown-button
+					class="left phon"
+					:links="moreDropdownLinks"
+					icon="icon-more"
+					@dropdown-action="moreDropdownActions"
+					:noarrow="true"
+					align="right"
+				/>
+				<button
+					@click="editDetails"
+					:title="'Edit ' + details.title"
+					class="left tabl desk"
+				>
+					<span class="icon icon-pencil"></span>&nbsp;&nbsp;Edit
+				</button>
+				<button
+					@click="deleteItem"
+					:title="'Delete ' + details.title"
+					class="left tabl desk"
+				>
+					<span class="icon icon-delete"></span>&nbsp;&nbsp;Delete
+				</button>
+				<br>
 				<template v-for="(item, index) in details.data">
-					<details-card-lineitem v-if="item.text" v-bind:item="item" v-bind:key="'lineitem_' + index"></details-card-lineitem>
-					<div class="clear" v-else-if="item.group && item.show !== 0 && item.hidden !== true">
-						<details-card-lineitem v-for="(groupItem, groupIndex) in item.group" v-bind:item="groupItem" v-bind:key="'lineitem_' + index + '_' + groupIndex"></details-card-lineitem>
+					<details-card-lineitem
+						v-if="item.text"
+						:item="item"
+						:key="'lineitem_' + index"
+					/>
+					<div
+						:key="'lineitem_div' + index"
+						class="clear"
+						v-else-if="item.group && item.show !== 0 && item.hidden !== true"
+					>
+						<details-card-lineitem
+							v-for="(groupItem, groupIndex) in item.group"
+							:item="groupItem"
+							:key="'lineitem_' + index + '_' + groupIndex"
+						/>
 					</div>
 				</template>
 			</div>
@@ -533,39 +1030,43 @@
 
 	<script type="text/x-template" id="details-card-lineitem">
 		<div v-if="item.text[0] && !item.hidden" class="lineItem">
-			<label v-if="item.label" class="itemLabel">{{ item.label.text }}</label>
-			<label v-else class="itemLabel">{{ item.column }}</label>
+			<label v-if="item.label" class="itemLabel">
+				{{ item.label.text }}
+			</label>
+			<label v-else class="itemLabel">
+				{{ item.column }}
+			</label>
 			<div class="itemText">
 				<template v-for="(line, lineIndex) in item.text">
 					<template v-if="lineIndex > 0 && item.type !== 'formattedAddress'">
-						<br />
+						<br :key="'br1-' + lineIndex">
 					</template>
 					<template v-if="item.type === 'email'">
-						<a v-bind:href="externalLink(line, 'email')">
+						<a :href="externalLink(line, 'email')" :key="'email-a-' + lineIndex">
 							<span class="icon icon-envelope"></span>&nbsp;&nbsp;{{ line }}
 						</a>
 					</template>
 					<template v-else-if="item.type === 'phoneNumber'">
 						<template v-if="item.label && /home/i.test(item.label.text)">
-							<a v-bind:href="externalLink(line, 'phone')">
+							<a :href="externalLink(line, 'phone')" :key="'phone-a-' + lineIndex">
 								<span class="icon icon-phone-alt"></span>&nbsp;&nbsp;{{ line }}
 							</a>
 						</template>
 						<template v-else>
-							<a v-bind:href="externalLink(line, 'phone')" title="Dial">
+							<a :key="'line-' + lineIndex" :href="externalLink(line, 'phone')" title="Dial">
 								<span class="icon icon-phone"></span>&nbsp;&nbsp;{{ line }}
 							</a>&nbsp;&nbsp;&nbsp;&nbsp;
-							<a v-bind:href="externalLink(line, 'sms')" title="Text Message">
+							<a :key="'sms-a' + lineIndex" :href="externalLink(line, 'sms')" title="Text Message">
 								<span class="icon icon-comment"></span>&nbsp;&nbsp;SMS
 							</a>
 						</template>
 					</template>
 					<template v-else-if="item.type === 'formattedAddress' && lineIndex === 0">
-						<a v-bind:href="externalLink(line, 'address', item.text)">
+						<a :href="externalLink(line, 'address', item.text)" :key="'fAddress-a-' + lineIndex">
 							<span class="icon icon-mappin"></span>&nbsp;&nbsp;
 							<template v-for="(addressLine, addressLineIndex) in item.text">
 								<template v-if="addressLineIndex > 0">
-									<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+									<br :key="'br2-' + addressLineIndex">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</template>
 								{{ addressLine }}
 							</template>
@@ -575,57 +1076,77 @@
 						<!--skip additional formattedAddress lines-->
 					</template>
 					<template v-else-if="item.label && item.label.text === 'GPS'">
-						<a v-bind:href="externalLink(line, 'www')" title="Open in Web Browser">
+						<a
+							:key="'gps-a-' + lineIndex"
+							:href="externalLink(line, 'www')"
+							title="Open in Web Browser"
+						>
 							<span class="icon icon-world"></span>&nbsp;&nbsp;{{ line }}
 						</a>
-						<br /><br />
-						<a v-bind:href="externalLink(line, 'gps')" title="Open in Maps App">
+						<br :key="'br3-' + lineIndex">
+						<br :key="'br4-' + lineIndex">
+						<a
+							:key="'gps-app-a-' + lineIndex"
+							:href="externalLink(line, 'gps')"
+							title="Open in Maps App"
+						>
 							<span class="icon icon-mappin"></span>&nbsp;&nbsp;Maps App
 						</a>
 					</template>
 					<template v-else-if="item.type === 'multilineString' && /^===\s.*\s===$/.test(line)">
-						<b><i>{{line.replace(/^===|===$/g,'')}}</i></b>
-						<br />
+						<b :key="'mstring-b-i' + lineIndex">
+							<i>{{ line.replace(/^===|===$/g,'') }}</i>
+						</b>
+						<br :key="'br5-' + lineIndex">
 					</template>
 					<template v-else-if="item.type === 'multilineString' && /^\*\*\*\s.*\s\*\*\*$/.test(line)">
-						<b>{{line.replace(/^\*\*\*|\*\*\*$/g,'')}}</b>
+						<b :key="'mstring-b-' + lineIndex">{{ line.replace(/^\*\*\*|\*\*\*$/g,'') }}</b>
 					</template>
-					<template v-else-if="item.type === 'multilineString' && /^-\s/.test(line)">
-						&nbsp;&nbsp;&nbsp;{{line.replace(/^-\s/g,'')}}
-					</template>
-					<template v-else-if="item.type === 'date'">
-						{{ new Date(Number(line)).toDateString() }}
-					</template>
-					<template v-else>
-						{{ line }}
-					</template>
+					<template v-else-if="item.type === 'multilineString' && /^-\s/.test(line)">&nbsp;&nbsp;&nbsp;{{ line.replace(/^-\s/g,'') }}</template>
+					<template v-else-if="item.type === 'date'">{{ new Date(Number(line)).toDateString() }}</template>
+					<template v-else>{{ line }}</template>
 				</template>
 			</div>
 		</div>
 	</script>
 
+	<script type="text/x-template" id="details-view-container">
+		<details-card class="view-container" :details="details"/>
+	</script>
+
 	<script type="text/x-template" id="search-results-page">
 		<div class="views">
-			<div id="searchResultsView" class="view" v-bind:class="{splitViewLeft: searchDetails.data.length > 0}">
+			<div
+				id="searchResultsView"
+				class="view"
+				:class="{splitViewLeft: searchDetails.data.length > 0}"
+			>
 				<div class="view-container">
 					<div v-if="searchResults.length > 0">
 						<h3>{{ searchResultsTitle }}</h3>
-						<jump-list v-bind:links="searchResults"
-								   v-bind:select="selectSearchResults"
-								   scrolldiv="searchResultsView"
-								   v-bind:details="searchDetails"
-								   v-bind:currentQuery="currentQuery"
-								   v-on:update-details="onDetailsUpdate"
-								   v-on:update-recently-viewed="onRecentlyViewedUpdate">
-						</jump-list>
+						<jump-list
+							:links="searchResults"
+							:select="selectSearchResults"
+							scrolldiv="searchResultsView"
+							:details="searchDetails"
+							:current-query="currentQuery"
+							@update-details="onDetailsUpdate"
+							@update-recently-viewed="onRecentlyViewedUpdate"
+						/>
 					</div>
 					<h6>{{ searchResultsError }}</h6>
 				</div>
 			</div>
 			<div class="scroll-outer-container">
 				<div class="view splitViewRight">
-					<transition name="forward" mode="out-in">
-						<component v-bind:is="detailsView" v-bind:details="searchDetails"></component>
+					<transition
+						name="forward"
+						mode="out-in"
+					>
+						<component
+							:is="detailsView"
+							:details="searchDetails"
+						/>
 					</transition>
 				</div>
 			</div>
@@ -635,90 +1156,262 @@
 	<script type="text/x-template" id="edit-details-page">
 		<div class="view">
 			<div class="view-container">
-				<edit-details-card v-bind:details="details"></edit-details-card>
+				<edit-details-card :details="details" />
 			</div>
 		</div>
 	</script>
 
 	<script type="text/x-template" id="edit-details-card">
 		<div>
-			<h3 v-if="details.title">Edit: <i>{{ details.title }}</i></h3>
+			<h3 v-if="details.title">
+				Edit:
+				<i>{{ details.title }}</i>
+			</h3>
 			<h3 v-else>Edit</h3>
 			<div class="cards">
 				<template v-for="(item, index) in details.data">
-					<edit-details-card-lineitem v-if="item.text" v-bind:item="item"></edit-details-card-lineitem>
-					<edit-details-card-collapse v-else-if="item.group" v-bind:item="item" v-bind:collapse="item.collapse" v-bind:show="item.show"></edit-details-card-collapse>
+					<edit-details-card-lineitem 
+						v-if="item.text" 
+						:key="'details-text-' + index"
+						:item="item" 
+					/>
+					<edit-details-card-collapse
+						v-else-if="item.group"
+						:key="'details-group-' + index"
+						:item="item"
+						:collapse="item.collapse"
+						:show="item.show"
+					/>
 				</template>
 			</div>
 			<div>
-				<button v-on:click="saveChanges"><span class="icon icon-ok"></span>&nbsp;&nbsp;Save</button>
-				<button v-on:click="cancelChanges"><span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel</button>
+				<button @click="saveChanges">
+					<span class="icon icon-ok"></span>&nbsp;&nbsp;Save
+				</button>
+				<button @click="cancelChanges">
+					<span class="icon icon-remove"></span>&nbsp;&nbsp;Cancel
+				</button>
 			</div>
 		</div>
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-lineitem">
-		<div v-if="!item.readonly" class="lineItem" v-bind:class="{valid: valid, invalid: valid === false}">
-			<dropdown-button v-if="item.label && item.label.options"
-							 class="itemLabel"
-							 v-bind:buttontext="item.label.text"
-							 v-bind:noinputtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-							 v-bind:customtextinput="item.label.textInput"
-							 select
-							 v-bind:links="item.label.options"
-							 v-on:dropdown-action="setLabel"
-							 v-bind:id="item.column + '_label'">
-			</dropdown-button>
-			<template v-else-if="item.label">
-				<label class="itemLabel">{{ item.label.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
-				<input type="text" v-bind:value="item.label.text" class="textbox" autocomplete="off"/>
-			</template>
-			<label v-else-if="item.column" class="itemLabel">{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
-			<textarea v-if="item.type === 'multilineString'" v-bind:value="item.text.join('\r\n')" class="textbox"></textarea>
-			<template v-else v-for="(value, i) in item.text">
-				<input v-if="item.type === 'number'" type="number" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<input v-else-if="item.type === 'integer'" type="number" step="1" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<input v-else-if="item.type === 'posInteger'" type="number" min="0" step="1" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<input v-else-if="item.type === 'negInteger'" type="number" max="0" step="1" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<div v-else-if="item.type === 'boolean'" class="switch right">
-					<input type="checkbox" v-bind:id="'switch_' + item.column" v-model="item.text[i]" />
-					<label v-bind:for="'switch_' + item.column" v-on:click="toggleItem(item, i)"></label>
-				</div>
-				<input v-else-if="item.type === 'date'" type="date" v-model="item.text[i]" class="textbox" v-on:blur="validateData(value, item.type)"/>
-				<input v-else-if="item.type === 'email'" type="email" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<input v-else-if="item.type === 'phoneNumber'" type="tel" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="item.focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<dropdown-button v-else-if="item.options"
-								 align="left"
-								 class="left"
-								 v-bind:buttontext="value"
-								 v-bind:noinputtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
-								 v-bind:customtextinput="item.textInput"
-								 select
-								 v-bind:links="item.options"
-								 v-on:dropdown-action="setValue"
-								 v-bind:id="item.column + '_dropdown' + i">
-				</dropdown-button>
-				<input v-else type="text" v-model="item.text[i]" class="textbox" autocomplete="off" v-on:focus="focused = true" v-on:blur="onBlur(value, item.type)"/>
-				<a class="cancelButton" v-on:click="clearValue" v-show="value !== '' && focused === true"><span class="icon icon-cancel"></span></a>
-				<div class="alert" v-bind:title="validationErrorDetails">{{ validationError }}</div>
-			</template>
-		</div>
+			<div
+		v-if="!item.readonly"
+		class="lineItem"
+		:class="{valid: valid, invalid: valid === false}"
+	>
+		<dropdown-button
+			v-if="item.label && item.label.options"
+			class="itemLabel"
+			:buttontext="item.label.text"
+			:noinputtext="'[ Select ' + item.label.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+			:customtextinput="item.label.textInput"
+			select
+			:links="item.label.options"
+			@dropdown-action="setLabel"
+			:id="item.column + '_label'"
+		/>
+		<template v-else-if="item.label">
+			<label class="itemLabel">{{ item.label.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
+			<input
+				type="text"
+				:value="item.label.text"
+				class="textbox"
+				autocomplete="off"
+			>
+		</template>
+		<label
+			v-else-if="item.column"
+			class="itemLabel"
+		>{{ item.column.replace(/_/g," ").replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, " $1") }}</label>
+		<textarea
+			v-if="item.type === 'multilineString'"
+			:value="item.text.join('\r\n')"
+			class="textbox"
+		></textarea>
+		<template
+			v-else
+			v-for="(value, i) in item.text"
+		>
+			<input
+				v-if="item.type === 'number'"
+				:key="'num-input-' + i"
+				type="number"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<input
+				v-else-if="item.type === 'integer'"
+				:key="'int-input-' + i"
+				type="number"
+				step="1"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<input
+				v-else-if="item.type === 'posInteger'"
+				:key="'posInt-input-' + i"
+				type="number"
+				min="0"
+				step="1"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<input
+				v-else-if="item.type === 'negInteger'"
+				:key="'negInt-input-' + i"
+				type="number"
+				max="0"
+				step="1"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<div
+				v-else-if="item.type === 'boolean'"
+				:key="'bool-input-' + i"
+				class="switch right"
+			>
+				<input
+					type="checkbox"
+					:id="'switch_' + item.column"
+					v-model="item.text[i]"
+				>
+				<label
+					:for="'switch_' + item.column"
+					@click="toggleItem(item, i)"
+				></label>
+			</div>
+			<input
+				v-else-if="item.type === 'date'"
+				:key="'date-input-' + i"
+				type="date"
+				v-model="item.text[i]"
+				class="textbox"
+				@blur="validateData(value, item.type)"
+			>
+			<input
+				v-else-if="item.type === 'email'"
+				:key="'email-input-' + i"
+				type="email"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<input
+				v-else-if="item.type === 'phoneNumber'"
+				:key="'phone-input-' + i"
+				type="tel"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="item.focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<dropdown-button
+				v-else-if="item.options"
+				:key="'input-options-' + i"
+				align="left"
+				class="left"
+				:buttontext="value"
+				:noinputtext="'[ Select ' + item.column.replace(/_/g,' ').replace(/([A-Z]+)/g, ' $1').replace(/([A-Z][a-z])/g, ' $1') + ' ]'"
+				:customtextinput="item.textInput"
+				select
+				:links="item.options"
+				@dropdown-action="setValue"
+				:id="item.column + '_dropdown' + i"
+			/>
+			<input
+				v-else
+				:key="'text-input-' + i"
+				type="text"
+				v-model="item.text[i]"
+				class="textbox"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, item.type)"
+			>
+			<a
+				:key="'clear-a-' + i"
+				class="cancelButton"
+				@click="clearValue"
+				v-show="value !== '' && focused === true"
+			>
+				<span class="icon icon-cancel"></span>
+			</a>
+			<div
+				:key="'input-error-' + i"
+				class="alert"
+				:title="validationErrorDetails"
+			>
+				{{ validationError }}
+			</div>
+		</template>
+	</div>
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-collapse">
-		<div class="card" v-if="item.readonly !== true">
-			<div v-if="item.groupHeading" class="cardHeading" v-on:click="toggleCollapse">
-				<span v-show="isCollapsed" class="desk tabl icon icon-menu-right left"></span>
-				<span v-show="isCollapsed === false" class="desk tabl icon icon-menu-down left"></span>
-				<span class="desk tabl left">&nbsp;&nbsp;</span>{{ item.groupHeading }}
-				<span v-show="isCollapsed" class="phon icon icon-menu-down right"></span>
-				<span v-show="isCollapsed === false" class="phon icon icon-menu-up right"></span>
+		<div
+			class="card"
+			v-if="item.readonly !== true"
+		>
+			<div
+				v-if="item.groupHeading"
+				class="cardHeading"
+				@click="toggleCollapse"
+			>
+				<span
+					v-show="isCollapsed"
+					class="desk tabl icon icon-menu-right left"
+				></span>
+				<span
+					v-show="isCollapsed === false"
+					class="desk tabl icon icon-menu-down left"
+				></span>
+				<span class="desk tabl left">&nbsp;&nbsp;</span>
+				{{ item.groupHeading }}
+				<span
+					v-show="isCollapsed"
+					class="phon icon icon-menu-down right"
+				></span>
+				<span
+					v-show="isCollapsed === false"
+					class="phon icon icon-menu-up right"
+				></span>
 			</div>
 			<transition name="expand">
-				<div v-show="isCollapsed === false" class="cardExpand">
+				<div
+					v-show="isCollapsed === false"
+					class="cardExpand"
+				>
 					<template v-for="(groupItem, index) in item.group">
-						<edit-details-card-lineitem v-show="item.collapse === false || index < numShown" v-bind:item="groupItem" v-bind:key="'edit_' + groupItem.column"></edit-details-card-lineitem>
-						<button v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1" v-on:click="revealNext(item.collapse)" class="lineItem"><span class="icon icon-plus"></span></button>
+						<edit-details-card-lineitem
+							v-show="item.collapse === false || index < numShown"
+							:item="groupItem"
+							:key="'edit_' + groupItem.column"
+						/>
+						<button
+							v-show="item.collapse && index < item.group.length - 1 && index === numShown - 1"
+							:key="'edit-button_' + groupItem.column"
+							@click="revealNext(item.collapse)"
+							class="lineItem"
+						>
+							<span class="icon icon-plus"></span>
+						</button>
 					</template>
 				</div>
 			</transition>
@@ -735,25 +1428,13 @@
 	</script>
 
 	<!-- JavaScript files -->
-	<script type="text/javascript" src="scripts/vue.min.js"></script>
-	<script type="text/javascript" src="scripts/vue-router.min.js"></script>
-	<script type="text/javascript" src="scripts/debugmode.min.js"></script>
-	<script type="text/javascript" src="scripts/base64.min.js"></script>
-	<script type="text/javascript" src="scripts/dropbox.min.js"></script>
-	<script type="text/javascript" src="scripts/Lawnchair.js"></script>
-	<script type="text/javascript" src="scripts/adapters/dom.js"></script>
-	<script type="text/javascript" src="scripts/adapters/indexed-db.js"></script>
-	<script type="text/javascript" src="scripts/storage.js"></script>
-	<script type="text/javascript" src="scripts/validate.min.js"></script>
-	<script type="text/javascript" src="scripts/nyckelDB.js"></script>
 	<script type="text/javascript" src="cordova.js"></script>
 	<script type="text/javascript" src="scripts/platformOverrides.js"></script>
-	<script type="text/javascript" src="scripts/common.min.js"></script>
 	<script type="text/javascript" src="scripts/winjs/base.min.js"></script>
-	<script type="text/javascript" src="scripts/lists.min.js"></script>
-	<script type="text/javascript" src="scripts/index.js"></script>
 	<script type="text/javascript" src="sw.js"></script>
-    <!-- The 'async' attribute is needed for RequireJS to work in a Windows app -->
-    <script type="text/javascript" data-main="scripts/startup" src="lib/require.2.1.8.js" async></script>
+
+	<!-- The 'async' attribute is needed for RequireJS to work in a Windows app -->
+	<script type="text/javascript" data-main="scripts/startup" src="scripts/require.2.1.8.js" async></script>
 </body>
+
 </html>

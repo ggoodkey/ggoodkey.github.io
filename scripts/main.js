@@ -1,13 +1,32 @@
-﻿//external dependencies
-// vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
-// storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
-/*global WinJS, NyckelDB, Base64*/
-var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windows, cordova; //dependancies
-(function () {
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage"], function (require, exports, vue_1, vue_router_1, debugmode_1, common_1, VAL, nyckelDB_1, base64_1, storage_1) {
     "use strict";
-    APP.setDebugMode(false); //TODO set to false
-    APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
-    const DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
+    Object.defineProperty(exports, "__esModule", { value: true });
+    vue_1 = __importDefault(vue_1);
+    vue_router_1 = __importDefault(vue_router_1);
+    VAL = __importStar(VAL);
+    nyckelDB_1 = __importDefault(nyckelDB_1);
+    base64_1 = __importDefault(base64_1);
+    exports.debug = debugmode_1.debug;
+    exports.VAL = VAL;
+    //external dependencies
+    // vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
+    // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
+    /*global WinJS*/
+    "use strict";
+    var appData = {}, Windows, cordova, Dbx; //dependancies
+    debugmode_1.setDebugMode(false); //TODO set to false
+    debugmode_1.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
+    var DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
     APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
     views = {
         new: {
@@ -56,7 +75,6 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             path: "/edit"
         }
     }, startView = "recent", //set the view (from views listed above) to start at by default		
-    debug = APP.debug, //shortform access to APP.debug
     contactsTemplateIMServiceOptions = {
         listInput: ["WhatsApp", "Viber", "Facebook Messenger", "WeChat", "QQ Mobile", "Line", "Skype", "Snapchat",
             "Twitter", "Telegram", "Google Talk", "KakaoTalk", "Kik Messenger", "Tango", "Yahoo", "AIM", "MSN",
@@ -65,7 +83,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
     }, contactsTemplateIMLabelOptions = {
         listInput: ["Personal", "Work", "Other"],
         textInput: true
-    }, dataTemplates = {
+    }, 
+    //add, remove or edit NyckelDB dataTemplates to suit your app needs. Examples below for contacts, files and groups NyckelDB databases
+    dataTemplates = {
         Contacts: {
             //these column headers are setup as an object where the property name is the column header name and the property value is the column header type
             //this makes it easier to see and apply "types" to each "header", especially in a big table like this
@@ -612,17 +632,22 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         else
             return false;
     }();
-    if (localTestingMode)
-        APP.setDebugMode(true);
-    var fileReaderInitiated = [], backstack = [], backIndex = 0, state = freshStateObj(), dbid = null, trim = function (str) {
+    exports.dataTemplates = dataTemplates;
+    exports.searchableColumns = searchableColumns;
+    exports.localTestingMode = localTestingMode;
+    function trim(str) {
         str = String(str);
         while (/\s\s/g.test(str))
             str = str.replace(/\s\s/g, " ");
         if (str === " ")
             return "";
         return str.replace(/^\s+|\s+$/gm, "");
-    }, refreshResponsiveLayout = function () {
-        var width = getWidth(), height = getHeight(), type = "tabl", orientation = " port ", theme = "", htmlTag = document.getElementsByTagName("html")[0];
+    }
+    exports.trim = trim;
+    if (localTestingMode)
+        debugmode_1.setDebugMode(true);
+    var fileReaderInitiated = [], backstack = [], backIndex = 0, state = freshStateObj(), dbid = null, refreshResponsiveLayout = function () {
+        var width = common_1.getWidth(), height = common_1.getHeight(), type = "tabl", orientation = " port ", theme = "", htmlTag = document.getElementsByTagName("html")[0];
         if (width > 1280)
             type = "desk";
         else if (width <= 640)
@@ -635,26 +660,34 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
     }, setNavLinkIndicatorPosition = function (location) {
         location = location ? location.replace(/\//, "") : startView;
         if (app.views[location] && app.views[location].level === 1) { //show indicator and move to correct position
-            var sidenavlink = document.getElementById("sidenavlink_" + location).getBoundingClientRect(), topnavlink = document.getElementById("topnavlink_" + location).getBoundingClientRect(), views = document.getElementById("topnav-container").getBoundingClientRect(), viewsWidth = views.right - views.left, extra = app.showSearchBar ? viewsWidth + 393 : viewsWidth + 113; //width of navbar buttons + searchbar (320) + search and menu buttons (110)
-            app.indicatorTop = sidenavlink.top - 54;
-            app.indicatorWidth = topnavlink.right - topnavlink.left;
-            app.indicatorRight = getWidth() - topnavlink.left - extra;
+            var sidenavlink = document.getElementById("sidenavlink_" + location), topnavlink = document.getElementById("topnavlink_" + location), views = document.getElementById("topnav-container");
+            if (views) {
+                var viewsBox = views.getBoundingClientRect(), viewsWidth = viewsBox.right - viewsBox.left, extra = app.showSearchBar ? viewsWidth + 393 : viewsWidth + 113; //width of navbar buttons + searchbar (320) + search and menu buttons (110)
+                if (sidenavlink)
+                    app.indicatorTop = sidenavlink.getBoundingClientRect().top - 54;
+                if (topnavlink) {
+                    var box = topnavlink.getBoundingClientRect();
+                    app.indicatorWidth = box.right - box.left;
+                    app.indicatorRight = common_1.getWidth() - box.left - extra;
+                }
+            }
         }
         else { //hide indicator
             app.indicatorRight = app.indicatorRight - app.indicatorWidth * 0.66;
             app.indicatorWidth = 0;
         }
-    }, 
+    };
+    exports.state = state;
     //web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
     //and offline senarios where web workers are not available
-    webWorker, wwCallbackQueue = [], wwCallbackIndex = 0, 
+    var webWorker, wwCallbackQueue = [], wwCallbackIndex = 0;
     /*obj{
      * "cmd": "read" "parseCSV" "merge" etc,
      * "args": [Array of arguments accepted by the cmd]
      * "title": if accessing a NyckelDB database
      * }
      */
-    wwManager = function (inputObj, callback, finalCallback) {
+    function wwManager(inputObj, callback, finalCallback) {
         function str2ab(str) {
             var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
             var bufView = new Uint16Array(buf);
@@ -700,18 +733,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 var title = VAL.toPropName(obj.title);
                 if (obj.cmd === "initNewNyckelDB") {
                     if (obj.args && obj.args.length >= 2) {
-                        appData[title] = new NyckelDB(obj.args[0]);
+                        appData[title] = new nyckelDB_1.default(obj.args[0]);
                         appData[title].init(obj.args[1], obj.args[2], obj.args[3], callback);
                     }
                     else
-                        debug("NyckelDB not initialised with correct arguments");
+                        debugmode_1.debug("NyckelDB not initialised with correct arguments");
                 }
                 else if (!appData[title]) {
-                    debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
+                    debugmode_1.debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
                     return null;
                 }
                 else if (!appData[title][obj.cmd]) {
-                    debug(obj.cmd, "invalid command called on " + obj.title);
+                    debugmode_1.debug(obj.cmd, "invalid command called on " + obj.title);
                     return null;
                 }
                 else if (obj.cmd === "forEachCol" || obj.cmd === "forEachRow")
@@ -723,7 +756,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             else if (obj.cmd) {
                 //debug(obj.cmd, "cmd");
-                Base64[obj.cmd].apply(null, obj.args);
+                base64_1.default[obj.cmd].apply(null, obj.args);
             }
         }
         var obj = inputObj;
@@ -731,7 +764,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             startWorker();
         else
             noWebWorker();
-    }, wwReadMessage = function (e) {
+    }
+    exports.wwManager = wwManager;
+    function wwReadMessage(e) {
         function ab2str(buffer) {
             var bufView = new Uint16Array(buffer), length = bufView.length, result = '', addition = Math.pow(2, 15); //max value in Edge before throwing error
             for (var i = 0; i < length; i += addition) {
@@ -747,7 +782,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         switch (data.type) {
             case "debug":
                 data.description = "web worker: " + (data.description || "");
-                debug(data.message, data.description);
+                debugmode_1.debug(data.message, data.description);
                 break;
             case "notify":
                 app.notify(data.message, data.fadeOut);
@@ -756,7 +791,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 if (data.callbackIndex)
                     wwCallbackQueue[data.callbackIndex](data.message, data.progress, data.total);
                 else
-                    debug(data.message, "no forEach callback found");
+                    debugmode_1.debug(data.message, "no forEach callback found");
                 break;
             case "result":
                 console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.cmd, data.len);
@@ -767,7 +802,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         wwCallbackQueue[data.callbackIndex](data.message);
                 }
                 else {
-                    debug(data.message, "no result callback found");
+                    debugmode_1.debug(data.message, "no result callback found");
                     return data.message;
                 }
                 break;
@@ -779,14 +814,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         wwCallbackQueue[data.finalCallbackIndex](data.message);
                 }
                 else
-                    debug(data.message, "finished but no callback found");
+                    debugmode_1.debug(data.message, "finished but no callback found");
                 break;
             /*	case "setItem":
                 case "deleteItem":
-                    APP.Sto[data.type].apply(null, data.args);
+                    Sto[data.type].apply(null, data.args);
                     break;
                 case "getItem":
-                    APP.Sto.getItem(data.args[0], data.args[1], function (value, error) {
+                    Sto.getItem(data.args[0], data.args[1], function (value, error) {
                         if (data.callbackIndex !== false) wwManager({ "cmd": "getItemCallback", "message": value, "error": error, "callbackIndex": data.callbackIndex });
                     }, function () {
                         if (data.doesntExistCallbackIndex !== false) wwManager({ "cmd": "getItemDoesntExistCallback", "doesntExistCallbackIndex": data.doesntExistCallbackIndex });
@@ -795,15 +830,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             */ case "progress":
             case "confirm":
             default: //other types of data
-                debug(data.type, "webworker response type not supported");
+                debugmode_1.debug(data.type, "webworker response type not supported");
         }
-    }, wwOnError = function (e) {
-        debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
-    }, defaultErrorHandler = function (success, errors) {
+    }
+    exports.wwReadMessage = wwReadMessage;
+    function wwOnError(e) {
+        debugmode_1.debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
+    }
+    function defaultErrorHandler(success, errors) {
         if (errors) {
             if (errors === "wrong key used") {
                 app.notify("Wrong key used", true);
-                debug(app.stoKey, "stoKey tried");
+                debugmode_1.debug(app.stoKey, "stoKey tried");
                 app.updateStoKey();
             }
             else if (/unsupported version/.test(errors)) {
@@ -811,15 +849,17 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             else {
                 app.notify("Unknown error", true);
-                debug(errors, "errors");
+                debugmode_1.debug(errors, "errors");
             }
         }
-    }, 
+    }
+    exports.defaultErrorHandler = defaultErrorHandler;
     //initialise the application
-    startApp = function (resumeBool) {
+    function startApp(resumeBool) {
         function doneLoadingApp() {
             setTimeout(function () {
                 setNavLinkIndicatorPosition(app.currentView.path);
+                /* eslint-disable-next-line no-extra-parens */
                 document.getElementById("loading").className = "done"; //app is rendered so fade in from black
             }, 150);
             checkDBLoaded(function (nextInQueue) {
@@ -850,10 +890,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 setupUI(doneLoadingApp);
             }
-            APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
+            Dbx = storage_1.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
         }
         function getLocalState() {
-            APP.Sto.getItem("state", null, function (appStateObj, error) {
+            storage_1.Sto.getItem("state", null, function (appStateObj, error) {
                 if (appStateObj) {
                     if (typeof appStateObj === "string" && JSON.parse)
                         appStateObj = JSON.parse(appStateObj);
@@ -877,21 +917,21 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         app.notify("App version has changed from " + appStateObj.version + " to " + app.version + ". Some of your app settings may have returned to their default values.");
                         // migrate older version state data here
                         var migrate = "darkTheme accentColor cookieAgree".split(" ");
-                        for (let x = 0, xLen = migrate.length; x < xLen; x++) {
+                        for (var x = 0, xLen = migrate.length; x < xLen; x++) {
                             if (appStateObj[migrate[x]] !== undefined) {
                                 app[migrate[x]] = appStateObj[migrate[x]];
                             }
                         }
-                        APP.Sto.deleteItem("state");
+                        storage_1.Sto.deleteItem("state");
                         setupUI(doneLoadingApp);
                     }
                 }
                 else if (error) {
-                    debug(error, "error getting app state");
+                    debugmode_1.debug(error, "error getting app state");
                     setupUI(doneLoadingApp);
                 }
                 else {
-                    APP.Sto.deleteItem("state");
+                    storage_1.Sto.deleteItem("state");
                     setupUI(doneLoadingApp);
                 }
             }, function () { setupUI(doneLoadingApp); });
@@ -901,14 +941,15 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 return nextInQueue();
         });
         getLocalState();
-    }, 
+    }
+    exports.startApp = startApp;
     /*colorLuminance
     * @craigbuckler
     * https://www.sitepoint.com/javascript-generate-lighter-darker-color/
     * hex #CCC or #123abc, with or without #
     * lum decimal b/t -1 and 1. 0.2 (20% lighter) -0.5 (50% darker)
     */
-    colorLuminance = function (hex, lum, returnRGB) {
+    var colorLuminance = function (hex, lum, returnRGB) {
         // validate hex string
         hex = new String(hex).replace(/[^0-9a-f]/gi, '');
         if (hex.length < 6) {
@@ -929,6 +970,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         var styleSheets = document.styleSheets;
         try {
             for (var a = 0, lenA = styleSheets.length, b, lenB, c, lenC, rules, rule, styles; a < lenA; a++) {
+                /* eslint-disable-next-line no-extra-parens */
                 rules = styleSheets[a].rules || styleSheets[a].cssRules;
                 for (b = 0, lenB = rules.length; b < lenB; b++) {
                     rule = rules[b].cssText;
@@ -977,7 +1019,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         windowsAccentColor = colors;
         app.accentColor = hex;
         app.storeState();
-        for (let a = 0, len = colors.length; a < len; a++) {
+        for (var a = 0, len = colors.length; a < len; a++) {
             success = updateCSSColor(colors[a], oldColorString[a]);
         }
         return success;
@@ -1021,7 +1063,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 sansWidth !== getWidth(font + ',sans-serif') ||
                 serifWidth !== getWidth(font + ',serif');
         }
-        function listener({ matches, media }) {
+        function listener(_a) {
+            var matches = _a.matches, media = _a.media;
             if (!matches) { // Not matching anymore = not interesting
                 return;
             }
@@ -1033,10 +1076,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             refreshResponsiveLayout();
         }
-        const DARK = '(prefers-color-scheme: dark)';
-        const LIGHT = '(prefers-color-scheme: light)';
+        var DARK = '(prefers-color-scheme: dark)';
+        var LIGHT = '(prefers-color-scheme: light)';
         if (isFontAvailable('Segoe UI Symbol')) {
+            /* eslint-disable-next-line no-extra-parens */
             document.getElementById("segoe-icons").rel = 'stylesheet';
+            /* eslint-disable-next-line no-extra-parens */
             document.getElementById("default-icons").rel = 'alternate stylesheet';
         }
         if (Windows) {
@@ -1071,17 +1116,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             else
                 app.systemDarkTheme = false;
-            const mqDark = window.matchMedia(DARK);
+            var mqDark = window.matchMedia(DARK);
             mqDark.addListener(listener);
-            const mqLight = window.matchMedia(LIGHT);
+            var mqLight = window.matchMedia(LIGHT);
             mqLight.addListener(listener);
         }
-    }, 
+    };
     //load NyckelDB databases
-    loadDB = true, loadDBQueue = [], loadingDB = false, checkDBLoaded = function (callback) {
+    var loadDB = true, loadDBQueue = [], loadingDB = false;
+    function checkDBLoaded(callback) {
         function initDB(title, template, dbNum, numOfTables) {
             var options = template.options || {};
-            options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
+            options.syncKey = app.stoKey === "unknown" ? dbid ? base64_1.default.hash(dbid) : base64_1.default.hash(app.dropboxEmail) : app.stoKey;
             var cb = function (success, errors) {
                 if (errors)
                     defaultErrorHandler(success, errors);
@@ -1130,15 +1176,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         else if (callback instanceof Function) {
             return callback();
         }
-    }, 
+    }
+    exports.checkDBLoaded = checkDBLoaded;
     //application functions
-    createNewItem = function (tableName) {
+    function createNewItem(tableName) {
         //get blank details object by just provinding a table and no id
         getDetails({ table: tableName }, function (detailsObj) {
             app.details = detailsObj;
             app.navigate("edit");
         });
-    }, formatValue = function (text, type, splitter) {
+    }
+    exports.createNewItem = createNewItem;
+    function formatValue(text, type, splitter) {
         var ret = [];
         //format multiline strings
         if (typeof text === "string") {
@@ -1152,12 +1201,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         else if (text !== undefined)
             ret = [text];
         return ret;
-    }, getDetails = function (returnedJSON, callback) {
+    }
+    exports.formatValue = formatValue;
+    function getDetails(returnedJSON, callback) {
         function processDetailsReturnData(row, error, cb) {
             function getDetailsData(template, splitter, labelDropdownList) {
                 function getDropdownList(optionsObj) {
                     var dropdownList = [];
-                    for (let a = 0, lenA = optionsObj.listInput.length; a < lenA; a++) {
+                    for (var a = 0, lenA = optionsObj.listInput.length; a < lenA; a++) {
                         dropdownList[a] = {
                             text: optionsObj.listInput[a],
                             action: optionsObj.listInput[a]
@@ -1173,7 +1224,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 function applyValueArr() {
                     vueDetailsData.text = [];
-                    for (let a = 0, lenA = template.column.length; a < lenA; a++) {
+                    for (var a = 0, lenA = template.column.length; a < lenA; a++) {
                         if (row[template.column[a]].value)
                             vueDetailsData.text[a] = row[template.column[a]].value;
                     }
@@ -1243,7 +1294,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     hidden: false,
                     readonly: false
                 };
-                for (let c = 0, lenC = template.group.length, d, lenD; c < lenC; c++) {
+                for (var c = 0, lenC = template.group.length, d = void 0, lenD = void 0; c < lenC; c++) {
                     ret.group[c] = getDetailsData(template.group[c], template.splitter, template.label && template.label.dropdownList);
                     for (d = 0, lenD = ret.group[c].text.length; d < lenD; d++) {
                         if (ret.group[c].text[d] !== "")
@@ -1265,19 +1316,19 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     ret = row[VAL.toPropName(template)].value;
                 else if (template.text) {
                     ret = [];
-                    for (let a = 0, lenA = template.text.length; a < lenA; a++) {
+                    for (var a = 0, lenA = template.text.length; a < lenA; a++) {
                         if (row[template.text[a]].value)
                             ret[a] = row[template.text[a]].value;
                     }
                     ret = ret.join(template.joiner || " ");
                 }
                 else
-                    debug("template heading error. change heading 'value' to 'text'");
+                    debugmode_1.debug("template heading error. change heading 'value' to 'text'");
                 return ret;
             }
             var data = [], b = 0, display = dataTemplates[returnedJSON.table].display, title = "Item not found :´(", subtitle = "Sorry, we couldn't locate this item in the database", image = "";
             if (row) {
-                var detailsView = display.detailsView && display.detailsView.length > 0 ? display.detailsView : dataTemplates[returnedJSON.table].headers;
+                var detailsView = display.detailsView && display.detailsView.length > 0 ? display.detailsView : getHeadersArr(dataTemplates[returnedJSON.table].headers);
                 if (display.heading) {
                     if (display.heading.title)
                         title = getHeading(display.heading.title);
@@ -1292,14 +1343,16 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 else
                     title = "";
-                for (let a = 0, lenA = detailsView.length; a < lenA; a++) {
-                    if (typeof detailsView[a] === "string" && detailsView[a] !== "id" || detailsView[a].text) {
-                        data[b] = getDetailsData(detailsView[a], detailsView[a].splitter);
-                        b++;
+                for (var a = 0, lenA = detailsView.length, item = void 0; a < lenA; a++) {
+                    item = detailsView[a];
+                    if (typeof item === "string" && item !== "id") {
+                        data[b++] = getDetailsData(item);
                     }
-                    else if (detailsView[a].group) {
-                        data[b] = getGroup(detailsView[a]);
-                        b++;
+                    else if (item.text) {
+                        data[b++] = getDetailsData(item, item.splitter);
+                    }
+                    else if (item.group) {
+                        data[b++] = getGroup(item);
                     }
                 }
             }
@@ -1330,7 +1383,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             wwManager(wwInput, function (row, error) { processDetailsReturnData(row, error, nextInQueue); });
         }
         checkDBLoaded(afterDBLoaded);
-    }, generateListItems = function (tableName, ids, options, callback) {
+    }
+    exports.getDetails = getDetails;
+    function generateListItems(tableName, ids, options, callback) {
         function buildList(result, errors) {
             var ret = [];
             if (!errors && result && result.length > 0) {
@@ -1349,7 +1404,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         if (typeof ids === "string")
             ids = [ids];
         wwManager({ "cmd": "getVals", "title": tableName, "args": [ids, columns] }, buildList);
-    }, generateList = function (dbTitle, ids, options, callback) {
+    }
+    exports.generateListItems = generateListItems;
+    function generateList(dbTitle, ids, options, callback) {
         function getIds(rowId) {
             ids.push(rowId);
         }
@@ -1366,8 +1423,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             wwManager({ "cmd": "forEachRow", "title": dbTitle }, getIds, getData);
         }
         else
-            debug(dbTitle, "title required");
-    }, buildMailtoUri = function (to, bcc, subject, message, callback) {
+            debugmode_1.debug(dbTitle, "title required");
+    }
+    exports.generateList = generateList;
+    function buildMailtoUri(to, bcc, subject, message, callback) {
         var query = bcc || subject || message ? "?" : "", joiner1 = bcc && (subject || message) ? "&" : "", joiner2 = (bcc || subject) && message ? "&" : "", bccBool = bcc ? true : false;
         to = to ? encodeURIComponent(to) : "";
         bcc = bcc ? "bcc=" + encodeURIComponent(bcc) : "";
@@ -1377,14 +1436,16 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             return callback("mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message, bccBool);
         else
             return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
-    }, addToGroup = function (groupName, detailsObj, searchQuery) {
+    }
+    exports.buildMailtoUri = buildMailtoUri;
+    function addToGroup(groupName, detailsObj, searchQuery) {
         wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
             if (detailsObj)
                 wwManager({ "cmd": "getVal", "title": "Groups", "args": [index, "groupIds"] }, function (ids) {
                     ids = JSON.parse(ids);
                     if (ids instanceof Array) { //convert old array data to object
                         var obj = {};
-                        for (let a = 0, len = ids.length; a < len; a++) {
+                        for (var a = 0, len = ids.length; a < len; a++) {
                             if (!obj[ids[a].table])
                                 obj[ids[a].table] = [];
                             obj[ids[a].table].push(ids[a].id);
@@ -1392,7 +1453,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         ids = obj;
                     }
                     //debug(detailsObj, "detailsObj");
-                    for (let b = 0, lenB = detailsObj.length; b < lenB; b++) {
+                    for (var b = 0, lenB = detailsObj.length; b < lenB; b++) {
                         if (!ids[detailsObj[b].table])
                             ids[detailsObj[b].table] = [];
                         if (ids[detailsObj[b].table].indexOf(detailsObj[b].id) === -1) {
@@ -1409,7 +1470,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     app.notify("Added '" + searchQuery + "' to " + groupName, true);
                 });
         });
-    }, groupInput = function (event) {
+    }
+    exports.addToGroup = addToGroup;
+    function groupInput(event) {
         function runSearch(table, find) {
             wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors) {
                 if (!errors && searchResults && searchResults.length > 0) {
@@ -1429,7 +1492,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 find = trim(find);
                 app.activeGroup = [];
                 document.getElementById("app").focus();
-                for (let table in dataTemplates) {
+                for (var table in dataTemplates) {
                     if (dataTemplates.hasOwnProperty(table)) {
                         runSearch(table, find);
                     }
@@ -1440,7 +1503,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         }
         var value = event ? event.target.value : app.groupSearchBox;
         checkDBLoaded(processInput);
-    }, addToNewGroup = function (detailsObj, searchQuery) {
+    }
+    exports.groupInput = groupInput;
+    function addToNewGroup(detailsObj, searchQuery) {
         app.addItemToGroupDropdown = false;
         app.groupDropdown = false;
         if (detailsObj)
@@ -1454,7 +1519,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         }
         app.navigate("groups");
         app.showNewGroupUI = true;
-    }, initializeGroups = function (callback) {
+    }
+    exports.addToNewGroup = addToNewGroup;
+    function initializeGroups(callback) {
         function getGroups(nextInQueue) {
             wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
                 var ids = [];
@@ -1475,7 +1542,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             checkDBLoaded(getGroups);
         else if (callback instanceof Function)
             return callback();
-    }, generateListView = function (tableTitle, ids, options) {
+    }
+    exports.initializeGroups = initializeGroups;
+    function generateListView(tableTitle, ids, options) {
         function applyTitle(title) {
             app.searchResultsTitle = title;
         }
@@ -1499,12 +1568,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             else {
                 app.spin(false, "Generating list...");
-                debug(tableTitle, "error generating list view");
+                debugmode_1.debug(tableTitle, "error generating list view");
                 if (nextInQueue instanceof Function)
                     return nextInQueue();
             }
         });
-    }, addToRecentlyViewed = function (obj) {
+    }
+    exports.generateListView = generateListView;
+    function addToRecentlyViewed(obj) {
         var recentlyViewed = false, recent = JSON.parse(JSON.stringify(app.recentlyViewed));
         //find and remove this item from recentlyViewed
         for (var b = 0; b < recent.length; b++) {
@@ -1521,7 +1592,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         //add this item to top of list
         app.recentlyViewed = recent;
         app.storeState();
-    }, importFile = function (toTable) {
+    }
+    exports.addToRecentlyViewed = addToRecentlyViewed;
+    function importFile(toTable) {
         function done(success, errors) {
             if (success && !errors) {
                 app.notify("Data imported successfully", true);
@@ -1533,21 +1606,16 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 app.notify("Done", true);
         }
         if (toTable === "Files")
-            app.loadFile('hiddenFileInput', null, function (data) {
+            app.loadFile('hiddenFileInput', undefined, function (data) {
                 wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
             });
         else if (toTable === "Contacts")
             app.loadFile('hiddenCSVInput', 'csv', function (data) {
                 wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey] }, done);
             });
-    }, confirm = function (msg, callback, options) {
-        app.confirmMsg = msg || "Are you sure?";
-        app.confirmOK = options && options.ok ? options.ok : "OK";
-        app.confirmCancel = options && options.cancel ? options.cancel : "Cancel";
-        app.confirmDetails = options && options.details ? options.details : "";
-        app.showConfirm = true;
-        app.confirmFunction = callback;
-    }, externalLink = function (text, type, multilineText) {
+    }
+    exports.importFile = importFile;
+    function externalLink(text, type, multilineText) {
         var link;
         text = String(text);
         if (type === "phone")
@@ -1592,19 +1660,21 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         }
         else
             return false;
-    }, getHeadersArr = function (headers) {
-        function IS_ARRAY(a) {
-            if (a && a.constructor === Array)
-                return true;
-            return false;
-        }
+    }
+    exports.externalLink = externalLink;
+    function is_array(a) {
+        if (a && a.constructor === Array)
+            return true;
+        return false;
+    }
+    function getHeadersArr(headers) {
         var ret = [];
-        if (IS_ARRAY(headers)) {
+        if (is_array(headers)) {
             ret = headers.join("||").split("||");
         }
         else if (headers && typeof headers === "object") {
             var a = 0;
-            for (let headerName in headers) {
+            for (var headerName in headers) {
                 ret[a++] = headerName;
             }
         }
@@ -1612,26 +1682,65 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             ret.shift();
         }
         return ret;
-    }, is_outsideClick = function (e) {
+    }
+    exports.getHeadersArr = getHeadersArr;
+    function is_typeString(s) {
+        var types = ["any", "number", "string", "boolean", "integer", "posInteger", "negInteger", "uniqueString",
+            "multilineString", "date", "email", "phoneNumber", "password", "formattedAddress", "streetAddress", "mailAddress",
+            "cityCounty", "provinceStateRegion", "country", "postalZipCode", "givenName", "familyName", "geoLocation",
+            "longitude", "latitude"].join("|"), valid = new RegExp("^(" + types + ")$");
+        if (String(s).match(valid))
+            return true;
+        else
+            return false;
+    }
+    function getTypesArr(types) {
+        var ret = [];
+        if (is_array(types)) {
+            for (var a = 0, b_1 = 0, len = types.length; a < len; a++) {
+                if (is_typeString(types[a]))
+                    ret[b_1++] = types[a];
+            }
+            return ret;
+        }
+        else if (types && typeof types === "object") {
+            var b = 0, c;
+            for (var headerName in types) {
+                if (types.hasOwnProperty(headerName)) {
+                    c = types[headerName];
+                    if (is_typeString(c))
+                        ret[b++] = c;
+                    else if (c.type && is_typeString(c.type))
+                        ret[b++] = c.type;
+                }
+            }
+            return ret;
+        }
+        else
+            return ret;
+    }
+    exports.getTypesArr = getTypesArr;
+    function is_outsideClick(e) {
         var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
         if (e.path) {
             //for non UWP
             //check to see if it is exactly the same button that was clicked, 
             //or another dropdown button
-            outsideClick = !this.$el.contains(e.target);
+            outsideClick = !app.$el.contains(e.target);
             var a = e.path.length || 0;
-            if (this.$el.id && outsideClick)
+            if (app.$el.id && outsideClick)
                 while (a--) {
-                    if (e.path[a].id === this.$el.id) {
+                    if (e.path[a].id === app.$el.id) {
                         outsideClick = false;
                         break;
                     }
                 }
         }
         return outsideClick;
-    };
-    //Components
-    const dropdown_button = Vue.extend({
+    }
+    exports.is_outsideClick = is_outsideClick;
+    vue_1.default.config.productionTip = false;
+    var dropdown_button = vue_1.default.extend({
         props: {
             buttontext: {
                 type: String,
@@ -1646,7 +1755,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 default: "left"
             },
             links: Array,
-            title: String,
+            title: {
+                type: String,
+                default: ""
+            },
             noarrow: {
                 type: Boolean,
                 default: false
@@ -1669,37 +1781,37 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 open: false,
                 inputValue: this.buttontext || this.noinputtext,
                 buttonValue: this.buttontext,
-                clickOutside: function (e) { }
+                clickOutsideInit: false,
+                clickOutsideFunct: function (e) { return e; }
             };
         },
         methods: {
             toggle: function (open) {
-                var app = document.getElementById("app");
+                var appDiv = document.getElementById("app"), 
+                // eslint-disable-next-line consistent-this
+                _this = this;
                 if (open === true || open === false)
                     this.open = open;
                 else
                     this.open = !this.open;
                 if (this.open) {
-                    if (!this.clickOutside) {
-                        this.clickOutside = function clickOutside(e) {
-                            if (is_outsideClick.call(this, e))
-                                this.action(null, this.buttonValue);
-                        }.bind(this);
+                    if (!this.clickOutsideInit) {
+                        this.clickOutsideFunct = function clickOutsideFunct(e) {
+                            if (is_outsideClick(e))
+                                _this.toggle(false);
+                        };
+                        this.clickOutsideInit = true;
                     }
-                    app.addEventListener("click", this.clickOutside);
-                    this.$emit("dropdown-open");
-                    if (this.customtextinput)
-                        Vue.nextTick(function () {
-                            this.$refs.input.focus();
-                        }.bind(this));
+                    if (appDiv)
+                        appDiv.addEventListener("click", this.clickOutsideFunct);
                 }
-                else
-                    app.removeEventListener("click", this.clickOutside);
+                else if (appDiv)
+                    appDiv.removeEventListener("click", this.clickOutsideFunct);
             },
             action: function (event, actionName) {
                 if (this.select || this.customtextinput && actionName) {
                     var text = String(actionName).replace(/<[^>]+>/g, "");
-                    for (let a = 0, len = this.links.length; a < len; a++) {
+                    for (var a = 0, len = this.links.length; a < len; a++) {
                         if (this.links[a].action !== undefined && this.links[a].action === actionName && this.links[a].text) {
                             text = this.links[a].text;
                             break;
@@ -1712,7 +1824,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#dropdown-button"
-    }), icon_select = Vue.extend({
+    });
+    var icon_select = vue_1.default.extend({
         props: {
             align: {
                 type: String,
@@ -1730,7 +1843,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         data: function () {
             return {
                 open: false,
-                clickOutside: function (e) { },
+                clickOutsideInit: false,
+                clickOutsideFunct: function (e) { return e; },
                 iconSelected: this.icon,
                 options: [
                     "icon-favorite-star",
@@ -1769,22 +1883,26 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         },
         methods: {
             toggle: function (open) {
-                var app = document.getElementById("app");
+                var app = document.getElementById("app"), 
+                // eslint-disable-next-line consistent-this
+                _this = this;
                 if (open === true || open === false)
                     this.open = open;
                 else
                     this.open = !this.open;
                 if (this.open) {
-                    if (!this.clickOutside) {
-                        this.clickOutside = function clickOutside(e) {
-                            if (is_outsideClick.call(this, e))
-                                this.toggle(false);
-                        }.bind(this);
+                    if (!this.clickOutsideInit) {
+                        this.clickOutsideFunct = function clickOutsideFunct(e) {
+                            if (is_outsideClick(e))
+                                _this.toggle(false);
+                        };
+                        this.clickOutsideInit = true;
                     }
-                    app.addEventListener("click", this.clickOutside);
+                    if (app)
+                        app.addEventListener("click", this.clickOutsideFunct);
                 }
-                else
-                    app.removeEventListener("click", this.clickOutside);
+                else if (app)
+                    app.removeEventListener("click", this.clickOutsideFunct);
             },
             select: function (icon) {
                 this.iconSelected = icon;
@@ -1793,7 +1911,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#icon-select"
-    }), color_select = Vue.extend({
+    });
+    var color_select = vue_1.default.extend({
         props: {
             align: {
                 type: String,
@@ -1807,8 +1926,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         data: function () {
             return {
                 open: false,
-                clickOutside: function (e) { },
+                clickOutsideInit: false,
+                clickOutsideFunct: function (e) { return e; },
                 options: [
+                    //hex color themes
                     "#478cdb",
                     "#ffb900",
                     "#ff8c00",
@@ -1848,22 +1969,26 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         },
         methods: {
             toggle: function (open) {
-                var app = document.getElementById("app");
+                var app = document.getElementById("app"), 
+                // eslint-disable-next-line consistent-this
+                _this = this;
                 if (open === true || open === false)
                     this.open = open;
                 else
                     this.open = !this.open;
                 if (this.open) {
-                    if (!this.clickOutside) {
-                        this.clickOutside = function clickOutside(e) {
-                            if (is_outsideClick.call(this, e))
-                                this.toggle(false);
-                        }.bind(this);
+                    if (!this.clickOutsideInit) {
+                        this.clickOutsideFunct = function clickOutsideFunct(e) {
+                            if (is_outsideClick(e))
+                                _this.toggle(false);
+                        };
+                        this.clickOutsideInit = true;
                     }
-                    app.addEventListener("click", this.clickOutside);
+                    if (app)
+                        app.addEventListener("click", this.clickOutsideFunct);
                 }
-                else
-                    app.removeEventListener("click", this.clickOutside);
+                else if (app)
+                    app.removeEventListener("click", this.clickOutsideFunct);
             },
             select: function (color) {
                 this.toggle(false);
@@ -1871,9 +1996,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#color-select"
-    }), jump_list = Vue.extend({
+    });
+    var jump_list = vue_1.default.extend({
         props: {
-            details: Object,
             links: Array,
             select: {
                 type: Boolean,
@@ -1883,7 +2008,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 type: Boolean,
                 default: false
             },
-            scrolldiv: String,
+            scrolldiv: {
+                type: String,
+                default: ""
+            },
             collapse: {
                 type: Boolean,
                 default: false
@@ -1902,27 +2030,37 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     {
                         text: "Sort List",
                         icon: "icon-sort",
-                        action: "sort"
+                        action: "sort",
+                        href: "",
+                        disabled: false
                     },
                     {
                         text: "Filter List",
                         icon: "icon-filter",
-                        action: "filter"
+                        action: "filter",
+                        href: "",
+                        disabled: false
                     },
                     {
                         text: "List View",
                         icon: "icon-list",
-                        action: "view"
+                        action: "view",
+                        href: "",
+                        disabled: false
                     },
                     {
                         text: "Add All to Favorites",
                         icon: "icon-favorite-star",
-                        action: "favorite"
+                        action: "favorite",
+                        href: "",
+                        disabled: false
                     },
                     {
                         text: "E-mail All",
                         icon: "icon-mail",
-                        action: "email"
+                        action: "email",
+                        href: "",
+                        disabled: false
                     }
                 ],
                 selectAll: this.selectall,
@@ -1940,9 +2078,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 a.sortBy = a.sortBy * 1;
                                 b.sortBy = b.sortBy * 1;
                             }
-                            if (a.sortBy === b.sortBy && a.type === 'jumplink' && b.type !== 'jumplink')
+                            if (a.sortBy === b.sortBy &&
+                                a.type === "jumplink" &&
+                                b.type !== "jumplink")
                                 return 1;
-                            if (a.sortBy === b.sortBy && b.type === 'jumplink' && a.type !== 'jumplink')
+                            if (a.sortBy === b.sortBy &&
+                                b.type === "jumplink" &&
+                                a.type !== "jumplink")
                                 return -1;
                             return a.sortBy === b.sortBy ? 0 : a.sortBy < b.sortBy ? -1 : 1;
                         }
@@ -1960,47 +2102,62 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         }
                         function generateHeaders() {
                             function obj(name, sortBy) {
-                                return { id: "jumplink_" + VAL.toPropName(name), sortBy: sortBy, text: name, type: "jumplink" };
+                                return {
+                                    id: "jumplink_" + VAL.toPropName(name),
+                                    table: "",
+                                    sortBy: sortBy,
+                                    text: name,
+                                    selected: false,
+                                    type: "jumplink"
+                                };
                             }
-                            var b = 0, c = 0, date = new Date(), now = date.getTime(), time = date.getHours() * 36e5 + date.getMinutes() * 6e4 + date.getSeconds() * 1000 + date.getMilliseconds(), diff = 0, recentHeaders = {
-                                "Older": 2592e6,
+                            var b = 0, c = 0, date = new Date(), now = date.getTime(), time = date.getHours() * 36e5 +
+                                date.getMinutes() * 6e4 +
+                                date.getSeconds() * 1000 +
+                                date.getMilliseconds(), diff = 0, recentHeaders = {
+                                Older: 2592e6,
                                 "In the Past 30 Days": 6048e5,
                                 "In the Past 7 Days": 1728e5 - time,
-                                "Yesterday": 864e5 - time,
+                                Yesterday: 864e5 - time,
                                 "Earlier Today": 36e5,
                                 "In the Past Hour": 3e5,
                                 "Just Now": 0
                             };
-                            for (let a = 0, len = list.length, name; a < len; a++) {
-                                if (list[a].type === "jumplink") { //strip out old headers
+                            for (var a = 0, len = list.length, name_1; a < len; a++) {
+                                if (list[a].type === "jumplink") {
+                                    //strip out old headers
                                     list.splice(a, 1);
                                     a--;
                                     len--;
                                 }
                                 //by most recent
-                                else if (typeof list[a].sortBy === "number" && list[a].sortBy > 15e11 && list[a].sortBy < 2e12) {
+                                else if (typeof list[a].sortBy === "number" &&
+                                    list[a].sortBy > 15e11 &&
+                                    list[a].sortBy < 2e12) {
                                     diff = now - list[a].sortBy;
-                                    for (let header in recentHeaders) {
+                                    for (var header in recentHeaders) {
                                         if (diff >= recentHeaders[header]) {
-                                            name = header;
+                                            name_1 = header;
                                             break;
                                         }
                                     }
-                                    if (a === 0 || name !== nameHeaders[c - 1].text) {
-                                        nameHeaders.push(obj(name, now - recentHeaders[name]));
+                                    if (a === 0 || name_1 !== nameHeaders[c - 1].text) {
+                                        nameHeaders.push(obj(name_1, now - recentHeaders[name_1]));
                                         c++;
                                     }
                                 }
                                 // by alphabetic
                                 else {
-                                    name = list[a].sortBy && list[a].sortBy.split("__")[0] || "A";
-                                    letter = name.charAt(0);
-                                    if (alphabetHeaders[b - 1] === undefined || letter !== alphabetHeaders[b - 1].sortBy) {
+                                    name_1 = list[a].sortBy && list[a].sortBy.split("__")[0] || "A";
+                                    letter = name_1.charAt(0);
+                                    if (alphabetHeaders[b - 1] === undefined ||
+                                        letter !== alphabetHeaders[b - 1].sortBy) {
                                         alphabetHeaders.push(obj(letter, letter));
                                         b++;
                                     }
-                                    if (nameHeaders[c - 1] === undefined || name !== nameHeaders[c - 1].sortBy) {
-                                        nameHeaders.push(obj(name, name));
+                                    if (nameHeaders[c - 1] === undefined ||
+                                        name_1 !== nameHeaders[c - 1].sortBy) {
+                                        nameHeaders.push(obj(name_1, name_1));
                                         c++;
                                     }
                                 }
@@ -2013,7 +2170,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         else
                             list = alphabetHeaders.concat(list);
                         list = deleteDuplicates(list);
-                        list = letter ? list.sort(sortFunction) : list.sort(sortFunction).reverse();
+                        list = letter
+                            ? list.sort(sortFunction)
+                            : list.sort(sortFunction).reverse();
                         return list;
                     }
                     return sortList(this.links);
@@ -2024,6 +2183,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         methods: {
+            toggle: function (prop) {
+                if (this[prop] !== undefined)
+                    this[prop] = this[prop] ? false : true;
+                else
+                    debugmode_1.debug(prop, "prop doesn't exist in jump-list");
+            },
             moreDropdownActions: function (action) {
                 switch (action) {
                     case "":
@@ -2035,11 +2200,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     case "favorite":
                         break;
                     case "view":
-                        this.toggle('collapsed');
+                        this.toggle("collapsed");
                         this.moreDropdownLinks[2] = {
                             text: this.collapsed ? "List View" : "Button View",
                             icon: this.collapsed ? "icon-list" : "icon-th",
-                            action: "view"
+                            action: "view",
+                            href: "",
+                            disabled: false
                         };
                         break;
                     case "email":
@@ -2054,11 +2221,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             addToGroup(groupName, null, this.currentQuery);
                         }
                         else
-                            debug(action, "no such button action found");
+                            debugmode_1.debug(action, "no such button action found");
                 }
             },
             seeDetails: function (obj) {
-                var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
+                var _this = this, sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
                 if (sortByRecent) {
                     this.list.unshift(obj);
                     this.list[0].sortBy = new Date().getTime();
@@ -2068,19 +2235,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     this.$emit("update-recently-viewed", obj);
                 getDetails(obj, function (detailsObj) {
                     if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
-                        this.$emit("update-details", detailsObj);
+                        _this.$emit("update-details", detailsObj);
                     }
                     else {
                         app.details = detailsObj;
                         app.navigate("details", null, detailsObj);
                     }
-                }.bind(this));
-            },
-            toggle: function (prop) {
-                if (this[prop] !== undefined)
-                    this[prop] = this[prop] ? false : true;
-                else
-                    debug(prop, "prop doesn't exist in jump-list");
+                });
             },
             toggleSelect: function (link) {
                 for (var a = 0, len = this.list.length; a < len; a++) {
@@ -2089,18 +2250,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 this.selectAll = false;
                 this.collapsed = false;
-                this.toggle('selected');
+                this.toggle("selected");
                 if (link)
                     link.selected = true;
-                Vue.nextTick(this.updateDropdownLinks);
+                vue_1.default.nextTick(this.updateDropdownLinks);
             },
             toggleSelectAll: function () {
-                this.toggle('selectAll');
+                this.toggle("selectAll");
                 for (var a = 0, len = this.list.length; a < len; a++) {
                     if (this.list[a].type === "link")
                         this.list[a].selected = this.selectAll ? true : false;
                 }
-                Vue.nextTick(this.updateDropdownLinks);
+                vue_1.default.nextTick(this.updateDropdownLinks);
             },
             showIf: function (link, collapse) {
                 return link.type === "jumplink" || collapse === false;
@@ -2109,10 +2270,17 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 if (link.type === "jumplink") {
                     var el = document.getElementById(div);
                     this.collapsed = collapse ? false : true;
+                    if (!el) {
+                        debugmode_1.debug("jumplink outer div #" + div + " not found. Check the div container id");
+                        return;
+                    }
                     if (collapse) {
-                        Vue.nextTick(function () {
-                            var pos = document.getElementById(link.id).offsetTop;
-                            el.scrollTop = pos;
+                        vue_1.default.nextTick(function () {
+                            var linkEl = document.getElementById(link.id), pos = 0;
+                            if (linkEl)
+                                pos = linkEl.offsetTop;
+                            if (el)
+                                el.scrollTop = pos;
                         });
                     }
                     else
@@ -2125,39 +2293,65 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 else {
                     this.seeDetails(link);
                 }
-                Vue.nextTick(this.updateDropdownLinks);
+                vue_1.default.nextTick(this.updateDropdownLinks);
             },
             updateDropdownLinks: function () {
                 function newEmailLink() {
                     var bccIds = [];
-                    for (let a = 0, len = this.list.length; a < len; a++) {
-                        if (this.list[a].type === "link" && (this.selected === false || this.list[a].selected === true) && this.list[a].table === "Contacts")
-                            bccIds.push(this.list[a].id);
+                    for (var a = 0, len = _this.list.length; a < len; a++) {
+                        if (_this.list[a].type === "link" &&
+                            (_this.selected === false || _this.list[a].selected === true) &&
+                            _this.list[a].table === "Contacts")
+                            bccIds.push(_this.list[a].id);
                     }
-                    getEmails.call(this, bccIds);
+                    getEmails(bccIds);
                 }
                 function getEmails(ids) {
                     var emailAddresses = [];
                     if (ids.length > 0)
                         wwManager({
-                            cmd: "getVals", title: "Contacts",
-                            args: [ids, ["Name", "GivenName", "FamilyName", "E_mail1_Type", "E_mail1_Value", "E_mail2_Type", "E_mail2_Value",
-                                    "E_mail3_Type", "E_mail3_Value", "E_mail4_Type", "E_mail4_Value", "E_mail5_Type", "E_mail5_Value", "E_mail6_Type",
-                                    "E_mail6_Value", "E_mail7_Type", "E_mail7_Value"]]
+                            cmd: "getVals",
+                            title: "Contacts",
+                            args: [
+                                ids,
+                                [
+                                    "Name",
+                                    "GivenName",
+                                    "FamilyName",
+                                    "E_mail1_Type",
+                                    "E_mail1_Value",
+                                    "E_mail2_Type",
+                                    "E_mail2_Value",
+                                    "E_mail3_Type",
+                                    "E_mail3_Value",
+                                    "E_mail4_Type",
+                                    "E_mail4_Value",
+                                    "E_mail5_Type",
+                                    "E_mail5_Value",
+                                    "E_mail6_Type",
+                                    "E_mail6_Value",
+                                    "E_mail7_Type",
+                                    "E_mail7_Value"
+                                ]
+                            ]
                         }, function (vals, errors) {
                             if (!vals || errors) {
-                                return debug(errors, "get email errors");
+                                return debugmode_1.debug(errors, "get email errors");
                             }
                             var type, email, name, primary = false;
-                            for (let a = 0, lenA = vals.length; a < lenA; a++) {
-                                name = vals[a][2].replace(/, /g, " and ").split(";")[0] + " " + vals[a][3];
+                            for (var a = 0, lenA = vals.length; a < lenA; a++) {
+                                name =
+                                    vals[a][2].replace(/, /g, " and ").split(";")[0] +
+                                        " " +
+                                        vals[a][3];
                                 if (vals[a][6]) {
-                                    for (let b = 4; b < 17; b = b + 2) { //find primary email
+                                    for (var b = 4; b < 17; b = b + 2) {
+                                        //find primary email
                                         if (/\*/.test(vals[a][b]))
                                             primary = b;
                                     }
                                 }
-                                for (let b = 4; b < 17; b = b + 2) {
+                                for (var b = 4; b < 17; b = b + 2) {
                                     email = vals[a][b + 1];
                                     if (!email)
                                         continue;
@@ -2174,68 +2368,90 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             }
                             if (emailAddresses.length > 0) {
                                 if (emailAddresses.length === 1)
-                                    buildMailtoUri(emailAddresses[0], null, null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
+                                    buildMailtoUri(emailAddresses[0], null, null, null, function (uri) {
+                                        updateLinks(uri, ids);
+                                    });
                                 else
-                                    buildMailtoUri(app.dropboxEmail || "", emailAddresses.join(","), null, null, function (uri) { updateLinks.call(this, uri, ids); }.bind(this));
+                                    buildMailtoUri(app.dropboxEmail || "", emailAddresses.join(","), null, null, function (uri) {
+                                        updateLinks(uri, ids);
+                                    });
                             }
                             else
-                                updateLinks.call(this);
-                        }.bind(this));
+                                updateLinks();
+                        });
                     else
-                        updateLinks.call(this);
+                        updateLinks();
                 }
                 function updateLinks(mailtoUri, ids) {
                     var len = ids ? ids.length : 0;
-                    this.moreDropdownLinks = [
+                    _this.moreDropdownLinks = [
                         {
                             text: "Sort List",
                             icon: "icon-sort",
-                            action: "sort"
+                            action: "sort",
+                            href: "",
+                            disabled: false
                         },
                         {
                             text: "Filter List",
                             icon: "icon-filter",
-                            action: "filter"
+                            action: "filter",
+                            href: "",
+                            disabled: false
                         },
                         {
-                            text: this.collapsed ? "List View" : "Button View",
-                            icon: this.collapsed ? "icon-list" : "icon-th",
-                            action: "view"
+                            text: _this.collapsed ? "List View" : "Button View",
+                            icon: _this.collapsed ? "icon-list" : "icon-th",
+                            action: "view",
+                            href: "",
+                            disabled: false
                         },
                         {
-                            text: this.selected ? "Add Selected to Favorites" : "Add All to Favorites",
+                            text: _this.selected
+                                ? "Add Selected to Favorites"
+                                : "Add All to Favorites",
                             icon: "icon-favorite-star",
                             action: "favorite",
-                            disabled: this.selected && len === 0 ? true : false
+                            href: "",
+                            disabled: _this.selected && len === 0 ? true : false
                         },
                         {
-                            text: this.selected ? "E-mail Selected" : "E-mail All",
+                            text: _this.selected ? "E-mail Selected" : "E-mail All",
                             icon: "icon-mail",
                             action: "email",
                             href: mailtoUri,
-                            disabled: this.selected && !mailtoUri ? true : false
+                            disabled: _this.selected && !mailtoUri ? true : false
                         }
                     ];
-                    for (let a = 0, len = app.groups.length; a < len; a++) {
-                        this.moreDropdownLinks[a + 4] = {
-                            text: this.selected ? "Add Selected to " + app.groups[a] + " Group" : "Add to " + app.groups[a] + " Group",
+                    for (var a = 0, len_1 = app.groups.length; a < len_1; a++) {
+                        _this.moreDropdownLinks[a + 4] = {
+                            text: _this.selected
+                                ? "Add Selected to " + app.groups[a] + " Group"
+                                : "Add to " + app.groups[a] + " Group",
                             icon: "icon-people",
                             action: "_add_to_group_" + app.groups[a],
-                            disabled: this.selected && len === 0 ? true : false
+                            href: "",
+                            disabled: _this.selected && len_1 === 0 ? true : false
                         };
                     }
-                    this.moreDropdownLinks.push({
-                        text: this.selected ? "Save Selected to New Group" : "Save Search as New Group",
+                    _this.moreDropdownLinks.push({
+                        text: _this.selected
+                            ? "Save Selected to New Group"
+                            : "Save Search as New Group",
                         icon: "icon-plus",
                         action: "_create_new_group",
-                        disabled: this.selected && len === 0 ? true : false
+                        href: "",
+                        disabled: _this.selected && len === 0 ? true : false
                     });
                 }
-                initializeGroups(newEmailLink.bind(this));
+                var _this = this;
+                initializeGroups(newEmailLink);
             }
         },
         template: "#jump-list"
-    }), new_table_page = Vue.extend({
+    });
+    var new_table_page = vue_1.default.extend({
+        name: "NewTablePage",
         components: {
             "dropdown-button": dropdown_button,
             "icon-select": icon_select,
@@ -2243,45 +2459,45 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         },
         data: function () {
             return {
+                newTableTitle: "",
+                searchableDropdown: -1,
+                typesDropdown: -1,
+                searchableDefault: "True",
+                typesDefault: "any",
+                searchableDropdownOptions: [
+                    { action: true, text: "True" },
+                    { action: false, text: "False" },
+                    { action: "optional", text: "Optional" }
+                ],
+                typesDropdownOptions: [
+                    { action: "Any", text: "Any", description: "Any text, number or boolean value" },
+                    { action: "Number", text: "Number", description: "Any positive or negative number, including decimal values" },
+                    { action: "Integer", text: "Integer", description: "Any positive or negative integer value" },
+                    { action: "PosInteger", text: "Positive Integer", description: "Any positive integer value, including 0" },
+                    { action: "NegInteger", text: "Negative Integer", description: "Any negative integer value, including 0" },
+                    { action: "Boolean", text: "Boolean Value", description: "True or False values" },
+                    { action: "String:", text: "Text", description: "Alphanumeric text and symbols without formatting" },
+                    { action: "MultilineString", text: "Multiline Text", description: "Formatted lines of aphanumeric text and symbols" },
+                    { action: "Date", text: "Date or Time", description: "A UTC formatted date/time" },
+                    { action: "UniqueString", text: "Username or ID", description: "A text based unique identifier" },
+                    { action: "Password", text: "Password", description: "The validation hash of a password, secret code or access token" },
+                    { action: "GivenName", text: "First Name", description: "A person's given name" },
+                    { action: "FamilyName", text: "Last Name", description: "A person's family name" },
+                    { action: "Email", text: "E-mail Address" },
+                    { action: "PhoneNumber", text: "Phone Number" },
+                    { action: "StreetAddress", text: "Street Address" },
+                    { action: "MailAddress", text: "Mailing Address" },
+                    { action: "CityCounty", text: "City or County" },
+                    { action: "ProvinceStateRegion", text: "Province, State or Region" },
+                    { action: "Country", text: "Country" },
+                    { action: "PostalZipCode", text: "Postal/Zip Code" },
+                    { action: "GeoLocation", text: "GPS Coordinates", description: "Decimal format GPS Coordinates" },
+                    { action: "Longitude", text: "Longitude Coordinate" },
+                    { action: "Latitude", text: "Latitude Coordinate" }
+                ],
                 newTable: {
-                    title: "",
                     headers: ["Column 1", "Column 2", "Column 3"],
-                    types: ["Any", "Any", "Any"],
-                    searchableDropdown: -1,
-                    typesDropdown: -1,
-                    searchableDefault: "True",
-                    typesDefault: "Any",
-                    searchableDropdownOptions: [
-                        { action: true, text: "True" },
-                        { action: false, text: "False" },
-                        { action: 'optional', text: "Optional" }
-                    ],
-                    typesDropdownOptions: [
-                        { action: "Any", text: "Any", description: "Any text, number or boolean value" },
-                        { action: "Number", text: "Number", description: "Any positive or negative number, including decimal values" },
-                        { action: "Integer", text: "Integer", description: "Any positive or negative integer value" },
-                        { action: "PosInteger", text: "Positive Integer", description: "Any positive integer value, including 0" },
-                        { action: "NegInteger", text: "Negative Integer", description: "Any negative integer value, including 0" },
-                        { action: "Boolean", text: "Boolean Value", description: "True or False values" },
-                        { action: "String:", text: "Text", description: "Alphanumeric text and symbols without formatting" },
-                        { action: "MultilineString", text: "Multiline Text", description: "Formatted lines of aphanumeric text and symbols" },
-                        { action: "Date", text: "Date or Time", description: "A UTC formatted date/time" },
-                        { action: "UniqueString", text: "Username or ID", description: "A text based unique identifier" },
-                        { action: "Password", text: "Password", description: "The validation hash of a password, secret code or access token" },
-                        { action: "GivenName", text: "First Name", description: "A person's given name" },
-                        { action: "FamilyName", text: "Last Name", description: "A person's family name" },
-                        { action: "Email", text: "E-mail Address" },
-                        { action: "PhoneNumber", text: "Phone Number" },
-                        { action: "StreetAddress", text: "Street Address" },
-                        { action: "MailAddress", text: "Mailing Address" },
-                        { action: "CityCounty", text: "City or County" },
-                        { action: "ProvinceStateRegion", text: "Province, State or Region" },
-                        { action: "Country", text: "Country" },
-                        { action: "PostalZipCode", text: "Postal/Zip Code" },
-                        { action: "GeoLocation", text: "GPS Coordinates", description: "Decimal format GPS Coordinates" },
-                        { action: "Longitude", text: "Longitude Coordinate" },
-                        { action: "Latitude", text: "Latitude Coordinate" }
-                    ],
+                    types: ["any", "any", "any"],
                     options: {
                         customProperties: {
                             icon: { initialValue: "", type: "string" },
@@ -2296,17 +2512,22 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             joiner: " ",
                             sortBy: ""
                         },
-                        detailsView: {}
-                    },
-                    optionsDropdown: -1,
-                    fullscreen: false
+                        heading: {
+                            image: "",
+                            title: "",
+                            subtitle: ""
+                        },
+                        detailsView: []
+                    }
                 },
+                optionsDropdown: -1,
+                fullscreen: false,
                 icon: "",
                 iconColor: "#ff4343",
                 customProperties: [],
                 showCustomPropertyInput: false,
                 customPropertyName: "",
-                customPropertyType: "",
+                customPropertyType: "any",
                 customPropertyTypes: [
                     { text: "Any", action: "Any" },
                     { text: "String", action: "String" },
@@ -2315,7 +2536,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 ],
                 customPropertyInitialValue: "",
                 initialValueInputType: "text",
-                customPropertyError: null,
+                customPropertyError: "",
                 thLinks: [
                     { text: "Insert Column Left", action: "insertColumnLeft" },
                     { text: "Insert Column Right", action: "insertColumnRight" },
@@ -2324,18 +2545,26 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             };
         },
         methods: {
+            setCustomProp: function (propName, value, type) {
+                this.newTable.options = this.newTable.options || {};
+                this.newTable.options.customProperties = this.newTable.options.customProperties || {};
+                this.newTable.options.customProperties[VAL.toPropName(propName)] = {
+                    initialValue: value,
+                    type: type
+                };
+            },
             setIcon: function (icon) {
                 this.icon = icon;
-                this.newTable.options.customProperties.icon = { initialValue: icon, type: "string" };
+                this.setCustomProp("icon", icon, "string");
             },
             setColor: function (color) {
                 this.iconColor = color;
-                this.newTable.options.customProperties.iconColor = { initialValue: color, type: "string" };
+                this.setCustomProp("iconColor", color, "string");
             },
             setCustomPropertyType: function (value) {
                 this.customPropertyType = value;
                 if (value === "String" || value === "Any") {
-                    this.initialValueInputType = "text";
+                    this.initialValueInputType = "string";
                     this.customPropertyInitialValue = "";
                 }
                 else if (value === "Number") {
@@ -2345,35 +2574,47 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 else if (value === "Boolean")
                     this.customPropertyInitialValue = false;
                 else
-                    debug(value, "not valid property type");
+                    debugmode_1.debug(value, "not valid property type");
             },
             addNewProperty: function () {
-                function isNumeric(n) { return !isNaN(parseFloat(n)) && isFinite(n); }
+                function isNumeric(n) {
+                    return !isNaN(parseFloat(n)) && isFinite(n);
+                }
                 if (!/^[A-z_]\w*(\.[A-z_]\w*)*$/.test(this.customPropertyName)) {
                     this.customPropertyError = "Invalid Property Name";
                 }
                 else if (!/Any|String|Number|Boolean/.test(this.customPropertyType)) {
                     this.customPropertyError = "Invalid Property Type";
                 }
-                else if (this.customPropertyType === "String" && typeof this.customPropertyInitialValue !== "string" ||
-                    this.customPropertyType === "Boolean" && typeof this.customPropertyInitialValue !== "boolean" ||
-                    this.customPropertyType === "Number" && !isNumeric(this.customPropertyInitialValue)) {
+                else if (this.customPropertyType === "string" &&
+                    typeof this.customPropertyInitialValue !== "string" ||
+                    this.customPropertyType === "boolean" &&
+                        typeof this.customPropertyInitialValue !== "boolean" ||
+                    this.customPropertyType === "number" &&
+                        !isNumeric(this.customPropertyInitialValue)) {
                     this.customPropertyError = "Invalid Initial Value";
                 }
                 else {
-                    this.customPropertyError = null;
+                    this.customPropertyError = "";
                     this.showCustomPropertyInput = false;
-                    this.customProperties.push({ name: this.customPropertyName, type: this.customPropertyType, initialValue: this.customPropertyInitialValue });
+                    this.customProperties.push({
+                        name: this.customPropertyName,
+                        type: this.customPropertyType,
+                        initialValue: this.customPropertyInitialValue
+                    });
                     this.customPropertyName = "";
-                    this.customPropertyType = "";
+                    this.customPropertyType = "any";
                     this.customPropertyInitialValue = "";
                 }
             },
             importNewTable: function () {
+                app.loadFile("hiddenCSVInput", "csv", this.applyNewTable);
+            },
+            applyNewTable: function (data) {
                 function matches(subsetArr, ofArr) {
                     var ret = true;
                     if (ofArr && ofArr.constructor === Array) {
-                        for (let a = 0, len = subsetArr.length; a < len; a++) {
+                        for (var a = 0, len = subsetArr.length; a < len; a++) {
                             if (ofArr.indexOf(subsetArr[a]) === -1)
                                 ret = false;
                             else if (!ofArr[subsetArr[a]])
@@ -2387,50 +2628,59 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 function createTempTable(JSON, template) {
                     template.options.importJSON = JSON;
                     app.notify("Building new table");
-                    wwManager({ "cmd": "initNewNyckelDB", "title": "temp", "args": ["temp", template.headers, template.types, template.options] }, function (success, errors) {
+                    wwManager({
+                        cmd: "initNewNyckelDB",
+                        title: "temp",
+                        args: ["temp", template.headers, template.types, template.options]
+                    }, function (success, errors) {
+                        //final callback function for last NyckelDB to initialise
                         if (errors)
                             defaultErrorHandler(success, errors);
                         else
                             app.notify("Done", true);
                     });
                 }
-                app.loadFile('hiddenCSVInput', 'csv', function (data) {
-                    if (matches(data.Headers, this.newTable.headers)) {
-                        createTempTable(data, this.newTable);
-                    }
-                    else {
-                        app.notify("CSV Headers don't match");
-                        for (var template in dataTemplates) {
-                            var tryHeaders = getHeadersArr(dataTemplates[template].headers);
-                            if (matches(data.Headers, tryHeaders)) {
-                                (function (self, template) {
-                                    confirm("Are you trying to create a " + template + " table? You can use a template.", function () {
-                                        self.template(template);
-                                        app.notify("");
-                                        createTempTable(data, dataTemplates[template]);
-                                    });
-                                })(this, template);
-                            }
+                if (matches(data.Headers, this.newTable.headers)) {
+                    createTempTable(data, this.newTable);
+                }
+                else {
+                    app.notify("CSV Headers don't match");
+                    for (var template in dataTemplates) {
+                        var tryHeaders = getHeadersArr(dataTemplates[template].headers);
+                        if (matches(data.Headers, tryHeaders)) {
+                            (function (self, template) {
+                                app.confirm("Are you trying to create a " +
+                                    template +
+                                    " table? You can use a template.", function () {
+                                    self.template(template);
+                                    app.notify("");
+                                    createTempTable(data, dataTemplates[template]);
+                                });
+                            })(this, template);
                         }
                     }
-                }.bind(this));
+                }
             },
             template: function (templateName) {
                 if (dataTemplates[templateName]) {
-                    this.newTable.title = templateName;
+                    this.newTableTitle = templateName;
                     this.newTable.headers = getHeadersArr(dataTemplates[templateName].headers);
-                    this.newTable.types = getHeadersArr(dataTemplates[templateName].types);
+                    this.newTable.types = getTypesArr(dataTemplates[templateName].types);
                     this.newTable.options = dataTemplates[templateName].options;
                     this.newTable.display = dataTemplates[templateName].display;
                     //TODO
                     //this.newTable.options.searchable = dataTemplates[templateName].options.searchable || [];
-                    this.icon = this.newTable.options.customProperties.icon.initialValue || "";
-                    this.iconColor = this.newTable.options.customProperties.iconColor.initialValue || "#ff4343";
+                    this.icon = "";
+                    this.iconColor = "#ff4343";
                 }
                 else {
-                    this.newTable.title = "";
+                    this.newTableTitle = "";
                     this.newTable.headers = ["", "", ""];
-                    this.newTable.types = [this.newTable.typesDefault, this.newTable.typesDefault, this.newTable.typesDefault];
+                    this.newTable.types = [
+                        this.typesDefault,
+                        this.typesDefault,
+                        this.typesDefault
+                    ];
                     this.icon = "";
                     this.iconColor = "#ff4343";
                     this.newTable.options = {
@@ -2447,7 +2697,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             joiner: " ",
                             sortBy: ""
                         },
-                        detailsView: {}
+                        heading: { title: "" },
+                        detailsView: []
                     };
                 }
             },
@@ -2459,26 +2710,33 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     this.insertColumn(index + 1);
                 }
                 else if (action === "deleteColumn") {
+                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.splice(index, 1);
+                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.types.splice(index, 1);
                     //	this.newTable.options.searchable.splice(index, 1);
-                    this.newTable.optionsDropdown = -1;
+                    this.optionsDropdown = -1;
                 }
             },
             insertColumn: function (index) {
                 if (index === false) {
+                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.push("");
-                    this.newTable.types.push(this.newTable.typesDefault);
-                    //	this.newTable.options.searchable.push(this.newTable.searchableDefault);
+                    /* eslint-disable-next-line no-extra-parens */
+                    this.newTable.types.push(this.typesDefault);
+                    //	this.newTable.options.searchable.push(this.searchableDefault);
                 }
                 else {
+                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.splice(index, 0, "");
-                    this.newTable.types.splice(index, 0, this.newTable.typesDefault);
-                    //	this.newTable.options.searchable.splice(index, 0, this.newTable.searchableDefault);
+                    /* eslint-disable-next-line no-extra-parens */
+                    this.newTable.types.splice(index, 0, this.typesDefault);
+                    //	this.newTable.options.searchable.splice(index, 0, this.searchableDefault);
                 }
-                this.newTable.optionsDropdown = -1;
+                this.optionsDropdown = -1;
             },
             typesAction: function (action, index) {
+                this.newTable.types = this.newTable.types || [];
                 this.newTable.types[index] = action;
             },
             searchableAction: function (action, index) {
@@ -2486,7 +2744,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#new-table-page"
-    }), groups_page = Vue.extend({
+    });
+    var groups_page = vue_1.default.extend({
+        name: "GroupsPage",
         components: {
             "jump-list": jump_list
         },
@@ -2501,66 +2761,107 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 groupHelp: false,
                 groupSearchBox: state.groupSearchBox,
                 addItemToGroupDropdown: state.addItemToGroupDropdown,
-                groupDropdown: state.groupDropdown
+                groupDropdown: state.groupDropdown,
+                ids: {}
             };
+        },
+        computed: {
+            selectedActiveGroup: function () {
+                var ret = [], b = 0;
+                for (var a = 0, len = this.activeGroup.length; a < len; a++) {
+                    if (this.activeGroup[a].selected)
+                        ret[b++] = this.activeGroup[a];
+                }
+                return ret;
+            }
         },
         methods: {
             newGroup: function (event, groupName) {
                 //Validate groupName
                 groupName = groupName || this.groupName;
+                this.groupName = groupName;
                 groupName = VAL.toEnglishAlphabet(groupName);
                 groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
                 groupName = trim(groupName);
                 if (groupName && groupName !== "") {
                     groupName = groupName.split(" ");
-                    for (let b = 0, lenB = groupName.length; b < lenB; b++) {
-                        groupName[b] = groupName[b][0].toUpperCase() + groupName[b].slice(1);
+                    for (var b = 0, lenB = groupName.length; b < lenB; b++) {
+                        groupName[b] =
+                            groupName[b][0].toUpperCase() + groupName[b].slice(1);
                     }
                     groupName = groupName.join(" ");
-                    var i = 2, title, ids = {};
+                    var title;
                     //get group ids
-                    for (let c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
+                    for (var c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
                         if (this.activeGroup[c].selected === true) {
                             title = VAL.toPropName(this.activeGroup[c].table);
-                            if (!ids[title])
-                                ids[title] = [];
-                            ids[title].push(this.activeGroup[c].id);
+                            if (!this.ids[title])
+                                this.ids[title] = [];
+                            this.ids[title].push(this.activeGroup[c].id);
                         }
                     }
-                    initializeGroups(function () {
-                        //check for duplicate groupNames
-                        if (this.groups.indexOf(groupName) > -1) {
-                            while (this.groups.indexOf(groupName + " " + i) > -1)
-                                i++;
-                            groupName = groupName + " " + i;
-                        }
-                        //Save new group
-                        wwManager({ "cmd": "addRow", "title": "Groups", "args": [[groupName, "", "", ""]] }, function () {
-                            this.updateGroup(groupName, ids, this.groupSearchBox);
-                            this.groups.push(groupName);
-                            this.activeGroup = [];
-                            this.showNewGroupUI = false;
-                            this.groupSearchBox = "";
-                            this.groupName = "";
-                        }.bind(this));
-                    }.bind(this));
+                    initializeGroups(this.initialiseGroupsCB);
                 }
                 else
                     app.notify("Group requires a name");
             },
+            initialiseGroupsCB: function () {
+                //check for duplicate groupNames
+                var i = 2;
+                if (this.groups.indexOf(this.groupName) > -1) {
+                    while (this.groups.indexOf(this.groupName + " " + i) > -1)
+                        i++;
+                    this.groupName = this.groupName + " " + i;
+                }
+                //Save new group
+                wwManager({
+                    cmd: "addRow",
+                    title: "Groups",
+                    args: [[this.groupName, "", "", ""]]
+                }, this.saveGroupCB);
+            },
+            saveGroupCB: function () {
+                this.updateGroup(this.groupName, this.ids, this.groupSearchBox);
+                this.groups.push(this.groupName);
+                this.activeGroup = [];
+                this.showNewGroupUI = false;
+                this.groupSearchBox = "";
+                this.groupName = "";
+                this.ids = {};
+            },
             updateGroup: function (groupName, ids, searchTerms) {
                 groupName = String(groupName);
-                wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
+                wwManager({
+                    cmd: "getIndexOf",
+                    title: "Groups",
+                    args: [null, groupName, "groupName"]
+                }, function (index) {
                     if (ids)
-                        wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "groupIds", JSON.stringify(ids)] }, defaultErrorHandler);
+                        wwManager({
+                            cmd: "setVal",
+                            title: "Groups",
+                            args: [index, "groupIds", JSON.stringify(ids)]
+                        }, defaultErrorHandler);
                     if (searchTerms)
-                        wwManager({ "cmd": "setVal", "title": "Groups", "args": [index, "searchTerms", String(searchTerms)] }, defaultErrorHandler);
+                        wwManager({
+                            cmd: "setVal",
+                            title: "Groups",
+                            args: [
+                                index,
+                                "searchTerms",
+                                String(searchTerms)
+                            ]
+                        }, defaultErrorHandler);
                 });
             },
             deleteGroup: function (groupName) {
                 groupName = String(groupName);
-                wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
-                    wwManager({ "cmd": "deleteRow", "title": "Groups", "args": [index] }, function (result) {
+                wwManager({
+                    cmd: "getIndexOf",
+                    title: "Groups",
+                    args: [null, groupName, "groupName"]
+                }, function (index) {
+                    wwManager({ cmd: "deleteRow", title: "Groups", args: [index] }, function (result) {
                         console.log(result, "deletedRow");
                     });
                 });
@@ -2568,7 +2869,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             },
             groupKeyPress: function (e) {
                 var keyCode = e.which || e.keyCode || 0;
-                if (keyCode === 38 || keyCode === 40 || keyCode === 27 || keyCode === 13) {
+                if (keyCode === 38 ||
+                    keyCode === 40 ||
+                    keyCode === 27 ||
+                    keyCode === 13) {
                     e.preventDefault();
                 }
             },
@@ -2577,21 +2881,31 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 var keyCode = e.which || e.keyCode || 0;
                 if (keyCode === 32)
                     e.preventDefault();
-                if (keyCode !== 8 && keyCode !== 9 && keyCode !== 32 && keyCode !== 38 && keyCode !== 40)
+                if (keyCode !== 8 &&
+                    keyCode !== 9 &&
+                    keyCode !== 32 &&
+                    keyCode !== 38 &&
+                    keyCode !== 40)
                     this.groupSearchBox = trim(this.groupSearchBox);
                 switch (keyCode) {
-                    case 27: /*escape key*/
+                    case 27 /*escape key*/:
                         this.resetGroupSearch();
                         break;
                 }
             },
             groupKeyDown: function (e) {
                 var keyCode = e.which || e.keyCode || 0;
-                if (keyCode === 9 || keyCode === 13 || keyCode === 32 || keyCode === 38 || keyCode === 27 || keyCode === 40) {
+                if (keyCode === 9 ||
+                    keyCode === 13 ||
+                    keyCode === 32 ||
+                    keyCode === 38 ||
+                    keyCode === 27 ||
+                    keyCode === 40) {
                     e.preventDefault();
                 }
                 if (keyCode === 32) {
-                    if (this.groupSearchBox !== "" && this.groupSearchBox.slice(-1) !== " ") {
+                    if (this.groupSearchBox !== "" &&
+                        this.groupSearchBox.slice(-1) !== " ") {
                         this.groupSearchBox = this.groupSearchBox + " ";
                     }
                 }
@@ -2601,19 +2915,20 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             },
             seeGroup: function (index) {
                 function add(group) {
-                    if (group.groupIds.value !== "" && group.groupIds.value !== "[]") {
+                    if (group.groupIds.value !== "" &&
+                        group.groupIds.value !== "[]") {
                         var ids = JSON.parse(group.groupIds.value), lenIds = 0, b = 0;
-                        for (let a in ids) {
+                        for (var a in ids) {
                             if (ids.hasOwnProperty(a)) {
                                 lenIds++;
                             }
                         }
                         //	debug(ids, "ids");
-                        for (let table in ids) {
+                        for (var table in ids) {
                             if (ids.hasOwnProperty(table)) {
                                 (function (table) {
                                     //	debug(table, "table");
-                                    generateListItems(table, ids[table], null, function (arr) {
+                                    generateListItems(table, ids[table], undefined, function (arr) {
                                         list = list.concat(arr);
                                         b++;
                                         if (b === lenIds) {
@@ -2628,12 +2943,16 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         remove(group);
                 }
                 function remove(group) {
-                    if (group.excludeIds && group.excludeIds.value && group.excludeIds.value !== "" && group.excludeIds.value !== "[]") {
+                    if (group.excludeIds &&
+                        group.excludeIds.value &&
+                        group.excludeIds.value !== "" &&
+                        group.excludeIds.value !== "[]") {
                         var removeIds = JSON.parse(group.excludeIds.value);
-                        for (let table in removeIds) {
-                            for (let a = 0, lenA = list.length; a < lenA; a++) {
-                                if (list[a].title === table && removeIds.indexOf(list[a].id) > -1) {
-                                    list[a].splice(a, 1);
+                        for (var table in removeIds) {
+                            for (var a = 0, lenA = list.length; a < lenA; a++) {
+                                if (list[a].table === table &&
+                                    removeIds.indexOf(list[a].id) > -1) {
+                                    list.splice(a, 1);
                                     a--;
                                     lenA--;
                                 }
@@ -2646,10 +2965,17 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     app.navigate("search", app.currentQuery);
                 }
                 function searchForMembers(table, group, lenTables) {
-                    wwManager({ "cmd": "advancedSearch", "title": table, "args": [group.searchTerms.value, { colNames: searchableColumns }] }, function (results, err) {
+                    wwManager({
+                        cmd: "advancedSearch",
+                        title: table,
+                        args: [
+                            group.searchTerms.value,
+                            { colNames: searchableColumns }
+                        ]
+                    }, function (results, err) {
                         if (!err) {
                             if (results)
-                                generateListItems(table, results, null, function (arr) {
+                                generateListItems(table, results, undefined, function (arr) {
                                     list = list.concat(arr);
                                     n++;
                                     if (n === lenTables)
@@ -2662,19 +2988,19 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             }
                         }
                         else
-                            debug(err, table + " seeGroup error");
+                            debugmode_1.debug(err, table + " seeGroup error");
                     });
                 }
                 function showGroup(group, error) {
                     //	debug(group, "group");
                     if (!group || error)
-                        debug(error);
+                        debugmode_1.debug(error);
                     else if (group.searchTerms.value !== "") {
-                        for (let a in dataTemplates) {
+                        for (var a in dataTemplates) {
                             if (dataTemplates.hasOwnProperty(a))
                                 lenTables++;
                         }
-                        for (let table in dataTemplates) {
+                        for (var table in dataTemplates) {
                             if (dataTemplates.hasOwnProperty(table)) {
                                 searchForMembers(table, group, lenTables);
                             }
@@ -2684,7 +3010,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         add(group);
                 }
                 var list = [], lenTables = 0, n = 0;
-                wwManager({ "cmd": "getRow", "title": "Groups", "args": [index] }, showGroup);
+                wwManager({ cmd: "getRow", title: "Groups", args: [index] }, showGroup);
             },
             addToGroup: function (groupName, detailsObj, searchQuery) {
                 //	debug(groupName, "groupName");
@@ -2693,7 +3019,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 addToGroup(groupName, detailsObj, searchQuery);
             },
             showSelectGroupMembers: function () {
-                for (let table in dataTemplates) {
+                for (var table in dataTemplates) {
                     (function (self, table) {
                         generateList(table, null, null, function (list) {
                             self.activeGroup = self.activeGroup.concat(list);
@@ -2709,17 +3035,19 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 if (this.groups.length === 0)
                     app.goBack();
                 else
-                    this.toggle('showNewGroupUI');
+                    this.toggle("showNewGroupUI");
             },
             toggle: function (prop) {
                 if (this[prop] === undefined)
-                    return debug(prop, "prop does not exist");
+                    return debugmode_1.debug(prop, "prop does not exist");
                 else
                     this[prop] = !this[prop];
             }
         },
         template: "#groups-page"
-    }), view1_page = Vue.extend({
+    });
+    var view1_page = vue_1.default.extend({
+        name: "View1Page",
         data: function () {
             return {
                 sharedFileLink: ""
@@ -2731,26 +3059,30 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             importFile: importFile,
             createNewItem: createNewItem,
             shareFile: function (fileName, fileContents, password, expires) {
-                APP.Dbx.share(fileName, fileContents, password, expires, function (response, response2, response3) {
-                    console.log("shared file", response, response2, response3);
-                    this.sharedFileLink = response.url;
-                }.bind(this));
+                Dbx.share(fileName, fileContents, password, expires, this.dbxShareCB);
+            },
+            dbxShareCB: function (response, response2, response3) {
+                console.log("shared file", response, response2, response3);
+                this.sharedFileLink = response.url;
             },
             receiveFile: function (fileName, password) {
-                APP.Dbx.receive(this.sharedFileLink, password, function (response, response2, response3) {
+                Dbx.receive(this.sharedFileLink, password, function (response, response2, response3) {
                     console.log("got file", response, response2, response3);
                 });
             }
         },
         template: "#view1-page"
-    }), view3_page = Vue.extend({
+    });
+    var view3_page = vue_1.default.extend({
+        name: "View3Page",
         methods: {
             generateListView: generateListView,
             importFile: importFile,
             createNewItem: createNewItem
         },
         template: "#view3-page"
-    }), details_card_lineitem = Vue.extend({
+    });
+    var details_card_lineitem = vue_1.default.extend({
         props: {
             item: Object
         },
@@ -2761,13 +3093,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             externalLink: externalLink
         },
         template: "#details-card-lineitem"
-    }), details_card = Vue.extend({
-        props: {
-            details: Object
-        },
+    });
+    var details_card = vue_1.default.extend({
         components: {
             "details-card-lineitem": details_card_lineitem,
             "dropdown-button": dropdown_button
+        },
+        props: {
+            details: Object
         },
         data: function () {
             return {
@@ -2778,7 +3111,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         text: "Loading Groups...",
                         action: "_loading",
                         disabled: true
-                    }, {
+                    },
+                    {
                         text: "Create a new group",
                         icon: "icon-plus",
                         action: "_create_new_group"
@@ -2789,7 +3123,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         text: "Edit",
                         icon: "icon-pencil",
                         action: "edit"
-                    }, {
+                    },
+                    {
                         text: "Delete",
                         icon: "icon-delete",
                         action: "delete"
@@ -2805,7 +3140,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             initializeGroups: function () {
                 initializeGroups(function () {
                     this.groupsDropdownLinks = [];
-                    for (let a = 0, len = app.groups.length; a < len; a++) {
+                    for (var a = 0, len = app.groups.length; a < len; a++) {
                         this.groupsDropdownLinks[a] = {
                             text: app.groups[a],
                             icon: "icon-people",
@@ -2830,20 +3165,20 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 function addToCopyLinks(item) {
                     if (item.text && item.text[0] && !item.hidden) {
                         this.copyDropdownLinks[b] = {
-                            text: item.text.join('\r\n'),
-                            action: item.text.join('\r\n')
+                            text: item.text.join("\r\n"),
+                            action: item.text.join("\r\n")
                         };
                         if (this.copyDropdownLinks[b].text.length > 50)
-                            this.copyDropdownLinks[b].text = this.copyDropdownLinks[b].text.slice(0, 50) + "...";
+                            this.copyDropdownLinks[b].text =
+                                this.copyDropdownLinks[b].text.slice(0, 50) + "...";
                         b++;
                     }
                 }
                 var b = 0;
-                for (let a = 0, len = this.details.data.length; a < len; a++) {
+                for (var a = 0, len = this.details.data.length; a < len; a++) {
                     if (this.details.data[a].group && !this.details.data[a].hidden) {
-                        for (let c = 0, lenC = this.details.data[a].group.length; c < lenC; c++) {
-                            addToCopyLinks.call(this, this.details.data[a].group[c], this.details.data[a].groupHeading);
-                        }
+                        for (var c = 0, lenC = this.details.data[a].group.length; c < lenC; c++)
+                            addToCopyLinks.call(this, this.details.data[a].group[c]);
                     }
                     else
                         addToCopyLinks.call(this, this.details.data[a]);
@@ -2857,7 +3192,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         app.notify("Copied '" + str + ext + "' to clipboard", true);
                     }
                     catch (err) {
-                        console.error('Failed to copy: ', err);
+                        console.error("Failed to copy: ", err);
                     }
                 }
             },
@@ -2874,8 +3209,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 app.navigate("edit");
             },
             deleteItem: function () {
-                confirm("Are you sure that you want to delete " + this.details.title + "?", function () {
-                    debug("delete not done");
+                app.confirm("Are you sure that you want to delete " + this.details.title + "?", function () {
+                    debugmode_1.debug("delete not done");
                 });
             },
             exportItem: function () {
@@ -2883,18 +3218,22 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     function saveToWindows(str, fileName) {
                         // Verify that we are currently not snapped, or that we can unsnap to open the picker
                         var currentState = Windows.UI.ViewManagement.ApplicationView.value;
-                        if (currentState === Windows.UI.ViewManagement.ApplicationViewState.snapped &&
+                        if (currentState ===
+                            Windows.UI.ViewManagement.ApplicationViewState.snapped &&
                             !Windows.UI.ViewManagement.ApplicationView.tryUnsnap()) {
                             // Fail silently if we can't unsnap
-                            debug("Some kind of Windows 8 bug prevented saving this file.");
+                            debugmode_1.debug("Some kind of Windows 8 bug prevented saving this file.");
                             return false;
                         }
                         // Create the picker object and set options
                         var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-                        savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Downloads;
+                        savePicker.suggestedStartLocation =
+                            Windows.Storage.Pickers.PickerLocationId.Downloads;
                         // Dropdown of file types the user can save the file as
                         savePicker.fileTypeChoices.insert("JSON (Javascript Object Notation) File", [".json"]);
-                        savePicker.fileTypeChoices.insert("Table of Comma Separated Values", [".csv"]);
+                        savePicker.fileTypeChoices.insert("Table of Comma Separated Values", [
+                            ".csv"
+                        ]);
                         savePicker.fileTypeChoices.insert("vCard Contact File", [".vcf"]);
                         savePicker.fileTypeChoices.insert("Plain Text", [".txt"]);
                         // Default file name if the user does not type one in or select a file to replace
@@ -2904,11 +3243,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 // Let Windows know that we're finished changing the file so the other app can update the remote version of the file.
                                 // Completing updates may require Windows to ask for user input.
                                 Windows.Storage.CachedFileManager.completeUpdatesAsync(file).done(function (updateStatus) {
-                                    if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
+                                    if (updateStatus ===
+                                        Windows.Storage.Provider.FileUpdateStatus.complete) {
                                         return true;
                                     }
                                     else {
-                                        debug("File " + file.name + " couldn't be saved.");
+                                        debugmode_1.debug("File " + file.name + " couldn't be saved.");
                                         return false;
                                     }
                                 });
@@ -2925,9 +3265,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     function saveToCordova(str, fileName) {
                         var fileApi = cordova.file, path;
                         if (fileApi.externalDataDirectory)
-                            path = fileApi.externalDataDirectory; //Android SD Card
+                            path = fileApi.externalDataDirectory;
+                        //Android SD Card
                         else if (fileApi.documentsDirectory)
-                            path = fileApi.documentsDirectory; //iPhone
+                            path = fileApi.documentsDirectory;
+                        //iPhone
                         else
                             path = fileApi.dataDirectory; //Android
                         fileApi.writeFile(path, fileName, str, true);
@@ -2936,12 +3278,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     function b64toBlob(b64Data, mimeType, sliceSize) {
                         mimeType = mimeType || "";
                         sliceSize = sliceSize || 512;
-                        const byteCharacters = atob(b64Data);
-                        const byteArrays = [];
-                        for (let offset = 0, slice, byteNumbers, byteArray; offset < byteCharacters.length; offset += sliceSize) {
+                        var byteCharacters = atob(b64Data);
+                        var byteArrays = [];
+                        for (var offset = 0, slice = void 0, byteNumbers = void 0, byteArray = void 0; offset < byteCharacters.length; offset += sliceSize) {
                             slice = byteCharacters.slice(offset, offset + sliceSize);
                             byteNumbers = new Array(slice.length);
-                            for (let i = 0; i < slice.length; i++)
+                            for (var i = 0; i < slice.length; i++)
                                 byteNumbers[i] = slice.charCodeAt(i);
                             byteArray = new Uint8Array(byteNumbers);
                             byteArrays.push(byteArray);
@@ -2956,15 +3298,15 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         if (/Macintosh|iPad|iPod|iPhone/.test(navigator.userAgent)) {
                             //no blob support in safari
                             if (str.match(b64Img))
-                                window.open(str, '_blank');
+                                window.open(str, "_blank");
                             else
-                                window.open('data:' + mimeType + ';base64,' + escape(str), '_blank');
+                                window.open("data:" + mimeType + ";base64," + escape(str), "_blank");
                         }
                         else {
                             if (Blob && (window.navigator.msSaveOrOpenBlob || URL && URL.createObjectURL)) {
                                 var blobObject;
                                 if (str.match(b64Img)) {
-                                    str = str.replace(b64Img, '');
+                                    str = str.replace(b64Img, "");
                                     blobObject = b64toBlob(str, mimeType, 512);
                                 }
                                 else
@@ -2978,7 +3320,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 }
                             }
                             else {
-                                url = "data:" + mimeType + ";charset=utf-8," + encodeURIComponent(str);
+                                url =
+                                    "data:" +
+                                        mimeType +
+                                        ";charset=utf-8," +
+                                        encodeURIComponent(str);
                             }
                             var link = document.getElementById("hiddenDownloadLink");
                             if (link) {
@@ -2988,9 +3334,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             }
                             else {
                                 var msg = "depends on a hidden link with id='hiddenDownloadLink'";
-                                msg += " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
-                                msg += " somewhere in the page to create a web browser download link";
-                                debug("html download link missing", msg);
+                                msg +=
+                                    " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
+                                msg +=
+                                    " somewhere in the page to create a web browser download link";
+                                debugmode_1.debug("html download link missing", msg);
                                 return false;
                             }
                             if (URL)
@@ -3007,7 +3355,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 if (this.details.table === "Files") {
                     var contents, extension, name, type, hash;
-                    for (let a = 0, i, aLen = this.details.data.length; a < aLen; a++) {
+                    for (var a = 0, i = void 0, aLen = this.details.data.length; a < aLen; a++) {
                         i = this.details.data[a];
                         if (i.column === "Extension")
                             extension = i.value[0];
@@ -3020,20 +3368,20 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         if (i.column === "Compressed Contents")
                             contents = i.value[0];
                     }
-                    if (hash === Base64.hash(Base64.hash(app.stoKey))) {
-                        contents = Base64.read(contents, Base64.hash(app.stoKey));
+                    if (hash === base64_1.default.hash(base64_1.default.hash(app.stoKey))) {
+                        contents = base64_1.default.read(contents, base64_1.default.hash(app.stoKey));
                         return saveFile(contents, name, type || extension);
                     }
                     else {
                         var msg = "You do not have access to this file's contents";
                         app.notify(msg);
-                        debug(msg, "hashes do not match");
+                        debugmode_1.debug(msg, "hashes do not match");
                         return false;
                     }
                 }
             },
             detailsViewHelp: function () {
-                confirm("Item not found. Would you like to remove this listing?", function () {
+                app.confirm("Item not found. Would you like to remove this listing?", function () {
                     app.recentlyViewed.splice(1, 1);
                     app.storeState();
                 });
@@ -3042,15 +3390,18 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             addToGroup: addToGroup
         },
         template: "#details-card"
-    }), details_view_container = Vue.extend({
-        props: {
-            details: Object
-        },
+    });
+    var details_view_container = vue_1.default.extend({
         components: {
             "details-card": details_card
         },
-        template: '<details-card class="view-container" v-bind:details="details"></details-card>'
-    }), details_page = Vue.extend({
+        props: {
+            details: Object
+        },
+        template: "#details-view-container"
+    });
+    var details_page = vue_1.default.extend({
+        name: "DetailsPage",
         components: {
             "details-card": details_card
         },
@@ -3060,7 +3411,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             };
         },
         template: "#details-page"
-    }), recent_page = Vue.extend({
+    });
+    var recent_page = vue_1.default.extend({
+        name: "RecentPage",
         components: {
             "jump-list": jump_list,
             "v-a": details_view_container,
@@ -3082,14 +3435,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 detailsView: "v-a"
             };
         },
+        watch: {
+            // call again the method if the route changes
+            $route: "fetchData"
+        },
         created: function () {
             // fetch the data when the view is created and the data is
             // already being observed
             this.fetchData();
-        },
-        watch: {
-            // call again the method if the route changes
-            '$route': 'fetchData'
         },
         methods: {
             onDetailsUpdate: function (newDetailsObj) {
@@ -3099,31 +3452,34 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             onRecentlyViewedUpdate: addToRecentlyViewed,
             addToNewGroup: addToNewGroup,
             fetchData: function () {
-                function error(err) {
-                    this.loading = false;
-                    if (err)
-                        console.log(err);
-                }
                 if (this.recentlyViewed.length === 0) {
                     this.loading = true;
-                    APP.Sto.getItem("state", null, function (s, err) {
-                        if (s) {
-                            this.loading = false;
-                            if (typeof s === "string" && JSON.parse)
-                                s = JSON.parse(s);
-                            if (s.recentlyViewed && s.version === this.version) {
-                                this.recentlyViewed = s.recentlyViewed;
-                                state.recentlyViewed = this.recentlyViewed;
-                            }
-                        }
-                        else
-                            error.call(this, err);
-                    }.bind(this), error.bind(this));
+                    storage_1.Sto.getItem("state", null, this.applyState, this.error);
                 }
+            },
+            error: function (err) {
+                this.loading = false;
+                if (err)
+                    console.log(err);
+            },
+            applyState: function (s, err) {
+                if (s) {
+                    this.loading = false;
+                    if (typeof s === "string" && JSON.parse)
+                        s = JSON.parse(s);
+                    if (s.recentlyViewed && s.version === this.version) {
+                        this.recentlyViewed = s.recentlyViewed;
+                        state.recentlyViewed = this.recentlyViewed;
+                    }
+                }
+                else
+                    this.error(err);
             }
         },
         template: "#recent-page"
-    }), search_results_page = Vue.extend({
+    });
+    var search_results_page = vue_1.default.extend({
+        name: "SearchResultsPage",
         components: {
             "jump-list": jump_list,
             "v-a": details_view_container,
@@ -3159,7 +3515,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             addToNewGroup: addToNewGroup
         },
         template: "#search-results-page"
-    }), edit_details_card_lineitem = Vue.extend({
+    });
+    var edit_details_card_lineitem = vue_1.default.extend({
         props: { item: Object },
         data: function () {
             return {
@@ -3191,11 +3548,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 this.validateData(value, valueType);
             },
             /*Cleans up messy contact data. Used before saving data to database to catch common errors
-            * valueType = the column heading from the csv table (ie "GivenName", "Address1_Street"...)
-            * value = the name, address, phone number etc to check
-            */
+             * valueType = the column heading from the csv table (ie "GivenName", "Address1_Street"...)
+             * value = the name, address, phone number etc to check
+             */
             validateData: function (value, valueType) {
-                wwManager({ "cmd": "validate", "title": "Groups", "args": [value, valueType] }, function (result, error, errorDetails) {
+                wwManager({ cmd: "validate", title: "Groups", args: [value, valueType] }, function (result, error, errorDetails) {
                     if (result !== value)
                         this.setValue(result);
                     this.validationError = error || null;
@@ -3205,7 +3562,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#edit-details-card-lineitem"
-    }), edit_details_card_collapse = Vue.extend({
+    });
+    var edit_details_card_collapse = vue_1.default.extend({
+        components: {
+            "edit-details-card-lineitem": edit_details_card_lineitem
+        },
         props: {
             item: Object,
             collapse: {
@@ -3216,9 +3577,6 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 type: Number,
                 default: 1
             }
-        },
-        components: {
-            "edit-details-card-lineitem": edit_details_card_lineitem
         },
         data: function () {
             return {
@@ -3240,12 +3598,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
         },
         template: "#edit-details-card-collapse"
-    }), edit_details_card = Vue.extend({
+    });
+    var edit_details_card = vue_1.default.extend({
         props: {
             details: Object
         },
         components: {
-            "dropdown-button": dropdown_button,
             "edit-details-card-lineitem": edit_details_card_lineitem,
             "edit-details-card-collapse": edit_details_card_collapse
         },
@@ -3257,15 +3615,19 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         if (errors.length === 0)
                             app.navigate("details");
                         else
-                            debug(errors, "errors saving changes");
+                            debugmode_1.debug(errors, "errors saving changes");
                     }
                 }
                 function save(data, label) {
                     if (data.text) {
                         if (label) {
                             if (String(label.text) !== String(label.orig)) {
-                                //set value 
-                                wwManager({ "cmd": "setVal", "title": table, "args": [rowId, label.column, label.text] }, function (setValue, error) {
+                                //set value
+                                wwManager({
+                                    cmd: "setVal",
+                                    title: table,
+                                    args: [rowId, label.column, label.text]
+                                }, function (setValue, error) {
                                     if (error)
                                         errors.push(error);
                                     if (setValue) {
@@ -3281,15 +3643,17 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         var text;
                         //remove formatting
                         if (/multilineString|formattedAddress/.test(data.type)) {
-                            text = data.text.join('\r\n');
+                            text = data.text.join("\r\n");
                         }
                         else if (typeof data.text === "string")
-                            text = data.splitter ? data.text.join(data.splitter) : data.text.join(" ::: ");
+                            text = data.splitter
+                                ? data.text.join(data.splitter)
+                                : data.text.join(" ::: ");
                         else
                             text = data.text[0];
                         if (text !== data.orig) {
-                            //set value 
-                            wwManager({ "cmd": "setVal", "title": table, "args": [rowId, data.column, text] }, function (setValue, error) {
+                            //set value
+                            wwManager({ cmd: "setVal", title: table, args: [rowId, data.column, text] }, function (setValue, error) {
                                 if (error)
                                     errors.push(error);
                                 if (setValue) {
@@ -3308,27 +3672,33 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 var table = this.details.table, rowId = this.details.id, data = this.details.data, n = 0, errors = [];
                 if (!rowId) {
                     app.spin(true, "Creating new item...");
-                    //create array						
-                    wwManager({ "cmd": "getHeaders", "title": table }, function (headers) {
+                    //create array
+                    wwManager({ cmd: "getHeaders", title: table }, function (headers) {
                         function setDefault(type) {
-                            return /number|integer/i.test(type) ? 0 : type === "boolean" ? false : "";
+                            return /number|integer/i.test(type)
+                                ? 0
+                                : type === "boolean"
+                                    ? false
+                                    : "";
                         }
                         function addToObj(data) {
                             arr[headers.indexOf(data.column)] = [];
-                            for (let b = 0, lenB = data.text.length; b < lenB; b++) {
+                            for (var b = 0, lenB = data.text.length; b < lenB; b++) {
                                 arr[headers.indexOf(data.column)][b] = data.text[b];
                             }
                             if (data.type === "boolean" || /number|integer/i.test(data.type)) {
-                                arr[headers.indexOf(data.column)] = arr[headers.indexOf(data.column)][0] || setDefault(data.type);
+                                arr[headers.indexOf(data.column)] =
+                                    arr[headers.indexOf(data.column)][0] || setDefault(data.type);
                             }
                             else
                                 arr[headers.indexOf(data.column)] = arr[headers.indexOf(data.column)].join(" ::: ");
                             if (data.label) {
-                                arr[headers.indexOf(data.label.column)] = data.label.text || setDefault(data.label.type);
+                                arr[headers.indexOf(data.label.column)] =
+                                    data.label.text || setDefault(data.label.type);
                             }
                         }
                         var arr = new Array(headers.length);
-                        for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+                        for (var a = 0, b = 0, len = data.length, lenB = void 0; a < len; a++) {
                             if (data[a].group) {
                                 for (b = 0, lenB = data[a].group.length; b < lenB; b++) {
                                     addToObj(data[a].group[b]);
@@ -3338,13 +3708,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 addToObj(data[a]);
                         }
                         //	debug(arr, "creating new row");
-                        for (let a = 0, len = arr.length; a < len; a++) {
+                        for (var a = 0, len = arr.length; a < len; a++) {
                             if (arr[a] === undefined)
-                                debug(arr[a], headers[a]);
+                                debugmode_1.debug(arr[a], headers[a]);
                         }
-                        wwManager({ "cmd": "addRow", "title": table, "args": [arr] }, function (id, errors) {
+                        wwManager({ cmd: "addRow", title: table, args: [arr] }, function (id, errors) {
                             if (errors)
-                                debug(errors, id);
+                                debugmode_1.debug(errors, id);
                             app.spin(false, "Creating new item...");
                         });
                     });
@@ -3353,7 +3723,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 else {
                     app.spin(true, "Saving...");
                     //count lineItems
-                    for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+                    for (var a = 0, b = 0, len = data.length, lenB = void 0; a < len; a++) {
                         if (data[a].readonly)
                             continue;
                         if (data[a].group) {
@@ -3373,7 +3743,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             n++;
                         }
                     }
-                    for (let a = 0, b = 0, len = data.length, lenB; a < len; a++) {
+                    for (var a = 0, b = 0, len = data.length, lenB = void 0; a < len; a++) {
                         if (data[a].readonly)
                             continue;
                         if (data[a].group) {
@@ -3389,12 +3759,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
             },
             cancelChanges: function () {
-                debug("cancelChanges not done");
+                debugmode_1.debug("cancelChanges not done");
                 app.navigate("details");
             }
         },
         template: "#edit-details-card"
-    }), edit_details_page = Vue.extend({
+    });
+    var edit_details_page = vue_1.default.extend({
+        name: "EditDetailsPage",
         components: {
             "edit-details-card": edit_details_card
         },
@@ -3404,9 +3776,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             };
         },
         template: "#edit-details-page"
-    }), page_not_found_page = Vue.extend({
+    });
+    var page_not_found = {
+        name: "PageNotFound",
         template: "#page-not-found"
-    }), routes = [
+    };
+    vue_1.default.use(vue_router_1.default);
+    var routes = [
         {
             path: '/new',
             name: "new",
@@ -3501,32 +3877,40 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             path: '*',
             name: "notfound",
             components: {
-                default: page_not_found_page
+                default: page_not_found
             },
             meta: {
                 title: 'Page not found :( - Nyckel (Beta)'
             }
         }
-    ], router = new VueRouter({
+    ];
+    var router = new vue_router_1.default({
         routes: routes
     });
-    const app = new Vue({
+    var app = new vue_1.default({
         router: router,
-        el: '#app',
+        el: "#app",
         components: {
             "dropdown-button": dropdown_button,
             "icon-select": icon_select,
-            "color-select": color_select,
-            "jump-list": jump_list,
-            //	"edit-details-card-lineitem": edit_details_card_lineitem,
-            "edit-details-page": edit_details_page,
-            "page-not-found-page": page_not_found_page
+            "color-select": color_select
         },
         data: state,
+        computed: {
+            // a computed getter
+            topLevelViews: function () {
+                var ret = {};
+                for (var navLink in this.views) {
+                    if (views[navLink].level === 1)
+                        ret[navLink] = this.views[navLink];
+                }
+                return ret;
+            }
+        },
         watch: {
-            '$route'(to, from) {
-                const toDepth = to.query.page || 0;
-                const fromDepth = from.query.page || 0;
+            '$route': function (to, from) {
+                var toDepth = to.query && to.query.page || 0;
+                var fromDepth = from.query && from.query.page || 0;
                 this.transitionName = toDepth > fromDepth ? 'forward' : 'back';
             }
         },
@@ -3535,7 +3919,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             this.$router.beforeEach(function (to, from, next) {
                 // This goes through the matched routes from last to first, finding the closest route with a title.
                 // eg. if we have /some/deep/nested/route and /some, /deep, and /nested have titles, nested's will be chosen.
-                const nearestWithTitle = to.matched.slice().reverse().find(function (r) { r.meta && r.meta.title; });
+                var nearestWithTitle = to.matched.slice().reverse().find(function (r) { return r.meta && r.meta.title; });
                 // If a route with a title was found, set the document (page) title to that value.
                 if (nearestWithTitle)
                     document.title = nearestWithTitle.meta.title;
@@ -3616,27 +4000,25 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     }
                 }
             },
-            /*options = {
-                urlQuery
-                search
-                table
-                id
-            }*/
             navigate: function (location, searchquery, detailsObj) {
                 var query = { page: backIndex + 1 };
                 if (searchquery) {
                     query.search = encodeURIComponent(searchquery);
                     if ("#/" + location + "?page=" + backIndex + "&search=" + query.search === window.location.hash)
-                        return; //dont navigate if no change
+                        return false; //dont navigate if no change
                 }
                 else if (detailsObj) {
                     query.id = detailsObj.id;
                     query.table = detailsObj.table;
-                    if ("#/" + this.currentView.path + "/" + location + "?page=" + backIndex + "&id=" + query.id + "&table=" + query.table === window.location.hash)
-                        return; //dont navigate if no change
+                    if ("#/" + this.currentView.path +
+                        "/" + location +
+                        "?page=" + backIndex +
+                        "&id=" + query.id +
+                        "&table=" + query.table === window.location.hash)
+                        return false; //dont navigate if no change
                 }
                 else if (location && "#/" + location + "?page=" + backIndex === window.location.hash)
-                    return; //dont navigate if no change				
+                    return false; //dont navigate if no change				
                 if (location)
                     this.$router.push({ path: "/" + location, query: query });
                 else if (backstack[backIndex])
@@ -3645,12 +4027,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     // get location from url hash
                     this.$router.push({ path: this.$route.path, query: this.$route.query });
                 }
+                return true;
             },
             toggle: function (prop) {
                 if (this[prop] !== undefined)
                     this[prop] = this[prop] === true ? false : true;
                 else
-                    debug(prop, "not found");
+                    debugmode_1.debug(prop, "not found");
             },
             toggleSettings: function () {
                 this.toggle('showSettings');
@@ -3659,7 +4042,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             storeState: function () {
                 if (cordova || this.cookieAgree) {
                     setTimeout(function () {
-                        APP.Sto.setItem("state", {
+                        storage_1.Sto.setItem("state", {
                             version: this.version,
                             darkTheme: this.darkTheme,
                             useSystemTheme: this.useSystemTheme,
@@ -3682,7 +4065,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             search: function (event, optionalQuery) {
                 var searchBoxInputElement = document.getElementById("searchBox");
                 if (!searchBoxInputElement)
-                    return;
+                    return false;
                 if (!this.showSearchBar) {
                     this.searchSuggestions = [];
                     searchBoxInputElement.focus();
@@ -3696,8 +4079,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 if (this.searchBox !== "" || optionalQuery) {
                     if (this.searchBox === "debugmode") {
-                        APP.setDebugMode(true);
-                        debug("showing debugmode");
+                        debugmode_1.setDebugMode(true);
+                        debugmode_1.debug("showing debugmode");
                     }
                     else if (this.searchBox === "useragent") {
                         this.notify(navigator.userAgent);
@@ -3707,7 +4090,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         checkDBLoaded(function (nextInQueue) {
                             function displayResults(searchResults, errors, table) {
                                 if (errors)
-                                    debug(errors, "search error");
+                                    debugmode_1.debug(errors, "search error");
                                 else if (searchResults)
                                     generateList(table, searchResults, null, function (list) {
                                         results = results.concat(list);
@@ -3758,7 +4141,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                     if (dataTemplates.hasOwnProperty(t))
                                         numOfSearches++;
                                 }
-                                for (let table in dataTemplates) {
+                                for (var table in dataTemplates) {
                                     (function (self, table) {
                                         wwManager({
                                             "cmd": "advancedSearch",
@@ -3773,6 +4156,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         }.bind(this));
                     }
                 }
+                return true;
             },
             cancelSearch: function () {
                 this.toggle("showSearchBar");
@@ -3952,6 +4336,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     setTimeout(clearMsg.bind(this), timer);
                 }
             },
+            confirm: function (msg, callback, options) {
+                this.confirmMsg = msg || "Are you sure?";
+                this.confirmOK = options && options.ok ? options.ok : "OK";
+                this.confirmCancel = options && options.cancel ? options.cancel : "Cancel";
+                this.confirmDetails = options && options.details ? options.details : "";
+                this.showConfirm = true;
+                this.confirmFunction = callback;
+            },
             processConfirm: function (bool) {
                 this.showConfirm = false;
                 this.showUpdateKey = false;
@@ -3981,7 +4373,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         this.dropboxEmail = user.email;
                         dbid = user.dbid;
                         this.loggedIn = true;
-                        this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
+                        this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? base64_1.default.hash(user.dbid) : base64_1.default.hash(user.email) : this.stoKey });
                         if (callback instanceof Function)
                             callback(true);
                     }
@@ -3992,15 +4384,15 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         if (callback instanceof Function)
                             callback(false);
                     }
-                    if (!APP.Dbx || !APP.Dbx.login)
-                        APP.Dbx = APP.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
-                    APP.Dbx.login(null, welcome.bind(this), startScreen.bind(this)); //TODO login password ui
+                    if (!Dbx || !Dbx.login)
+                        Dbx = storage_1.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
+                    Dbx.login(null, welcome.bind(this), startScreen.bind(this)); //TODO login password ui
                 }
                 this.notify("Connecting to Dropbox, please wait...", false, login.bind(this));
             },
             logout: function (callback) {
                 function logout() {
-                    APP.Dbx.logout(function () {
+                    Dbx.logout(function () {
                         this.loggedIn = false;
                         this.dropboxUsername = "";
                         this.dropboxEmail = "";
@@ -4009,7 +4401,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             return callback();
                     }.bind(this));
                 }
-                if (APP.Dbx && APP.Dbx.isAuthenticated)
+                if (Dbx && Dbx.isAuthenticated)
                     this.notify("Disconnecting from Dropbox", false, logout.bind(this));
                 else if (callback instanceof Function)
                     return callback();
@@ -4030,11 +4422,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         this.stoKeyWarning = "";
                         var oldKey = this.stoKey;
                         if (dbid) {
-                            oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(dbid);
-                            this.stoKey = Base64.hash(dbid + key.value);
+                            oldKey = oldKey !== "unknown" ? oldKey : base64_1.default.hash(dbid);
+                            this.stoKey = base64_1.default.hash(dbid + key.value);
                         }
-                        else { //temp until depricate APP.User.id
-                            debug("error setting key", "error");
+                        else { //temp until depricate User.id
+                            debugmode_1.debug("error setting key", "error");
                             console.log(oldKey, this.stoKey, dbid);
                             //oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(_this.dropboxEmail);
                             //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
@@ -4059,14 +4451,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         return callback();
                 }
                 this.showUpdateKey = true;
-                confirm("Please input your current password", function () {
+                this.confirm("Please input your current password", function () {
                     checkDBLoaded(function (nextInQueue) {
                         var key = document.getElementById("updateStoKeyInput");
                         if (dbid) {
-                            this.stoKey = Base64.hash(dbid + key.value);
+                            this.stoKey = base64_1.default.hash(dbid + key.value);
                         }
                         else
-                            debug("use of dropboxEmail as a key has been depricated", "error"); //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate APP.User.id
+                            debugmode_1.debug("use of dropboxEmail as a key has been depricated", "error"); //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate User.id
                         return storeKey.call(this, this.stoKey, nextInQueue);
                     }.bind(this));
                 }.bind(this));
@@ -4108,7 +4500,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 callback(reader.result, file);
                             };
                             if (readAs === "image" || imageTypes.test(file.type)) {
-                                debug(file, "reading as image");
+                                debugmode_1.debug(file, "reading as image");
                                 reader.readAsDataURL(file);
                             }
                             else if (readAs === "text")
@@ -4149,7 +4541,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     return cb();
                 }
                 function saveFile(source, details) {
-                    var contents = Base64.write_and_verify(source, Base64.hash(this.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = this.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(this.stoKey));
+                    var contents = base64_1.default.write_and_verify(source, base64_1.default.hash(this.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = this.dropboxEmail || "unknown", hash = base64_1.default.hash(base64_1.default.hash(this.stoKey));
                     name.pop();
                     name = name.join(".");
                     modified = typeof modified === "number" ? modified : new Date(modified).getTime();
@@ -4162,7 +4554,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 function parseCSV(source) {
                     this.notify("Importing data...", false, function () {
-                        source = csv2json(source);
+                        source = common_1.csv2json(source);
                         source.lastModified = new Date().getTime();
                         source.author = this.dropboxEmail || "unknown";
                         //try get csv modified date and author from notes
@@ -4190,10 +4582,10 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     }.bind(this));
                 }
                 function parseVCF(input) {
-                    debug(input, "parseVCF not done");
+                    debugmode_1.debug(input, "parseVCF not done");
                 }
                 function parseJSON(input) {
-                    debug(input, "parseJSON not done");
+                    debugmode_1.debug(input, "parseJSON not done");
                 }
                 function click(callback) {
                     if (fileInputElement)
@@ -4207,17 +4599,17 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }.bind(this));
             },
             /*options = {
-                see nyckeldb.js NyckelDBObj.prototype.sync options
+              see nyckeldb.js NyckelDBObj.prototype.sync options
             }*/
             syncAll: function (event, options) {
                 function sync(syncfile, cb) {
                     function done(success, errors, obj, title, finalBool) {
                         if (success && obj && obj.file) {
                             syncfile = JSON.parse(obj.syncFile);
-                            APP.Dbx.save("/data/" + obj.title, obj.file, null, function () {
+                            Dbx.save("/data/" + obj.title, obj.file, null, function () {
                                 wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error) {
                                     if (!success)
-                                        debug(error, title + " setSyncComplete error");
+                                        debugmode_1.debug(error, title + " setSyncComplete error");
                                     else
                                         console.log("sync complete");
                                     if (finalBool)
@@ -4226,7 +4618,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                             }, function (error) {
                                 if (finalBool)
                                     this.spin(false, "Synchronising with Dropbox");
-                                debug(error, "save file to Dropbox error");
+                                debugmode_1.debug(error, "save file to Dropbox error");
                             });
                         }
                         else {
@@ -4254,12 +4646,12 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                             break;
                                         default:
                                             this.notify("Unknown error");
-                                            debug(errors, "sync errors");
+                                            debugmode_1.debug(errors, "sync errors");
                                     }
                                 }
                             }
                             else
-                                debug("no json returned to upload to dropbox");
+                                debugmode_1.debug("no json returned to upload to dropbox");
                         }
                         syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
                         if (b === count)
@@ -4276,7 +4668,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                 options.forceSync = true;
                             }
                             else {
-                                debug(error, "couldn't sync " + title);
+                                debugmode_1.debug(error, "couldn't sync " + title);
                                 this.notify("Sync did not complete successfully");
                                 return;
                             }
@@ -4288,13 +4680,13 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         }.bind(this));
                     }
                     function download(title, b) {
-                        APP.Dbx.open("/data/" + title, null, function (json, error) {
+                        Dbx.open("/data/" + title, null, function (json, error) {
                             readFile.call(this, title, json, error, b);
                         }.bind(this));
                     }
                     syncfile = syncfile || {};
                     //add templates to syncfile
-                    for (let table in dataTemplates) {
+                    for (var table in dataTemplates) {
                         if (dataTemplates.hasOwnProperty(table)) {
                             syncfile[table] = syncfile[table] || 0;
                             count++;
@@ -4304,7 +4696,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         return cb(syncfile);
                     }
                     var a = 1, b = 1;
-                    for (let table in dataTemplates) {
+                    for (var table in dataTemplates) {
                         if (!err && dataTemplates.hasOwnProperty(table)) {
                             (function (self, table) {
                                 wwManager({ "cmd": "isSyncPending", "title": table, "args": [syncfile] }, function (requiresSync, errors) {
@@ -4320,7 +4712,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                                     }
                                     else {
                                         self.spin(false, "Synchronising with Dropbox");
-                                        debug(errors, "problem syncing " + table);
+                                        debugmode_1.debug(errors, "problem syncing " + table);
                                         self.notify("Sync did not complete successfully");
                                     }
                                 });
@@ -4334,11 +4726,11 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     function success() {
-                        APP.Sto.setItem("lastSyncAll", new Date().getTime());
+                        storage_1.Sto.setItem("lastSyncAll", new Date().getTime());
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     if (syncfileNeedsUpdated) {
-                        APP.Dbx.save("/sync/lastSync", syncfile, null, success.bind(this), failed.bind(this));
+                        Dbx.save("/sync/lastSync", syncfile, null, success.bind(this), failed.bind(this));
                     }
                     else
                         return success.call(this);
@@ -4361,24 +4753,24 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                     }
                 }
                 var err = false, count = 0, syncfileNeedsUpdated = false;
-                if (!(APP.Dbx && APP.Dbx.isAuthenticated))
+                if (!(Dbx && Dbx.isAuthenticated))
                     return console.log("cannot sync to Dropbox now");
                 //else console.log("beginning sync");
                 checkDBLoaded(function (nextInQueue) {
                     options = options || {};
-                    options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
+                    options.initialKey = dbid ? base64_1.default.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
                     options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-                    APP.Sto.getItem("lastSyncAll", null, function (time) {
+                    storage_1.Sto.getItem("lastSyncAll", null, function (time) {
                         //debug(time);
                         if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) { //5 minutes between sync attempts
                             this.spin(true, "Synchronising with Dropbox");
-                            APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+                            Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
                         }
                         else
                             console.log("db was recently synced");
                     }.bind(this), function () {
                         this.spin(true, "Synchronising with Dropbox");
-                        APP.Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
+                        Dbx.open("/sync/lastSync", null, readSyncfile.bind(this));
                     }.bind(this));
                     if (nextInQueue instanceof Function)
                         return nextInQueue();
@@ -4395,9 +4787,9 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 var loadingDiv = document.getElementById("loading");
                 if (loadingDiv)
                     loadingDiv.className = "";
-                state = freshStateObj();
+                exports.state = state = freshStateObj();
                 state.cookieAgree = true;
-                for (let s in state) {
+                for (var s in state) {
                     if (this[s])
                         this[s] = state[s];
                 }
@@ -4425,8 +4817,8 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             wipeApp: function () {
                 var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
                 msg = "This will " + msg + "and restore default settings";
-                confirm("Are you sure you want to reset the app?", function reset() {
-                    APP.Sto.nuke();
+                this.confirm("Are you sure you want to reset the app?", function reset() {
+                    storage_1.Sto.nuke();
                     this.logout(this.resetSettings);
                 }.bind(this), { ok: "Reset App", details: msg });
             },
@@ -4436,18 +4828,14 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
                 }
                 var msg = "Do this if you are having synchronisation issues.This will not effect your locally saved app data, which can be restored to Dropbox";
                 msg += " afterwards by clicking 'SYNC NOW' in Settings";
-                confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account?", function () {
-                    APP.Dbx.delete("/sync", onComplete);
-                    APP.Dbx.delete("/data", onComplete);
+                this.confirm("Are you sure that you want to delete all of this app's data saved in your Dropbox account?", function () {
+                    Dbx.delete("/sync", onComplete);
+                    Dbx.delete("/data", onComplete);
                 }, { ok: "Reset App Cloud Data", details: msg });
             }
         }
     });
-    //make some functions global
-    APP.goBack = app.goBack;
-    APP.notify = app.notify;
-    APP.confirm = confirm;
-    APP.localTestingMode = localTestingMode;
+    exports.app = app;
     window.onresize = refreshResponsiveLayout; //recalc layout on resize for a responsive experience
     if (Windows && WinJS) {
         console.log("Windows");
@@ -4489,7 +4877,7 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
             }
             WinJS.Application.onbackclick = function (e) {
                 e.handled = true;
-                return APP.goBack();
+                return app.goBack();
             };
             if (isFirstActivation) {
                 startApp(); //and... GO!
@@ -4504,29 +4892,35 @@ var APP, VAL, appData = {}, getWidth, getHeight, csv2json, VueRouter, Vue, Windo
         };
         winApp.start();
     }
-    else if (cordova) {
-        var onDeviceReady = function () {
-            function onPause() {
-                // This application has been suspended. Save application state here.
-                app.storeState();
-            }
-            function onResume() {
-                // This application has been reactivated. Restore application state here.
-                startApp(true);
-            }
-            function onBack() {
-                if (!APP.goBack() && navigator && navigator.app && navigator.app.exitApp)
-                    navigator.app.exitApp();
-            }
-            // Handle the Cordova pause and resume events
-            document.addEventListener('pause', onPause.bind(this), false);
-            document.addEventListener('resume', onResume.bind(this), false);
-            document.addEventListener('backbutton', onBack.bind(this), false);
-            // TODO: Cordova has been loaded. Perform any initialization that requires Cordova here.
-            startApp(); //and... GO!
-        };
-        document.addEventListener('deviceready', onDeviceReady.bind(this), false);
-    }
+    // else if (cordova) {
+    // 	//	document.addEventListener('deviceready', onDeviceReady.bind(this), false);
+    // }
     else
         startApp(); //and... GO!
-})();
+    function onDeviceReady() {
+        function onPause() {
+            // This application has been suspended. Save application state here.
+            app.storeState();
+        }
+        function onResume() {
+            // This application has been reactivated. Restore application state here.
+            startApp(true);
+        }
+        function onBack() {
+            /* eslint-disable-next-line no-extra-parens */
+            if (!app.goBack() && navigator && navigator.app && navigator.app.exitApp)
+                navigator.app.exitApp();
+        }
+        // Handle the Cordova pause and resume events
+        document.addEventListener('pause', onPause, false);
+        document.addEventListener('resume', onResume, false);
+        document.addEventListener('backbutton', onBack, false);
+        // TODO: Cordova has been loaded. Perform any initialization that requires Cordova here.
+        startApp(); //and... GO!
+    }
+    function initialize() {
+        document.addEventListener('deviceready', onDeviceReady, false);
+    }
+    exports.initialize = initialize;
+});
+//# sourceMappingURL=main.js.map
