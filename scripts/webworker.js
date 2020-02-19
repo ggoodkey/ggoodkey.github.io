@@ -40,8 +40,8 @@ while (length--) {
 		APP[method] = noop;
 	}
 }
-requirejs(["./base64.js", "./validate.js", "./lists.js", "./nyckelDB.js", "./Lawnchair.js", "./storage.js"],
-	function (Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
+requirejs(["./base64.js", "./validate.js", "./lists.js", "./storage.js", "./nyckelDB.js", "./Lawnchair.js"],
+	function (Base64, VAL, Spelling, Sto, NyckelDB, Lawnchair) {
 		self.addEventListener('message', function (e) {
 			function debug(msg, description) {
 				var arrBuffer = str2ab(JSON.stringify({ "type": "debug", "message": msg, "description": description }));
