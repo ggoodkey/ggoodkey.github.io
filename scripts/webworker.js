@@ -40,7 +40,7 @@ while (length--) {
 		APP[method] = noop;
 	}
 }
-requirejs(["./scripts/base64.js", "./scripts/validate.js", "./scripts/lists.js", "./scripts/nyckelDB.js", "./scripts/Lawnchair.js", "./scripts/storage.js"],
+requirejs(["./base64.js", "./validate.js", "./lists.js", "./nyckelDB.js", "./Lawnchair.js", "./storage.js"],
 	function (Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
 		self.addEventListener('message', function (e) {
 			function debug(msg, description) {
