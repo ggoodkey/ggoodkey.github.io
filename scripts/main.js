@@ -1,13 +1,6 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
 (function (factory) {
     if (typeof module === "object" && typeof module.exports === "object") {
         var v = factory(require, exports);
@@ -24,8 +17,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     var debugmode_1 = require("./debugmode");
     exports.debug = debugmode_1.debug;
     var common_1 = require("./common");
-    var VAL = __importStar(require("./validate"));
-    exports.VAL = VAL;
+    var validate_1 = __importDefault(require("./validate"));
+    exports.VAL = validate_1.default;
     var nyckelDB_1 = __importDefault(require("./nyckelDB"));
     var base64_1 = __importDefault(require("./base64"));
     var storage_1 = require("./storage");
@@ -741,7 +734,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
             else if (callback)
                 obj.args = [callback];
             if (obj.title && obj.cmd) {
-                var title = VAL.toPropName(obj.title);
+                var title = validate_1.default.toPropName(obj.title);
                 if (obj.cmd === "initNewNyckelDB") {
                     if (obj.args && obj.args.length >= 2) {
                         appData[title] = new nyckelDB_1.default(obj.args[0]);
@@ -1228,9 +1221,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
                     return dropdownList;
                 }
                 function applyValueStr() {
-                    vueDetailsData = row[VAL.toPropName(template)];
-                    vueDetailsData.orig = row[VAL.toPropName(template)].value;
-                    vueDetailsData.text = formatValue(row[VAL.toPropName(template)].value, vueDetailsData.type, splitter);
+                    vueDetailsData = row[validate_1.default.toPropName(template)];
+                    vueDetailsData.orig = row[validate_1.default.toPropName(template)].value;
+                    vueDetailsData.text = formatValue(row[validate_1.default.toPropName(template)].value, vueDetailsData.type, splitter);
                     vueDetailsData.splitter = splitter;
                 }
                 function applyValueArr() {
@@ -1243,7 +1236,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
                     vueDetailsData.readonly = true;
                 }
                 function applyValueObj() {
-                    var a = VAL.toPropName(template.column);
+                    var a = validate_1.default.toPropName(template.column);
                     vueDetailsData = {
                         type: row[a].type,
                         column: row[a].column,
@@ -1258,7 +1251,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
                     }
                 }
                 function applyLabel() {
-                    var a = VAL.toPropName(template.label.column);
+                    var a = validate_1.default.toPropName(template.label.column);
                     vueDetailsData.label = {
                         column: template.label.column,
                         orig: row[a].value,
@@ -1324,7 +1317,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
             function getHeading(template) {
                 var ret;
                 if (typeof template === "string")
-                    ret = row[VAL.toPropName(template)].value;
+                    ret = row[validate_1.default.toPropName(template)].value;
                 else if (template.text) {
                     ret = [];
                     for (var a = 0, lenA = template.text.length; a < lenA; a++) {
@@ -1496,9 +1489,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
         function processInput(nextInQueue) {
             if (value !== "") {
                 var find = String(value);
-                find = VAL.removeHTMLTags(find);
+                find = validate_1.default.removeHTMLTags(find);
                 find = find.toLowerCase();
-                find = VAL.toEnglishAlphabet(find);
+                find = validate_1.default.toEnglishAlphabet(find);
                 find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
                 find = trim(find);
                 app.activeGroup = [];
@@ -1564,7 +1557,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
             options = options || {};
             options.pageNumber = options.pageNumber || 1;
             options.numberPerPage = options.numberPerPage || 100;
-            tableTitle = VAL.toPropName(tableTitle);
+            tableTitle = validate_1.default.toPropName(tableTitle);
             if (dataTemplates[tableTitle]) {
                 app.searchResults = [];
                 generateList(tableTitle, ids, options, function (list) {
@@ -2114,7 +2107,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
                         function generateHeaders() {
                             function obj(name, sortBy) {
                                 return {
-                                    id: "jumplink_" + VAL.toPropName(name),
+                                    id: "jumplink_" + validate_1.default.toPropName(name),
                                     table: "",
                                     sortBy: sortBy,
                                     text: name,
@@ -2559,7 +2552,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
             setCustomProp: function (propName, value, type) {
                 this.newTable.options = this.newTable.options || {};
                 this.newTable.options.customProperties = this.newTable.options.customProperties || {};
-                this.newTable.options.customProperties[VAL.toPropName(propName)] = {
+                this.newTable.options.customProperties[validate_1.default.toPropName(propName)] = {
                     initialValue: value,
                     type: type
                 };
@@ -2791,7 +2784,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
                 //Validate groupName
                 groupName = groupName || this.groupName;
                 this.groupName = groupName;
-                groupName = VAL.toEnglishAlphabet(groupName);
+                groupName = validate_1.default.toEnglishAlphabet(groupName);
                 groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
                 groupName = trim(groupName);
                 if (groupName && groupName !== "") {
@@ -2805,7 +2798,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
                     //get group ids
                     for (var c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
                         if (this.activeGroup[c].selected === true) {
-                            title = VAL.toPropName(this.activeGroup[c].table);
+                            title = validate_1.default.toPropName(this.activeGroup[c].table);
                             if (!this.ids[title])
                                 this.ids[title] = [];
                             this.ids[title].push(this.activeGroup[c].id);
@@ -4228,9 +4221,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
                 if (value !== "") {
                     if (loadDB === false) {
                         var suggestions = [], str = String(value), numOfTables = 0, n = 0;
-                        str = VAL.removeHTMLTags(str);
+                        str = validate_1.default.removeHTMLTags(str);
                         str = str.toLowerCase();
-                        str = VAL.toEnglishAlphabet(str);
+                        str = validate_1.default.toEnglishAlphabet(str);
                         str = str.replace(/[^_a-z0-9\+\-]/gi, " ");
                         str = trim(str);
                         for (var t in dataTemplates) {
