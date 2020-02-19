@@ -1,7 +1,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./base64", "./main", "./dropbox", "./Lawnchair"], function (require, exports, base64_1, main_1, dropbox_1, Lawnchair_1) {
+define(["require", "exports", "./base64", "./dropbox", "./Lawnchair"], function (require, exports, base64_1, dropbox_1, Lawnchair_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base64_1 = __importDefault(base64_1);
@@ -275,10 +275,7 @@ define(["require", "exports", "./base64", "./main", "./dropbox", "./Lawnchair"],
             password = password || "";
             if (WorkingOffline) { //not possible when running locally
                 var msg = "You can't login from a page hosted on your local file system";
-                if (main_1.app.notify)
-                    main_1.app.notify(msg, true);
-                else
-                    alert(msg);
+                alert(msg);
                 if (failureCallback instanceof Function)
                     return failureCallback();
                 else
