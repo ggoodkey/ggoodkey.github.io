@@ -4,7 +4,6 @@ importScripts('validate.js');
 importScripts('lists.js');
 importScripts('nyckelDB.js');
 importScripts('Lawnchair.js');
-importScripts('adapters/indexed-db.js');
 importScripts('storage.js');
 /*global NyckelDB, Base64*/
 function ab2str(buffer) {
