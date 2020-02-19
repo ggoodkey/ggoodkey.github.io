@@ -10,9 +10,9 @@
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
     var VAL;
-    /*replace non-alphabetic charactors with spaces or specified replacer */
     (function () {
         VAL = {
+            /*replace non-alphabetic charactors with spaces or specified replacer */
             validate: function (words, replacer) {
                 if (!words)
                     return "";

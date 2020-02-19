@@ -17,7 +17,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     var lists_1 = __importDefault(require("./lists"));
     "use strict";
     /* eslint-disable */
-    //depenancies
+    // global depenancies
     var APP, Windows, cordova;
     var NyckelDB = (function () {
         function IS_NUMERIC(n) {
