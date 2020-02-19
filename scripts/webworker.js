@@ -104,7 +104,7 @@ self.addEventListener('message', function (e) {
 	data = JSON.parse(data);
 	if (data) {
 		if (data.time) console.log((new Date().getTime() - data.time) / 1000 + "s", "to post message to webWorker", data.cmd, data.len);
-	//	if (data.title) data.title = VAL.toPropName(data.title);
+		if (data.title) data.title = VAL.toPropName(data.title);
 		switch (data.cmd) {
 			case "initNewNyckelDB":
 				initNewNyckelDB(data.title, data.args, function (success, errors, title, syncPending) {
