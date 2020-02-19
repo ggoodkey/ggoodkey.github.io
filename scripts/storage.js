@@ -1,12 +1,20 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./base64", "./dropbox", "./Lawnchair"], function (require, exports, base64_1, dropbox_1, Lawnchair_1) {
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./base64", "./dropbox", "./Lawnchair"], factory);
+    }
+})(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    base64_1 = __importDefault(base64_1);
-    dropbox_1 = __importDefault(dropbox_1);
-    Lawnchair_1 = __importDefault(Lawnchair_1);
+    var base64_1 = __importDefault(require("./base64"));
+    var dropbox_1 = __importDefault(require("./dropbox"));
+    var Lawnchair_1 = __importDefault(require("./Lawnchair"));
     /* global cordova */
     "use strict";
     var LOCAL = {}, Version = 1.1, PreviousVersion = 1, WorkingOffline = function () {

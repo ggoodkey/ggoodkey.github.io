@@ -1,6 +1,15 @@
-define(["require", "exports", "./main"], function (require, exports, main_1) {
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./main"], factory);
+    }
+})(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var main_1 = require("./main");
     'use strict';
     var cordova;
     var toString = {}.toString;

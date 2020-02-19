@@ -1,11 +1,20 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "./base64", "./storage", "./lists"], function (require, exports, base64_1, storage_1, lists_1) {
+(function (factory) {
+    if (typeof module === "object" && typeof module.exports === "object") {
+        var v = factory(require, exports);
+        if (v !== undefined) module.exports = v;
+    }
+    else if (typeof define === "function" && define.amd) {
+        define(["require", "exports", "./base64", "./storage", "./lists"], factory);
+    }
+})(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    base64_1 = __importDefault(base64_1);
-    lists_1 = __importDefault(lists_1);
+    var base64_1 = __importDefault(require("./base64"));
+    var storage_1 = require("./storage");
+    var lists_1 = __importDefault(require("./lists"));
     "use strict";
     /* eslint-disable */
     //depenancies
