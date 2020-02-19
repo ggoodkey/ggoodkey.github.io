@@ -40,10 +40,7 @@ while (length--) {
 		APP[method] = noop;
 	}
 }
-requirejs.config({
-	baseUrl: "scripts"
-});
-requirejs(["base64", "validate", "lists", "nyckelDB", "Lawnchair", "storage"],
+requirejs(["./scripts/base64.js", "./scripts/validate.js", "./scripts/lists.js", "./scripts/nyckelDB.js", "./scripts/Lawnchair.js", "./scripts/storage.js"],
 	function (Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
 		self.addEventListener('message', function (e) {
 			function debug(msg, description) {
