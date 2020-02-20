@@ -168,7 +168,7 @@ define("validate", ["require", "exports"], function (require, exports) {
 *
 */
 /* eslint-disable */
-define("base64", ["require", "exports"], function (require, exports) {
+define("base64-bundle", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Base64 = {};
@@ -1267,7 +1267,7 @@ define("base64", ["require", "exports"], function (require, exports) {
     })();
     exports.default = Base64;
 });
-define("Lawnchair", ["require", "exports"], function (require, exports) {
+define("Lawnchair-bundle", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /* eslint-disable */
@@ -1760,7 +1760,7 @@ define("Lawnchair", ["require", "exports"], function (require, exports) {
     // }
     exports.default = Lawnchair;
 });
-define("storage", ["require", "exports", "base64", "Lawnchair"], function (require, exports, base64_1, Lawnchair_1) {
+define("storage-bundle", ["require", "exports", "base64-bundle", "Lawnchair-bundle"], function (require, exports, base64_1, Lawnchair_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base64_1 = __importDefault(base64_1);
@@ -1898,7 +1898,7 @@ define("storage", ["require", "exports", "base64", "Lawnchair"], function (requi
     var Sto = new LocalStorageObj();
     exports.default = Sto;
 });
-define("lists", ["require", "exports"], function (require, exports) {
+define("lists-bundle", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LISTSJSON = {
@@ -5737,7 +5737,7 @@ define("lists", ["require", "exports"], function (require, exports) {
     };
     exports.default = Spelling;
 });
-define("nyckelDB", ["require", "exports", "base64", "storage", "lists"], function (require, exports, base64_2, storage_1, lists_1) {
+define("nyckelDB-bundle", ["require", "exports", "base64-bundle", "storage-bundle", "lists-bundle"], function (require, exports, base64_2, storage_1, lists_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base64_2 = __importDefault(base64_2);

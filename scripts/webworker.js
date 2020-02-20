@@ -12,13 +12,13 @@ requirejs.config({
 	baseUrl: ".",
 	waitSeconds: 20,
 	paths: {
-		'validate': './bundle',
-		'base64': './bundle',
-		"nyckelDB": "./bundle"
+		'validate-bundle': './bundle',
+		'base64-bundle': './bundle',
+		"nyckelDB-bundle": "./bundle"
 	}
 });
 
-require(["validate", "base64", "nyckelDB"],
+require(["validate-bundle", "base64-bundle", "nyckelDB-bundle"],
 	function (VAL, Base64, NyckelDB) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
