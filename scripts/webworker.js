@@ -11,8 +11,10 @@ importScripts('require.2.1.8.js');
 requirejs.config({
 	baseUrl: ".",
 	waitSeconds: 20,
-	bundles: {
-		'bundle': ['validate', 'base64', 'nyckelDB']
+	paths: {
+		'validate': './bundle',
+		'base64': './bundle',
+		"nyckelDB": "./bundle"
 	}
 });
 
