@@ -1,6 +1,11 @@
-define(["require", "exports", "./main"], function (require, exports, main_1) {
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+define(["require", "exports", "./base64", "./storage", "./main"], function (require, exports, base64_1, storage_1, main_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    base64_1 = __importDefault(base64_1);
+    storage_1 = __importDefault(storage_1);
     'use strict';
     var cordova;
     var toString = {}.toString;
@@ -213,6 +218,222 @@ define(["require", "exports", "./main"], function (require, exports, main_1) {
             initAuth();
         return promise;
     };
-    exports.default = dropbox;
+    var CLIENT_ID;
+    var localTestingMode = function () {
+        if (!window)
+            return false; //running in webworker
+        var loc = window.location;
+        if (!loc || /^file/.test(loc.href) || /^file/.test(loc.protocol) || loc.origin === "file://" || window.navigator.onLine === false)
+            return true;
+        else
+            return false;
+    }();
+    function dropboxError(error, error1, XMLhttpRequest) {
+        //if (error instanceof XMLHttpRequest) error = error.statusText;
+        if (console && console.log)
+            console.log("dropbox error:", error, error1, XMLhttpRequest);
+    }
+    var DropboxSessionObj = /** @class */ (function () {
+        function DropboxSessionObj(client_id, password, callback) {
+            dropbox.setGlobalErrorHandler(dropboxError);
+            this.isAuthenticated = false;
+            CLIENT_ID = client_id;
+            //try login
+            if (!localTestingMode) {
+                if (localStorage.__dbat && localStorage.__dbat !== "") {
+                    this.isAuthenticated = true;
+                    //updateFileList();
+                    password = password || "";
+                    this.getUserInfo(password, callback); /*TODO password*/
+                }
+                //else check if returning oauth call with token
+                else if (window && window.location.hash.match(/^#access_token=/)) {
+                    this.login.call(this, password, callback, function () {
+                        dropboxError("failed to login");
+                    });
+                }
+                else if (callback instanceof Function) {
+                    return callback(false);
+                }
+            }
+            else if (callback instanceof Function)
+                return callback(false);
+        }
+        DropboxSessionObj.prototype.save = function (fileName, fileContents, key, callback, onErrorCallback) {
+            if (typeof fileContents !== "string")
+                fileContents = JSON.stringify(fileContents);
+            if (key)
+                fileContents = base64_1.default.write(fileContents, key);
+            if (onErrorCallback) {
+                var _onErrorCallback = function (error) {
+                    dropboxError(error);
+                    onErrorCallback(error);
+                };
+                callback = { onComplete: callback, onError: _onErrorCallback };
+            }
+            if (localTestingMode)
+                return callback instanceof Function ? callback(false) : false;
+            dropbox("files/upload", { "mute": true, "autorename": false, "mode": "overwrite", "path": fileName }, fileContents, callback);
+        };
+        DropboxSessionObj.prototype.open = function (fileName, key, callback) {
+            function rtn(apiResponse, data) {
+                if (data) {
+                    if (key)
+                        data = base64_1.default.read(data, key);
+                    return callback instanceof Function ? callback(data) : data;
+                }
+                else
+                    return callback instanceof Function ? callback(false, "data not found") : false;
+            }
+            function fail(error) {
+                dropboxError(error);
+                return callback instanceof Function ? callback(false, error.statusText) : false;
+            }
+            if (localTestingMode)
+                return callback instanceof Function ? callback(false, "working offline") : false;
+            else
+                dropbox("files/download", { path: fileName, responseType: "text" }, { onComplete: rtn, onError: fail });
+        };
+        DropboxSessionObj.prototype.delete = function (fileName, callback) {
+            dropbox("files/delete_v2", { path: fileName }, { onComplete: callback, onError: dropboxError });
+        };
+        DropboxSessionObj.prototype.getUserInfo = function (password, callback) {
+            function ret(alias, email, id, account_id) {
+                var user = { "alias": alias, "email": email, "id": id, "dbid": account_id };
+                return callback instanceof Function ? callback(user) : user;
+            }
+            function gotCachedUser(user) {
+                user = JSON.parse(user);
+                return ret(user.alias, user.email, user.id, user.dbid);
+            }
+            function tryDropbox() {
+                function newUser(obj) {
+                    if (obj && obj.email && obj.name) {
+                        obj.id = base64_1.default.hash(obj.email); //TODO depricate id
+                        storage_1.default.setItem(storage_1.default.LocalUserRef, JSON.stringify({ "alias": obj.name.display_name, "email": obj.email, "id": obj.id, "dbid": obj.account_id }));
+                        return ret(obj.name.display_name, obj.email, obj.id, obj.account_id);
+                    }
+                    else {
+                        return callback instanceof Function ? callback(false) : false;
+                    }
+                }
+                dropbox("users/get_account", undefined, newUser);
+            }
+            function gotOldUser(user) {
+                console.log("found old cached version user, deleting, get new one from dropbox", user);
+                user = JSON.parse(user);
+                //TODO migrate user version
+                storage_1.default.deleteItem(storage_1.default.LocalUserRef_old);
+                tryDropbox();
+            }
+            function noCachedUser() {
+                storage_1.default.getItem(storage_1.default.LocalUserRef_old, null, gotOldUser, tryDropbox);
+            }
+            password = password || "";
+            if (localTestingMode)
+                return callback instanceof Function ? callback(false) : false;
+            else {
+                storage_1.default.getItem(storage_1.default.LocalUserRef, null, gotCachedUser, noCachedUser);
+            }
+        };
+        DropboxSessionObj.prototype.login = function (password, successCallback, failureCallback) {
+            function auth() {
+                if (!window)
+                    return failureCallback instanceof Function ? failureCallback() : false;
+                var redirectUri = cordova ? "https://www.dropbox.com/1/oauth2/redirect_receiver" : window.location.href.toLowerCase().split("#")[0];
+                dropbox.authenticate({ client_id: CLIENT_ID, redirect_uri: redirectUri }, { "onComplete": initiate.bind(this), "onError": failureCallback });
+            }
+            function initiate() {
+                function gotUser(user) {
+                    if (user)
+                        return successCallback instanceof Function ? successCallback(user) : true;
+                    else
+                        return failureCallback instanceof Function ? failureCallback() : false;
+                }
+                this.isAuthenticated = true;
+                this.getUserInfo(password, gotUser);
+            }
+            password = password || "";
+            if (localTestingMode) { //not possible when running locally
+                var msg = "You can't login from a page hosted on your local file system";
+                alert(msg);
+                if (failureCallback instanceof Function)
+                    return failureCallback();
+                else
+                    return;
+            }
+            else if (this.isAuthenticated)
+                initiate.call(this);
+            else
+                auth.call(this);
+        };
+        DropboxSessionObj.prototype.logout = function (callback) {
+            function resetApp() {
+                storage_1.default.deleteItem(storage_1.default.LocalUserRef);
+                this.isAuthenticated = false;
+                return callback instanceof Function ? callback() : true;
+            }
+            dropbox("auth/token/revoke", undefined, resetApp.bind(this));
+        };
+        DropboxSessionObj.prototype.share = function (fileName, fileContents, key, expires, callback) {
+            var settings = {
+                requested_visibility: key ? "password" : "public",
+                audience: key ? "password" : "public",
+                access: "max"
+            };
+            if (key) {
+                settings.link_password = base64_1.default.hash(key);
+                fileContents = base64_1.default.write(fileContents, key);
+            }
+            if (expires) {
+                if (expires instanceof Date)
+                    expires = expires.toISOString();
+                settings.expires = expires; //"%Y-%m-%dT%H:%M:%SZ"
+            }
+            dropbox("sharing/list_shared_links", { "path": "/shared/" + fileName, "direct_only": true }, function (ret) {
+                console.log(ret);
+                var found = false;
+                for (var a = 0, aLen = ret.links.length; a < aLen; a++) {
+                    if (ret.links[a].name === fileName && ret.links[a].path_lower === "/shared/" + fileName.toLowerCase())
+                        found = ret.links[a];
+                }
+                if (found === false)
+                    this.save("/shared/" + fileName, fileContents, key, function (ret) {
+                        dropbox("sharing/create_shared_link_with_settings", { "path": "/shared/" + fileName, "settings": settings }, callback);
+                    });
+                else
+                    return callback instanceof Function ? callback(found) : found;
+            }.bind(this));
+        };
+        DropboxSessionObj.prototype.revoke = function (fileName, callback) {
+            dropbox("sharing/list_shared_links", { "path": "/shared/" + fileName, "direct_only": true }, function (ret) {
+                console.log(ret);
+                //	dropbox("sharing/revoke_shared_link", { "url": "https://www.dropbox.com/s/2sn712vy1ovegw8/Prime_Numbers.txt?dl=0" }, callback);
+            });
+        };
+        DropboxSessionObj.prototype.receive = function (linkURL, key, callback) {
+            function ret(apiResponse, data) {
+                console.log(apiResponse);
+                if (data) {
+                    if (key)
+                        data = base64_1.default.read(data, key);
+                    return callback instanceof Function ? callback(data) : data;
+                }
+                else
+                    return callback instanceof Function ? callback(false, "shared data not found") : false;
+            }
+            var settings = {
+                url: linkURL.replace(/\?dl\=0$/, "?dl=1"),
+                link_password: undefined
+            };
+            if (key)
+                settings.link_password = base64_1.default.hash(key);
+            dropbox("sharing/get_shared_link_file", settings, ret);
+        };
+        return DropboxSessionObj;
+    }());
+    exports.initiateDropbox = function (client_id, password, callback) {
+        return new DropboxSessionObj(client_id, password, callback);
+    };
 });
 //# sourceMappingURL=dropbox.js.map

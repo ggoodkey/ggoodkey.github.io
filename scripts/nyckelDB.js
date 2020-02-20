@@ -5,6 +5,7 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     base64_1 = __importDefault(base64_1);
+    storage_1 = __importDefault(storage_1);
     lists_1 = __importDefault(lists_1);
     "use strict";
     /* eslint-disable */
@@ -377,11 +378,11 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
                 if (typeof changes === "undefined" || changes === true) {
                     //check for and surface hidden values before save
                     console.log("saving to localStorage");
-                    storage_1.Sto.setItem(DB[this.id].title, EXPORT_DB.call(this));
+                    storage_1.default.setItem(DB[this.id].title, EXPORT_DB.call(this));
                 }
                 ERRORS[this.id] = "";
             }
-            if (storage_1.Sto) {
+            if (storage_1.default) {
                 if (ERRORS[this.id]) {
                     var msg = "The following errors are found in the " + DB[this.id].title + " database\n" +
                         ERRORS[this.id] + "\nWould you still like to save changes?";
@@ -1077,7 +1078,7 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
             BUILDING_SEARCH_INDEX_QUEUE[this.id] = [];
             BUILDING_SEARCH_INDEX[this.id] = true;
             COL_NAMES_INDEXED[this.id] = getIndexableColumns(db, colNamesToIndex);
-            storage_1.Sto.getItem("searchIndex_" + DB[this.id].title, null, function (obj) {
+            storage_1.default.getItem("searchIndex_" + DB[this.id].title, null, function (obj) {
                 if (typeof obj === "string")
                     obj = JSON.parse(obj);
                 if (!(obj &&
@@ -1096,7 +1097,7 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
             }.bind(this), start.bind(this));
         }
         function STO_SEARCH_INDEX() {
-            storage_1.Sto.setItem("searchIndex_" + DB[this.id].title, {
+            storage_1.default.setItem("searchIndex_" + DB[this.id].title, {
                 "lastModified": DB[this.id].lastModified,
                 "colNamesIndexed": COL_NAMES_INDEXED[this.id],
                 "searchIndex": SEARCH_INDEX[this.id],
@@ -1933,7 +1934,7 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
         function INITIATE_DBS(title, callback) {
             function newDBS() {
                 DBS[NUM++] = title;
-                storage_1.Sto.setItem("tables", JSON.stringify(DBS));
+                storage_1.default.setItem("tables", JSON.stringify(DBS));
                 if (callback instanceof Function)
                     return callback(title);
             }
@@ -1944,7 +1945,7 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
                     return callback(title);
             }
             else
-                storage_1.Sto && storage_1.Sto.getItem("tables", null, function (tables) {
+                storage_1.default && storage_1.default.getItem("tables", null, function (tables) {
                     if (tables) {
                         DBS = JSON.parse(tables);
                         if (DBS.indexOf(title) === -1)
@@ -3160,8 +3161,8 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
                     else if (options && options.customProperties)
                         properties = applyCustomProperties.call(this, options.customProperties);
                     //try to get cached table
-                    if (storage_1.Sto)
-                        storage_1.Sto.getItem(DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
+                    if (storage_1.default)
+                        storage_1.default.getItem(DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
                     else
                         return callback instanceof Function ? callback.call(this, false, "localStorage not found", false) : "localStorage not found";
                 }
@@ -3279,12 +3280,12 @@ define(["require", "exports", "./base64", "./storage", "./lists"], function (req
              */
             NyckelDBObj.prototype.NUKEALL = function (msg, callback) {
                 function nuke() {
-                    if (storage_1.Sto) {
+                    if (storage_1.default) {
                         for (var a = 0, len = DBS.length; a < len; a++) {
-                            storage_1.Sto.deleteItem(DBS[a]);
-                            storage_1.Sto.deleteItem("searchIndex_" + DBS[a]);
+                            storage_1.default.deleteItem(DBS[a]);
+                            storage_1.default.deleteItem("searchIndex_" + DBS[a]);
                         }
-                        storage_1.Sto.deleteItem("tables");
+                        storage_1.default.deleteItem("tables");
                     }
                     DB = new Array(Math.pow(2, 32) - 1);
                     NUM = 0;

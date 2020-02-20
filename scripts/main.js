@@ -1,7 +1,7 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage"], function (require, exports, vue_1, vue_router_1, debugmode_1, common_1, validate_1, nyckelDB_1, base64_1, storage_1) {
+define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage", "./dropbox"], function (require, exports, vue_1, vue_router_1, debugmode_1, common_1, validate_1, nyckelDB_1, base64_1, storage_1, dropbox_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     vue_1 = __importDefault(vue_1);
@@ -9,6 +9,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
     validate_1 = __importDefault(validate_1);
     nyckelDB_1 = __importDefault(nyckelDB_1);
     base64_1 = __importDefault(base64_1);
+    storage_1 = __importDefault(storage_1);
     exports.debug = debugmode_1.debug;
     exports.VAL = validate_1.default;
     //external dependencies
@@ -883,10 +884,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 }
                 setupUI(doneLoadingApp);
             }
-            Dbx = storage_1.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
+            Dbx = dropbox_1.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
         }
         function getLocalState() {
-            storage_1.Sto.getItem("state", null, function (appStateObj, error) {
+            storage_1.default.getItem("state", null, function (appStateObj, error) {
                 if (appStateObj) {
                     if (typeof appStateObj === "string" && JSON.parse)
                         appStateObj = JSON.parse(appStateObj);
@@ -915,7 +916,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                 app[migrate[x]] = appStateObj[migrate[x]];
                             }
                         }
-                        storage_1.Sto.deleteItem("state");
+                        storage_1.default.deleteItem("state");
                         setupUI(doneLoadingApp);
                     }
                 }
@@ -924,7 +925,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     setupUI(doneLoadingApp);
                 }
                 else {
-                    storage_1.Sto.deleteItem("state");
+                    storage_1.default.deleteItem("state");
                     setupUI(doneLoadingApp);
                 }
             }, function () { setupUI(doneLoadingApp); });
@@ -3447,7 +3448,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             fetchData: function () {
                 if (this.recentlyViewed.length === 0) {
                     this.loading = true;
-                    storage_1.Sto.getItem("state", null, this.applyState, this.error);
+                    storage_1.default.getItem("state", null, this.applyState, this.error);
                 }
             },
             error: function (err) {
@@ -4035,7 +4036,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             storeState: function () {
                 if (cordova || this.cookieAgree) {
                     setTimeout(function () {
-                        storage_1.Sto.setItem("state", {
+                        storage_1.default.setItem("state", {
                             version: this.version,
                             darkTheme: this.darkTheme,
                             useSystemTheme: this.useSystemTheme,
@@ -4378,7 +4379,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             callback(false);
                     }
                     if (!Dbx || !Dbx.login)
-                        Dbx = storage_1.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
+                        Dbx = dropbox_1.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
                     Dbx.login(null, welcome.bind(this), startScreen.bind(this)); //TODO login password ui
                 }
                 this.notify("Connecting to Dropbox, please wait...", false, login.bind(this));
@@ -4719,7 +4720,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     function success() {
-                        storage_1.Sto.setItem("lastSyncAll", new Date().getTime());
+                        storage_1.default.setItem("lastSyncAll", new Date().getTime());
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     if (syncfileNeedsUpdated) {
@@ -4753,7 +4754,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     options = options || {};
                     options.initialKey = dbid ? base64_1.default.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
                     options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-                    storage_1.Sto.getItem("lastSyncAll", null, function (time) {
+                    storage_1.default.getItem("lastSyncAll", null, function (time) {
                         //debug(time);
                         if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) { //5 minutes between sync attempts
                             this.spin(true, "Synchronising with Dropbox");
@@ -4811,7 +4812,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
                 msg = "This will " + msg + "and restore default settings";
                 this.confirm("Are you sure you want to reset the app?", function reset() {
-                    storage_1.Sto.nuke();
+                    storage_1.default.nuke();
                     this.logout(this.resetSettings);
                 }.bind(this), { ok: "Reset App", details: msg });
             },
