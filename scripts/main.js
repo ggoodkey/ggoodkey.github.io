@@ -1,27 +1,16 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-(function (factory) {
-    if (typeof module === "object" && typeof module.exports === "object") {
-        var v = factory(require, exports);
-        if (v !== undefined) module.exports = v;
-    }
-    else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage"], factory);
-    }
-})(function (require, exports) {
+define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage"], function (require, exports, vue_1, vue_router_1, debugmode_1, common_1, validate_1, nyckelDB_1, base64_1, storage_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var vue_1 = __importDefault(require("vue"));
-    var vue_router_1 = __importDefault(require("vue-router"));
-    var debugmode_1 = require("./debugmode");
+    vue_1 = __importDefault(vue_1);
+    vue_router_1 = __importDefault(vue_router_1);
+    validate_1 = __importDefault(validate_1);
+    nyckelDB_1 = __importDefault(nyckelDB_1);
+    base64_1 = __importDefault(base64_1);
     exports.debug = debugmode_1.debug;
-    var common_1 = require("./common");
-    var validate_1 = __importDefault(require("./validate"));
     exports.VAL = validate_1.default;
-    var nyckelDB_1 = __importDefault(require("./nyckelDB"));
-    var base64_1 = __importDefault(require("./base64"));
-    var storage_1 = require("./storage");
     //external dependencies
     // vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
     // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
