@@ -9,7 +9,7 @@ importScripts('require.2.1.8.js');
 // /*global NyckelDB, Base64*/
 
 require({
-	baseUrl: "./",
+	baseUrl: ".",
 	waitSeconds: 20
 },
 	["require", "./scripts/base64.js", "./scripts/validate.js", "./scripts/lists.js", "./scripts/nyckelDB.js", "./scripts/Lawnchair.js", "./scripts/storage.js"],
