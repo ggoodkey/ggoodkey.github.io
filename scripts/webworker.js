@@ -8,14 +8,15 @@ importScripts('require.2.1.8.js');
 // importScripts('storage.js');
 // /*global NyckelDB, Base64*/
 
-require({
+requirejs.config({
 	baseUrl: ".",
 	waitSeconds: 20,
 	bundles: {
-		'./bundle': ['validate', 'base64', 'nyckelDB']
+		'bundle': ['validate', 'base64', 'nyckelDB']
 	}
-},
-	["validate", "base64", "nyckelDB"],
+});
+
+require(["validate", "base64", "nyckelDB"],
 	function (VAL, Base64, NyckelDB) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
