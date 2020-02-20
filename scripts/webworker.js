@@ -11,13 +11,8 @@ importScripts('require.2.1.8.js');
 require({
 	baseUrl: ".",
 	waitSeconds: 20,
-	paths: {
-		'validate': './bundle',
-		'base64': './bundle',
-		"Lawnchair": "./bundle",
-		"storage": "./bundle",
-		"lists": "./bundle",
-		"nyckelDB": "./bundle"
+	bundles: {
+		'./bundle': ['validate', 'base64', 'Lawnchair', 'storage', 'lists', 'nyckelDB']
 	}
 },
 	["validate", "base64", "Lawnchair", "storage", "lists", "nyckelDB"],
