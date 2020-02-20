@@ -120,6 +120,7 @@ require({
 			data = JSON.parse(data);
 			if (data) {
 				if (data.time) console.log((new Date().getTime() - data.time) / 1000 + "s", "to post message to webWorker", data.cmd, data.len);
+				debug(VAL);
 				if (data.title) data.title = VAL.toPropName(data.title);
 				switch (data.cmd) {
 					case "initNewNyckelDB":
