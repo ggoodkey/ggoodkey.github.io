@@ -12,11 +12,11 @@ require({
 	baseUrl: ".",
 	waitSeconds: 20,
 	bundles: {
-		'./bundle': ['validate', 'base64', 'Lawnchair', 'storage', 'lists', 'nyckelDB']
+		'./bundle': ['validate', 'base64', 'nyckelDB']
 	}
 },
-	["validate", "base64", "Lawnchair", "storage", "lists", "nyckelDB"],
-	function (VAL, Base64, Lawnchair, Sto, Spelling, NyckelDB) {
+	["validate", "base64", "nyckelDB"],
+	function (VAL, Base64, NyckelDB) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
 				length = bufView.length,
