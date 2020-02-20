@@ -1,9 +1,7 @@
 define(["require", "exports"], function (require, exports) {
     'use strict';
     Object.defineProperty(exports, "__esModule", { value: true });
-    var VAL;
-    (function () {
-        VAL = {
+    var VAL = {
             /*replace non-alphabetic charactors with spaces or specified replacer */
             validate: function (words, replacer) {
                 if (!words)
@@ -141,7 +139,6 @@ define(["require", "exports"], function (require, exports) {
                 return str.replace(/^\s+|\s+$/g, "");
             }
         };
-    }());
     exports.default = VAL;
 });
 //# sourceMappingURL=validate.js.map
