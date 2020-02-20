@@ -10,10 +10,18 @@ importScripts('require.2.1.8.js');
 
 require({
 	baseUrl: ".",
-	waitSeconds: 20
+	waitSeconds: 20,
+	paths: {
+		'validate': './bundle',
+		'base64': './bundle',
+		"Lawnchair": "./bundle",
+		"storage": "./bundle",
+		"lists": "./bundle",
+		"nyckelDB": "./bundle"
+	}
 },
-	["./bundle"],
-	function (Base64, VAL, NyckelDB) {
+	["validate", "base64", "Lawnchair", "storage", "lists", "nyckelDB"],
+	function (VAL, Base64, Lawnchair, Sto, Spelling, NyckelDB) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
 				length = bufView.length,
