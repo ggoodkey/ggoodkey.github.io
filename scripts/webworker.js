@@ -1,4 +1,5 @@
 ﻿/* eslint-disable complexity */
+importScripts('require.2.1.8.js');
 importScripts('base64.js');
 importScripts('validate.js');
 importScripts('lists.js');

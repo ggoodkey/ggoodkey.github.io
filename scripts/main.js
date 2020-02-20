@@ -764,9 +764,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
             }
         }
         var obj = inputObj;
-        // if (!!window.Worker && !localTestingMode) startWorker(); //temp remove webWorker until get modules figured out in a worker
-        // else
-        noWebWorker();
+        if (!!window.Worker && !localTestingMode)
+            startWorker(); //temp remove webWorker until get modules figured out in a worker
+        else
+            noWebWorker();
     }
     exports.wwManager = wwManager;
     function wwReadMessage(e) {
