@@ -9,10 +9,10 @@ importScripts('require.2.1.8.js');
 // /*global NyckelDB, Base64*/
 
 require({
-	baseUrl: "./scripts/",
+	baseUrl: "./",
 	waitSeconds: 20
 },
-	["require", "base64.js", "validate.js", "lists.js", "nyckelDB.js", "Lawnchair.js", "storage.js"],
+	["require", "./scripts/base64.js", "./scripts/validate.js", "./scripts/lists.js", "./scripts/nyckelDB.js", "./scripts/Lawnchair.js", "./scripts/storage.js"],
 	function (require, Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
