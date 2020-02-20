@@ -8,13 +8,11 @@ importScripts('require.2.1.8.js');
 // importScripts('storage.js');
 // /*global NyckelDB, Base64*/
 
-requirejs({
+require({
 	baseUrl: "./"
 },
 	["require", "base64", "validate", "lists", "nyckelDB", "Lawnchair", "storage"],
 	function (require, Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
-
-
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
 				length = bufView.length,
