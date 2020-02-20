@@ -11,10 +11,13 @@ importScripts('require.2.1.8.js');
 requirejs.config({
 	baseUrl: ".",
 	waitSeconds: 20,
-	paths: {
-		'validate-bundle': './bundle',
-		'base64-bundle': './bundle',
-		"nyckelDB-bundle": "./bundle"
+	// paths: {
+	// 	'validate-bundle': './bundle',
+	// 	'base64-bundle': './bundle',
+	// 	"nyckelDB-bundle": "./bundle"
+	// },
+	bundles: {
+		"bundle": ["validate-bundle", "base64-bundle", "nyckelDB-bundle"]
 	}
 });
 
