@@ -9,7 +9,8 @@ importScripts('require.2.1.8.js');
 // /*global NyckelDB, Base64*/
 
 require({
-	baseUrl: "./scripts/"
+	baseUrl: "./scripts/",
+	waitSeconds: 20
 },
 	["require", "base64", "validate", "lists", "nyckelDB", "Lawnchair", "storage"],
 	function (require, Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
