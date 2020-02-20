@@ -12,7 +12,7 @@ require({
 	baseUrl: ".",
 	waitSeconds: 20
 },
-	["./base64.js", "./validate.js", "./nyckelDB.js"],
+	["./base64", "./validate", "./nyckelDB"],
 	function (Base64, VAL, NyckelDB) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
