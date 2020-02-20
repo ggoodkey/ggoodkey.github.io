@@ -12,7 +12,7 @@ require({
 	baseUrl: "./scripts/",
 	waitSeconds: 20
 },
-	["require", "./base64.js", "./validate.js", "./lists.js", "./nyckelDB.js", "./Lawnchair.js", "./storage.js"],
+	["require", "../base64.js", "../validate.js", "../lists.js", "../nyckelDB.js", "../Lawnchair.js", "../storage.js"],
 	function (require, Base64, VAL, Spelling, NyckelDB, Lawnchair, Sto) {
 		function ab2str(buffer) {
 			var bufView = new Uint16Array(buffer),
