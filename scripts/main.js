@@ -755,7 +755,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         }
         var obj = inputObj;
         //	if (!!window.Worker && !localTestingMode) startWorker(); //temp remove webWorker until get modules figured out in a worker
-        //	else
+        //	else //
         noWebWorker();
     }
     exports.wwManager = wwManager;
