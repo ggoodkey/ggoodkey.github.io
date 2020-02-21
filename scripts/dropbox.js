@@ -1,13 +1,6 @@
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-define(["require", "exports", "./base64", "./storage", "./main"], function (require, exports, base64_1, storage_1, main_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    base64_1 = __importDefault(base64_1);
-    storage_1 = __importDefault(storage_1);
-    'use strict';
-    var cordova;
+'use strict';
+/* global Sto */
+var cordova, APP, Base64, initiateDropbox = function (client_id, password, callback) {
     var toString = {}.toString;
     function isFunction(x) { return toString.call(x) === '[object Function]'; }
     function isString(x) { return toString.call(x) === '[object String]'; }
@@ -185,8 +178,8 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
                     browser.removeEventListener('loadstop', onEvent);
                     browser.removeEventListener('exit', onEvent);
                     removed = true;
-                    if (main_1.app && main_1.app.goBack)
-                        main_1.app.goBack();
+                    if (APP && APP.goBack)
+                        APP.goBack();
                 }
             };
             browser.addEventListener('loadstart', onEvent);
@@ -263,7 +256,7 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
             if (typeof fileContents !== "string")
                 fileContents = JSON.stringify(fileContents);
             if (key)
-                fileContents = base64_1.default.write(fileContents, key);
+                fileContents = Base64.write(fileContents, key);
             if (onErrorCallback) {
                 var _onErrorCallback = function (error) {
                     dropboxError(error);
@@ -279,7 +272,7 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
             function rtn(apiResponse, data) {
                 if (data) {
                     if (key)
-                        data = base64_1.default.read(data, key);
+                        data = Base64.read(data, key);
                     return callback instanceof Function ? callback(data) : data;
                 }
                 else
@@ -309,8 +302,8 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
             function tryDropbox() {
                 function newUser(obj) {
                     if (obj && obj.email && obj.name) {
-                        obj.id = base64_1.default.hash(obj.email); //TODO depricate id
-                        storage_1.default.setItem(storage_1.default.LocalUserRef, JSON.stringify({ "alias": obj.name.display_name, "email": obj.email, "id": obj.id, "dbid": obj.account_id }));
+                        obj.id = Base64.hash(obj.email); //TODO depricate id
+                        Sto.setItem(Sto.LocalUserRef, JSON.stringify({ "alias": obj.name.display_name, "email": obj.email, "id": obj.id, "dbid": obj.account_id }));
                         return ret(obj.name.display_name, obj.email, obj.id, obj.account_id);
                     }
                     else {
@@ -323,17 +316,17 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
                 console.log("found old cached version user, deleting, get new one from dropbox", user);
                 user = JSON.parse(user);
                 //TODO migrate user version
-                storage_1.default.deleteItem(storage_1.default.LocalUserRef_old);
+                Sto.deleteItem(Sto.LocalUserRef_old);
                 tryDropbox();
             }
             function noCachedUser() {
-                storage_1.default.getItem(storage_1.default.LocalUserRef_old, null, gotOldUser, tryDropbox);
+                Sto.getItem(Sto.LocalUserRef_old, null, gotOldUser, tryDropbox);
             }
             password = password || "";
             if (localTestingMode)
                 return callback instanceof Function ? callback(false) : false;
             else {
-                storage_1.default.getItem(storage_1.default.LocalUserRef, null, gotCachedUser, noCachedUser);
+                Sto.getItem(Sto.LocalUserRef, null, gotCachedUser, noCachedUser);
             }
         };
         DropboxSessionObj.prototype.login = function (password, successCallback, failureCallback) {
@@ -369,7 +362,7 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
         };
         DropboxSessionObj.prototype.logout = function (callback) {
             function resetApp() {
-                storage_1.default.deleteItem(storage_1.default.LocalUserRef);
+                Sto.deleteItem(Sto.LocalUserRef);
                 this.isAuthenticated = false;
                 return callback instanceof Function ? callback() : true;
             }
@@ -382,8 +375,8 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
                 access: "max"
             };
             if (key) {
-                settings.link_password = base64_1.default.hash(key);
-                fileContents = base64_1.default.write(fileContents, key);
+                settings.link_password = Base64.hash(key);
+                fileContents = Base64.write(fileContents, key);
             }
             if (expires) {
                 if (expires instanceof Date)
@@ -416,7 +409,7 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
                 console.log(apiResponse);
                 if (data) {
                     if (key)
-                        data = base64_1.default.read(data, key);
+                        data = Base64.read(data, key);
                     return callback instanceof Function ? callback(data) : data;
                 }
                 else
@@ -427,13 +420,11 @@ define(["require", "exports", "./base64", "./storage", "./main"], function (requ
                 link_password: undefined
             };
             if (key)
-                settings.link_password = base64_1.default.hash(key);
+                settings.link_password = Base64.hash(key);
             dropbox("sharing/get_shared_link_file", settings, ret);
         };
         return DropboxSessionObj;
     }());
-    exports.initiateDropbox = function (client_id, password, callback) {
-        return new DropboxSessionObj(client_id, password, callback);
-    };
-});
+    return new DropboxSessionObj(client_id, password, callback);
+};
 //# sourceMappingURL=dropbox.js.map

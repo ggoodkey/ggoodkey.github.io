@@ -1,14 +1,14 @@
-define(["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+"use strict";
+var APP = APP || {};
+(function () {
     function changeDebugMode() {
         if (DEBUG_MODE === true) {
-            debug("Debug Mode turned off");
-            setDebugMode(false);
+            APP.debug("Debug Mode turned off");
+            APP.setDebugMode(false);
         }
         else {
-            setDebugMode(true);
-            debug("Debug Mode turned on");
+            APP.setDebugMode(true);
+            APP.debug("Debug Mode turned on");
         }
     }
     function moveDebugWindow() {
@@ -208,7 +208,7 @@ define(["require", "exports"], function (require, exports) {
             consolemessage = null;
         }
         if (DEBUG_TO_CONSOLE === true && (severity !== undefined || /error/i.test(description))) {
-            setDebugMode(true);
+            APP.setDebugMode(true);
         }
         if (DEBUG_MODE === true || DEBUG_TO_CONSOLE === true && console && console.log) {
             if (code instanceof Array)
@@ -284,7 +284,7 @@ define(["require", "exports"], function (require, exports) {
             HTML_TAG.className = trim(HTML_TAG.className.replace(/debugmodeOn|debugShowLarge|debugShowSmall/g, ""));
     }
     var DEBUG_COUNT = 0, DEBUG_TIME = new Date().getTime(), DEBUG_STOP = false, DEBUG_MODE = false, DEBUG_TO_CONSOLE = false, ERROR_CACHE = [], CACHE_MSG_INDEX = 0, INITIATED = false, HIDE_DEBUG_BUTTON, DEBUG_DIV, DEBUG_MESSAGE_DIV, HTML_TAG = document.getElementsByTagName("html")[0];
-    function setDebugMode(debugMode) {
+    APP.setDebugMode = function (debugMode) {
         if (debugMode === true) {
             if (!INITIATED)
                 init();
@@ -302,13 +302,12 @@ define(["require", "exports"], function (require, exports) {
         }
         else {
             DEBUG_MODE = true;
-            debug(debugMode, "Error: Cannot set DebugMode to", true);
+            APP.debug(debugMode, "Error: Cannot set DebugMode to", true);
         }
         DEBUG_MODE = debugMode;
         return debugMode;
-    }
-    exports.setDebugMode = setDebugMode;
-    function setDebugToConsole(debugMode) {
+    };
+    APP.setDebugToConsole = function (debugMode) {
         if (debugMode === true) {
             debugMode = true;
             while (CACHE_MSG_INDEX) {
@@ -321,23 +320,21 @@ define(["require", "exports"], function (require, exports) {
             debugMode = false;
         else {
             DEBUG_TO_CONSOLE = true;
-            debug(debugMode, "Error: Cannot set DebugToConsole to", true);
+            APP.debug(debugMode, "Error: Cannot set DebugToConsole to", true);
         }
         DEBUG_TO_CONSOLE = debugMode;
         return debugMode;
-    }
-    exports.setDebugToConsole = setDebugToConsole;
-    function CacheMsg(msg, description, severity) {
+    };
+    APP.cacheMsg = function (code, description, severity) {
         if (DEBUG_MODE === true)
-            debug(msg, description, severity);
+            APP.debug(code, description, severity);
         else {
-            ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), description, msg, severity];
+            ERROR_CACHE[CACHE_MSG_INDEX] = [timeStamp(new Date()), description, code, severity];
             CACHE_MSG_INDEX++;
         }
-    }
-    exports.CacheMsg = CacheMsg;
+    };
     /*prints a message to div called #debugMsg, like console.log*/
-    function debug(code, description, severity) {
+    APP.debug = function (code, description, severity) {
         var d = new Date();
         if (DEBUG_STOP === true && d.getTime() - DEBUG_TIME > 5000) {
             DEBUG_COUNT = 0;
@@ -354,7 +351,6 @@ define(["require", "exports"], function (require, exports) {
             _debug(code, description, severity, timeStamp(d));
         }
         d = null;
-    }
-    exports.debug = debug;
-});
+    };
+}());
 //# sourceMappingURL=debugmode.js.map

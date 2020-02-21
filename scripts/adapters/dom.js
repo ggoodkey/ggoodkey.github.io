@@ -36,7 +36,7 @@ Lawnchair.adapter('dom', (function() {
                 var a = this.all(), r = [];
                 // FIXME this is crazy inefficient but I'm in a strata meeting and half concentrating
                 for (var i = 0, l = a.length; i < l; i++) {
-                    if (a[i] != key) r.push(a[i]);
+                    if (a[i] !== key) r.push(a[i]);
                 }
                 storage.setItem(JSON.stringify(this.key), JSON.stringify(r));
             },

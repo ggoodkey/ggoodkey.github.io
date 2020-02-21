@@ -1,12 +1,6 @@
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-define(["require", "exports", "./base64", "./Lawnchair"], function (require, exports, base64_1, Lawnchair_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    base64_1 = __importDefault(base64_1);
-    Lawnchair_1 = __importDefault(Lawnchair_1);
-    /* global */
+"use strict";
+/* global Base64, Lawnchair */
+var Sto = (function () {
     "use strict";
     var LOCAL = {}, Version = 1.1, PreviousVersion = 1;
     var LocalStorageObj = /** @class */ (function () {
@@ -37,13 +31,13 @@ define(["require", "exports", "./base64", "./Lawnchair"], function (require, exp
             if (typeof value === "object")
                 value = JSON.stringify(value);
             //if (console && console.log) console.log("setItem", refName, value, key);
-            value = key ? base64_1.default.write(value, key) : base64_1.default.write(value);
+            value = key ? Base64.write(value, key) : Base64.write(value);
             if (window.Windows) {
                 var storageFolder = window.Windows.Storage.ApplicationData.current.localFolder;
                 storageFolder.getFileAsync(refName).done(write, fileNotFoundError);
             }
-            else if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair_1.default)) {
-                LOCAL[refName] = Lawnchair_1.default();
+            else if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair)) {
+                LOCAL[refName] = Lawnchair();
                 return ret();
             }
             else
@@ -51,7 +45,7 @@ define(["require", "exports", "./base64", "./Lawnchair"], function (require, exp
         };
         LocalStorageObj.prototype.getItem = function (refName, key, callback, doesntExistCallback) {
             function read(str) {
-                var value = key ? base64_1.default.read(str, key) : base64_1.default.read(str);
+                var value = key ? Base64.read(str, key) : Base64.read(str);
                 //if (console && console.log) console.log("getItem", refName, value, key);
                 if (key && !value)
                     return callback instanceof Function ? callback(null, "wrong key") : null;
@@ -88,12 +82,12 @@ define(["require", "exports", "./base64", "./Lawnchair"], function (require, exp
                 });
             }
             //try get cached value from the LOCAL object
-            else if (LOCAL[refName] && LOCAL[refName] instanceof Lawnchair_1.default) {
+            else if (LOCAL[refName] && LOCAL[refName] instanceof Lawnchair) {
                 return LOCAL[refName].get(refName, got);
             }
             // or from Lawnchair object and cache it to to LOCAL object for quick retrieval later
             else {
-                LOCAL[refName] = Lawnchair_1.default();
+                LOCAL[refName] = Lawnchair();
                 return LOCAL[refName].get(refName, got);
             }
         };
@@ -114,7 +108,7 @@ define(["require", "exports", "./base64", "./Lawnchair"], function (require, exp
                 });
             }
             else {
-                Lawnchair_1.default(getAllKeys);
+                Lawnchair(getAllKeys);
             }
             LOCAL = {};
         };
@@ -129,14 +123,13 @@ define(["require", "exports", "./base64", "./Lawnchair"], function (require, exp
                 });
             }
             else {
-                Lawnchair_1.default(deleteRef);
+                Lawnchair(deleteRef);
                 if (LOCAL && LOCAL[refName])
                     LOCAL[refName] = {};
             }
         };
         return LocalStorageObj;
     }());
-    var Sto = new LocalStorageObj();
-    exports.default = Sto;
-});
+    return new LocalStorageObj();
+}());
 //# sourceMappingURL=storage.js.map

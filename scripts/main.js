@@ -1,26 +1,15 @@
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", "./validate", "./nyckelDB", "./base64", "./storage", "./dropbox"], function (require, exports, vue_1, vue_router_1, debugmode_1, common_1, validate_1, nyckelDB_1, base64_1, storage_1, dropbox_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    vue_1 = __importDefault(vue_1);
-    vue_router_1 = __importDefault(vue_router_1);
-    validate_1 = __importDefault(validate_1);
-    nyckelDB_1 = __importDefault(nyckelDB_1);
-    base64_1 = __importDefault(base64_1);
-    storage_1 = __importDefault(storage_1);
-    exports.debug = debugmode_1.debug;
-    exports.VAL = validate_1.default;
-    //external dependencies
-    // vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
-    // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
-    /*global WinJS*/
-    "use strict";
-    var appData = {}, Windows, cordova, Dbx; //dependancies
-    debugmode_1.setDebugMode(false); //TODO set to false
-    debugmode_1.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
-    var DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
+"use strict";
+//external dependencies
+// vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
+// storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
+/*global WinJS, Sto, NyckelDB, cordova, initiateDropbox, Vue */
+"use strict";
+var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
+(function () {
+    APP.setDebugMode(false); //TODO set to false
+    APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
+    var appData = {};
+    var debug = APP.debug, DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
     APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
     views = {
         new: {
@@ -626,9 +615,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         else
             return false;
     }();
-    exports.dataTemplates = dataTemplates;
-    exports.searchableColumns = searchableColumns;
-    exports.localTestingMode = localTestingMode;
     function trim(str) {
         str = String(str);
         while (/\s\s/g.test(str))
@@ -637,11 +623,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             return "";
         return str.replace(/^\s+|\s+$/gm, "");
     }
-    exports.trim = trim;
     if (localTestingMode)
-        debugmode_1.setDebugMode(true);
+        APP.setDebugMode(true);
     var fileReaderInitiated = [], backstack = [], backIndex = 0, state = freshStateObj(), dbid = null, refreshResponsiveLayout = function () {
-        var width = common_1.getWidth(), height = common_1.getHeight(), type = "tabl", orientation = " port ", theme = "", htmlTag = document.getElementsByTagName("html")[0];
+        var width = COM.getWidth(), height = COM.getHeight(), type = "tabl", orientation = " port ", theme = "", htmlTag = document.getElementsByTagName("html")[0];
         if (width > 1280)
             type = "desk";
         else if (width <= 640)
@@ -662,7 +647,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 if (topnavlink) {
                     var box = topnavlink.getBoundingClientRect();
                     app.indicatorWidth = box.right - box.left;
-                    app.indicatorRight = common_1.getWidth() - box.left - extra;
+                    app.indicatorRight = COM.getWidth() - box.left - extra;
                 }
             }
         }
@@ -671,7 +656,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             app.indicatorWidth = 0;
         }
     };
-    exports.state = state;
     //web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
     //and offline senarios where web workers are not available
     var webWorker, wwCallbackQueue = [], wwCallbackIndex = 0;
@@ -724,21 +708,21 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             else if (callback)
                 obj.args = [callback];
             if (obj.title && obj.cmd) {
-                var title = validate_1.default.toPropName(obj.title);
+                var title = VAL.toPropName(obj.title);
                 if (obj.cmd === "initNewNyckelDB") {
                     if (obj.args && obj.args.length >= 2) {
-                        appData[title] = new nyckelDB_1.default(obj.args[0]);
+                        appData[title] = new NyckelDB(obj.args[0]);
                         appData[title].init(obj.args[1], obj.args[2], obj.args[3], callback);
                     }
                     else
-                        debugmode_1.debug("NyckelDB not initialised with correct arguments");
+                        debug("NyckelDB not initialised with correct arguments");
                 }
                 else if (!appData[title]) {
-                    debugmode_1.debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
+                    debug(obj.args, "couldn't complete '" + obj.cmd + "' because '" + obj.title + "' database has not been successfully initialized");
                     return null;
                 }
                 else if (!appData[title][obj.cmd]) {
-                    debugmode_1.debug(obj.cmd, "invalid command called on " + obj.title);
+                    debug(obj.cmd, "invalid command called on " + obj.title);
                     return null;
                 }
                 else if (obj.cmd === "forEachCol" || obj.cmd === "forEachRow")
@@ -750,15 +734,15 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             }
             else if (obj.cmd) {
                 //debug(obj.cmd, "cmd");
-                base64_1.default[obj.cmd].apply(null, obj.args);
+                Base64[obj.cmd].apply(null, obj.args);
             }
         }
         var obj = inputObj;
-        //	if (!!window.Worker && !localTestingMode) startWorker(); //temp remove webWorker until get modules figured out in a worker
-        //	else //
-        noWebWorker();
+        if (!!Worker && !localTestingMode)
+            startWorker();
+        else
+            noWebWorker();
     }
-    exports.wwManager = wwManager;
     function wwReadMessage(e) {
         function ab2str(buffer) {
             var bufView = new Uint16Array(buffer), length = bufView.length, result = '', addition = Math.pow(2, 15); //max value in Edge before throwing error
@@ -775,7 +759,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         switch (data.type) {
             case "debug":
                 data.description = "web worker: " + (data.description || "");
-                debugmode_1.debug(data.message, data.description);
+                debug(data.message, data.description);
                 break;
             case "notify":
                 app.notify(data.message, data.fadeOut);
@@ -784,7 +768,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 if (data.callbackIndex)
                     wwCallbackQueue[data.callbackIndex](data.message, data.progress, data.total);
                 else
-                    debugmode_1.debug(data.message, "no forEach callback found");
+                    debug(data.message, "no forEach callback found");
                 break;
             case "result":
                 console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.cmd, data.len);
@@ -795,7 +779,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         wwCallbackQueue[data.callbackIndex](data.message);
                 }
                 else {
-                    debugmode_1.debug(data.message, "no result callback found");
+                    debug(data.message, "no result callback found");
                     return data.message;
                 }
                 break;
@@ -807,7 +791,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         wwCallbackQueue[data.finalCallbackIndex](data.message);
                 }
                 else
-                    debugmode_1.debug(data.message, "finished but no callback found");
+                    debug(data.message, "finished but no callback found");
                 break;
             /*	case "setItem":
                 case "deleteItem":
@@ -823,18 +807,17 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             */ case "progress":
             case "confirm":
             default: //other types of data
-                debugmode_1.debug(data.type, "webworker response type not supported");
+                debug(data.type, "webworker response type not supported");
         }
     }
-    exports.wwReadMessage = wwReadMessage;
     function wwOnError(e) {
-        debugmode_1.debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
+        debug(e.message, "Web Worker error: " + e.filename + ': ' + e.lineno);
     }
     function defaultErrorHandler(success, errors) {
         if (errors) {
             if (errors === "wrong key used") {
                 app.notify("Wrong key used", true);
-                debugmode_1.debug(app.stoKey, "stoKey tried");
+                debug(app.stoKey, "stoKey tried");
                 app.updateStoKey();
             }
             else if (/unsupported version/.test(errors)) {
@@ -842,11 +825,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             }
             else {
                 app.notify("Unknown error", true);
-                debugmode_1.debug(errors, "errors");
+                debug(errors, "errors");
             }
         }
     }
-    exports.defaultErrorHandler = defaultErrorHandler;
     //initialise the application
     function startApp(resumeBool) {
         function doneLoadingApp() {
@@ -883,10 +865,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 }
                 setupUI(doneLoadingApp);
             }
-            Dbx = dropbox_1.initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
+            Dbx = initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
         }
         function getLocalState() {
-            storage_1.default.getItem("state", null, function (appStateObj, error) {
+            Sto.getItem("state", null, function (appStateObj, error) {
                 if (appStateObj) {
                     if (typeof appStateObj === "string" && JSON.parse)
                         appStateObj = JSON.parse(appStateObj);
@@ -915,16 +897,16 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                 app[migrate[x]] = appStateObj[migrate[x]];
                             }
                         }
-                        storage_1.default.deleteItem("state");
+                        Sto.deleteItem("state");
                         setupUI(doneLoadingApp);
                     }
                 }
                 else if (error) {
-                    debugmode_1.debug(error, "error getting app state");
+                    debug(error, "error getting app state");
                     setupUI(doneLoadingApp);
                 }
                 else {
-                    storage_1.default.deleteItem("state");
+                    Sto.deleteItem("state");
                     setupUI(doneLoadingApp);
                 }
             }, function () { setupUI(doneLoadingApp); });
@@ -935,7 +917,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         });
         getLocalState();
     }
-    exports.startApp = startApp;
     /*colorLuminance
     * @craigbuckler
     * https://www.sitepoint.com/javascript-generate-lighter-darker-color/
@@ -1120,7 +1101,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
     function checkDBLoaded(callback) {
         function initDB(title, template, dbNum, numOfTables) {
             var options = template.options || {};
-            options.syncKey = app.stoKey === "unknown" ? dbid ? base64_1.default.hash(dbid) : base64_1.default.hash(app.dropboxEmail) : app.stoKey;
+            options.syncKey = app.stoKey === "unknown" ? dbid ? Base64.hash(dbid) : Base64.hash(app.dropboxEmail) : app.stoKey;
             var cb = function (success, errors) {
                 if (errors)
                     defaultErrorHandler(success, errors);
@@ -1170,7 +1151,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             return callback();
         }
     }
-    exports.checkDBLoaded = checkDBLoaded;
     //application functions
     function createNewItem(tableName) {
         //get blank details object by just provinding a table and no id
@@ -1179,7 +1159,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             app.navigate("edit");
         });
     }
-    exports.createNewItem = createNewItem;
     function formatValue(text, type, splitter) {
         var ret = [];
         //format multiline strings
@@ -1195,7 +1174,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             ret = [text];
         return ret;
     }
-    exports.formatValue = formatValue;
     function getDetails(returnedJSON, callback) {
         function processDetailsReturnData(row, error, cb) {
             function getDetailsData(template, splitter, labelDropdownList) {
@@ -1210,9 +1188,9 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     return dropdownList;
                 }
                 function applyValueStr() {
-                    vueDetailsData = row[validate_1.default.toPropName(template)];
-                    vueDetailsData.orig = row[validate_1.default.toPropName(template)].value;
-                    vueDetailsData.text = formatValue(row[validate_1.default.toPropName(template)].value, vueDetailsData.type, splitter);
+                    vueDetailsData = row[VAL.toPropName(template)];
+                    vueDetailsData.orig = row[VAL.toPropName(template)].value;
+                    vueDetailsData.text = formatValue(row[VAL.toPropName(template)].value, vueDetailsData.type, splitter);
                     vueDetailsData.splitter = splitter;
                 }
                 function applyValueArr() {
@@ -1225,7 +1203,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     vueDetailsData.readonly = true;
                 }
                 function applyValueObj() {
-                    var a = validate_1.default.toPropName(template.column);
+                    var a = VAL.toPropName(template.column);
                     vueDetailsData = {
                         type: row[a].type,
                         column: row[a].column,
@@ -1240,7 +1218,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     }
                 }
                 function applyLabel() {
-                    var a = validate_1.default.toPropName(template.label.column);
+                    var a = VAL.toPropName(template.label.column);
                     vueDetailsData.label = {
                         column: template.label.column,
                         orig: row[a].value,
@@ -1306,7 +1284,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             function getHeading(template) {
                 var ret;
                 if (typeof template === "string")
-                    ret = row[validate_1.default.toPropName(template)].value;
+                    ret = row[VAL.toPropName(template)].value;
                 else if (template.text) {
                     ret = [];
                     for (var a = 0, lenA = template.text.length; a < lenA; a++) {
@@ -1316,7 +1294,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     ret = ret.join(template.joiner || " ");
                 }
                 else
-                    debugmode_1.debug("template heading error. change heading 'value' to 'text'");
+                    debug("template heading error. change heading 'value' to 'text'");
                 return ret;
             }
             var data = [], b = 0, display = dataTemplates[returnedJSON.table].display, title = "Item not found :´(", subtitle = "Sorry, we couldn't locate this item in the database", image = "";
@@ -1377,7 +1355,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         }
         checkDBLoaded(afterDBLoaded);
     }
-    exports.getDetails = getDetails;
     function generateListItems(tableName, ids, options, callback) {
         function buildList(result, errors) {
             var ret = [];
@@ -1398,7 +1375,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             ids = [ids];
         wwManager({ "cmd": "getVals", "title": tableName, "args": [ids, columns] }, buildList);
     }
-    exports.generateListItems = generateListItems;
     function generateList(dbTitle, ids, options, callback) {
         function getIds(rowId) {
             ids.push(rowId);
@@ -1416,9 +1392,8 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             wwManager({ "cmd": "forEachRow", "title": dbTitle }, getIds, getData);
         }
         else
-            debugmode_1.debug(dbTitle, "title required");
+            debug(dbTitle, "title required");
     }
-    exports.generateList = generateList;
     function buildMailtoUri(to, bcc, subject, message, callback) {
         var query = bcc || subject || message ? "?" : "", joiner1 = bcc && (subject || message) ? "&" : "", joiner2 = (bcc || subject) && message ? "&" : "", bccBool = bcc ? true : false;
         to = to ? encodeURIComponent(to) : "";
@@ -1430,7 +1405,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         else
             return "mailto:" + to + query + bcc + joiner1 + subject + joiner2 + message;
     }
-    exports.buildMailtoUri = buildMailtoUri;
     function addToGroup(groupName, detailsObj, searchQuery) {
         wwManager({ "cmd": "getIndexOf", "title": "Groups", "args": [null, groupName, "groupName"] }, function (index) {
             if (detailsObj)
@@ -1464,7 +1438,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 });
         });
     }
-    exports.addToGroup = addToGroup;
     function groupInput(event) {
         function runSearch(table, find) {
             wwManager({ "cmd": "advancedSearch", "title": table, "args": [find, { colNames: searchableColumns }] }, function (searchResults, errors) {
@@ -1478,9 +1451,9 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         function processInput(nextInQueue) {
             if (value !== "") {
                 var find = String(value);
-                find = validate_1.default.removeHTMLTags(find);
+                find = VAL.removeHTMLTags(find);
                 find = find.toLowerCase();
-                find = validate_1.default.toEnglishAlphabet(find);
+                find = VAL.toEnglishAlphabet(find);
                 find = find.replace(/[^_a-z0-9\+\-]/gi, " ");
                 find = trim(find);
                 app.activeGroup = [];
@@ -1497,7 +1470,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         var value = event ? event.target.value : app.groupSearchBox;
         checkDBLoaded(processInput);
     }
-    exports.groupInput = groupInput;
     function addToNewGroup(detailsObj, searchQuery) {
         app.addItemToGroupDropdown = false;
         app.groupDropdown = false;
@@ -1513,7 +1485,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         app.navigate("groups");
         app.showNewGroupUI = true;
     }
-    exports.addToNewGroup = addToNewGroup;
     function initializeGroups(callback) {
         function getGroups(nextInQueue) {
             wwManager({ "cmd": "getLength", "title": "Groups" }, function (length) {
@@ -1536,7 +1507,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         else if (callback instanceof Function)
             return callback();
     }
-    exports.initializeGroups = initializeGroups;
     function generateListView(tableTitle, ids, options) {
         function applyTitle(title) {
             app.searchResultsTitle = title;
@@ -1546,7 +1516,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             options = options || {};
             options.pageNumber = options.pageNumber || 1;
             options.numberPerPage = options.numberPerPage || 100;
-            tableTitle = validate_1.default.toPropName(tableTitle);
+            tableTitle = VAL.toPropName(tableTitle);
             if (dataTemplates[tableTitle]) {
                 app.searchResults = [];
                 generateList(tableTitle, ids, options, function (list) {
@@ -1561,13 +1531,12 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             }
             else {
                 app.spin(false, "Generating list...");
-                debugmode_1.debug(tableTitle, "error generating list view");
+                debug(tableTitle, "error generating list view");
                 if (nextInQueue instanceof Function)
                     return nextInQueue();
             }
         });
     }
-    exports.generateListView = generateListView;
     function addToRecentlyViewed(obj) {
         var recentlyViewed = false, recent = JSON.parse(JSON.stringify(app.recentlyViewed));
         //find and remove this item from recentlyViewed
@@ -1586,7 +1555,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         app.recentlyViewed = recent;
         app.storeState();
     }
-    exports.addToRecentlyViewed = addToRecentlyViewed;
     function importFile(toTable) {
         function done(success, errors) {
             if (success && !errors) {
@@ -1607,7 +1575,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey] }, done);
             });
     }
-    exports.importFile = importFile;
     function externalLink(text, type, multilineText) {
         var link;
         text = String(text);
@@ -1654,7 +1621,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         else
             return false;
     }
-    exports.externalLink = externalLink;
     function is_array(a) {
         if (a && a.constructor === Array)
             return true;
@@ -1676,7 +1642,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         }
         return ret;
     }
-    exports.getHeadersArr = getHeadersArr;
     function is_typeString(s) {
         var types = ["any", "number", "string", "boolean", "integer", "posInteger", "negInteger", "uniqueString",
             "multilineString", "date", "email", "phoneNumber", "password", "formattedAddress", "streetAddress", "mailAddress",
@@ -1712,7 +1677,6 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         else
             return ret;
     }
-    exports.getTypesArr = getTypesArr;
     function is_outsideClick(e) {
         var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
         if (e.path) {
@@ -1731,9 +1695,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         }
         return outsideClick;
     }
-    exports.is_outsideClick = is_outsideClick;
-    vue_1.default.config.productionTip = false;
-    var dropdown_button = vue_1.default.extend({
+    var dropdown_button = Vue.extend({
         props: {
             buttontext: {
                 type: String,
@@ -1818,7 +1780,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#dropdown-button"
     });
-    var icon_select = vue_1.default.extend({
+    var icon_select = Vue.extend({
         props: {
             align: {
                 type: String,
@@ -1905,7 +1867,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#icon-select"
     });
-    var color_select = vue_1.default.extend({
+    var color_select = Vue.extend({
         props: {
             align: {
                 type: String,
@@ -1990,7 +1952,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#color-select"
     });
-    var jump_list = vue_1.default.extend({
+    var jump_list = Vue.extend({
         props: {
             links: Array,
             select: {
@@ -2096,7 +2058,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         function generateHeaders() {
                             function obj(name, sortBy) {
                                 return {
-                                    id: "jumplink_" + validate_1.default.toPropName(name),
+                                    id: "jumplink_" + VAL.toPropName(name),
                                     table: "",
                                     sortBy: sortBy,
                                     text: name,
@@ -2180,7 +2142,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 if (this[prop] !== undefined)
                     this[prop] = this[prop] ? false : true;
                 else
-                    debugmode_1.debug(prop, "prop doesn't exist in jump-list");
+                    debug(prop, "prop doesn't exist in jump-list");
             },
             moreDropdownActions: function (action) {
                 switch (action) {
@@ -2214,7 +2176,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             addToGroup(groupName, null, this.currentQuery);
                         }
                         else
-                            debugmode_1.debug(action, "no such button action found");
+                            debug(action, "no such button action found");
                 }
             },
             seeDetails: function (obj) {
@@ -2246,7 +2208,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 this.toggle("selected");
                 if (link)
                     link.selected = true;
-                vue_1.default.nextTick(this.updateDropdownLinks);
+                Vue.nextTick(this.updateDropdownLinks);
             },
             toggleSelectAll: function () {
                 this.toggle("selectAll");
@@ -2254,7 +2216,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     if (this.list[a].type === "link")
                         this.list[a].selected = this.selectAll ? true : false;
                 }
-                vue_1.default.nextTick(this.updateDropdownLinks);
+                Vue.nextTick(this.updateDropdownLinks);
             },
             showIf: function (link, collapse) {
                 return link.type === "jumplink" || collapse === false;
@@ -2264,11 +2226,11 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     var el = document.getElementById(div);
                     this.collapsed = collapse ? false : true;
                     if (!el) {
-                        debugmode_1.debug("jumplink outer div #" + div + " not found. Check the div container id");
+                        debug("jumplink outer div #" + div + " not found. Check the div container id");
                         return;
                     }
                     if (collapse) {
-                        vue_1.default.nextTick(function () {
+                        Vue.nextTick(function () {
                             var linkEl = document.getElementById(link.id), pos = 0;
                             if (linkEl)
                                 pos = linkEl.offsetTop;
@@ -2286,7 +2248,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 else {
                     this.seeDetails(link);
                 }
-                vue_1.default.nextTick(this.updateDropdownLinks);
+                Vue.nextTick(this.updateDropdownLinks);
             },
             updateDropdownLinks: function () {
                 function newEmailLink() {
@@ -2329,7 +2291,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             ]
                         }, function (vals, errors) {
                             if (!vals || errors) {
-                                return debugmode_1.debug(errors, "get email errors");
+                                return debug(errors, "get email errors");
                             }
                             var type, email, name, primary = false;
                             for (var a = 0, lenA = vals.length; a < lenA; a++) {
@@ -2443,7 +2405,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#jump-list"
     });
-    var new_table_page = vue_1.default.extend({
+    var new_table_page = Vue.extend({
         name: "NewTablePage",
         components: {
             "dropdown-button": dropdown_button,
@@ -2541,7 +2503,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             setCustomProp: function (propName, value, type) {
                 this.newTable.options = this.newTable.options || {};
                 this.newTable.options.customProperties = this.newTable.options.customProperties || {};
-                this.newTable.options.customProperties[validate_1.default.toPropName(propName)] = {
+                this.newTable.options.customProperties[VAL.toPropName(propName)] = {
                     initialValue: value,
                     type: type
                 };
@@ -2567,7 +2529,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 else if (value === "Boolean")
                     this.customPropertyInitialValue = false;
                 else
-                    debugmode_1.debug(value, "not valid property type");
+                    debug(value, "not valid property type");
             },
             addNewProperty: function () {
                 function isNumeric(n) {
@@ -2738,7 +2700,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#new-table-page"
     });
-    var groups_page = vue_1.default.extend({
+    var groups_page = Vue.extend({
         name: "GroupsPage",
         components: {
             "jump-list": jump_list
@@ -2773,7 +2735,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 //Validate groupName
                 groupName = groupName || this.groupName;
                 this.groupName = groupName;
-                groupName = validate_1.default.toEnglishAlphabet(groupName);
+                groupName = VAL.toEnglishAlphabet(groupName);
                 groupName = groupName.replace(/[^A-z0-9_\-/\s]/g, "");
                 groupName = trim(groupName);
                 if (groupName && groupName !== "") {
@@ -2787,7 +2749,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     //get group ids
                     for (var c = 0, lenC = this.activeGroup.length; c < lenC; c++) {
                         if (this.activeGroup[c].selected === true) {
-                            title = validate_1.default.toPropName(this.activeGroup[c].table);
+                            title = VAL.toPropName(this.activeGroup[c].table);
                             if (!this.ids[title])
                                 this.ids[title] = [];
                             this.ids[title].push(this.activeGroup[c].id);
@@ -2981,13 +2943,13 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             }
                         }
                         else
-                            debugmode_1.debug(err, table + " seeGroup error");
+                            debug(err, table + " seeGroup error");
                     });
                 }
                 function showGroup(group, error) {
                     //	debug(group, "group");
                     if (!group || error)
-                        debugmode_1.debug(error);
+                        debug(error);
                     else if (group.searchTerms.value !== "") {
                         for (var a in dataTemplates) {
                             if (dataTemplates.hasOwnProperty(a))
@@ -3032,14 +2994,14 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             },
             toggle: function (prop) {
                 if (this[prop] === undefined)
-                    return debugmode_1.debug(prop, "prop does not exist");
+                    return debug(prop, "prop does not exist");
                 else
                     this[prop] = !this[prop];
             }
         },
         template: "#groups-page"
     });
-    var view1_page = vue_1.default.extend({
+    var view1_page = Vue.extend({
         name: "View1Page",
         data: function () {
             return {
@@ -3066,7 +3028,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#view1-page"
     });
-    var view3_page = vue_1.default.extend({
+    var view3_page = Vue.extend({
         name: "View3Page",
         methods: {
             generateListView: generateListView,
@@ -3075,7 +3037,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#view3-page"
     });
-    var details_card_lineitem = vue_1.default.extend({
+    var details_card_lineitem = Vue.extend({
         props: {
             item: Object
         },
@@ -3087,7 +3049,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#details-card-lineitem"
     });
-    var details_card = vue_1.default.extend({
+    var details_card = Vue.extend({
         components: {
             "details-card-lineitem": details_card_lineitem,
             "dropdown-button": dropdown_button
@@ -3203,7 +3165,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             },
             deleteItem: function () {
                 app.confirm("Are you sure that you want to delete " + this.details.title + "?", function () {
-                    debugmode_1.debug("delete not done");
+                    debug("delete not done");
                 });
             },
             exportItem: function () {
@@ -3215,7 +3177,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             Windows.UI.ViewManagement.ApplicationViewState.snapped &&
                             !Windows.UI.ViewManagement.ApplicationView.tryUnsnap()) {
                             // Fail silently if we can't unsnap
-                            debugmode_1.debug("Some kind of Windows 8 bug prevented saving this file.");
+                            debug("Some kind of Windows 8 bug prevented saving this file.");
                             return false;
                         }
                         // Create the picker object and set options
@@ -3241,7 +3203,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                         return true;
                                     }
                                     else {
-                                        debugmode_1.debug("File " + file.name + " couldn't be saved.");
+                                        debug("File " + file.name + " couldn't be saved.");
                                         return false;
                                     }
                                 });
@@ -3331,7 +3293,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                     " <a id='hiddenDownloadLink' style='display:none' download='' href=''></a>";
                                 msg +=
                                     " somewhere in the page to create a web browser download link";
-                                debugmode_1.debug("html download link missing", msg);
+                                debug("html download link missing", msg);
                                 return false;
                             }
                             if (URL)
@@ -3361,14 +3323,14 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         if (i.column === "Compressed Contents")
                             contents = i.value[0];
                     }
-                    if (hash === base64_1.default.hash(base64_1.default.hash(app.stoKey))) {
-                        contents = base64_1.default.read(contents, base64_1.default.hash(app.stoKey));
+                    if (hash === Base64.hash(Base64.hash(app.stoKey))) {
+                        contents = Base64.read(contents, Base64.hash(app.stoKey));
                         return saveFile(contents, name, type || extension);
                     }
                     else {
                         var msg = "You do not have access to this file's contents";
                         app.notify(msg);
-                        debugmode_1.debug(msg, "hashes do not match");
+                        debug(msg, "hashes do not match");
                         return false;
                     }
                 }
@@ -3384,7 +3346,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#details-card"
     });
-    var details_view_container = vue_1.default.extend({
+    var details_view_container = Vue.extend({
         components: {
             "details-card": details_card
         },
@@ -3393,7 +3355,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#details-view-container"
     });
-    var details_page = vue_1.default.extend({
+    var details_page = Vue.extend({
         name: "DetailsPage",
         components: {
             "details-card": details_card
@@ -3405,7 +3367,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#details-page"
     });
-    var recent_page = vue_1.default.extend({
+    var recent_page = Vue.extend({
         name: "RecentPage",
         components: {
             "jump-list": jump_list,
@@ -3447,7 +3409,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             fetchData: function () {
                 if (this.recentlyViewed.length === 0) {
                     this.loading = true;
-                    storage_1.default.getItem("state", null, this.applyState, this.error);
+                    Sto.getItem("state", null, this.applyState, this.error);
                 }
             },
             error: function (err) {
@@ -3471,7 +3433,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#recent-page"
     });
-    var search_results_page = vue_1.default.extend({
+    var search_results_page = Vue.extend({
         name: "SearchResultsPage",
         components: {
             "jump-list": jump_list,
@@ -3509,7 +3471,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#search-results-page"
     });
-    var edit_details_card_lineitem = vue_1.default.extend({
+    var edit_details_card_lineitem = Vue.extend({
         props: { item: Object },
         data: function () {
             return {
@@ -3556,7 +3518,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#edit-details-card-lineitem"
     });
-    var edit_details_card_collapse = vue_1.default.extend({
+    var edit_details_card_collapse = Vue.extend({
         components: {
             "edit-details-card-lineitem": edit_details_card_lineitem
         },
@@ -3592,7 +3554,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         },
         template: "#edit-details-card-collapse"
     });
-    var edit_details_card = vue_1.default.extend({
+    var edit_details_card = Vue.extend({
         props: {
             details: Object
         },
@@ -3608,7 +3570,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         if (errors.length === 0)
                             app.navigate("details");
                         else
-                            debugmode_1.debug(errors, "errors saving changes");
+                            debug(errors, "errors saving changes");
                     }
                 }
                 function save(data, label) {
@@ -3703,11 +3665,11 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         //	debug(arr, "creating new row");
                         for (var a = 0, len = arr.length; a < len; a++) {
                             if (arr[a] === undefined)
-                                debugmode_1.debug(arr[a], headers[a]);
+                                debug(arr[a], headers[a]);
                         }
                         wwManager({ cmd: "addRow", title: table, args: [arr] }, function (id, errors) {
                             if (errors)
-                                debugmode_1.debug(errors, id);
+                                debug(errors, id);
                             app.spin(false, "Creating new item...");
                         });
                     });
@@ -3752,13 +3714,13 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 }
             },
             cancelChanges: function () {
-                debugmode_1.debug("cancelChanges not done");
+                debug("cancelChanges not done");
                 app.navigate("details");
             }
         },
         template: "#edit-details-card"
     });
-    var edit_details_page = vue_1.default.extend({
+    var edit_details_page = Vue.extend({
         name: "EditDetailsPage",
         components: {
             "edit-details-card": edit_details_card
@@ -3774,7 +3736,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         name: "PageNotFound",
         template: "#page-not-found"
     };
-    vue_1.default.use(vue_router_1.default);
+    Vue.use(VueRouter);
     var routes = [
         {
             path: '/new',
@@ -3877,10 +3839,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             }
         }
     ];
-    var router = new vue_router_1.default({
+    var router = new VueRouter({
         routes: routes
     });
-    var app = new vue_1.default({
+    var app = new Vue({
         router: router,
         el: "#app",
         components: {
@@ -4026,7 +3988,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 if (this[prop] !== undefined)
                     this[prop] = this[prop] === true ? false : true;
                 else
-                    debugmode_1.debug(prop, "not found");
+                    debug(prop, "not found");
             },
             toggleSettings: function () {
                 this.toggle('showSettings');
@@ -4035,7 +3997,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             storeState: function () {
                 if (cordova || this.cookieAgree) {
                     setTimeout(function () {
-                        storage_1.default.setItem("state", {
+                        Sto.setItem("state", {
                             version: this.version,
                             darkTheme: this.darkTheme,
                             useSystemTheme: this.useSystemTheme,
@@ -4072,8 +4034,8 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 }
                 if (this.searchBox !== "" || optionalQuery) {
                     if (this.searchBox === "debugmode") {
-                        debugmode_1.setDebugMode(true);
-                        debugmode_1.debug("showing debugmode");
+                        APP.setDebugMode(true);
+                        debug("showing debugmode");
                     }
                     else if (this.searchBox === "useragent") {
                         this.notify(navigator.userAgent);
@@ -4083,7 +4045,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         checkDBLoaded(function (nextInQueue) {
                             function displayResults(searchResults, errors, table) {
                                 if (errors)
-                                    debugmode_1.debug(errors, "search error");
+                                    debug(errors, "search error");
                                 else if (searchResults)
                                     generateList(table, searchResults, null, function (list) {
                                         results = results.concat(list);
@@ -4210,9 +4172,9 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 if (value !== "") {
                     if (loadDB === false) {
                         var suggestions = [], str = String(value), numOfTables = 0, n = 0;
-                        str = validate_1.default.removeHTMLTags(str);
+                        str = VAL.removeHTMLTags(str);
                         str = str.toLowerCase();
-                        str = validate_1.default.toEnglishAlphabet(str);
+                        str = VAL.toEnglishAlphabet(str);
                         str = str.replace(/[^_a-z0-9\+\-]/gi, " ");
                         str = trim(str);
                         for (var t in dataTemplates) {
@@ -4366,7 +4328,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         this.dropboxEmail = user.email;
                         dbid = user.dbid;
                         this.loggedIn = true;
-                        this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? base64_1.default.hash(user.dbid) : base64_1.default.hash(user.email) : this.stoKey });
+                        this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
                         if (callback instanceof Function)
                             callback(true);
                     }
@@ -4378,7 +4340,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             callback(false);
                     }
                     if (!Dbx || !Dbx.login)
-                        Dbx = dropbox_1.initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
+                        Dbx = initiateDropbox(DROPBOX_CLIENT_ID, this.stoKey);
                     Dbx.login(null, welcome.bind(this), startScreen.bind(this)); //TODO login password ui
                 }
                 this.notify("Connecting to Dropbox, please wait...", false, login.bind(this));
@@ -4415,11 +4377,11 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         this.stoKeyWarning = "";
                         var oldKey = this.stoKey;
                         if (dbid) {
-                            oldKey = oldKey !== "unknown" ? oldKey : base64_1.default.hash(dbid);
-                            this.stoKey = base64_1.default.hash(dbid + key.value);
+                            oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(dbid);
+                            this.stoKey = Base64.hash(dbid + key.value);
                         }
                         else { //temp until depricate User.id
-                            debugmode_1.debug("error setting key", "error");
+                            debug("error setting key", "error");
                             console.log(oldKey, this.stoKey, dbid);
                             //oldKey = oldKey !== "unknown" ? oldKey : Base64.hash(_this.dropboxEmail);
                             //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);
@@ -4448,10 +4410,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     checkDBLoaded(function (nextInQueue) {
                         var key = document.getElementById("updateStoKeyInput");
                         if (dbid) {
-                            this.stoKey = base64_1.default.hash(dbid + key.value);
+                            this.stoKey = Base64.hash(dbid + key.value);
                         }
                         else
-                            debugmode_1.debug("use of dropboxEmail as a key has been depricated", "error"); //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate User.id
+                            debug("use of dropboxEmail as a key has been depricated", "error"); //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate User.id
                         return storeKey.call(this, this.stoKey, nextInQueue);
                     }.bind(this));
                 }.bind(this));
@@ -4493,7 +4455,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                 callback(reader.result, file);
                             };
                             if (readAs === "image" || imageTypes.test(file.type)) {
-                                debugmode_1.debug(file, "reading as image");
+                                debug(file, "reading as image");
                                 reader.readAsDataURL(file);
                             }
                             else if (readAs === "text")
@@ -4512,7 +4474,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     function notify() { this.spin(true, "Loading file..."); init.call(this); }
                     function showError(e) { this.notify("Error loading file: " + e); }
                     if (!fileReaderInitiated[fileInputId]) {
-                        if (fileInputElement && window.File && window.FileReader && window.FileList && window.Blob) {
+                        if (fileInputElement && File && FileReader && FileList && Blob) {
                             fileInputElement.addEventListener('change', notify.bind(this), false);
                             fileInputElement.addEventListener('error', showError.bind(this), false);
                         }
@@ -4534,7 +4496,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     return cb();
                 }
                 function saveFile(source, details) {
-                    var contents = base64_1.default.write_and_verify(source, base64_1.default.hash(this.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = this.dropboxEmail || "unknown", hash = base64_1.default.hash(base64_1.default.hash(this.stoKey));
+                    var contents = Base64.write_and_verify(source, Base64.hash(this.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = this.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(this.stoKey));
                     name.pop();
                     name = name.join(".");
                     modified = typeof modified === "number" ? modified : new Date(modified).getTime();
@@ -4547,7 +4509,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 }
                 function parseCSV(source) {
                     this.notify("Importing data...", false, function () {
-                        source = common_1.csv2json(source);
+                        source = COM.csv2json(source);
                         source.lastModified = new Date().getTime();
                         source.author = this.dropboxEmail || "unknown";
                         //try get csv modified date and author from notes
@@ -4575,10 +4537,10 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                     }.bind(this));
                 }
                 function parseVCF(input) {
-                    debugmode_1.debug(input, "parseVCF not done");
+                    debug(input, "parseVCF not done");
                 }
                 function parseJSON(input) {
-                    debugmode_1.debug(input, "parseJSON not done");
+                    debug(input, "parseJSON not done");
                 }
                 function click(callback) {
                     if (fileInputElement)
@@ -4602,7 +4564,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             Dbx.save("/data/" + obj.title, obj.file, null, function () {
                                 wwManager({ "cmd": "setSyncCompleted", "title": title, "args": [syncfile] }, function (success, error) {
                                     if (!success)
-                                        debugmode_1.debug(error, title + " setSyncComplete error");
+                                        debug(error, title + " setSyncComplete error");
                                     else
                                         console.log("sync complete");
                                     if (finalBool)
@@ -4611,7 +4573,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                             }, function (error) {
                                 if (finalBool)
                                     this.spin(false, "Synchronising with Dropbox");
-                                debugmode_1.debug(error, "save file to Dropbox error");
+                                debug(error, "save file to Dropbox error");
                             });
                         }
                         else {
@@ -4639,12 +4601,12 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                             break;
                                         default:
                                             this.notify("Unknown error");
-                                            debugmode_1.debug(errors, "sync errors");
+                                            debug(errors, "sync errors");
                                     }
                                 }
                             }
                             else
-                                debugmode_1.debug("no json returned to upload to dropbox");
+                                debug("no json returned to upload to dropbox");
                         }
                         syncfileNeedsUpdated = !syncfile || !syncfile[title] || obj ? true : syncfileNeedsUpdated;
                         if (b === count)
@@ -4661,7 +4623,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                 options.forceSync = true;
                             }
                             else {
-                                debugmode_1.debug(error, "couldn't sync " + title);
+                                debug(error, "couldn't sync " + title);
                                 this.notify("Sync did not complete successfully");
                                 return;
                             }
@@ -4705,7 +4667,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                                     }
                                     else {
                                         self.spin(false, "Synchronising with Dropbox");
-                                        debugmode_1.debug(errors, "problem syncing " + table);
+                                        debug(errors, "problem syncing " + table);
                                         self.notify("Sync did not complete successfully");
                                     }
                                 });
@@ -4719,7 +4681,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     function success() {
-                        storage_1.default.setItem("lastSyncAll", new Date().getTime());
+                        Sto.setItem("lastSyncAll", new Date().getTime());
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     if (syncfileNeedsUpdated) {
@@ -4751,9 +4713,9 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 //else console.log("beginning sync");
                 checkDBLoaded(function (nextInQueue) {
                     options = options || {};
-                    options.initialKey = dbid ? base64_1.default.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
+                    options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
                     options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-                    storage_1.default.getItem("lastSyncAll", null, function (time) {
+                    Sto.getItem("lastSyncAll", null, function (time) {
                         //debug(time);
                         if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) { //5 minutes between sync attempts
                             this.spin(true, "Synchronising with Dropbox");
@@ -4780,7 +4742,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 var loadingDiv = document.getElementById("loading");
                 if (loadingDiv)
                     loadingDiv.className = "";
-                exports.state = state = freshStateObj();
+                state = freshStateObj();
                 state.cookieAgree = true;
                 for (var s in state) {
                     if (this[s])
@@ -4811,7 +4773,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
                 var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
                 msg = "This will " + msg + "and restore default settings";
                 this.confirm("Are you sure you want to reset the app?", function reset() {
-                    storage_1.default.nuke();
+                    Sto.nuke();
                     this.logout(this.resetSettings);
                 }.bind(this), { ok: "Reset App", details: msg });
             },
@@ -4828,7 +4790,7 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
             }
         }
     });
-    exports.app = app;
+    APP.goBack = app.goBack;
     window.onresize = refreshResponsiveLayout; //recalc layout on resize for a responsive experience
     if (Windows && WinJS) {
         console.log("Windows");
@@ -4885,9 +4847,9 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         };
         winApp.start();
     }
-    // else if (cordova) {
-    // 	//	document.addEventListener('deviceready', onDeviceReady.bind(this), false);
-    // }
+    else if (cordova) {
+        document.addEventListener('deviceready', onDeviceReady, false);
+    }
     else
         startApp(); //and... GO!
     function onDeviceReady() {
@@ -4911,9 +4873,8 @@ define(["require", "exports", "vue", "vue-router", "./debugmode", "./common", ".
         // TODO: Cordova has been loaded. Perform any initialization that requires Cordova here.
         startApp(); //and... GO!
     }
-    function initialize() {
-        document.addEventListener('deviceready', onDeviceReady, false);
-    }
-    exports.initialize = initialize;
-});
+}());
+// export function initialize(): void {
+// 	document.addEventListener('deviceready', onDeviceReady, false);
+// }
 //# sourceMappingURL=main.js.map
