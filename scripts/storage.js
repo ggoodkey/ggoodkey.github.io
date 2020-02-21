@@ -1,5 +1,5 @@
 "use strict";
-/* global Base64, Lawnchair */
+/* global Base64, Lawnchair, Windows */
 var Sto = (function () {
     "use strict";
     var LOCAL = {}, Version = 1.1, PreviousVersion = 1;
@@ -14,7 +14,7 @@ var Sto = (function () {
                 LOCAL[refName].save({ key: refName, data: value });
             }
             function write(file) {
-                window.Windows.Storage.FileIO.writeTextAsync(file, value).done(function () {
+                Windows.Storage.FileIO.writeTextAsync(file, value).done(function () {
                 }, function (error) {
                     //file couldn't be written - handle the error
                     console.log(error, "not written");
@@ -32,8 +32,8 @@ var Sto = (function () {
                 value = JSON.stringify(value);
             //if (console && console.log) console.log("setItem", refName, value, key);
             value = key ? Base64.write(value, key) : Base64.write(value);
-            if (window.Windows) {
-                var storageFolder = window.Windows.Storage.ApplicationData.current.localFolder;
+            if (Windows) {
+                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                 storageFolder.getFileAsync(refName).done(write, fileNotFoundError);
             }
             else if (typeof LOCAL[refName] === "undefined" || LOCAL[refName] === null || !(LOCAL[refName] instanceof Lawnchair)) {
@@ -63,10 +63,10 @@ var Sto = (function () {
                         return null;
                 }
             }
-            if (window.Windows) {
-                var storageFolder = window.Windows.Storage.ApplicationData.current.localFolder;
+            if (Windows) {
+                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                 storageFolder.getFileAsync(refName).done(function (file) {
-                    window.Windows.Storage.FileIO.readTextAsync(file).done(function (fileContent) {
+                    Windows.Storage.FileIO.readTextAsync(file).done(function (fileContent) {
                         read(fileContent);
                         //'fileContent' contains your JSON data as a string
                     }, function (error) {
@@ -96,8 +96,8 @@ var Sto = (function () {
             var _this = this;
             function getAllKeys() { this.keys(deleteEachKey); }
             function deleteEachKey(keys) { keys.forEach(_this.deleteItem); }
-            if (window.Windows) {
-                var storageFolder = window.Windows.Storage.ApplicationData.current.localFolder;
+            if (Windows) {
+                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                 storageFolder.getFilesAsync().done(function (files) {
                     if (files.length > 0)
                         for (var a = 0, len = files.length; a < len; a++) {
@@ -114,10 +114,10 @@ var Sto = (function () {
         };
         LocalStorageObj.prototype.deleteItem = function (refName) {
             function deleteRef() { this.remove(refName); }
-            if (window.Windows) {
-                var storageFolder = window.Windows.Storage.ApplicationData.current.localFolder;
+            if (Windows) {
+                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                 storageFolder.getFileAsync(refName).done(function (file) {
-                    file.deleteAsync(window.Windows.Storage.StorageDeleteOption.default);
+                    file.deleteAsync(Windows.Storage.StorageDeleteOption.default);
                 }, function (error) {
                     console.log(error);
                 });
