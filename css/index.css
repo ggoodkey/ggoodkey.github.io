@@ -759,14 +759,14 @@ html.desk.dark .dropdown-container button.selected:hover,
 html.tabl .searchSuggestions-container,
 html.desk .searchSuggestions-container,
 .dropdown {
-	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
 }
 
 .dark #navbar,
 html.tabl.dark .searchSuggestions-container,
 html.desk.dark .searchSuggestions-container,
 .dark .dropdown {
-	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.7);
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
 }
 
 #navbar .navButtons .navlink {

@@ -351,7 +351,7 @@ searchable: Boolean whether to index column for searches
     
 
     
-    <h4 class="name" id="addRow"><span class="type-signature"></span>addRow<span class="signature">(array, id<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="addRow"><span class="type-signature"></span>addRow<span class="signature">(array, id<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {string}</span></h4>
     
 
     
@@ -455,6 +455,39 @@ searchable: Boolean whether to index column for searches
             
 
             <td class="description last"><p>id is optional and will only be used if it doesn't already exist</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">addRowCallback</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>if row is a JSON object, the new row id is passed back only through a callback function</p></td>
         </tr>
 
     
