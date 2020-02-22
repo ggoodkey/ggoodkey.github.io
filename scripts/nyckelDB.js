@@ -84,6 +84,22 @@ var NyckelDB = (function () {
             str = str.replace(/\s\s/g, " ");
         return str.replace(/^\s+|\s+$/gm, "");
     }
+    function IS_COMPATIBLE_VERSION(ver) {
+        if (ver === this.version + "_" + Base64.Version)
+            return true;
+        else if (ver === this.version + "." + Base64.Version)
+            return true;
+        else {
+            var compat = false;
+            for (var a = 0, len = COMPATIBLE_VERSIONS.length; a < len; a++) {
+                if (ver === COMPATIBLE_VERSIONS[a] + "_" + Base64.Version)
+                    compat = true;
+                else if (ver === COMPATIBLE_VERSIONS[a] + "." + Base64.Version)
+                    compat = true;
+            }
+            return compat;
+        }
+    }
     /*returns number of minutes since Fri Jul 14 2017 02:40:00 GMT+0000, or since 15e11 in javascript time
     use wRefTo (with reference to, Optional) to specify a different base time stamp as reference. Returns the difference
     b/t wRefTo and Now. */
@@ -364,7 +380,6 @@ var NyckelDB = (function () {
         }
     }
     function TO_LOCAL_STORAGE(changes) {
-        if (changes === void 0) { changes = false; }
         function save() {
             if (typeof changes === "undefined" || changes === true) {
                 //check for and surface hidden values before save
@@ -679,7 +694,7 @@ var NyckelDB = (function () {
                     if (dif === false)
                         return matchedID;
                     if (searchLevel < minimunFindIdLoop)
-                        return false;
+                        return undefined;
                     for (var a = 0, difLen = dif.length; a < difLen; a++) {
                         SET_VAL.call(this, matchedID, dif[a], jsonRow[dif[a]], false, 0);
                         syncChanges = true;
@@ -714,7 +729,7 @@ var NyckelDB = (function () {
                 //if there are no registered ids existing/left, create a new one
                 if (remainingIds.length === 0) {
                     syncChanges = true;
-                    return ADD_ROW.call(this, toArray.call(this, jsonRow), null, false, toEditTimesArr.call(this, json, "create new row from csv"));
+                    return ADD_ROW.call(this, toArray.call(this, jsonRow), undefined, false, toEditTimesArr.call(this, json, "create new row from csv"));
                 }
                 else {
                     var ids = [];
@@ -727,14 +742,14 @@ var NyckelDB = (function () {
                     switch (ids.length) {
                         case 0:
                             if (searchLevel < 2)
-                                return false;
+                                return undefined;
                             syncChanges = true;
-                            return ADD_ROW.call(this, toArray.call(this, jsonRow), null, false, toEditTimesArr.call(this, json, "no remaining ids"));
+                            return ADD_ROW.call(this, toArray.call(this, jsonRow), undefined, false, toEditTimesArr.call(this, json, "no remaining ids"));
                         case 1:
                             return onePossibleMatch.call(this, ids[0], 3, searchLevel, jsonRow);
                         default:
                             if (searchLevel < 4)
-                                return false;
+                                return undefined;
                             var numDif = [], dif = [];
                             for (var k = 0; k < ids.length; k++) {
                                 dif[k] = findDifferences.call(this, ids[k], jsonRow);
@@ -743,7 +758,7 @@ var NyckelDB = (function () {
                                 numDif[k] = dif[k].length;
                             }
                             if (searchLevel < 5)
-                                return false;
+                                return undefined;
                             var closest = 0;
                             for (var m = 1; m < numDif.length; m++) {
                                 if (numDif[m] < numDif[m - 1])
@@ -830,7 +845,7 @@ var NyckelDB = (function () {
         var syncChanges = false;
         if ("Headers" in json && "Rows" in json)
             return applyCSV.call(this, json);
-        if ("data" in json && json.version === this.version + "_" + Base64.Version && Base64.hmac(json.data, key) === json.signature) {
+        if ("data" in json && IS_COMPATIBLE_VERSION.call(this, json.version) && Base64.hmac(json.data, key) === json.signature) {
             json = Base64.read(json.data, key);
         }
         if ("title" in json)
@@ -1073,7 +1088,7 @@ var NyckelDB = (function () {
             if (typeof obj === "string")
                 obj = JSON.parse(obj);
             if (!(obj &&
-                obj.version === this.version + "_" + Base64.Version &&
+                IS_COMPATIBLE_VERSION.call(this, obj.version) &&
                 obj.length === this.getLength() &&
                 obj.lastModified === DB[this.id].lastModified &&
                 obj.colNamesIndexed.join("") === COL_NAMES_INDEXED[this.id].join(""))) {
@@ -1218,7 +1233,7 @@ var NyckelDB = (function () {
                 end = null;
                 if (num > maxIdsPossible) {
                     CACHE_ERROR.call(this, "getNextId failed", "You have exceeded a design limitation in the number of possible records that this application can handle.");
-                    return null;
+                    return undefined;
                 }
                 else
                     return newId;
@@ -1227,7 +1242,7 @@ var NyckelDB = (function () {
             existingIds = existingIds || {};
             if (typeof existingIds !== "object") {
                 CACHE_ERROR.call(this, "getNextId failed", "Invalid parameters: existingIds expects a JSON object");
-                return null;
+                return undefined;
             }
             var alphabetLength = alphabet.length, maxIdsPossible = maxNumPos(idLength, alphabetLength), newId = "", num = 0, alpha = alphabet[0];
             setStartingPoint(startingPoint);
@@ -1235,7 +1250,7 @@ var NyckelDB = (function () {
         }
         if (TABLE_IS_DELETED(DB[this.id])) {
             CACHE_ERROR.call(this, "please recreate table before adding rows");
-            return callback instanceof Function ? (callback.call(this, false, "please recreate table before adding rows"), false) : false;
+            return callback instanceof Function ? (callback.call(this, false, "please recreate table before adding rows"), undefined) : undefined;
         }
         var hLen = DB[this.id].columns.headers.length;
         if (id && array.length === hLen && array[0] === id) {
@@ -1243,16 +1258,16 @@ var NyckelDB = (function () {
         }
         if (array.length !== hLen - 1) {
             CACHE_ERROR.call(this, array, "new row doesn't match table size: " + hLen);
-            return callback instanceof Function ? (callback.call(this, false, "new row doesn't match table size: " + hLen), false) : false;
+            return callback instanceof Function ? (callback.call(this, false, "new row doesn't match table size: " + hLen), undefined) : undefined;
         }
         id = getNextId.call(this, 3, DB[this.id].ids, id ? id : IS_ARRAY(array) ? array.join("") : null);
         if (!id)
-            return callback instanceof Function ? (callback.call(this, false, "unknown"), false) : false;
+            return callback instanceof Function ? (callback.call(this, false, "unknown"), undefined) : undefined;
         var row = [id];
         if (!array || array.constructor !== Array) {
             CACHE_ERROR.call(this, array, "cannot add row");
             row = null;
-            return callback instanceof Function ? (callback.call(this, false, "cannot add row"), false) : false;
+            return callback instanceof Function ? (callback.call(this, false, "cannot add row"), undefined) : undefined;
         }
         for (var a = 1, len = DB[this.id].columns.headers.length, type = void 0; a < len; a++) {
             type = DB[this.id].columns.meta[DB[this.id].columns.headers[a]].type[0];
@@ -1990,7 +2005,7 @@ var NyckelDB = (function () {
         function syncToken(token) {
             if (token) {
                 token = typeof token === "string" ? JSON.parse(token) : token;
-                if (typeof token !== "string" && token && token.version === this.version + "_" + Base64.Version) {
+                if (typeof token !== "string" && token && IS_COMPATIBLE_VERSION.call(this, token.version)) {
                     if (token.signature && token.token && token.signature === Base64.hmac(token.token, key)) {
                         var dbxSyncObj = JSON.parse(Base64.read(token.token, key));
                         for (var i in dbxSyncObj) {
@@ -2509,7 +2524,7 @@ var NyckelDB = (function () {
          * @function addRow
          * @param {array} array a complete array, or a JSON object in form {[colName]: {value: [value]},..}
          * @param {string} [id] id is optional and will only be used if it doesn't already exist
-         * @param {addRowCallback} [callback] if row is a JSON object, the new row id is passed back only through a callback function
+         * @param {setRowCallback} [callback] if row is a JSON object, the new row id is passed back only through a callback function
          * @returns {string} new row id
          */
         NyckelDBObj.prototype.addRow = function (array, id, callback) {
@@ -2521,7 +2536,7 @@ var NyckelDB = (function () {
                         _array[a] = array[col].value;
                     a++;
                 }, function () {
-                    var id = ADD_ROW.call(this, _array, id, true, undefined, callback);
+                    id = ADD_ROW.call(this, _array, id, true, undefined, callback);
                 }.bind(this));
             }
             else
@@ -3169,7 +3184,7 @@ var NyckelDB = (function () {
                     return;
                 }
                 var version = String(json.version).split("_");
-                if (String(version[0]) !== String(this.version) && COMPATIBLE_VERSIONS.indexOf(String(version[0])) === -1) {
+                if (!IS_COMPATIBLE_VERSION.call(this, json.version)) {
                     console.log("versions do not match", String(version[0]), String(this.version));
                     didntGetCachedTable.call(this);
                     return;
@@ -3212,7 +3227,7 @@ var NyckelDB = (function () {
                 return callback instanceof Function ? callback.call(this, false, "importData modified dates are corrupted: " + opt.importData.lastModified, null, false) : CACHE_ERROR.call(this, "importData modified dates are corrupted: " + opt.importData.lastModified);
             }
             if (opt.importData && opt.importData.data) {
-                if (opt.importData.version !== this.version + "_" + Base64.Version && opt.importData.version !== this.version + "." + Base64.Version) {
+                if (!IS_COMPATIBLE_VERSION.call(this, opt.importData.version)) {
                     return callback instanceof Function ? callback.call(this, false, "imported database version not supported", null, false) : CACHE_ERROR.call(this, "imported database version not supported");
                 }
                 else if (Base64.hmac(opt.importData.data, opt.key) === opt.importData.signature) {
@@ -3749,7 +3764,7 @@ var NyckelDB = (function () {
                 return CREATE_BASE64_FILE.call(this, writeKey, opt.token, callback);
             else if (typeof json === "string")
                 json = JSON.parse(json);
-            if (!json.data || !(json.version === this.version + "_" + Base64.Version)) {
+            if (!json.data || !IS_COMPATIBLE_VERSION.call(this, json.version)) {
                 return retError.call(this, "unsupported version:" + json.version);
             }
             return sync.call(this);
@@ -3854,8 +3869,8 @@ var NyckelDB = (function () {
     var VALID_STRING_TYPES = new RegExp("^(" + STRING_TYPES.split(" ").join("|") + ")$");
     var VALID_NUMBER_TYPES = new RegExp("^(" + NUMBER_TYPES.split(" ").join("|") + ")$");
     var FORBIDDEN = GET_FORBIDDEN(); //property names that shouldn't be used (?)
-    var THIS_VERSION = "0.6.0";
-    var COMPATIBLE_VERSIONS = ["0.5"];
+    var THIS_VERSION = "0.6.0"; //update COMPATIBLE_VERSIONS when this changes
+    var COMPATIBLE_VERSIONS = ["0.5"]; // capable of migrating these versions forward to the current version
     //TODO share function
     return NyckelDBObj;
 }());
