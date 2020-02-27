@@ -238,22 +238,30 @@
 								Delete Local Data
 							</button>
 						</div>
-
 						<br>
+
 						<hr>
+						<h6>About the App</h6>
 						<div class="clear">
 							App Version
 							<div class="right">
 								{{ version }}
 							</div>
 						</div>
-
-						<a class="clear right" href="http://gapps.droppages.com/privacy.html" target="_blank">
-							Privacy Policy
-						</a>
-						<p id="copy" class="clear">
-							<small>&copy; 2018 GG</small>
-						</p>
+						<br>
+						<small>
+							<a class="clear" href="http://gapps.droppages.com/FAQ.html" target="_blank">
+								Help/FAQ
+							</a>
+							<br>
+							<a class="clear" href="http://gapps.droppages.com/privacy.html" target="_blank">
+								Privacy Policy
+							</a>
+							<br>
+							<a class="clear" href="http://gapps.droppages.com/terms.html" target="_blank">
+								Terms and Conditions
+							</a>
+						</small>
 					</div>
 				</div>
 			</div>
@@ -311,6 +319,12 @@
 
 	<!-- Vue.js Templates-->
 
+	<!-- 
+			This HTML Document including x-templates was created by G. Goodkey
+			Permission to use may be granted on request 
+			g g o o d k e y A T g m a i l D O T c o m 
+	-->
+
 	<script type="text/x-template" id="dropdown-button">
 		<div class="dropdownButton dropdown-container">
 			<button
@@ -321,25 +335,14 @@
 				@click="toggle"
 			>
 				<template v-if="icon">
-					<span
-						class="dropdownButton icon"
-						:class="icon"
-					></span>
-					<template v-if="noinputtext || buttonValue !== '' || noarrow === false">&nbsp;&nbsp;</template>
-				</template>
-				<template v-if="noinputtext || buttonValue !== ''">{{ buttonValue || noinputtext }}</template>
-				<template v-if="noarrow === false">
-					&nbsp;
-					<small>
-						<span
-							v-show="open"
-							class="dropdownButton icon icon-triangle-top"
-						></span>
-						<span
-							v-show="open === false"
-							class="dropdownButton icon icon-triangle-bottom"
-						></span>
-					</small>
+					<!-- funny formatting to avoid text wrapping inside button -->
+					<span class="dropdownButton icon" :class="icon"
+					></span><template v-if="noinputtext || buttonValue !== '' || noarrow === false"
+					>&nbsp;&nbsp;</template></template><template v-if="noinputtext || buttonValue !== ''"
+					>{{ buttonValue || noinputtext }}</template><template v-if="noarrow === false"
+					>&nbsp;<small><span v-show="open" class="dropdownButton icon icon-triangle-top"
+					></span><span v-show="open === false" class="dropdownButton icon icon-triangle-bottom"
+					></span></small>
 				</template>
 			</button>
 			<input
@@ -532,119 +535,123 @@
 				>
 					<table>
 						<thead>
-							<th>
-								<a
-									v-show="fullscreen"
-									@click="fullscreen = false"
+							<tr>
+								<th>
+									<a
+										v-show="fullscreen"
+										@click="fullscreen = false"
+									>
+										<span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen
+									</a>
+									<a
+										v-show="fullscreen === false"
+										@click="fullscreen = true"
+									>
+										<span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen
+									</a>
+								</th>
+								<th
+									v-for="(column, index) in newTable.headers"
+									:key="'th-' + index"
 								>
-									<span class="icon icon-resize-small"></span>&nbsp;&nbsp;Exit Fullscreen
-								</a>
-								<a
-									v-show="fullscreen === false"
-									@click="fullscreen = true"
-								>
-									<span class="icon icon-fullscreen"></span>&nbsp;&nbsp;Fullscreen
-								</a>
-							</th>
-							<th
-								v-for="(column, index) in newTable.headers"
-								:key="'th-' + index"
-							>
-								<dropdown-button
-									:buttontext="'Column ' + (index + 1)"
-									:links="thLinks"
-									@dropdown-action="thAction($event, index)"
-								/>
-							</th>
-							<th>
-								<a @click="insertColumn(false)">
-									<span
-										class="icon icon-plus"
-										title="Add New Column"
-									></span>
-								</a>
-							</th>
+									<dropdown-button
+										:buttontext="'Column ' + (index + 1)"
+										:links="thLinks"
+										@dropdown-action="thAction($event, index)"
+									/>
+								</th>
+								<th>
+									<a @click="insertColumn(false)">
+										<span
+											class="icon icon-plus"
+											title="Add New Column"
+										></span>
+									</a>
+								</th>
+							</tr>
 						</thead>
-						<tr>
-							<th title="These are the headers of the columns in your table">
-								Column&nbsp;Name
-							</th>
-							<td
-								v-for="(column, index) in newTable.headers"
-								:key="'td-columnname-' + index"
-							>
-								<input
-									v-model="newTable.headers[index]"
-									type="text"
-									size="12"
+						<tbody>
+							<tr>
+								<th title="These are the headers of the columns in your table">
+									Column&nbsp;Name
+								</th>
+								<td
+									v-for="(column, index) in newTable.headers"
+									:key="'td-columnname-' + index"
 								>
-							</td>
-							<td></td>
-						</tr>
-						<tr>
-							<th>Column&nbsp;Data&nbsp;Type</th>
-							<td
-								v-for="(type, index) in newTable.types"
-								:key="'td-datatype-' + index"
-							>
-								<dropdown-button
-									:buttontext="newTable.types[index]"
-									:links="typesDropdownOptions"
-									select
-									@dropdown-action="typesAction($event, index)"
-								/>
-							</td>
-							<td></td>
-						</tr>
-						<tr>
-							<th title="Do you want data from this column to show up in search results?">
-								Searchable
-							</th>
-							<td
-								v-for="(value, index) in newTable.options.searchable"
-								:key="'td-searchable-' + index"
-							>
-								<dropdown-button
-									:buttontext="newTable.options.searchable[index]"
-									:links="searchableDropdownOptions"
-									select
-									@dropdown-action="searchableAction($event, index)"
-								/>
-							</td>
-							<td></td>
-						</tr>
-						<tr>
-							<th></th>
-							<td
-								v-for="(type, index) in newTable.types"
-								:key="'td1-' + index"
-							></td>
-							<td></td>
-						</tr>
-						<tr>
-							<th></th>
-							<td
-								v-for="(type, index) in newTable.types"
-								:key="'td2-' + index"
-							></td>
-							<td></td>
-						</tr>
-						<tr>
-							<th></th>
-							<td
-								v-for="(type, index) in newTable.types"
-								:key="'td3-' + index"
-							></td>
-							<td></td>
-						</tr>
-						<tr>
-							<th></th>
-							<td
-								v-for="(type, index) in newTable.types"
-								:key="'td4-' + index"
-							></td>
-						<td></td>
-						</tr>
+									<input
+										v-model="newTable.headers[index]"
+										type="text"
+										size="12"
+									>
+								</td>
+								<td></td>
+							</tr>
+							<tr>
+								<th>Column&nbsp;Data&nbsp;Type</th>
+								<td
+									v-for="(type, index) in newTable.types"
+									:key="'td-datatype-' + index"
+								>
+									<dropdown-button
+										:buttontext="newTable.types[index]"
+										:links="typesDropdownOptions"
+										select
+										@dropdown-action="typesAction($event, index)"
+									/>
+								</td>
+								<td></td>
+							</tr>
+							<tr>
+								<th title="Do you want data from this column to show up in search results?">
+									Searchable
+								</th>
+								<td
+									v-for="(value, index) in newTable.options.searchable"
+									:key="'td-searchable-' + index"
+								>
+									<dropdown-button
+										:buttontext="newTable.options.searchable[index]"
+										:links="searchableDropdownOptions"
+										select
+										@dropdown-action="searchableAction($event, index)"
+									/>
+								</td>
+								<td></td>
+							</tr>
+							<tr>
+								<th></th>
+								<td
+									v-for="(type, index) in newTable.types"
+									:key="'td1-' + index"
+								></td>
+								<td></td>
+							</tr>
+							<tr>
+								<th></th>
+								<td
+									v-for="(type, index) in newTable.types"
+									:key="'td2-' + index"
+								></td>
+								<td></td>
+							</tr>
+							<tr>
+								<th></th>
+								<td
+									v-for="(type, index) in newTable.types"
+									:key="'td3-' + index"
+								></td>
+								<td></td>
+							</tr>
+							<tr>
+								<th></th>
+								<td
+									v-for="(type, index) in newTable.types"
+									:key="'td4-' + index"
+								></td>
+								<td></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 				<label
@@ -888,6 +895,101 @@
 		</div>
 	</script>
 
+	<script type="text/x-template" id="editable-table">
+		<div
+			class="table-container"
+			:class="{ 'fullscreen': fullscreen }"
+			@scroll.passive="onScroll"
+		>
+			<a v-if="rowLength === 0" @click="fetchData(0,100)">See all contacts</a>
+			<table v-else class="tableFixedHead">
+				<thead>
+					<tr>
+						<th>
+							<a
+								v-show="fullscreen"
+								@click="fullscreen = false"
+							>
+								<span class="icon icon-resize-small"></span>
+							</a>
+							<a
+								v-show="fullscreen === false"
+								@click="fullscreen = true"
+							>
+								<span class="icon icon-fullscreen"></span>
+							</a>
+						</th>
+						<th
+							v-for="(colName, index) in db.headers" 
+							:key="'thead-' + index"
+						>
+							<dropdown-button
+								:buttontext="colName"
+								:links="thLinks"
+								@dropdown-action="thAction($event, index)"
+							/>
+						</th>
+						<th>
+							<a @click="insertColumn(false)">
+								<span
+									class="icon icon-plus"
+									title="Add New Column"
+								></span>
+							</a>
+						</th>
+					</tr>
+				</thead>
+				<tbody class="fixedHeight">
+					<tr >
+						<td class="stripeFiller" 
+							:colspan="colLength + 1" 
+							:style="{height: (blankRowsBefore * 40) + 'px'}"
+						></td>
+					</tr>
+					<tr v-for="(row, index) in db.tabledata"
+						:key="'tr-'+ (index + blankRowsBefore)"
+					>
+						<template v-for="(value, i) in row">
+							<th v-if="i === 0"
+								:key="'th-' + (index + blankRowsBefore) + '-' + i"
+							>
+								{{ value }}
+							</th>
+							<td v-else 
+								:key="'td-' + (index + blankRowsBefore) + '-' + i"
+							>
+								<div>{{ value }}</div>
+								<!-- <template v-if="db.datatypes[i + 1] === 'boolean'">
+									<a @click="toggleValue(index, i)">{{ value }}</a>
+								</template>
+								<template v-else-if="db.datatypes[i + 1] === 'number'">
+									<input
+										v-model="value"
+										type="number"
+										size="12"
+									>
+								</template>
+								<template v-else>
+									<input
+										v-model="value"
+										type="text"
+										size="12"
+									>
+								</template> -->
+							</td>
+						</template>
+					</tr>
+					<tr >
+						<td class="stripeFiller" 
+							:colspan="colLength + 1" 
+							:style="{height: rowLength - blankRowsBefore < 100 ? 0 + 'px' : ((rowLength - blankRowsBefore - 100) * 40) + 'px'}"
+						></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</script>
+
 	<script type="text/x-template" id="view1-page">
 		<div class="view">
 			<div class="view-container">
@@ -902,11 +1004,7 @@
 				</a>
 				<br>
 				<br>
-				<a class="button" @click="generateListView('Contacts')">
-					See all contacts
-				</a>
-				<br>
-				<br>
+				<editable-table tablename="Contacts"></editable-table>
 			</div>
 		</div>
 	</script>
@@ -1447,8 +1545,6 @@
 	<script type="text/javascript" src="scripts/main.js"></script>
 	<script type="text/javascript" src="sw.js"></script>
 
-	<!-- The 'async' attribute is needed for RequireJS to work in a Windows app -->
-	<!-- <script type="text/javascript" data-main="scripts/startup" src="scripts/require.2.1.8.js" async></script> -->
 </body>
 
 </html>

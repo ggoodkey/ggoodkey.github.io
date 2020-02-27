@@ -124,6 +124,7 @@ self.addEventListener('message', function (e) {
 			case "unfilter":
 			case "getLastModified":
 			case "getHeaders":
+			case "getTypes":
 				if (!appData[data.title]) debug(data.title + " table not initiated");
 				else post(appData[data.title][data.cmd](), null, data.callbackIndex);
 				break;

@@ -237,12 +237,29 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         groupHeading: "Additional Name Information",
                         group: ["Initials", "Nickname", "ShortName", "MaidenName",
                             "YomiName", "GivenNameYomi", "AdditionalNameYomi", "FamilyNameYomi"],
-                        hidden: true
+                        hidden: true,
+                        readonly: true
                     },
                     {
                         groupHeading: "Organization",
-                        group: ["Organization1_Type", "Organization1_Name", "Organization1_YomiName", "Organization1_Title", "Organization1_Department",
-                            "Organization1_Symbol", "Organization1_Location", "Organization1_JobDescription"],
+                        group: [
+                            {
+                                column: "Organization1_Name",
+                                label: {
+                                    column: "Organization1_Type",
+                                    dropdownList: {
+                                        listInput: ["Company", "Other"],
+                                        textInput: true
+                                    }
+                                }
+                            },
+                            { column: "Organization1_YomiName", readonly: true },
+                            { column: "Organization1_Title", readonly: true },
+                            { column: "Organization1_Department", readonly: true },
+                            { column: "Organization1_Symbol", readonly: true },
+                            { column: "Organization1_Location", readonly: true },
+                            { column: "Organization1_JobDescription", readonly: true }
+                        ],
                         hidden: true
                     },
                     { column: "GroupMembership", hidden: true, readonly: true },
@@ -343,7 +360,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             { column: "IM10_Service", dropdownList: contactsTemplateIMServiceOptions },
                             { column: "IM10_Value", label: { column: "IM10_Type", dropdownList: contactsTemplateIMLabelOptions } }
                         ],
-                        splitter: " ::: "
+                        splitter: " ::: ",
+                        hidden: true,
+                        readonly: true
                     }, {
                         groupHeading: "Addresses",
                         group: [
@@ -354,14 +373,42 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     },
                     {
                         groupHeading: "Address 1",
-                        group: ["Address1_Type", "Address1_Street", "Address1_City", "Address1_POBox",
-                            "Address1_Region", "Address1_PostalCode", "Address1_Country", "Address1_ExtendedAddress"],
+                        group: [
+                            {
+                                column: "Address1_Type",
+                                dropdownList: {
+                                    listInput: ["Home Address", "Work Address", "Mail Address", "Other Address"],
+                                    textInput: true
+                                }
+                            },
+                            "Address1_Street",
+                            "Address1_City",
+                            "Address1_POBox",
+                            "Address1_Region",
+                            "Address1_PostalCode",
+                            "Address1_Country",
+                            "Address1_ExtendedAddress"
+                        ],
                         hidden: true
                     },
                     {
                         groupHeading: "Address 2",
-                        group: ["Address2_Type", "Address2_Street", "Address2_City", "Address2_POBox",
-                            "Address2_Region", "Address2_PostalCode", "Address2_Country", "Address2_ExtendedAddress"],
+                        group: [
+                            {
+                                column: "Address2_Type",
+                                dropdownList: {
+                                    listInput: ["Home Address", "Work Address", "Mail Address", "Other Address"],
+                                    textInput: true
+                                }
+                            },
+                            "Address2_Street",
+                            "Address2_City",
+                            "Address2_POBox",
+                            "Address2_Region",
+                            "Address2_PostalCode",
+                            "Address2_Country",
+                            "Address2_ExtendedAddress"
+                        ],
                         hidden: true
                     },
                     {
@@ -414,7 +461,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     {
                         groupHeading: "Other Information",
                         group: ["Gender", "Location", "BillingInformation", "DirectoryServer", "Mileage", "Occupation", "Hobby", "Sensitivity",
-                            "Priority", "Subject", "Language"]
+                            "Priority", "Subject", "Language"],
+                        hidden: true,
+                        readonly: true
                     },
                     {
                         groupHeading: "Custom Fields",
@@ -431,7 +480,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             "CustomField9_Type", { column: "CustomField9_Value", label: { column: "CustomField9_Type" } },
                             "CustomField10_Type", { column: "CustomField10_Value", label: { column: "CustomField10_Type" } }
                         ],
-                        splitter: " ::: "
+                        splitter: " ::: ",
+                        hidden: true,
+                        readonly: true
                     },
                     {
                         groupHeading: "Notes",
@@ -1143,7 +1194,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             }
             if (!loadingDB) {
                 loadingDB = true;
-                app.spin(true, "Loading data...");
+                if (app && app.spin)
+                    app.spin(true, "Loading data...");
                 getTables();
             }
         }
@@ -1679,6 +1731,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     }
     function is_outsideClick(e) {
         var outsideClick = !/dropdownButton/.test(e.target._prevClass); //for Windows UWP app which does not support .path or .contains
+        if (outsideClick)
+            return true;
         if (e.path) {
             //for non UWP
             //check to see if it is exactly the same button that was clicked, 
@@ -1709,7 +1763,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 type: String,
                 default: "left"
             },
-            links: Array,
+            links: {
+                type: Array,
+                default: function () { return []; }
+            },
             title: {
                 type: String,
                 default: ""
@@ -1954,7 +2011,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     });
     var jump_list = Vue.extend({
         props: {
-            links: Array,
+            links: {
+                type: Array,
+                default: function () { return []; }
+            },
             select: {
                 type: Boolean,
                 default: false
@@ -2493,9 +2553,12 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 initialValueInputType: "text",
                 customPropertyError: "",
                 thLinks: [
-                    { text: "Insert Column Left", action: "insertColumnLeft" },
-                    { text: "Insert Column Right", action: "insertColumnRight" },
-                    { text: "Delete Column", action: "deleteColumn" }
+                    { text: "Sort Table by Column", action: "sortTable", icon: "icon-sort" },
+                    { text: "Rename Column", action: "renameColumn", icon: "icon-pencil" },
+                    { text: "Edit Column Properties", action: "editProps", icon: "icon-settings" },
+                    { text: "Insert Column Left", action: "insertColumnLeft", icon: "icon-left" },
+                    { text: "Insert Column Right", action: "insertColumnRight", icon: "icon-right" },
+                    { text: "Delete Column", action: "deleteColumn", icon: "icon-delete" }
                 ]
             };
         },
@@ -3001,8 +3064,104 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         },
         template: "#groups-page"
     });
+    var editable_table = Vue.extend({
+        components: {
+            "dropdown-button": dropdown_button
+        },
+        props: {
+            tablename: String,
+        },
+        data: function () {
+            return {
+                db: {
+                    headers: [],
+                    datatypes: [],
+                    tabledata: [[]]
+                },
+                colLength: 0,
+                rowLength: 0,
+                blankRowsBefore: 0,
+                fullscreen: false,
+                scrollPos: 0,
+                onScrollRunning: false,
+                fetchingData: false,
+                thLinks: [
+                    { text: "Sort Table by Column", action: "sortTable", icon: "icon-sort" },
+                    { text: "Rename Column", action: "renameColumn", icon: "icon-pencil" },
+                    { text: "Edit Column Properties", action: "editProps", icon: "icon-settings" },
+                    { text: "Insert Column Left", action: "insertColumnLeft", icon: "icon-left" },
+                    { text: "Insert Column Right", action: "insertColumnRight", icon: "icon-right" },
+                    { text: "Delete Column", action: "deleteColumn", icon: "icon-delete" }
+                ]
+            };
+        },
+        methods: {
+            fetchData: function (fromRow, toRow) {
+                function getVals(headers, tableLength) {
+                    var rows = [];
+                    toRow = tableLength < toRow ? tableLength : toRow;
+                    for (var a = 0, len = toRow - fromRow; a < len; a++) {
+                        rows[a] = a + fromRow;
+                    }
+                    wwManager({ cmd: "getVals", args: [rows, headers], title: this.tablename }, function (table) {
+                        this.rowLength = tableLength;
+                        this.colLength = headers.length;
+                        this.db.headers = headers;
+                        this.db.tabledata = table;
+                        this.blankRowsBefore = fromRow;
+                        this.fetchingData = false;
+                    }.bind(this));
+                }
+                if (!this.fetchingData) {
+                    this.fetchingData = true;
+                    checkDBLoaded(function () {
+                        if (this.db.headers.length > 0 && this.rowLength > 0)
+                            getVals.call(this, this.db.headers, this.rowLength);
+                        else
+                            wwManager({ cmd: "getLength", title: this.tablename }, function (tableLength) {
+                                wwManager({ cmd: "getHeaders", title: this.tablename }, function (headers) {
+                                    getVals.call(this, headers, tableLength);
+                                }.bind(this));
+                            }.bind(this));
+                        if (this.db.datatypes.length === 0)
+                            wwManager({ cmd: "getTypes", title: this.tablename }, function (types) {
+                                this.db.datatypes = types;
+                            }.bind(this));
+                    }.bind(this));
+                }
+            },
+            thAction: function (event, action) {
+            },
+            insertColumn: function (index) {
+                if (index === false) {
+                    //add to end
+                }
+                else {
+                    // add at index number
+                }
+            },
+            toggleValue: function (rowIndex, colIndex) {
+                this.db.tabledata[rowIndex][colIndex] = !this.db.tabledata[rowIndex][colIndex];
+            },
+            onScroll: function (event) {
+                var pos = event.target.scrollTop;
+                if (!this.onScrollRunning && !this.fetchingData && (pos > this.scrollPos + 2000 || pos < this.scrollPos - 1500)) {
+                    this.onScrollRunning = true;
+                    this.scrollPos = pos;
+                    var start = Math.floor(pos / 80) * 2; //makes sure to start at an even number
+                    start = start < 34 ? 0 : start - 34; //render 34 rows above scrollTop
+                    this.fetchData(start, start + 100); //fetch 100 rows
+                    window.setTimeout(function () { this.onScrollRunning = false; }.bind(this), 50);
+                }
+            }
+        },
+        template: "#editable-table"
+    });
     var view1_page = Vue.extend({
         name: "View1Page",
+        components: {
+            "editable-table": editable_table
+        },
         data: function () {
             return {
                 sharedFileLink: ""

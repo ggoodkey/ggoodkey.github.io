@@ -2930,6 +2930,22 @@ var NyckelDB = (function () {
         };
         ;
         /**
+         * Get an Array of all the column 'types'
+         * @function getTypes
+         * @return { string[] } an Array of column types
+         * @since v0.6.0
+        */
+        NyckelDBObj.prototype.getTypes = function () {
+            var ret = [], db = DB[this.id];
+            if (!TABLE_IS_DELETED(db)) {
+                for (var a = 1, len = db.columns.headers.length - 1; a < len; a++) {
+                    ret[a - 1] = this.getType(db.columns.headers[a]);
+                }
+            }
+            return ret;
+        };
+        ;
+        /**
          * Get the value of a cell
          * @function getVal
          * @param {number | string} rowId can be the index of the row, or it's 3 digit identifier
@@ -2956,25 +2972,27 @@ var NyckelDB = (function () {
             if (!rowIds || rowIds.constructor !== Array || !colNames || colNames.constructor !== Array) {
                 return callback instanceof Function ? callback.call(this, false, "invalid inputs") : false;
             }
-            var ret = [];
-            for (var a = 0, x = 0, b = void 0, y = void 0, rowIndex = void 0, colIndex = void 0, len = rowIds.length, lenB = colNames.length; a < len; a++) {
-                rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
-                if (rowIndex > -1) {
-                    ret[x] = [rowIds[a]];
-                    for (b = 0, y = 1; b < lenB; b++) {
-                        colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
-                        if (colIndex > 0) {
-                            ret[x][y] = DB[this.id].table[rowIndex][colIndex];
-                            y++;
+            var ret = [], db = DB[this.id];
+            if (!TABLE_IS_DELETED(db)) {
+                for (var a = 0, x = 0, b = void 0, y = void 0, rowIndex = void 0, colIndex = void 0, len = rowIds.length, lenB = colNames.length; a < len; a++) {
+                    rowIndex = GET_INDEX_OF_ROW.call(this, rowIds[a]);
+                    if (rowIndex > -1) {
+                        ret[x] = [db.table[rowIndex][0]];
+                        for (b = 0, y = 1; b < lenB; b++) {
+                            colIndex = GET_INDEX_OF_COLUMN.call(this, colNames[b]);
+                            if (colIndex > 0) {
+                                ret[x][y] = db.table[rowIndex][colIndex];
+                                y++;
+                            }
+                            else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
+                                return callback instanceof Function ? callback.call(this, false, colNames[b] + " is not a valid colName") : false;
+                            }
                         }
-                        else if (!COL_NAME_IS_VALID.call(this, colNames[b])) {
-                            return callback instanceof Function ? callback.call(this, false, colNames[b] + " is not a valid colName") : false;
-                        }
+                        x++;
                     }
-                    x++;
-                }
-                else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
-                    return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
+                    else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
+                        return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
+                    }
                 }
             }
             return callback instanceof Function ? callback.call(this, ret, ERRORS[this.id]) : ret;
