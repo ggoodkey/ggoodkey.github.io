@@ -56,6 +56,7 @@ html, .inAppBrowserWrap {
 	-webkit-text-size-adjust: none;
 	-ms-text-size-adjust: none;
 	background-color: black;
+	overscroll-behavior: contain;
 }
 
 body {
@@ -224,147 +225,78 @@ table {
 	border-collapse: collapse;
 }
 
-th{
+th {
 	background-color: #f2f2f2;
 	font-weight: normal;
 }
 
-.table-container {
-	overflow-x: auto;
-	height: 600px;
+.dark th {
+	background-color: #161616;
 }
 
-html.phon .table-container {
-	width: 100%;
-}
-
-.tableFixedHead {
-	overflow-y: auto; 
-}
-.tableFixedHead thead th { 
-	position: sticky;
-	top: 0; 
-	z-index: 1;
-}
-
-.tableFixedHead tbody th {
-	position: sticky;
-  	left: 0;
-	top: auto;
-	font-family: 'Courier New', Courier, monospace;
-	font-weight: bold;
-}
-
-table, th, td {
-	border: none;
-}
-
-th {
+table, th {
 	outline: 2px solid white;
 }
 
+.dark table,
 .dark th {
 	outline: 2px solid #292929;
 }
 
-.fixedHeight th {
-	height: 40px;
+table, th, td, table input {
+	border: none;
 }
 
-.fixedHeight td div{
-	height: 38px;
-    overflow: hidden;
-    padding: 0px 12px;
-    white-space: pre;
-    max-width: 500px;
-    line-height: 40px;
+th, td, table li {
+	text-align: left;
+	vertical-align: middle;
 }
 
-	th, td, table li {
-		text-align: left;
-		vertical-align: middle;
-	}
 tbody tr th, 
 thead a {
 	padding: 8px;
 }
 
+table a {
+	display: block;
+	width: 100%;
+	padding-top: 4px;
+}
 
-	table input {
-		border: none;
-	}
+table input{
+	padding: 9px;
+}
 
-	table input:focus{
-		outline: 1px solid #478cdb; /*accent blue*/
-	}
-	.dark table input:focus{
-		background-color: #2d2d2d;
-	}
-	table input{
-		padding: 9px;
-	}
+table input:focus{
+	outline: 1px solid #478cdb; /*accent blue*/
+}
 
-	table li {
-		padding: 8px;
-	}
+.dark table input:focus{
+	background-color: #2d2d2d;
+}
 
-	table button {
-		width: 100%;
-		text-align: left;
-	}
+table li {
+	padding: 8px;
+	border-bottom: 2px solid white;
+}
 
-	table tr button {
-		text-transform: none;
-		font-size: 16px;
-	}
+.dark table li {
+	border-bottom: 1px solid #292929;
+}
 
-	button.dropdownButton .icon-triangle-top,
-	button.dropdownButton .icon-triangle-bottom {
-		position: absolute;
-		right: 8px;
-		top: 33%;
-	}
+table button {
+	width: 100%;
+	text-align: left;
+}
 
-	button.dropdownButton{
-		padding-right: 24px;
-	}
+table tr button {
+	text-transform: none;
+	font-size: 16px;
+}
 
-	table,
-	table input {
-		background-color: white;
-	}
-
-	table a {
-		display: block;
-		width: 100%;
-		padding-top: 4px;
-	}
-
-	table .dropdown {
-		padding: 0;
-		margin: 0;
-		margin-right: 8px;
-		min-width: 160px;
-		max-height: 150px;
-		overflow: auto;
-		font-weight: normal;
-		background-color: #fdfdfd;
-	}
-
-	table li {
-		border-bottom: 2px solid white;
-	}
-
-.table-container.fullscreen {
-	position: absolute;
-	top: 0;
-	height: 91%;
-	left: 0;
-	width: 98%;
-	overflow: scroll;
-	background-color: #eee;
-	z-index: 3;
-	padding: 0;
+table,
+table input {
+	background-color: white;
 }
 
 .dark table,
@@ -373,19 +305,34 @@ thead a {
 	color: lightgray;
 }
 
-	.dark table li {
-		border-bottom: 1px solid #292929;
-	}
-	.dark th{
-		background-color: #161616;
-	}
-	.dark .table-container.fullscreen {
-		background-color: black;
-	}
+button.dropdownButton .icon-triangle-top,
+button.dropdownButton .icon-triangle-bottom {
+	position: absolute;
+	right: 8px;
+	top: 33%;
+}
+
+button.dropdownButton{
+	padding-right: 24px;
+}
+
+table .dropdown {
+	padding: 0;
+	margin: 0;
+	margin-right: 8px;
+	min-width: 160px;
+	font-weight: normal;
+	background-color: #fdfdfd;
+}
 
 tr:nth-child(even),
 tr:nth-child(even) input {
 	background-color: #fafafa;
+}
+
+.dark tr:nth-child(even),
+.dark tr:nth-child(even) input  {
+	background-color: #252525;
 }
 
 .stripeFiller {
@@ -407,9 +354,91 @@ tr:nth-child(even) input {
 	);
 }
 
-.dark tr:nth-child(even),
-.dark tr:nth-child(even) input  {
-	background-color: #252525;
+.table-container {
+	overflow-x: auto;
+	height: 600px;
+}
+
+html.phon .table-container {
+	width: 100%;
+}
+
+.table-container.fullscreen {
+	position: absolute;
+	top: 0;
+	height: 92%;
+	left: 0;
+	width: 98%;
+	overflow: scroll;
+	background-color: #eee;
+	z-index: 3;
+	padding: 0;
+}
+
+.dark .table-container.fullscreen {
+	background-color: black;
+}
+
+.tableFixedHead {
+	overflow-y: auto; 
+}
+
+.tableFixedHead thead th { 
+	position: sticky;
+	top: 0; 
+	z-index: 1;
+}
+
+.tableFixedHead tbody th {
+	position: sticky;
+  	left: 0;
+	top: auto;
+	font-family: 'Courier New', Courier, monospace;
+	font-weight: bold;
+}
+
+.fixedHeight th {
+	height: 40px;
+}
+
+.fixedHeight td div{
+	height: 38px;
+    overflow: hidden;
+    padding: 0px 12px;
+    white-space: pre;
+    max-width: 500px;
+    line-height: 40px;
+}
+
+td.selected,
+.tableInputs input {
+	outline: 1px solid #478cdb; /*accent blue*/
+}
+
+.selectedVal,
+td.selected .unselectedVal {
+	display: none;
+}
+
+td.selected .selectedVal{
+	display: block;
+}
+
+tr.tableInputs{
+	height: 0;
+}
+
+.tableInputs th{
+	height: 0;
+}
+
+.tableInputs td{
+	height: 0;
+}
+
+.tableInputs input {
+	position: relative;
+	width: 100%;
 }
 
 #loading {
@@ -429,10 +458,10 @@ tr:nth-child(even) input {
 	will-change: opacity, height;
 }
 
-	#loading.done {
-		height: 0;
-		opacity: 0;
-	}
+#loading.done {
+	height: 0;
+	opacity: 0;
+}
 
 #notification {
 	position: fixed;
@@ -479,101 +508,6 @@ html.desk #notification {
 	top: 66px;
 	left: 12px;
 }
-#confirmContainer {
-	position: fixed;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	z-index: 20;
-}
-#confirmContainer{
-	background-color: white;
-	background-color: rgba(255,255,255,0.5);
-}
-
-.dark #confirmContainer{
-	background-color: black;
-	background-color: rgba(0,0,0,0.5);
-}
-
-#confirm {
-	position: absolute;
-	z-index: 20;
-	top: 55%;
-	left: 50%;
-	-moz-transform: translateY(-50%) translateX(-50%);
-	-ms-transform: translateY(-50%) translateX(-50%);
-	-o-transform: translateY(-50%) translateX(-50%);
-	-webkit-transform: translateY(-50%) translateX(-50%);
-	transform: translateY(-50%) translateX(-50%);
-	padding: 20px 16px;
-	text-align: center;
-	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.3);
-	border: 1px solid #478cdb; /*accent blue*/
-	border-radius: 3px;
-	width: 450px;
-	max-width: 90%;
-	background-color: white;
-}
-
-.dark #confirm {
-	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.7);
-	border-color: #5498e7; /*accent blue 10% lighter*/
-	background-color: #1A1A1A;
-}
-
-#confirmMessage {
-	font-size: 19px;
-	padding: 16px;
-	margin-bottom: 8px;
-	max-height: 250px;
-	overflow-y: auto;
-}
-
-#confirm button {
-	padding: 16px;
-	margin: 8px;
-	min-width: 100px;
-	font-size: 16px;
-}
-
-#confirm.shake {
-	animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
-	box-shadow: 0 0 10px #478cdb; /*accent blue*/
-}
-
-@keyframes shake {
-	10%, 90% {
-		transform: translateX(-49%) translateY(-50%);
-	}
-
-	20%, 80% {
-		transform: translateX(-52%) translateY(-50%);
-	}
-
-	30%, 50%, 70% {
-		transform: translateX(-46%) translateY(-50%);
-	}
-
-	40%, 60% {
-		transform: translateX(-54%) translateY(-50%);
-	}
-}
-
-.dark #confirm button {
-	color: white;
-}
-
-#confirmOK {
-	color: white;
-	background-color: #478cdb; /*accent blue*/
-}
-
-.dark #confirmOK {
-	color: white;
-	background-color: #5498e7; /*accent blue 10% lighter*/
-}
 
 .close {
 	opacity: 0.7; /*override bootstrap*/
@@ -586,16 +520,16 @@ html.desk #notification {
 	opacity: 0.2;
 }
 
-	.dark .close:hover,
-	.dark .close:focus,
-	.dark .close:active,
-	.dark .close.hover,
-	.dark .close.focus,
-	.dark .close.active {
-		color: #000000;
-		text-decoration: none;
-		opacity: 0.5;
-	}
+.dark .close:hover,
+.dark .close:focus,
+.dark .close:active,
+.dark .close.hover,
+.dark .close.focus,
+.dark .close.active {
+	color: #000000;
+	text-decoration: none;
+	opacity: 0.5;
+}
 
 div,
 img {
@@ -604,14 +538,14 @@ img {
 	border: 0;
 }
 
-	div:link,
-	div:hover,
-	div:active,
-	a:link,
-	a:hover,
-	a:active {
-		text-decoration: none;
-	}
+div:link,
+div:hover,
+div:active,
+a:link,
+a:hover,
+a:active {
+	text-decoration: none;
+}
 
 #app {
 	margin-top: 54px;
@@ -643,14 +577,14 @@ html.desk .tabl {
 	display: none;
 }
 
-	html.tabl .tabl.phon,
-	html.phon .tabl.phon,
-	html.desk .tabl.desk,
-	html.tabl .tabl.desk,
-	html.phon .desk.phon,
-	html.desk .desk.phon {
-		display: block;
-	}
+html.tabl .tabl.phon,
+html.phon .tabl.phon,
+html.desk .tabl.desk,
+html.tabl .tabl.desk,
+html.phon .desk.phon,
+html.desk .desk.phon {
+	display: block;
+}
 
 html,
 #app,
@@ -659,15 +593,15 @@ html.phon .searchSuggestions-container,
 	background-color: #eee; /*page color*/
 }
 
-	html.dark,
-	.dark #app,
-	.dark #searchAutoComplete,
-	html.phon.dark .searchSuggestions-container,
-	.dark #stoKeyInput,
-	.dark #stoKeyInputConfirm,
-	.dark .views{
-		background-color: #111; /*dark page color*/
-	}
+html.dark,
+.dark #app,
+.dark #searchAutoComplete,
+html.phon.dark .searchSuggestions-container,
+.dark #stoKeyInput,
+.dark #stoKeyInputConfirm,
+.dark .views{
+	background-color: #111; /*dark page color*/
+}
 
 #closeSidenav {
 	position: fixed;
@@ -694,10 +628,10 @@ html.desk #closeSidenav {
 	color: white;
 }
 
-	#notification:focus,
-	#notification:active {
-		background-color: #5498e7; /*accent blue 10% lighter*/
-	}
+#notification:focus,
+#notification:active {
+	background-color: #5498e7; /*accent blue 10% lighter*/
+}
 
 :visited,
 .disabled {
@@ -733,7 +667,7 @@ html.desk #closeSidenav {
 
 html,
 #app,
-#confirm,
+.dialog,
 #searchReset,
 .searchSuggestions,
 #searchResults,
@@ -746,7 +680,7 @@ html,
 
 html.dark,
 .dark #app,
-.dark #confirm,
+.dark .dialog,
 .dark #searchReset,
 .dark .searchSuggestions,
 .dark #searchResults,
@@ -1882,10 +1816,12 @@ html.desk.dark .button-link:hover:active {
 	border: 1px solid #478cdb; /*accent blue*/
 	background-color: transparent;
 }
-.textbox:focus {
+.textbox:focus,
+td.selected {
 	background-color: white;
 }
-.dark .textbox:focus {
+.dark .textbox:focus,
+.dark td.selected {
 	background-color: black;
 }
 
@@ -1917,33 +1853,6 @@ html.desk .jumplink:hover,
 html.desk .cardHeading:hover,
 html.desk .cardHeading:hover:active {
 	color: #5498e7; /*accent blue 10% lighter*/
-}
-
-.green,
-table .green input,
-table .green a,
-table .green a:hover,
-table .green a:active,
-table .green a:focus,
-.desk table .green a:active,
-.desk table .green a:focus {
-	color :rgba(34, 184, 34, 0.85);
-}
-
-.red,
-table .red input,
-table .red a,
-table .red a:hover,
-table .red a:active,
-table .red a:focus,
-.desk table .red a:active,
-.desk table .red a:focus {
-	color: rgba(184, 32, 32, 0.85);
-}
-
-.yellow,
-table .yellow input {
-	color: rgb(228, 186, 0);
 }
 
 .searchSuggestions .link:active,
@@ -2037,6 +1946,112 @@ button[disabled="disabled"]:focus{
 .dark button[disabled="disabled"],
 .dark a.disabled {
 	color: #555; /*dark link visited link disabled*/
+}
+
+.dialogContainer {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 20;
+}
+.dialogContainer{
+	background-color: white;
+	background-color: rgba(255,255,255,0.5);
+}
+
+.dark .dialogContainer{
+	background-color: black;
+	background-color: rgba(0,0,0,0.5);
+}
+
+.dialog {
+	position: absolute;
+	z-index: 20;
+	top: 55%;
+	left: 50%;
+	-moz-transform: translateY(-50%) translateX(-50%);
+	-ms-transform: translateY(-50%) translateX(-50%);
+	-o-transform: translateY(-50%) translateX(-50%);
+	-webkit-transform: translateY(-50%) translateX(-50%);
+	transform: translateY(-50%) translateX(-50%);
+	padding: 24px;
+	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.3);
+	border: 1px solid #478cdb; /*accent blue*/
+	border-radius: 3px;
+	width: 450px;
+	max-width: 90%;
+	background-color: white;
+}
+
+html.phon .view-container .dialog,
+html.tabl .view-container .dialog {
+	top: 50%;
+	left: 42%;
+}
+
+.dark .dialog {
+	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.7);
+	border-color: #5498e7; /*accent blue 10% lighter*/
+	background-color: #1A1A1A;
+}
+
+.dialogMessage {
+	font-size: 17px;
+	padding: 16px 0;
+	margin-bottom: 8px;
+}
+
+.dialogButtons button {
+	padding: 16px;
+	margin: 8px;
+	min-width: 100px;
+	font-size: 16px;
+}
+
+.dialog.shake {
+	animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+	box-shadow: 0 0 10px #478cdb; /*accent blue*/
+}
+
+@keyframes shake {
+	10%, 90% {
+		transform: translateX(-49%) translateY(-50%);
+	}
+
+	20%, 80% {
+		transform: translateX(-52%) translateY(-50%);
+	}
+
+	30%, 50%, 70% {
+		transform: translateX(-46%) translateY(-50%);
+	}
+
+	40%, 60% {
+		transform: translateX(-54%) translateY(-50%);
+	}
+}
+
+.dark .dialogButtons button,
+.dark .dialogButtons button:active,
+.dark .dialogButtons button:focus,
+html.desk.dark .dialogButtons button:hover {
+	border: none;
+	color: white;
+}
+
+.dialogOK,
+html.desk .dialogOK:hover,
+.dialogOK:focus {
+	border: none;
+	background-color: #478cdb; /*accent blue*/
+}
+
+.dark .dialogOK,
+html.desk.dark .dialogOK:hover,
+.dark .dialogOK:focus {
+	background-color: #5498e7; /*accent blue 10% lighter*/
 }
 
 ::-webkit-scrollbar {

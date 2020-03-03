@@ -640,12 +640,12 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             details: {
                 id: "",
                 table: "",
-                data: {
-                    column: "",
-                    orig: "",
-                    text: [],
-                    type: "any"
-                },
+                data: [{
+                        column: "",
+                        orig: "",
+                        text: [],
+                        type: "any"
+                    }],
                 image: "",
                 title: "",
                 subtitle: "null"
@@ -1415,7 +1415,14 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     sort = result[a].pop();
                     if (sort === "")
                         sort = "*";
-                    ret[a] = { table: tableName, id: result[a].shift(), sortBy: sort + "__" + result[a].join(joiner), text: result[a].join(joiner), selected: options.selected || false, type: "link" };
+                    ret[a] = {
+                        table: tableName,
+                        id: result[a].shift(),
+                        sortBy: sort + "__" + result[a].join(joiner),
+                        text: result[a].join(joiner),
+                        selected: options.selected || false,
+                        type: "link"
+                    };
                 }
             }
             return callback instanceof Function ? callback(ret) : ret;
@@ -2009,6 +2016,44 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         },
         template: "#color-select"
     });
+    var dialog_box = Vue.extend({
+        props: {
+            heading: {
+                type: String,
+                default: ""
+            },
+            showif: {
+                type: Boolean,
+                default: true
+            },
+            okbutton: {
+                type: String,
+                default: "OK"
+            },
+            cancelbutton: {
+                type: String,
+                default: "Cancel"
+            }
+        },
+        data: function () {
+            return {
+                dialogShake: false
+            };
+        },
+        methods: {
+            processConfirm: function (action) {
+                if (action)
+                    this.$emit("dialog-box-ok");
+                else
+                    this.$emit("dialog-box-cancel");
+            },
+            shakeBox: function () {
+                this.dialogShake = true;
+                setTimeout(function () { this.dialogShake = false; }.bind(this), 600);
+            }
+        },
+        template: "#dialog-box"
+    });
     var jump_list = Vue.extend({
         props: {
             links: {
@@ -2240,7 +2285,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
             },
             seeDetails: function (obj) {
-                var _this = this, sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
+                var sortByRecent = typeof obj.sortBy === "number" && obj.sortBy > 15e11 && obj.sortBy < 2e12;
                 if (sortByRecent) {
                     this.list.unshift(obj);
                     this.list[0].sortBy = new Date().getTime();
@@ -2250,13 +2295,13 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     this.$emit("update-recently-viewed", obj);
                 getDetails(obj, function (detailsObj) {
                     if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
-                        _this.$emit("update-details", detailsObj);
+                        this.$emit("update-details", detailsObj);
                     }
                     else {
                         app.details = detailsObj;
                         app.navigate("details", null, detailsObj);
                     }
-                });
+                }.bind(this));
             },
             toggleSelect: function (link) {
                 for (var a = 0, len = this.list.length; a < len; a++) {
@@ -2313,13 +2358,13 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             updateDropdownLinks: function () {
                 function newEmailLink() {
                     var bccIds = [];
-                    for (var a = 0, len = _this.list.length; a < len; a++) {
-                        if (_this.list[a].type === "link" &&
-                            (_this.selected === false || _this.list[a].selected === true) &&
-                            _this.list[a].table === "Contacts")
-                            bccIds.push(_this.list[a].id);
+                    for (var a = 0, len = this.list.length; a < len; a++) {
+                        if (this.list[a].type === "link" &&
+                            (this.selected === false || this.list[a].selected === true) &&
+                            this.list[a].table === "Contacts")
+                            bccIds.push(this.list[a].id);
                     }
-                    getEmails(bccIds);
+                    getEmails.call(this, bccIds);
                 }
                 function getEmails(ids) {
                     var emailAddresses = [];
@@ -2384,22 +2429,22 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             if (emailAddresses.length > 0) {
                                 if (emailAddresses.length === 1)
                                     buildMailtoUri(emailAddresses[0], null, null, null, function (uri) {
-                                        updateLinks(uri, ids);
-                                    });
+                                        updateLinks.call(this, uri, ids);
+                                    }.bind(this));
                                 else
                                     buildMailtoUri(app.dropboxEmail || "", emailAddresses.join(","), null, null, function (uri) {
-                                        updateLinks(uri, ids);
-                                    });
+                                        updateLinks.call(this, uri, ids);
+                                    }.bind(this));
                             }
                             else
-                                updateLinks();
-                        });
+                                updateLinks.call(this);
+                        }.bind(this));
                     else
-                        updateLinks();
+                        updateLinks.call(this);
                 }
                 function updateLinks(mailtoUri, ids) {
                     var len = ids ? ids.length : 0;
-                    _this.moreDropdownLinks = [
+                    this.moreDropdownLinks = [
                         {
                             text: "Sort List",
                             icon: "icon-sort",
@@ -2415,52 +2460,51 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             disabled: false
                         },
                         {
-                            text: _this.collapsed ? "List View" : "Button View",
-                            icon: _this.collapsed ? "icon-list" : "icon-th",
+                            text: this.collapsed ? "List View" : "Button View",
+                            icon: this.collapsed ? "icon-list" : "icon-th",
                             action: "view",
                             href: "",
                             disabled: false
                         },
                         {
-                            text: _this.selected
+                            text: this.selected
                                 ? "Add Selected to Favorites"
                                 : "Add All to Favorites",
                             icon: "icon-favorite-star",
                             action: "favorite",
                             href: "",
-                            disabled: _this.selected && len === 0 ? true : false
+                            disabled: this.selected && len === 0 ? true : false
                         },
                         {
-                            text: _this.selected ? "E-mail Selected" : "E-mail All",
+                            text: this.selected ? "E-mail Selected" : "E-mail All",
                             icon: "icon-mail",
                             action: "email",
                             href: mailtoUri,
-                            disabled: _this.selected && !mailtoUri ? true : false
+                            disabled: this.selected && !mailtoUri ? true : false
                         }
                     ];
                     for (var a = 0, len_1 = app.groups.length; a < len_1; a++) {
-                        _this.moreDropdownLinks[a + 4] = {
-                            text: _this.selected
+                        this.moreDropdownLinks[a + 4] = {
+                            text: this.selected
                                 ? "Add Selected to " + app.groups[a] + " Group"
                                 : "Add to " + app.groups[a] + " Group",
                             icon: "icon-people",
                             action: "_add_to_group_" + app.groups[a],
                             href: "",
-                            disabled: _this.selected && len_1 === 0 ? true : false
+                            disabled: this.selected && len_1 === 0 ? true : false
                         };
                     }
-                    _this.moreDropdownLinks.push({
-                        text: _this.selected
+                    this.moreDropdownLinks.push({
+                        text: this.selected
                             ? "Save Selected to New Group"
                             : "Save Search as New Group",
                         icon: "icon-plus",
                         action: "_create_new_group",
                         href: "",
-                        disabled: _this.selected && len === 0 ? true : false
+                        disabled: this.selected && len === 0 ? true : false
                     });
                 }
-                var _this = this;
-                initializeGroups(newEmailLink);
+                initializeGroups(newEmailLink.bind(this));
             }
         },
         template: "#jump-list"
@@ -3064,12 +3108,67 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         },
         template: "#groups-page"
     });
-    var editable_table = Vue.extend({
+    var multi_input = Vue.extend({
         components: {
             "dropdown-button": dropdown_button
         },
         props: {
-            tablename: String,
+            type: {
+                type: String,
+                default: "text"
+            },
+            value: {
+                type: [String, Number, Boolean],
+                default: ""
+            },
+            inputclass: {
+                type: String,
+                default: ""
+            },
+            options: {
+                type: Array,
+                default: function () {
+                    return [];
+                }
+            },
+            id: {
+                type: String,
+                default: ""
+            },
+            textinput: {
+                type: Boolean,
+                default: false
+            },
+            align: {
+                type: String,
+                default: "left"
+            }
+        },
+        data: function () {
+            return {
+                focused: false
+            };
+        },
+        methods: {
+            setValue: function () {
+            },
+            onBlur: function (value, type) {
+                //validate value
+            }
+        },
+        template: "#multi-input"
+    });
+    var editable_table = Vue.extend({
+        components: {
+            "dropdown-button": dropdown_button,
+            "multi-input": multi_input,
+            "dialog-box": dialog_box
+        },
+        props: {
+            tablename: {
+                type: String,
+                required: true
+            }
         },
         data: function () {
             return {
@@ -3087,12 +3186,39 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 fetchingData: false,
                 thLinks: [
                     { text: "Sort Table by Column", action: "sortTable", icon: "icon-sort" },
-                    { text: "Rename Column", action: "renameColumn", icon: "icon-pencil" },
                     { text: "Edit Column Properties", action: "editProps", icon: "icon-settings" },
                     { text: "Insert Column Left", action: "insertColumnLeft", icon: "icon-left" },
                     { text: "Insert Column Right", action: "insertColumnRight", icon: "icon-right" },
                     { text: "Delete Column", action: "deleteColumn", icon: "icon-delete" }
-                ]
+                ],
+                selectedCell: "",
+                validTypes: [
+                    { action: "Any", text: "Any", description: "Any text, number or boolean value" },
+                    { action: "Number", text: "Number", description: "Any positive or negative number, including decimal values" },
+                    { action: "Integer", text: "Integer", description: "Any positive or negative integer value" },
+                    { action: "PosInteger", text: "Positive Integer", description: "Any positive integer value, including 0" },
+                    { action: "NegInteger", text: "Negative Integer", description: "Any negative integer value, including 0" },
+                    { action: "Boolean", text: "Boolean Value", description: "True or False values" },
+                    { action: "String:", text: "Text", description: "Alphanumeric text and symbols without formatting" },
+                    { action: "MultilineString", text: "Multiline Text", description: "Formatted lines of aphanumeric text and symbols" },
+                    { action: "Date", text: "Date or Time", description: "A UTC formatted date/time" },
+                    { action: "UniqueString", text: "Username or ID", description: "A text based unique identifier" },
+                    { action: "Password", text: "Password", description: "The validation hash of a password, secret code or access token" },
+                    { action: "GivenName", text: "First Name", description: "A person's given name" },
+                    { action: "FamilyName", text: "Last Name", description: "A person's family name" },
+                    { action: "Email", text: "E-mail Address" },
+                    { action: "PhoneNumber", text: "Phone Number" },
+                    { action: "StreetAddress", text: "Street Address" },
+                    { action: "MailAddress", text: "Mailing Address" },
+                    { action: "CityCounty", text: "City or County" },
+                    { action: "ProvinceStateRegion", text: "Province, State or Region" },
+                    { action: "Country", text: "Country" },
+                    { action: "PostalZipCode", text: "Postal/Zip Code" },
+                    { action: "GeoLocation", text: "GPS Coordinates", description: "Decimal format GPS Coordinates" },
+                    { action: "Longitude", text: "Longitude Coordinate" },
+                    { action: "Latitude", text: "Latitude Coordinate" }
+                ],
+                showPropsDialogBox: false
             };
         },
         methods: {
@@ -3110,6 +3236,11 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         this.db.tabledata = table;
                         this.blankRowsBefore = fromRow;
                         this.fetchingData = false;
+                        Vue.nextTick(function () {
+                            var el = document.getElementById(this.selectedCell);
+                            if (el)
+                                el.className = "selected";
+                        }.bind(this));
                     }.bind(this));
                 }
                 if (!this.fetchingData) {
@@ -3130,14 +3261,59 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     }.bind(this));
                 }
             },
-            thAction: function (event, action) {
+            thAction: function (action, index) {
+                function deleteCol() {
+                    this.db.headers.splice(index, 1);
+                    this.db.datatypes.splice(index, 1);
+                    for (var a = 0, len = this.db.tabledata.length; a < len; a++) {
+                        this.db.tabledata[a].splice(index + 1, 1);
+                    }
+                    //	this.db.options.searchable.splice(index, 1);
+                }
+                if (action === "insertColumnLeft") {
+                    this.insertColumn(index);
+                }
+                else if (action === "insertColumnRight") {
+                    this.insertColumn(index + 1);
+                }
+                else if (action === "deleteColumn") {
+                    //check if column contains data
+                    var data = false;
+                    for (var a = 1, len = this.db.tabledata.length; a < len; a++) {
+                        if (this.db.tabledata[a][index + 1]) {
+                            data = true;
+                            break;
+                        }
+                    }
+                    if (!data)
+                        deleteCol.call(this);
+                    else
+                        app.confirm("Are you sure you want to delete this column?", deleteCol.bind(this));
+                }
+                else if (action === "sortTable") {
+                    wwManager({ cmd: "sortByCol", title: this.tablename, args: [this.db.headers[index]] }, function () {
+                        this.fetchData(0, 100);
+                    }.bind(this));
+                }
+                else if (action === "editProps")
+                    this.showPropsDialogBox = true;
             },
             insertColumn: function (index) {
                 if (index === false) {
-                    //add to end
+                    this.db.headers.push("");
+                    this.db.datatypes.push("any");
+                    for (var a = 0, len = this.db.tabledata.length; a < len; a++) {
+                        this.db.tabledata[a].push("");
+                    }
+                    //	this.db.options.searchable.push(true);
                 }
                 else {
-                    // add at index number
+                    this.db.headers.splice(index, 0, "");
+                    this.db.datatypes.splice(index, 0, "any");
+                    for (var a = 0, len = this.db.tabledata.length; a < len; a++) {
+                        this.db.tabledata[a].splice(index + 1, 0, "");
+                    }
+                    //	this.db.options.searchable.splice(index, 0, true);
                 }
             },
             toggleValue: function (rowIndex, colIndex) {
@@ -3153,6 +3329,18 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     this.fetchData(start, start + 100); //fetch 100 rows
                     window.setTimeout(function () { this.onScrollRunning = false; }.bind(this), 50);
                 }
+            },
+            selectCell: function (cell) {
+                var el = document.getElementById(this.selectedCell);
+                if (el)
+                    el.className = "";
+                this.selectedCell = cell;
+                el = document.getElementById(cell);
+                if (el)
+                    el.className = "selected";
+            },
+            setProperties: function () {
+                this.showPropsDialogBox = false;
             }
         },
         template: "#editable-table"
@@ -3198,7 +3386,17 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     });
     var details_card_lineitem = Vue.extend({
         props: {
-            item: Object
+            item: {
+                type: Object,
+                default: function () {
+                    return {
+                        column: "",
+                        orig: "",
+                        text: [],
+                        type: "any"
+                    };
+                }
+            }
         },
         data: function () {
             return {};
@@ -3214,7 +3412,24 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             "dropdown-button": dropdown_button
         },
         props: {
-            details: Object
+            details: {
+                type: Object,
+                default: function () {
+                    return {
+                        id: "",
+                        table: "",
+                        data: [{
+                                column: "",
+                                orig: "",
+                                text: [],
+                                type: "any"
+                            }],
+                        image: "",
+                        title: "",
+                        subtitle: "null"
+                    };
+                }
+            }
         },
         data: function () {
             return {
@@ -3510,7 +3725,24 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             "details-card": details_card
         },
         props: {
-            details: Object
+            details: {
+                type: Object,
+                default: function () {
+                    return {
+                        id: "",
+                        table: "",
+                        data: [{
+                                column: "",
+                                orig: "",
+                                text: [],
+                                type: "any"
+                            }],
+                        image: "",
+                        title: "",
+                        subtitle: "null"
+                    };
+                }
+            }
         },
         template: "#details-view-container"
     });
@@ -3631,7 +3863,19 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         template: "#search-results-page"
     });
     var edit_details_card_lineitem = Vue.extend({
-        props: { item: Object },
+        props: {
+            item: {
+                type: Object,
+                default: function () {
+                    return {
+                        column: "",
+                        orig: "",
+                        text: [],
+                        type: "any"
+                    };
+                }
+            }
+        },
         data: function () {
             return {
                 focused: false,
@@ -3682,7 +3926,17 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             "edit-details-card-lineitem": edit_details_card_lineitem
         },
         props: {
-            item: Object,
+            item: {
+                type: Object,
+                default: function () {
+                    return {
+                        column: "",
+                        orig: "",
+                        text: [],
+                        type: "any"
+                    };
+                }
+            },
             collapse: {
                 type: [Boolean, Number],
                 default: false
@@ -3715,7 +3969,24 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     });
     var edit_details_card = Vue.extend({
         props: {
-            details: Object
+            details: {
+                type: Object,
+                default: function () {
+                    return {
+                        id: "",
+                        table: "",
+                        data: [{
+                                column: "",
+                                orig: "",
+                                text: [],
+                                type: "any"
+                            }],
+                        image: "",
+                        title: "",
+                        subtitle: "null"
+                    };
+                }
+            }
         },
         components: {
             "edit-details-card-lineitem": edit_details_card_lineitem,
@@ -5033,7 +5304,4 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         startApp(); //and... GO!
     }
 }());
-// export function initialize(): void {
-// 	document.addEventListener('deviceready', onDeviceReady, false);
-// }
 //# sourceMappingURL=main.js.map

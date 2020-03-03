@@ -281,22 +281,22 @@
 			{{ spinnerMsg[spinIndex] }}
 		</div>
 
-		<div v-show="showConfirm" id="confirmContainer" @click="shakeConfirm">
+		<div v-show="showConfirm" class="dialogContainer" @click="shakeConfirm">
 		</div>
-		<div v-show="showConfirm" id="confirm" :class="{ 'shake': confirmShake }">
+		<div v-show="showConfirm" class="dialog" :class="{ 'shake': confirmShake }">
 			<h5 v-if="confirmDetails">
 				{{ confirmMsg }}
 			</h5>
-			<div id="confirmMessage">
+			<div class="dialogMessage">
 				{{ confirmDetails || confirmMsg }}
 			</div>
 
-			<form>
+			<form class="dialogButtons">
 				<input v-show="showUpdateKey" id="updateStoKeyInput" type="password">
-				<button id="confirmOK" type="button" aria-label="OK" @click="processConfirm(true);">
+				<button class="dialogOK" type="button" aria-label="OK" @click="processConfirm(true);">
 					{{ confirmOK }}
 				</button>
-				<button id="confirmCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
+				<button class="dialogCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
 					{{ confirmCancel }}
 				</button>
 			</form>
@@ -317,15 +317,12 @@
 		</div>
 	</div>
 
-	<!-- Vue.js Templates-->
+	<!-- Vue.js Templates -->
 
-	<!-- 
-			This HTML Document including x-templates was created by G. Goodkey
-			Permission to use may be granted on request 
-			g g o o d k e y A T g m a i l D O T c o m 
-	-->
 
 	<script type="text/x-template" id="dropdown-button">
+		<!-- This HTML Document including x-templates was created by G. Goodkey. Permission to use may be granted on request g g o o d k e y A T g m a i l D O T c o m -->
+
 		<div class="dropdownButton dropdown-container">
 			<button
 				v-if="customtextinput && open === false || customtextinput === false"
@@ -423,6 +420,27 @@
 					:key="'color-select-' + option"
 					@click="select(option)"
 				>
+				</div>
+			</div>
+		</div>
+	</script>
+
+	<script type="text/x-template" id="dialog-box">
+		<div>
+			<div v-show="showif" class="dialogContainer" @click="shakeBox"></div>
+			<div v-show="showif" class="dialog" :class="{ 'shake': dialogShake }">
+				<h4 v-if="heading">
+					{{ heading }}
+				</h4>
+				<br>
+				<div class="dialogMessage"><slot></slot></div>
+				<div class="clear dialogButtons" align="right">
+					<button class="dialogCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
+						{{ cancelbutton }}
+					</button>
+					<button class="dialogOK" type="button" aria-label="OK" @click="processConfirm(true);">
+						{{ okbutton }}
+					</button>
 				</div>
 			</div>
 		</div>
@@ -921,7 +939,7 @@
 						</th>
 						<th
 							v-for="(colName, index) in db.headers" 
-							:key="'thead-' + index"
+							:key="'thead-' + colName + index"
 						>
 							<dropdown-button
 								:buttontext="colName"
@@ -957,25 +975,13 @@
 							</th>
 							<td v-else 
 								:key="'td-' + (index + blankRowsBefore) + '-' + i"
+								:id="'td-' + (index + blankRowsBefore) + '-' + i"
+								@click="selectCell('td-' + (index + blankRowsBefore) + '-' + i)"
 							>
-								<div>{{ value }}</div>
-								<!-- <template v-if="db.datatypes[i + 1] === 'boolean'">
-									<a @click="toggleValue(index, i)">{{ value }}</a>
-								</template>
-								<template v-else-if="db.datatypes[i + 1] === 'number'">
-									<input
-										v-model="value"
-										type="number"
-										size="12"
-									>
-								</template>
-								<template v-else>
-									<input
-										v-model="value"
-										type="text"
-										size="12"
-									>
-								</template> -->
+								<div class="unselectedVal">{{ value }}</div>
+								<div class="selectedVal">
+									<multi-input :value="value" :type="db.datatypes[i - 1]"></multi-input>
+								</div>
 							</td>
 						</template>
 					</tr>
@@ -987,6 +993,17 @@
 					</tr>
 				</tbody>
 			</table>
+			<dialog-box 
+				:showif="showPropsDialogBox" 
+				okbutton="Apply" 
+				heading="Column Properties" 
+				@dialog-box-ok="setProperties" 
+				@dialog-box-cancel="showPropsDialogBox = false"
+			>
+				<div class="clear">Column Name: <multi-input class="right" type="string" value=""></multi-input></div>
+				<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
+				<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
+			</dialog-box>
 		</div>
 	</script>
 
@@ -1291,6 +1308,116 @@
 				</button>
 			</div>
 		</div>
+	</script>
+
+	<script type="text/x-template" id="multi-input">
+		<template>
+			<input
+				v-if="type === 'number'"
+				type="number"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<input
+				v-else-if="type === 'integer'"
+				type="number"
+				step="1"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<input
+				v-else-if="type === 'posInteger'"
+				type="number"
+				min="0"
+				step="1"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<input
+				v-else-if="type === 'negInteger'"
+				type="number"
+				max="0"
+				step="1"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<div
+				v-else-if="type === 'boolean'"
+				class="switch right"
+			>
+			<input
+				type="checkbox"
+				:id="'switch_' + id"
+				v-model="value"
+			>
+				<label
+					:for="'switch_' + id"
+					@click="onBlur(value, type)"
+				></label>
+			</div>
+			<input
+				v-else-if="type === 'date'"
+				type="date"
+				v-model="value"
+				:class="inputclass"
+				@blur="onBlur(value, type)"
+			>
+			<input
+				v-else-if="type === 'email'"
+				type="email"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<input
+				v-else-if="type === 'phoneNumber'"
+				type="tel"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+			<dropdown-button
+				v-else-if="options.length > 0"
+				:class="inputclass"
+				:align="align"
+				:buttontext="value"
+				noinputtext="[ Select ]"
+				:customtextinput="textinput"
+				select
+				:links="options"
+				@dropdown-action="setValue"
+			/>
+			<textarea
+				v-else-if="type === 'multilineString'"
+				:value="value"
+				:class="inputclass"
+			></textarea>
+			<input
+				v-else
+				type="text"
+				v-model="value"
+				:class="inputclass"
+				autocomplete="off"
+				@focus="focused = true"
+				@blur="onBlur(value, type)"
+			>
+		</template>
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-lineitem">

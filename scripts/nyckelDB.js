@@ -3672,9 +3672,10 @@ var NyckelDB = (function () {
          * @param {object} [options] {
          *	"reverse": sort Z-A, (true or false)
          *	"fromEndOfStr": sort xA-xZ, (true or false) }
+         * @param {successCallback} [callback] sort callback function
          * @returns {object} this
          */
-        NyckelDBObj.prototype.sortByCol = function (colName, options) {
+        NyckelDBObj.prototype.sortByCol = function (colName, options, callback) {
             function reverseStr(str) {
                 str = String(str);
                 var ret = [];
@@ -3708,10 +3709,10 @@ var NyckelDB = (function () {
                     DB[this.id].table.reverse();
                 ROW_INDEX_CACHE[this.id] = {};
                 colIndex = null;
-                return this;
+                return callback instanceof Function ? (callback.call(this, true, false), this) : this;
             }
             else
-                return this;
+                return callback instanceof Function ? (callback.call(this, false, "column not found"), this) : this;
         };
         ;
         /**
