@@ -23,7 +23,7 @@
 <body>
 	<h1>NyckelDB tests</h1>
 
-	<button onclick="javascript: APP.Sto.nuke(); if (window.location && window.location.reload) window.location.reload(true);">Clear localStorage Cache</button>
+	<button onclick="javascript: Sto.nuke(); if (window.location && window.location.reload) window.location.reload(true);">Clear localStorage Cache</button>
 	<table id="testTable">
 		<thead>
 			<tr>
@@ -70,12 +70,12 @@
 		<a id="hiddenDownloadLink" download="" href="" style="display:none"></a>
 	</div>
 
-	<script type="text/javascript" src="../scripts/debugmode.min.js"></script>
+	<script type="text/javascript" src="../scripts/debugmode.js"></script>
 	<script type="text/javascript" src="../scripts/Lawnchair.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/memory.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/indexed-db.js"></script>
 	<script type="text/javascript" src="../scripts/adapters/dom.js"></script>
-	<script type="text/javascript" src="../scripts/base64.min.js"></script>
+	<script type="text/javascript" src="../scripts/base64.js"></script>
 	<script type="text/javascript" src="../scripts/storage.js"></script>
 	<!-- <script type="text/javascript" src="../scripts/validate.min.js"></script> -->
 	<script type="text/javascript" src="../scripts/nyckelDB.js"></script>
@@ -200,31 +200,30 @@
 		testMethods("isDel", function (a) { return db[a].isDeleted(); });
 		//addRow(array, id)	DONE
 		testMethods("addRow", function (a) { return db[a].addRow(["hello", 2, false], "aaa"); }, true);
-		//addColumn(colName, position, options, callback)
-		testMethods("addColumn", function (a) { return db[a].addColumn("column_4", 4, { type: "string", initialValue: "hello, I'm new here", searchable: true }); }, true);
 		//setType(colName, type, data, callback)
 		testMethods("setType", function (a) {
-			db[a].addColumn("column_5", 5, { type: "any", initialValue: false });
-			return db[a].setType("column_5", "boolean", null, function (data, err) {
+			db[a].addColumn("column_4", 5, { type: "any", initialValue: true });
+			return db[a].setType("column_4", "boolean", null, function (data, err) {
 				if (err === "cannot apply type to this row, please update data and try again" && data) {
 					for (let row in data.column_4) {
 						data.column_4[row] = true;
 					}
-					db[a].setType("column_5", "boolean", data, function (data, err) {
+					db[a].setType("column_4", "boolean", data, function (data, err) {
 						return data;
 					});
 				}
 				else return false;
 			});
 		}, true);
+		testMethods("renameColumn", function(a){ return db[a].renameColumn("column_4","column_4.1"); }, true);
 		//deleteColumn(colName)
-		testMethods("deleteColumn", function (a) { db[a].addColumn("column_6"); return db[a].deleteColumn("column 6"); }, true);
+		testMethods("deleteColumn", function (a) { return db[a].deleteColumn("column_4.1"); }, true);
 		//getLength()	DONE
 		testMethods("length", function (a) { return db[a].getLength(); });
 		//setVal(rowId, colName, newValue)
-		testMethods("setVal", function (a) { return db[a].setVal(results[4][a], "column_1", "yes"); }, true);
+		testMethods("setVal", function (a) {console.log(results, a); return db[a].setVal("aaa", "column_1", "yes"); }, true);
 		//getVal(rowId, colName)
-		testMethods("getVal", function (a) { return db[a].getVal(results[4][a], "column_1"); });
+		testMethods("getVal", function (a) { return db[a].getVal("aaa", "column_1"); });
 		//getIndexOf(id, orValue, colName)
 		testMethods("indexOf", function (a) { return db[a].getIndexOf("aaa"); });
 		testMethods("indexOf2", function (a) { return db[a].getIndexOf(null, "yes", "column_1"); });
@@ -252,7 +251,7 @@
 		//unfilter()
 		testMethods("unfilter", function (a) { return db[a].unfilter(); });
 		//deleteRow(rowId)
-		testMethods("delRow", function (a) { return db[a].deleteRow(results[4][a]); }, true);
+		testMethods("delRow", function (a) { return db[a].deleteRow("aaa"); }, true);
 		testMethods("length", function (a) { return db[a].getLength(); });
 		//toCSV()
 		testMethods("toCSV", function (a) { return db[a].toCSV(); });

@@ -129,7 +129,6 @@ self.addEventListener('message', function (e) {
 				else post(appData[data.title][data.cmd](), null, data.callbackIndex);
 				break;
 			//1 argument, returns 1 value
-			case "sortByCol":
 			case "getProp":
 			case "hideRow":
 			case "deleteRow":
@@ -178,6 +177,7 @@ self.addEventListener('message', function (e) {
 			case "sync":
 			case "search":
 			case "setVals":
+			case "sortByCol":
 			case "advancedSearch":
 			case "importJSON":
 			case "getVals":

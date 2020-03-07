@@ -327,7 +327,7 @@
 			<button
 				v-if="customtextinput && open === false || customtextinput === false"
 				class="dropdownButton"
-				:class="{selected: open}"
+				:class="{selected: open, withArrow: noarrow === false}"
 				:title="title"
 				@click="toggle"
 			>
@@ -914,97 +914,100 @@
 	</script>
 
 	<script type="text/x-template" id="editable-table">
-		<div
-			class="table-container"
-			:class="{ 'fullscreen': fullscreen }"
-			@scroll.passive="onScroll"
-		>
-			<a v-if="rowLength === 0" @click="fetchData(0,100)">See all contacts</a>
-			<table v-else class="tableFixedHead">
-				<thead>
-					<tr>
-						<th>
-							<a
-								v-show="fullscreen"
-								@click="fullscreen = false"
+		<template>
+			<a v-if="rowLength === 0" @click="fetchData(0)">Load Table</a>
+			<div v-else>
+				<div 
+					class="table-container"
+					:class="{ 'fullscreen': fullscreen }"
+					@scroll.passive="onScroll"
+				>	
+					<dropdown-button 
+						id="tableMenuButton"
+						icon="icon-menu-hamburger" 
+						:links="menuLinks"
+						@dropdown-action="menuActions"
+						noarrow="true"
+					></dropdown-button>
+					<multi-input 
+						id="tableMultiInput"
+						inputclass="tableMultiInput" 
+						:value="selectedCellValue" 
+						:type="selectedCellType" 
+						:style="{top: (selectedCell[0] * 40 + 50) + 'px', left: ((selectedCell[1] - 1) * 262 + 48) + 'px'}"
+						@update-input-value="setValue"
+						@invalid-input-value="showError"
+					></multi-input>
+					<table class="tableFixedHead">
+						<thead>
+							<tr>
+								<th class="first">aaa</th>
+								<th
+									v-for="(colName, index) in db.headers" 
+									:key="'thead-' + colName + index"
+								>
+									<dropdown-button
+										:buttontext="colName"
+										:links="thLinks"
+										@dropdown-action="thAction($event, index)"
+									/>
+								</th>
+								<th>
+									<a @click="insertColumn(false)">
+										<span
+											class="icon icon-plus"
+											title="Add New Column"
+										></span>
+									</a>
+								</th>
+							</tr>
+						</thead>
+						<tbody class="fixedHeight">
+							<tr >
+								<td class="stripeFiller" 
+									:colspan="colLength + 1" 
+									:style="{height: (blankRowsBefore * 40) + 'px'}"
+								></td>
+							</tr>
+							<tr v-for="(row, index) in db.tabledata"
+								:key="'tr-'+ (index + blankRowsBefore)"
 							>
-								<span class="icon icon-resize-small"></span>
-							</a>
-							<a
-								v-show="fullscreen === false"
-								@click="fullscreen = true"
-							>
-								<span class="icon icon-fullscreen"></span>
-							</a>
-						</th>
-						<th
-							v-for="(colName, index) in db.headers" 
-							:key="'thead-' + colName + index"
-						>
-							<dropdown-button
-								:buttontext="colName"
-								:links="thLinks"
-								@dropdown-action="thAction($event, index)"
-							/>
-						</th>
-						<th>
-							<a @click="insertColumn(false)">
-								<span
-									class="icon icon-plus"
-									title="Add New Column"
-								></span>
-							</a>
-						</th>
-					</tr>
-				</thead>
-				<tbody class="fixedHeight">
-					<tr >
-						<td class="stripeFiller" 
-							:colspan="colLength + 1" 
-							:style="{height: (blankRowsBefore * 40) + 'px'}"
-						></td>
-					</tr>
-					<tr v-for="(row, index) in db.tabledata"
-						:key="'tr-'+ (index + blankRowsBefore)"
+								<template v-for="(value, i) in row">
+									<th v-if="i === 0"
+										:key="'th-' + (index + blankRowsBefore) + '-' + i"
+									>
+										{{ value }}
+									</th>
+									<td v-else 
+										:key="'td-' + (index + blankRowsBefore) + '-' + i"
+										@click="selectCell(index, i)"
+									>
+										<div>{{ value }}</div>
+									</td>
+								</template>
+							</tr>
+							<tr >
+								<td class="stripeFiller" 
+									:colspan="colLength + 1" 
+									:style="{height: rowLength - blankRowsBefore < 100 ? 0 + 'px' : ((rowLength - blankRowsBefore - 100) * 40) + 'px'}"
+								></td>
+							</tr>
+						</tbody>
+					</table>
+					<dialog-box 
+						:showif="showPropsDialogBox" 
+						okbutton="Apply" 
+						heading="Column Properties" 
+						@dialog-box-ok="setProperties" 
+						@dialog-box-cancel="showPropsDialogBox = false"
 					>
-						<template v-for="(value, i) in row">
-							<th v-if="i === 0"
-								:key="'th-' + (index + blankRowsBefore) + '-' + i"
-							>
-								{{ value }}
-							</th>
-							<td v-else 
-								:key="'td-' + (index + blankRowsBefore) + '-' + i"
-								:id="'td-' + (index + blankRowsBefore) + '-' + i"
-								@click="selectCell('td-' + (index + blankRowsBefore) + '-' + i)"
-							>
-								<div class="unselectedVal">{{ value }}</div>
-								<div class="selectedVal">
-									<multi-input :value="value" :type="db.datatypes[i - 1]"></multi-input>
-								</div>
-							</td>
-						</template>
-					</tr>
-					<tr >
-						<td class="stripeFiller" 
-							:colspan="colLength + 1" 
-							:style="{height: rowLength - blankRowsBefore < 100 ? 0 + 'px' : ((rowLength - blankRowsBefore - 100) * 40) + 'px'}"
-						></td>
-					</tr>
-				</tbody>
-			</table>
-			<dialog-box 
-				:showif="showPropsDialogBox" 
-				okbutton="Apply" 
-				heading="Column Properties" 
-				@dialog-box-ok="setProperties" 
-				@dialog-box-cancel="showPropsDialogBox = false"
-			>
-				<div class="clear">Column Name: <multi-input class="right" type="string" value=""></multi-input></div>
-				<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
-				<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
-			</dialog-box>
-		</div>
+						<div class="clear">Column Name: <multi-input class="right" type="string" value=""></multi-input></div>
+						<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
+						<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
+					</dialog-box>
+				</div>
+			</div>
+		</template>
 	</script>
 
 	<script type="text/x-template" id="view1-page">
@@ -1319,7 +1322,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'integer'"
@@ -1329,7 +1332,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'posInteger'"
@@ -1340,7 +1343,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'negInteger'"
@@ -1351,7 +1354,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<div
 				v-else-if="type === 'boolean'"
@@ -1364,7 +1367,7 @@
 			>
 				<label
 					:for="'switch_' + id"
-					@click="onBlur(value, type)"
+					@click="setValue(value, type)"
 				></label>
 			</div>
 			<input
@@ -1372,7 +1375,7 @@
 				type="date"
 				v-model="value"
 				:class="inputclass"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'email'"
@@ -1381,7 +1384,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'phoneNumber'"
@@ -1390,7 +1393,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 			<dropdown-button
 				v-else-if="options.length > 0"
@@ -1401,7 +1404,7 @@
 				:customtextinput="textinput"
 				select
 				:links="options"
-				@dropdown-action="setValue"
+				@dropdown-action="setValue($event, type)"
 			/>
 			<textarea
 				v-else-if="type === 'multilineString'"
@@ -1415,7 +1418,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, type)"
+				@blur="setValue(value, type)"
 			>
 		</template>
 	</script>
@@ -1545,7 +1548,7 @@
 				class="textbox"
 				autocomplete="off"
 				@focus="item.focused = true"
-				@blur="onBlur(value, item.type)"
+				@blur="setValue(value, item.type)"
 			>
 			<dropdown-button
 				v-else-if="item.options"
@@ -1568,7 +1571,7 @@
 				class="textbox"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="onBlur(value, item.type)"
+				@blur="setValue(value, item.type)"
 			>
 			<a
 				:key="'clear-a-' + i"

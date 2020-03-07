@@ -67,7 +67,7 @@ body {
 	user-select: none;
 }
 
-body, input, button {
+body, input, button, textarea {
 	font-family: 'Segoe UI', Roboto, Selawik, 'HelveticaNeue-Light', HelveticaNeue, Helvetica, Arial, sans-serif;
 	font-size: 16px;
 	line-height: 20px;
@@ -225,22 +225,27 @@ table {
 	border-collapse: collapse;
 }
 
-th {
+th,
+#tableMenuButton {
 	background-color: #f2f2f2;
 	font-weight: normal;
 }
 
-.dark th {
+.dark th,
+.dark #tableMenuButton {
 	background-color: #161616;
 }
 
-table, th {
-	outline: 2px solid white;
+th,
+#tableMenuButton button,
+.table-container {
+	outline: 1px solid white;
 }
 
-.dark table,
-.dark th {
-	outline: 2px solid #292929;
+.dark th,
+.dark #tableMenuButton button,
+.dark .table-container {
+	outline: 1px solid #292929;
 }
 
 table, th, td, table input {
@@ -253,7 +258,8 @@ th, td, table li {
 }
 
 tbody tr th, 
-thead a {
+thead a,
+.tableFixedHead thead th.first {
 	padding: 8px;
 }
 
@@ -312,7 +318,7 @@ button.dropdownButton .icon-triangle-bottom {
 	top: 33%;
 }
 
-button.dropdownButton{
+button.dropdownButton.withArrow{
 	padding-right: 24px;
 }
 
@@ -355,8 +361,9 @@ tr:nth-child(even) input {
 }
 
 .table-container {
-	overflow-x: auto;
-	height: 600px;
+	position: relative;
+	overflow: auto;
+	max-height: 600px;
 }
 
 html.phon .table-container {
@@ -380,19 +387,20 @@ html.phon .table-container {
 }
 
 .tableFixedHead {
-	overflow-y: auto; 
+	overflow-y: auto;
 }
 
 .tableFixedHead thead th { 
 	position: sticky;
 	top: 0; 
-	z-index: 1;
+	z-index: 3;
 }
 
 .tableFixedHead tbody th {
 	position: sticky;
   	left: 0;
 	top: auto;
+	z-index: 2;
 	font-family: 'Courier New', Courier, monospace;
 	font-weight: bold;
 }
@@ -406,22 +414,8 @@ html.phon .table-container {
     overflow: hidden;
     padding: 0px 12px;
     white-space: pre;
-    max-width: 500px;
+    width: 260px;
     line-height: 40px;
-}
-
-td.selected,
-.tableInputs input {
-	outline: 1px solid #478cdb; /*accent blue*/
-}
-
-.selectedVal,
-td.selected .unselectedVal {
-	display: none;
-}
-
-td.selected .selectedVal{
-	display: block;
 }
 
 tr.tableInputs{
@@ -439,6 +433,39 @@ tr.tableInputs{
 .tableInputs input {
 	position: relative;
 	width: 100%;
+}
+
+#tableMenuButton {
+	position: fixed;
+	z-index: 4;
+}
+
+#tableMenuButton button{
+	padding: 13px 15px;
+	border-radius: 0px;
+}
+
+.tableMultiInput {
+	position: absolute;
+	top: 50px;
+	left: 48px;
+	z-index: 1;
+	height: 41px;
+	border: 0;
+	padding: 0 11.5px;
+	width: 260px;
+	line-height: 40px;
+	background-color: transparent;
+}
+
+.tableMultiInput:focus {
+	outline: 1px solid #478cdb; /*accent blue*/
+}
+
+textarea.tableMultiInput {
+	height: 300px;
+	width: 450px;
+	line-height: 20px;
 }
 
 #loading {
@@ -688,7 +715,8 @@ html.dark,
 .dark #stoKeyInput,
 .dark #stoKeyInputConfirm,
 .dark .textbox,
-.dark .cancelButton {
+.dark .cancelButton,
+.dark .tableMultiInput {
 	color: lightgray; /*dark main text color*/
 }
 
@@ -1308,12 +1336,14 @@ table input:focus {
 	background-color: rgba(128, 128, 128, 0.25);
 }
 
-.invalid .textbox {
+.invalid .textbox,
+.invalid.tableMultiInput {
     color: red;
 }
 
 .invalid .textbox:focus,
-.dark .invalid .textbox:focus {
+.dark .invalid .textbox:focus,
+.invalid.tableMultiInput {
 	border-color: red;
 }
 
@@ -1817,11 +1847,11 @@ html.desk.dark .button-link:hover:active {
 	background-color: transparent;
 }
 .textbox:focus,
-td.selected {
+.tableMultiInput:focus {
 	background-color: white;
 }
 .dark .textbox:focus,
-.dark td.selected {
+.dark .tableMultiInput:focus {
 	background-color: black;
 }
 

@@ -748,7 +748,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         function noWebWorker() {
             function applyCallback(callback) {
                 var hasCallback = ["addColumn", "advancedSearch", "deleteColumn", "deleteTable", "getHeaders", "getRow", "getRowTemplate", "getSearchSuggestions", "getVals",
-                    "importJSON", "isSyncPending", "NUKEALL", "renameColumn", "search", "setSyncCompleted", "setTitle", "setType", "setVal", "setVals", "sync", "validate"];
+                    "importJSON", "isSyncPending", "NUKEALL", "renameColumn", "search", "setSyncCompleted", "setTitle", "setType", "setVal", "setVals", "sortByCol", "sync", "validate"];
                 if (hasCallback.indexOf(obj.cmd) > -1)
                     return appData[title][obj.cmd].apply(appData[title], obj.args);
                 else
@@ -3150,10 +3150,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             };
         },
         methods: {
-            setValue: function () {
-            },
-            onBlur: function (value, type) {
-                //validate value
+            setValue: function (value, type) {
+                this.$emit("update-input-value", { value: value, type: type });
             }
         },
         template: "#multi-input"
@@ -3168,6 +3166,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             tablename: {
                 type: String,
                 required: true
+            },
+            maxrows: {
+                type: Number,
+                default: 50
             }
         },
         data: function () {
@@ -3192,6 +3194,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     { text: "Delete Column", action: "deleteColumn", icon: "icon-delete" }
                 ],
                 selectedCell: "",
+                selectedCellValue: "",
+                selectedCellType: "string",
                 validTypes: [
                     { action: "Any", text: "Any", description: "Any text, number or boolean value" },
                     { action: "Number", text: "Number", description: "Any positive or negative number, including decimal values" },
@@ -3218,15 +3222,22 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     { action: "Longitude", text: "Longitude Coordinate" },
                     { action: "Latitude", text: "Latitude Coordinate" }
                 ],
-                showPropsDialogBox: false
+                showPropsDialogBox: false,
+                menuLinks: [
+                    { action: "toggleFullscreen", text: "Fullscreen", icon: "icon-fullscreen" },
+                    { action: "importCSV", text: "Import CSV Data", icon: "icon-import" },
+                    { action: "addRow", text: "Create New Row", icon: "icon-plus" }
+                ],
+                invalidInput: false,
+                inputError: "",
+                inputErrorDetails: ""
             };
         },
         methods: {
-            fetchData: function (fromRow, toRow) {
+            fetchData: function (fromRow) {
                 function getVals(headers, tableLength) {
-                    var rows = [];
-                    toRow = tableLength < toRow ? tableLength : toRow;
-                    for (var a = 0, len = toRow - fromRow; a < len; a++) {
+                    var rows = [], len = fromRow + this.maxrows > tableLength ? tableLength - fromRow : this.maxrows;
+                    for (var a = 0; a < len; a++) {
                         rows[a] = a + fromRow;
                     }
                     wwManager({ cmd: "getVals", args: [rows, headers], title: this.tablename }, function (table) {
@@ -3237,9 +3248,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         this.blankRowsBefore = fromRow;
                         this.fetchingData = false;
                         Vue.nextTick(function () {
-                            var el = document.getElementById(this.selectedCell);
-                            if (el)
-                                el.className = "selected";
+                            if (this.selectedCell)
+                                this.selectCell(this.selectedCell[0], this.selectedCell[1]);
+                            else
+                                this.selectCell(1, 0);
                         }.bind(this));
                     }.bind(this));
                 }
@@ -3292,7 +3304,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
                 else if (action === "sortTable") {
                     wwManager({ cmd: "sortByCol", title: this.tablename, args: [this.db.headers[index]] }, function () {
-                        this.fetchData(0, 100);
+                        this.fetchData(0);
                     }.bind(this));
                 }
                 else if (action === "editProps")
@@ -3321,26 +3333,58 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             },
             onScroll: function (event) {
                 var pos = event.target.scrollTop;
-                if (!this.onScrollRunning && !this.fetchingData && (pos > this.scrollPos + 2000 || pos < this.scrollPos - 1500)) {
+                if (!this.onScrollRunning && !this.fetchingData && (pos > this.scrollPos + 800 || pos < this.scrollPos - 500)) {
                     this.onScrollRunning = true;
                     this.scrollPos = pos;
                     var start = Math.floor(pos / 80) * 2; //makes sure to start at an even number
-                    start = start < 34 ? 0 : start - 34; //render 34 rows above scrollTop
-                    this.fetchData(start, start + 100); //fetch 100 rows
-                    window.setTimeout(function () { this.onScrollRunning = false; }.bind(this), 50);
+                    start = start < 16 ? 0 : start - 16; //render 16 rows above scrollTop
+                    this.fetchData(start); //fetch x rows
+                    window.setTimeout(function () { this.onScrollRunning = false; }.bind(this), 100);
                 }
             },
-            selectCell: function (cell) {
-                var el = document.getElementById(this.selectedCell);
-                if (el)
-                    el.className = "";
-                this.selectedCell = cell;
-                el = document.getElementById(cell);
-                if (el)
-                    el.className = "selected";
+            selectCell: function (row, column) {
+                this.selectedCell = [row + this.blankRowsBefore, column];
+                this.selectedCellValue = this.db.tabledata[row][column];
+                this.selectedCellType = this.db.datatypes[column - 1];
+                var input = document.getElementsByClassName("tableMultiInput");
+                if (input)
+                    input[0].focus();
             },
             setProperties: function () {
                 this.showPropsDialogBox = false;
+            },
+            menuActions: function (action) {
+                if (action === "toggleFullscreen") {
+                    this.menuLinks[0].icon = this.fullscreen ? "icon-fullscreen" : "icon-resize-small";
+                    this.fullscreen = !this.fullscreen;
+                }
+                else if (action === "importCSV") {
+                    //TODO
+                }
+                else if (action === "addRow") {
+                    //TODO
+                }
+            },
+            setValue: function (value) {
+                debug(value);
+                wwManager({
+                    cmd: "validate", title: this.tablename, args: [value.value, value.type]
+                }, function (updatedValue, error, errorDetails) {
+                    if (error) {
+                        this.invalidInput = true;
+                        this.inputError = error;
+                        this.inputErrorDetails = errorDetails;
+                    }
+                    else {
+                        this.invalidInput = false;
+                        this.inputError = "";
+                        this.inputErrorDetails = "";
+                        this.db.tabledata[this.selectedCell[0]][this.selectedCell[1]] = updatedValue;
+                    }
+                }.bind(this));
+            },
+            showError: function (errorObj) {
+                debug(errorObj);
             }
         },
         template: "#editable-table"
