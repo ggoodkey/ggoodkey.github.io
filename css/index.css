@@ -364,6 +364,7 @@ tr:nth-child(even) input {
 	position: relative;
 	overflow: auto;
 	max-height: 600px;
+	overscroll-behavior: contain;
 }
 
 html.phon .table-container {
@@ -445,7 +446,8 @@ tr.tableInputs{
 	border-radius: 0px;
 }
 
-.tableMultiInput {
+input.tableMultiInput,
+textarea.tableMultiInput {
 	position: absolute;
 	top: 50px;
 	left: 48px;
@@ -454,18 +456,41 @@ tr.tableInputs{
 	border: 0;
 	padding: 0 11.5px;
 	width: 260px;
-	line-height: 40px;
-	background-color: transparent;
+	line-height: 40.5px;
+	outline: 1px solid lightgrey;
 }
 
-.tableMultiInput:focus {
+.dark input.tableMultiInput,
+.dark textarea.tableMultiInput {
+	outline: 1px solid #333;
+}
+
+input.tableMultiInput:focus,
+input.tableMultiInput:active,
+textarea.tableMultiInput:focus,
+textarea.tableMultiInput:active {
 	outline: 1px solid #478cdb; /*accent blue*/
 }
 
+input.invalid.tableMultiInput,
+textarea.invalid.tableMultiInput {
+	outline: 1px solid red;
+}
+
 textarea.tableMultiInput {
-	height: 300px;
-	width: 450px;
-	line-height: 20px;
+	height: 200px;
+	width: 350px;
+	line-height: 24px;
+	padding-top: 9px;
+	white-space: nowrap;
+}
+
+.multiInputErrorMessage{
+	color: red;
+	font-size: 12px;
+	position: absolute;
+	z-index: 2;
+	white-space: nowrap;
 }
 
 #loading {
@@ -1342,8 +1367,7 @@ table input:focus {
 }
 
 .invalid .textbox:focus,
-.dark .invalid .textbox:focus,
-.invalid.tableMultiInput {
+.dark .invalid .textbox:focus {
 	border-color: red;
 }
 
@@ -1847,11 +1871,11 @@ html.desk.dark .button-link:hover:active {
 	background-color: transparent;
 }
 .textbox:focus,
-.tableMultiInput:focus {
+.tableMultiInput {
 	background-color: white;
 }
 .dark .textbox:focus,
-.dark .tableMultiInput:focus {
+.dark .tableMultiInput {
 	background-color: black;
 }
 

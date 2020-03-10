@@ -934,14 +934,21 @@
 						inputclass="tableMultiInput" 
 						:value="selectedCellValue" 
 						:type="selectedCellType" 
+						:class="{ invalid: invalidInput }"
 						:style="{top: (selectedCell[0] * 40 + 50) + 'px', left: ((selectedCell[1] - 1) * 262 + 48) + 'px'}"
-						@update-input-value="setValue"
-						@invalid-input-value="showError"
 					></multi-input>
+					<div 
+						v-show="inputError" 
+						:title="inputErrorDetails" 
+						class="multiInputErrorMessage"
+						:style="{top: (selectedCell[0] * 40 + 47) + 'px', left: ((selectedCell[1] - 1) * 262 + 52) + 'px'}"
+					>
+						{{ inputError }}
+					</div>
 					<table class="tableFixedHead">
 						<thead>
 							<tr>
-								<th class="first">aaa</th>
+								<th class="first"></th>
 								<th
 									v-for="(colName, index) in db.headers" 
 									:key="'thead-' + colName + index"
@@ -1016,11 +1023,6 @@
 				<h3>Contacts</h3>
 				<a class="button" @click="createNewItem('Contacts')">
 					Create a new Contact
-				</a>
-				<br>
-				<br>
-				<a class="button" @click="importFile('Contacts')">
-					Select a CSV file from your device
 				</a>
 				<br>
 				<br>
@@ -1314,7 +1316,6 @@
 	</script>
 
 	<script type="text/x-template" id="multi-input">
-		<template>
 			<input
 				v-if="type === 'number'"
 				type="number"
@@ -1322,7 +1323,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'integer'"
@@ -1332,7 +1333,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'posInteger'"
@@ -1343,7 +1344,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'negInteger'"
@@ -1354,7 +1355,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<div
 				v-else-if="type === 'boolean'"
@@ -1367,7 +1368,7 @@
 			>
 				<label
 					:for="'switch_' + id"
-					@click="setValue(value, type)"
+					@click="emitNewValue(value, type)"
 				></label>
 			</div>
 			<input
@@ -1375,7 +1376,7 @@
 				type="date"
 				v-model="value"
 				:class="inputclass"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'email'"
@@ -1384,7 +1385,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<input
 				v-else-if="type === 'phoneNumber'"
@@ -1393,7 +1394,7 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
 			<dropdown-button
 				v-else-if="options.length > 0"
@@ -1404,10 +1405,10 @@
 				:customtextinput="textinput"
 				select
 				:links="options"
-				@dropdown-action="setValue($event, type)"
+				@dropdown-action="emitNewValue($event, type)"
 			/>
 			<textarea
-				v-else-if="type === 'multilineString'"
+				v-else-if="type === 'multilineString' || type === 'formattedAddress'"
 				:value="value"
 				:class="inputclass"
 			></textarea>
@@ -1418,9 +1419,8 @@
 				:class="inputclass"
 				autocomplete="off"
 				@focus="focused = true"
-				@blur="setValue(value, type)"
+				@blur="emitNewValue(value, type)"
 			>
-		</template>
 	</script>
 
 	<script type="text/x-template" id="edit-details-card-lineitem">

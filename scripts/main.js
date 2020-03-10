@@ -676,7 +676,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     }
     if (localTestingMode)
         APP.setDebugMode(true);
-    var fileReaderInitiated = [], backstack = [], backIndex = 0, state = freshStateObj(), dbid = null, refreshResponsiveLayout = function () {
+    var backstack = [], backIndex = 0, state = freshStateObj(), dbid = null, refreshResponsiveLayout = function () {
         var width = COM.getWidth(), height = COM.getHeight(), type = "tabl", orientation = " port ", theme = "", htmlTag = document.getElementsByTagName("html")[0];
         if (width > 1280)
             type = "desk";
@@ -1614,10 +1614,13 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         app.recentlyViewed = recent;
         app.storeState();
     }
-    function importFile(toTable) {
+    /* options = {fileExtention: "json" or "csv", "overwrite": boolean } */
+    function importFile(toTable, options, callback) {
         function done(success, errors) {
             if (success && !errors) {
                 app.notify("Data imported successfully", true);
+                if (callback instanceof Function)
+                    callback();
             }
             else if (errors) {
                 defaultErrorHandler(success, errors);
@@ -1625,12 +1628,13 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             else
                 app.notify("Done", true);
         }
+        options = options || {};
         if (toTable === "Files")
-            app.loadFile('hiddenFileInput', undefined, function (data) {
+            loadFile('hiddenFileInput', undefined, function (data) {
                 wwManager({ "cmd": "addRow", "title": toTable, "args": [data] }, done);
             });
-        else if (toTable === "Contacts")
-            app.loadFile('hiddenCSVInput', 'csv', function (data) {
+        else
+            loadFile('hiddenCSVInput', options, function (data) {
                 wwManager({ "cmd": "importJSON", "title": toTable, "args": [data, app.stoKey] }, done);
             });
     }
@@ -1755,6 +1759,165 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
         }
         return outsideClick;
+    }
+    /*
+    * formInputId is id of <input type="file" accept=".csv" id="browseButton1"/> (in this case it would be "browseButton1")
+    * fileExtension could be ".txt", ".png", ".csv", etc.
+    * callback is the function to preform after the file has been loaded
+    */
+    function loadFile(fileInputId, options, callback) {
+        // readAs accepts "text", "image", "binary", or "array" (defaults to binary)
+        function initFileReader(readAs, callback) {
+            function removeListeners() {
+                fileInputElement.removeEventListener('change', init.bind(null, options));
+                fileInputElement.removeEventListener('error', showError);
+                fileInputElement.files = null;
+                fileInputElement.value = "";
+                fileInputElement.accept = "";
+            }
+            function init(options) {
+                app.spin(true, "Loading file...");
+                if (!fileInputElement || !fileInputElement.files)
+                    return;
+                var file = fileInputElement.files[0], /* FileList object*/ path = fileInputElement.value.replace(/\\/g, "/"), accept = fileInputElement.accept.replace(/^\./, ""), ext, 
+                // eslint-disable-next-line max-len
+                imageTypes = /^image\/(?:bmp|cis\-cod|gif|ief|jpeg|pipeg|png|svg\+xml|tiff|x\-(cmu\-raster|cmx|icon|portable\-(anymap|bitmap|graymap|pixmap)|rgb|xbitmap|xpixmap|xwindowdump))$/i;
+                var fileExtension = options && options.fileExtension || null;
+                if (fileExtension)
+                    ext = new RegExp(fileExtension + "$", "gi");
+                if (path === "" || accept !== fileExtension) {
+                    if (path)
+                        app.notify("A known exception occured. Please try again", true);
+                    removeListeners();
+                    app.spin(false, "Loading file...");
+                    return;
+                }
+                if (!fileExtension || path.match(ext) instanceof Array && path.match(ext)[0] === fileExtension) /* verify file extension*/ {
+                    var reader = new FileReader();
+                    reader.onerror = function () {
+                        if (reader.error) {
+                            switch (reader.error.name) {
+                                case "notFoundError":
+                                    app.notify('File Not Found!');
+                                    break;
+                                case "abortError":
+                                    break; // noop
+                                default:
+                                    app.notify('An error occurred reading this file.');
+                                    console.log(reader.error);
+                            }
+                        }
+                        removeListeners();
+                    };
+                    reader.onload = function () {
+                        app.spin(false, "Loading file...");
+                        removeListeners();
+                        callback(reader.result, file);
+                    };
+                    reader.onabort = function () { removeListeners(); };
+                    if (readAs === "image" || imageTypes.test(file.type)) {
+                        debug(file, "reading as image");
+                        reader.readAsDataURL(file);
+                    }
+                    else if (readAs === "text")
+                        reader.readAsText(file);
+                    else if (readAs === "array")
+                        reader.readAsArrayBuffer(file);
+                    else
+                        reader.readAsBinaryString(file);
+                }
+                else {
+                    app.notify("File type not supported! Expected " + fileExtension, false);
+                    app.spin(false, "Loading file...");
+                    removeListeners();
+                }
+            }
+            function showError(e) {
+                removeListeners();
+                app.notify("Error loading file: " + e);
+            }
+            if (fileInputElement && File && FileReader && FileList && Blob) {
+                removeListeners();
+                if (options && options.fileExtension)
+                    fileInputElement.accept = "." + options.fileExtension;
+                fileInputElement.addEventListener('change', init.bind(null, options), { once: true });
+                fileInputElement.addEventListener('error', showError, { once: true });
+            }
+            else
+                app.notify('Failed to initiate the File Reader.', true);
+        }
+        function checkFileType(options, cb) {
+            if (options.fileExtension && /csv/i.test(options.fileExtension))
+                initFileReader('text', parseCSV);
+            else if (options.fileExtension && /vcf/i.test(options.fileExtension))
+                initFileReader('text', parseVCF);
+            else if (options.fileExtension && /json/i.test(options.fileExtension))
+                initFileReader('text', parseJSON);
+            else if (options.fileExtension && /^(jpe?g|png|gif|bmp|svg|tiff)$/i.test(options.fileExtension))
+                initFileReader('image', saveFile);
+            else
+                initFileReader("binary", saveFile);
+            return cb();
+        }
+        function saveFile(source, details) {
+            var contents = Base64.write_and_verify(source, Base64.hash(app.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = app.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(app.stoKey));
+            name.pop();
+            name = name.join(".");
+            modified = typeof modified === "number" ? modified : new Date(modified).getTime();
+            var ret = [displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents];
+            app.spin(false, "Loading file...");
+            if (callback instanceof Function)
+                return callback(ret);
+            else
+                return ret;
+        }
+        function parseCSV(source) {
+            app.notify("Importing data...", false, function () {
+                source = COM.csv2json(source);
+                source.lastModified = new Date().getTime();
+                source.author = app.dropboxEmail || "unknown";
+                //try get csv modified date and author from notes
+                if (source.Rows[0].Notes) {
+                    source.Rows[0].Notes = source.Rows[0].Notes.replace(/\r\n|\r|\n/g, "\r\n"); //normalize line breaks
+                    var notes = source.Rows[0].Notes.split("\r\n");
+                    for (var d = 0, lenD = notes.length; d < lenD; d++) {
+                        if (/^\-Imported/.test(notes[d])) {
+                            var impFr = notes[d].replace(/^\-Imported/, ""), importDate = [];
+                            if (impFr && impFr.length === 8) {
+                                importDate[0] = Number(impFr.substring(0, 4));
+                                importDate[1] = Number(impFr.supstring(4, 6));
+                                importDate[2] = Number(impFr.supstring(6, 8));
+                                source.lastModified = new Date(importDate[2], importDate[0], importDate[1]).getTime();
+                            }
+                        }
+                    }
+                }
+                source.replaceAll = options && options.overwrite || false;
+                source.identifierCol = "Name";
+                if (callback instanceof Function)
+                    return callback(source);
+                else
+                    return source;
+            });
+        }
+        function parseVCF(input) {
+            debug(input, "parseVCF not done");
+        }
+        function parseJSON(input) {
+            debug(input, "parseJSON not done");
+        }
+        //click forwarding from a button to the ugly (and now hidden) fileInputElement
+        function click(callback) {
+            if (fileInputElement)
+                fileInputElement.click();
+            if (callback instanceof Function)
+                return callback();
+        }
+        options = options || {};
+        var fileInputElement = document.getElementById(fileInputId);
+        checkDBLoaded(function (nextInQueue) {
+            checkFileType(options, function () { click(nextInQueue); });
+        });
     }
     var dropdown_button = Vue.extend({
         props: {
@@ -2670,7 +2833,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
             },
             importNewTable: function () {
-                app.loadFile("hiddenCSVInput", "csv", this.applyNewTable);
+                loadFile("hiddenCSVInput", { fileExtension: "csv" }, this.applyNewTable);
             },
             applyNewTable: function (data) {
                 function matches(subsetArr, ofArr) {
@@ -3150,8 +3313,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             };
         },
         methods: {
-            setValue: function (value, type) {
-                this.$emit("update-input-value", { value: value, type: type });
+            emitNewValue: function (value, type) {
+                this.$emit("value-changed", { value: value, type: type });
             }
         },
         template: "#multi-input"
@@ -3193,7 +3356,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     { text: "Insert Column Right", action: "insertColumnRight", icon: "icon-right" },
                     { text: "Delete Column", action: "deleteColumn", icon: "icon-delete" }
                 ],
-                selectedCell: "",
+                selectedCell: [-1, 0],
                 selectedCellValue: "",
                 selectedCellType: "string",
                 validTypes: [
@@ -3224,9 +3387,11 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 ],
                 showPropsDialogBox: false,
                 menuLinks: [
-                    { action: "toggleFullscreen", text: "Fullscreen", icon: "icon-fullscreen" },
-                    { action: "importCSV", text: "Import CSV Data", icon: "icon-import" },
-                    { action: "addRow", text: "Create New Row", icon: "icon-plus" }
+                    { action: "toggleFullscreen", text: "Full Screen", description: "Toggle full screen", icon: "icon-fullscreen" },
+                    { action: "importCSV", text: "Import CSV File", description: "Import a CSV file from your device", icon: "icon-import" },
+                    { action: "exportJSON", text: "Create Backup File", description: "Export a Nyckel JSON file to your device", icon: "icon-export" },
+                    { action: "importJSON", text: "Restore from Backup File", description: "Import a Nyckel JSON file from your device", icon: "icon-import" },
+                    { action: "addRow", text: "New Row", description: "Add a new row to the table", icon: "icon-plus" }
                 ],
                 invalidInput: false,
                 inputError: "",
@@ -3234,7 +3399,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             };
         },
         methods: {
-            fetchData: function (fromRow) {
+            fetchData: function (fromRow, rebuild) {
                 function getVals(headers, tableLength) {
                     var rows = [], len = fromRow + this.maxrows > tableLength ? tableLength - fromRow : this.maxrows;
                     for (var a = 0; a < len; a++) {
@@ -3248,17 +3413,14 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         this.blankRowsBefore = fromRow;
                         this.fetchingData = false;
                         Vue.nextTick(function () {
-                            if (this.selectedCell)
-                                this.selectCell(this.selectedCell[0], this.selectedCell[1]);
-                            else
-                                this.selectCell(1, 0);
+                            this.selectCell(this.selectedCell[0] - this.blankRowsBefore, this.selectedCell[1]);
                         }.bind(this));
                     }.bind(this));
                 }
                 if (!this.fetchingData) {
                     this.fetchingData = true;
                     checkDBLoaded(function () {
-                        if (this.db.headers.length > 0 && this.rowLength > 0)
+                        if (this.db.headers.length > 0 && this.rowLength > 0 && !rebuild)
                             getVals.call(this, this.db.headers, this.rowLength);
                         else
                             wwManager({ cmd: "getLength", title: this.tablename }, function (tableLength) {
@@ -3266,7 +3428,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                                     getVals.call(this, headers, tableLength);
                                 }.bind(this));
                             }.bind(this));
-                        if (this.db.datatypes.length === 0)
+                        if (this.db.datatypes.length === 0 || rebuild)
                             wwManager({ cmd: "getTypes", title: this.tablename }, function (types) {
                                 this.db.datatypes = types;
                             }.bind(this));
@@ -3343,12 +3505,22 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
             },
             selectCell: function (row, column) {
-                this.selectedCell = [row + this.blankRowsBefore, column];
-                this.selectedCellValue = this.db.tabledata[row][column];
-                this.selectedCellType = this.db.datatypes[column - 1];
-                var input = document.getElementsByClassName("tableMultiInput");
-                if (input)
-                    input[0].focus();
+                function sel(prevCellValidated) {
+                    if (prevCellValidated) {
+                        this.selectedCell = [row + this.blankRowsBefore, column];
+                        this.selectedCellValue = this.db.tabledata[row][column];
+                        this.selectedCellType = this.db.datatypes[column - 1];
+                        if (input)
+                            input[0].focus({ preventScroll: true });
+                    }
+                }
+                if (row > -1) {
+                    var input = document.getElementsByClassName("tableMultiInput");
+                    if (this.selectedCell[0] > -1 && input)
+                        this.validateValue({ value: input[0].value, type: this.selectedCellType }, sel.bind(this));
+                    else
+                        sel.call(this, true);
+                }
             },
             setProperties: function () {
                 this.showPropsDialogBox = false;
@@ -3359,32 +3531,42 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     this.fullscreen = !this.fullscreen;
                 }
                 else if (action === "importCSV") {
-                    //TODO
+                    importFile(this.tablename, { fileExtension: "csv", overwrite: true }, function () { this.fetchData(0, true); }.bind(this));
                 }
                 else if (action === "addRow") {
+                    debug("not done");
                     //TODO
                 }
+                else if (action === "importJSON") {
+                    importFile(this.tablename, { fileExtension: "json", overwrite: false }, function () { this.fetchData(0, true); }.bind(this));
+                }
+                else if (action === "exportJSON") {
+                    //TODO
+                }
+                else {
+                    debug(action, "not done");
+                }
             },
-            setValue: function (value) {
-                debug(value);
+            validateValue: function (value, callback) {
+                this.selectedCellValue = value.value;
                 wwManager({
                     cmd: "validate", title: this.tablename, args: [value.value, value.type]
                 }, function (updatedValue, error, errorDetails) {
                     if (error) {
                         this.invalidInput = true;
                         this.inputError = error;
-                        this.inputErrorDetails = errorDetails;
+                        if (errorDetails)
+                            this.inputErrorDetails = errorDetails;
                     }
                     else {
                         this.invalidInput = false;
                         this.inputError = "";
                         this.inputErrorDetails = "";
-                        this.db.tabledata[this.selectedCell[0]][this.selectedCell[1]] = updatedValue;
+                        this.db.tabledata[this.selectedCell[0] - this.blankRowsBefore][this.selectedCell[1]] = updatedValue;
+                        if (callback instanceof Function)
+                            callback(true, updatedValue);
                     }
                 }.bind(this));
-            },
-            showError: function (errorObj) {
-                debug(errorObj);
             }
         },
         template: "#editable-table"
@@ -3402,7 +3584,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         methods: {
             externalLink: externalLink,
             generateListView: generateListView,
-            importFile: importFile,
             createNewItem: createNewItem,
             shareFile: function (fileName, fileContents, password, expires) {
                 Dbx.share(fileName, fileContents, password, expires, this.dbxShareCB);
@@ -4890,141 +5071,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             debug("use of dropboxEmail as a key has been depricated", "error"); //_this.stoKey = Base64.hash(_this.dropboxEmail + key.value);//temp until depricate User.id
                         return storeKey.call(this, this.stoKey, nextInQueue);
                     }.bind(this));
-                }.bind(this));
-            },
-            /*
-            * formInputId is id of <input type="file" accept=".csv" id="browseButton1"/> (in this case it would be "browseButton1")
-            * fileExtension could be ".txt", ".png", ".csv", etc.
-            * callback is the function to preform after the file has been loaded
-            */
-            loadFile: function (fileInputId, fileExtension, callback) {
-                // readAs accepts "text", "image", "binary", or "array" (defaults to binary)
-                function initFileReader(readAs, callback) {
-                    function init() {
-                        if (!fileInputElement || !fileInputElement.files)
-                            return;
-                        var file = fileInputElement.files[0], /* FileList object*/ path = fileInputElement.value.replace(/\\/g, "/"), ext, 
-                        // eslint-disable-next-line max-len
-                        imageTypes = /^image\/(?:bmp|cis\-cod|gif|ief|jpeg|pipeg|png|svg\+xml|tiff|x\-(cmu\-raster|cmx|icon|portable\-(anymap|bitmap|graymap|pixmap)|rgb|xbitmap|xpixmap|xwindowdump))$/i;
-                        if (fileExtension)
-                            ext = new RegExp(fileExtension + "$", "gi");
-                        if (!fileExtension || path.match(ext) instanceof Array && path.match(ext)[0] === fileExtension) /* verify file extension*/ {
-                            var reader = new FileReader();
-                            reader.onerror = function (evt) {
-                                switch (evt.target.error.code) {
-                                    case evt.target.error.NOT_FOUND_ERR:
-                                        this.notify('File Not Found!');
-                                        break;
-                                    case evt.target.error.NOT_READABLE_ERR:
-                                        this.notify('File is not readable');
-                                        break;
-                                    case evt.target.error.ABORT_ERR:
-                                        break; // noop
-                                    default:
-                                        this.notify('An error occurred reading this file.');
-                                }
-                            }.bind(this);
-                            reader.onload = function () {
-                                app.spin(false, "Loading file...");
-                                callback(reader.result, file);
-                            };
-                            if (readAs === "image" || imageTypes.test(file.type)) {
-                                debug(file, "reading as image");
-                                reader.readAsDataURL(file);
-                            }
-                            else if (readAs === "text")
-                                reader.readAsText(file);
-                            else if (readAs === "array")
-                                reader.readAsArrayBuffer(file);
-                            else
-                                reader.readAsBinaryString(file);
-                            fileReaderInitiated[fileInputId] = true;
-                        }
-                        else {
-                            this.notify("File type not supported! Expected " + fileExtension, false);
-                            this.spin(false, "Loading file...");
-                        }
-                    }
-                    function notify() { this.spin(true, "Loading file..."); init.call(this); }
-                    function showError(e) { this.notify("Error loading file: " + e); }
-                    if (!fileReaderInitiated[fileInputId]) {
-                        if (fileInputElement && File && FileReader && FileList && Blob) {
-                            fileInputElement.addEventListener('change', notify.bind(this), false);
-                            fileInputElement.addEventListener('error', showError.bind(this), false);
-                        }
-                        else
-                            this.notify('Failed to initiate the File Reader.', true);
-                    }
-                }
-                function init(cb) {
-                    if (fileExtension && /csv/i.test(fileExtension))
-                        initFileReader.call(this, 'text', parseCSV.bind(this));
-                    else if (fileExtension && /vcf/i.test(fileExtension))
-                        initFileReader.call(this, 'text', parseVCF.bind(this));
-                    else if (fileExtension && /json/i.test(fileExtension))
-                        initFileReader.call(this, 'text', parseJSON.bind(this));
-                    else if (fileExtension && /^(jpe?g|png|gif|bmp|svg|tiff)$/i.test(fileExtension))
-                        initFileReader.call(this, 'image', saveFile.bind(this));
-                    else
-                        initFileReader.call(this, "binary", saveFile.bind(this));
-                    return cb();
-                }
-                function saveFile(source, details) {
-                    var contents = Base64.write_and_verify(source, Base64.hash(this.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = this.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(this.stoKey));
-                    name.pop();
-                    name = name.join(".");
-                    modified = typeof modified === "number" ? modified : new Date(modified).getTime();
-                    var ret = [displayName, name, extension, type, origSize, compSize, compression, new Date().getTime(), modified, owner, hash, contents];
-                    this.spin(false, "Loading file...");
-                    if (callback instanceof Function)
-                        return callback(ret);
-                    else
-                        return ret;
-                }
-                function parseCSV(source) {
-                    this.notify("Importing data...", false, function () {
-                        source = COM.csv2json(source);
-                        source.lastModified = new Date().getTime();
-                        source.author = this.dropboxEmail || "unknown";
-                        //try get csv modified date and author from notes
-                        if (source.Rows[0].Notes) {
-                            source.Rows[0].Notes = source.Rows[0].Notes.replace(/\r\n|\r|\n/g, "\r\n"); //normalize line breaks
-                            var notes = source.Rows[0].Notes.split("\r\n");
-                            for (var d = 0, lenD = notes.length; d < lenD; d++) {
-                                if (/^\-Imported/.test(notes[d])) {
-                                    var impFr = notes[d].replace(/^\-Imported/, ""), importDate = [];
-                                    if (impFr && impFr.length === 8) {
-                                        importDate[0] = Number(impFr.substring(0, 4));
-                                        importDate[1] = Number(impFr.supstring(4, 6));
-                                        importDate[2] = Number(impFr.supstring(6, 8));
-                                        source.lastModified = new Date(importDate[2], importDate[0], importDate[1]).getTime();
-                                    }
-                                }
-                            }
-                        }
-                        source.replaceAll = true;
-                        source.identifierCol = "Name";
-                        if (callback instanceof Function)
-                            return callback(source);
-                        else
-                            return source;
-                    }.bind(this));
-                }
-                function parseVCF(input) {
-                    debug(input, "parseVCF not done");
-                }
-                function parseJSON(input) {
-                    debug(input, "parseJSON not done");
-                }
-                function click(callback) {
-                    if (fileInputElement)
-                        fileInputElement.click();
-                    if (callback instanceof Function)
-                        return callback();
-                }
-                var fileInputElement = document.getElementById(fileInputId);
-                checkDBLoaded(function (nextInQueue) {
-                    init.call(this, function () { click(nextInQueue); });
                 }.bind(this));
             },
             /*options = {
