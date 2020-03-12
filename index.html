@@ -496,9 +496,9 @@
 						'link': link.type === 'link',
 						'jumplink': link.type === 'jumplink',
 						'jumplink-button': link.type === 'jumplink' && collapsed === true,
-						'icon': selected && link.type === 'link',
-						'icon-unchecked': selected && link.selected === false,
-						'icon-check': selected && link.selected,
+						'icon': link.type === 'link',
+						'icon-unchecked': link.type === 'link' && selected && link.selected === false,
+						'icon-check': link.type === 'link' && selected && link.selected,
 						'selected': selected && link.selected }"
 					:key="'jump-list-' + link.id"
 				>
