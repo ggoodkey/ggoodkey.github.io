@@ -364,7 +364,7 @@ tr:nth-child(even) input {
 	position: relative;
 	overflow: auto;
 	max-height: 600px;
-	overscroll-behavior: contain;
+	overscroll-behavior: none;
 }
 
 html.phon .table-container {
