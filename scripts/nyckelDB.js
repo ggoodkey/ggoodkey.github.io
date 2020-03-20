@@ -25,7 +25,7 @@ var NyckelDB = (function () {
         else {
             while (/^_/.test(str))
                 str = str.replace(/^_/, "");
-            str = TRIM(String(str)).replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
+            str = TRIM(String(str)).replace(/ /g, "_").replace(/[^a-z0-9_]/gi, "");
             if (str === "" || /^\d/.test(str) || /^(moz|scroll|screen|on|webkit)/.test(str) || FORBIDDEN.indexOf(str) > -1)
                 return "_" + str;
             else
@@ -967,7 +967,7 @@ var NyckelDB = (function () {
         str = null;
         for (var a = 0, len = arr.length; a < len; a++) {
             //toPropName
-            arr[a] = arr[a].replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
+            arr[a] = arr[a].replace(/ /g, "_").replace(/[^a-z0-9_]/gi, "");
             if (/\d/.test(arr[a].charAt(0)))
                 arr[a] = "_" + arr[a];
         }
@@ -1164,13 +1164,14 @@ var NyckelDB = (function () {
             function setStartingPoint(startingPoint) {
                 if (startingPoint) {
                     newId = TO_BASIC_ALPHABET(startingPoint);
-                    newId = newId.replace(/[^A-z0-9]/g, "");
+                    newId = newId.replace(/[^a-z0-9]/gi, "");
                     if (/^\d/.test(newId))
                         newId = alpha + newId;
                     newId = newId.slice(0, idLength);
                 }
                 while (newId.length < idLength)
                     newId += alpha;
+                return newId;
             }
             function maxNumPos(idLength, alphabetLength) {
                 return Math.pow(alphabetLength, idLength - 1) * (alphabetLength - 10);
@@ -1210,6 +1211,7 @@ var NyckelDB = (function () {
                     }
                 }
                 var activeChar, letterIndex, end;
+                newId = setStartingPoint(startingPoint);
                 for (activeChar = idLength - 1; (existingIds[newId] !== undefined || FORBIDDEN.indexOf(newId) !== -1) && activeChar > -1 && num < maxIdsPossible; activeChar--, num++) {
                     for (letterIndex = alphabet.indexOf(newId.charAt(activeChar)); (existingIds[newId] !== undefined || FORBIDDEN.indexOf(newId) !== -1) && letterIndex < alphabetLength && num < maxIdsPossible; letterIndex++, num++) {
                         if (letterIndex + 1 !== alphabetLength) {
@@ -1243,7 +1245,6 @@ var NyckelDB = (function () {
                 return undefined;
             }
             var alphabetLength = alphabet.length, maxIdsPossible = maxNumPos(idLength, alphabetLength), newId = "", num = 0, alpha = alphabet[0];
-            setStartingPoint(startingPoint);
             return buildId.call(this);
         }
         if (TABLE_IS_DELETED(DB[this.id])) {
@@ -1531,7 +1532,7 @@ var NyckelDB = (function () {
         }
         function validateProvince(prov) {
             var orig = prov;
-            prov = TRIM(String(prov)).replace(/[^A-z ]/g, "");
+            prov = TRIM(String(prov)).replace(/[^a-z ]/gi, "");
             if (prov === "PEI")
                 prov = "PE";
             if (prov.length < 2 && prov !== "") {
@@ -1739,7 +1740,7 @@ var NyckelDB = (function () {
             return validateProvince.call(this, value);
         else if (/Postal/i.test(valueType))
             return validatePostalCode.call(this, value);
-        else if (/Street/i.test(valueType) || /Location/i.test(valueType) && /[A-z]/.test(String(value)))
+        else if (/Street/i.test(valueType) || /Location/i.test(valueType) && /[a-z]/i.test(String(value)))
             return validateAddress.call(this, value);
         else if (/Latitude/i.test(valueType))
             return validateLatitude.call(this, value);
@@ -3010,6 +3011,8 @@ var NyckelDB = (function () {
                     else if (!ROW_ID_IS_VALID.call(this, rowIds[a])) {
                         return callback instanceof Function ? callback.call(this, false, rowIds[a] + " (" + typeof rowIds[a] + ") is not a valid rowId") : false;
                     }
+                    else
+                        console.log("getVals rowId not found");
                 }
             }
             return callback instanceof Function ? callback.call(this, ret, ERRORS[this.id]) : ret;

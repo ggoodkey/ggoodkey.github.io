@@ -19,12 +19,12 @@
 }
 
 /* responsive layout css classes (dynamically set on html tag)
-	phon = phone <= 640px wide
-	tabl = tablet = between 640px and 1280px wide
-	desk = desktop/laptop > 1280px wide
-	port = portrait orientation
-	land = landscape orientation
-	dark = dark-theme
+	html.phon = phone <= 640px wide
+	html.tabl = tablet = between 640px and 1280px wide
+	html.desk = desktop/laptop > 1280px wide
+	html.port = portrait orientation
+	html.land = landscape orientation
+	.dark = dark-theme
 */
 
 * {
@@ -261,6 +261,11 @@ tbody tr th,
 thead a,
 .tableFixedHead thead th.first {
 	padding: 8px;
+	width: 47px;
+}
+
+table.tableFixedHead {
+	min-width: 100%;
 }
 
 table a {
@@ -319,6 +324,8 @@ button.dropdownButton .icon-triangle-bottom {
 }
 
 button.dropdownButton.withArrow{
+	white-space: nowrap;
+	position: relative;
 	padding-right: 24px;
 }
 
@@ -341,6 +348,7 @@ tr:nth-child(even) input {
 	background-color: #252525;
 }
 
+.table-container,
 .stripeFiller {
 	background: repeating-linear-gradient(
 		#fafafa, 
@@ -351,6 +359,7 @@ tr:nth-child(even) input {
 	width: 100%;
 }
 
+.dark .table-container,
 .dark .stripeFiller {
 	background: repeating-linear-gradient(
 		#252525,
@@ -364,7 +373,8 @@ tr:nth-child(even) input {
 	position: relative;
 	overflow: auto;
 	max-height: 600px;
-	overscroll-behavior: none;
+	min-height: 300px;
+	overscroll-behavior-x: none;
 }
 
 html.phon .table-container {
@@ -374,21 +384,22 @@ html.phon .table-container {
 .table-container.fullscreen {
 	position: absolute;
 	top: 0;
-	height: 92%;
 	left: 0;
-	width: 98%;
-	overflow: scroll;
+	bottom: 0;
+    right: 0;
+	max-height: 100%;
 	background-color: #eee;
 	z-index: 3;
 	padding: 0;
 }
 
-.dark .table-container.fullscreen {
-	background-color: black;
+html.desk .table-container.fullscreen {
+	bottom: 54px;
+    right: 28px;
 }
 
-.tableFixedHead {
-	overflow-y: auto;
+.dark .table-container.fullscreen {
+	background-color: black;
 }
 
 .tableFixedHead thead th { 
@@ -417,6 +428,14 @@ html.phon .table-container {
     white-space: pre;
     width: 260px;
     line-height: 40px;
+}
+
+.tableOverlay {
+	position: absolute;
+	width: 100%;
+	top:0;
+	bottom:0;
+	padding-top: 150px;
 }
 
 tr.tableInputs{
@@ -2010,38 +2029,39 @@ button[disabled="disabled"]:focus{
 	right: 0;
 	z-index: 20;
 }
-.dialogContainer{
+.dialogContainer {
 	background-color: white;
 	background-color: rgba(255,255,255,0.5);
 }
 
-.dark .dialogContainer{
+.dark .dialogContainer {
 	background-color: black;
 	background-color: rgba(0,0,0,0.5);
 }
 
 .dialog {
-	position: absolute;
+	position: fixed;
 	z-index: 20;
-	top: 55%;
+	top: 100px;
 	left: 50%;
-	-moz-transform: translateY(-50%) translateX(-50%);
-	-ms-transform: translateY(-50%) translateX(-50%);
-	-o-transform: translateY(-50%) translateX(-50%);
-	-webkit-transform: translateY(-50%) translateX(-50%);
-	transform: translateY(-50%) translateX(-50%);
-	padding: 24px;
+	width: 450px;
+	max-width: 85%;
+	max-height: 70%;
+	overflow: auto;
+	-moz-transform: translateX(-50%);
+	-ms-transform: translateX(-50%);
+	-o-transform: translateX(-50%);
+	-webkit-transform: translateX(-50%);
+	transform: translateX(-50%);
+	padding: 0 24px 24px;
 	box-shadow: 1px 1px 12px rgba(0, 0, 0, 0.3);
 	border: 1px solid #478cdb; /*accent blue*/
 	border-radius: 3px;
-	width: 450px;
-	max-width: 90%;
 	background-color: white;
 }
 
 html.phon .view-container .dialog,
 html.tabl .view-container .dialog {
-	top: 50%;
 	left: 42%;
 }
 
@@ -2055,6 +2075,8 @@ html.tabl .view-container .dialog {
 	font-size: 17px;
 	padding: 16px 0;
 	margin-bottom: 8px;
+	max-height: 70%;
+	overflow: auto;
 }
 
 .dialogButtons button {
@@ -2071,19 +2093,19 @@ html.tabl .view-container .dialog {
 
 @keyframes shake {
 	10%, 90% {
-		transform: translateX(-49%) translateY(-50%);
+		transform: translateX(-49%);
 	}
 
 	20%, 80% {
-		transform: translateX(-52%) translateY(-50%);
+		transform: translateX(-52%);
 	}
 
 	30%, 50%, 70% {
-		transform: translateX(-46%) translateY(-50%);
+		transform: translateX(-46%);
 	}
 
 	40%, 60% {
-		transform: translateX(-54%) translateY(-50%);
+		transform: translateX(-54%);
 	}
 }
 

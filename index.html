@@ -281,26 +281,14 @@
 			{{ spinnerMsg[spinIndex] }}
 		</div>
 
-		<div v-show="showConfirm" class="dialogContainer" @click="shakeConfirm">
-		</div>
-		<div v-show="showConfirm" class="dialog" :class="{ 'shake': confirmShake }">
-			<h5 v-if="confirmDetails">
-				{{ confirmMsg }}
-			</h5>
-			<div class="dialogMessage">
-				{{ confirmDetails || confirmMsg }}
-			</div>
-
-			<form class="dialogButtons">
-				<input v-show="showUpdateKey" id="updateStoKeyInput" type="password">
-				<button class="dialogOK" type="button" aria-label="OK" @click="processConfirm(true);">
-					{{ confirmOK }}
-				</button>
-				<button class="dialogCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
-					{{ confirmCancel }}
-				</button>
-			</form>
-		</div>
+		<dialog-box
+			:showif="showConfirm"
+			:heading="confirmMsg"
+			:cancelbutton="confirmCancel"
+			:okbutton="confirmOK"
+			@dialog-box-ok="processConfirm(true);" 
+			@dialog-box-cancel="processConfirm(false);"
+		>{{ confirmDetails }}</dialog-box>
 
 		<div id="closeSidenav" @click="showSettings = false; toggle('showSideNav');">
 		</div>
@@ -318,7 +306,6 @@
 	</div>
 
 	<!-- Vue.js Templates -->
-
 
 	<script type="text/x-template" id="dropdown-button">
 		<!-- This HTML Document including x-templates was created by G. Goodkey. Permission to use may be granted on request g g o o d k e y A T g m a i l D O T c o m -->
@@ -433,7 +420,9 @@
 					{{ heading }}
 				</h4>
 				<br>
-				<div class="dialogMessage"><slot></slot></div>
+				<div class="dialogMessage">
+					<slot></slot>
+				</div>
 				<div class="clear dialogButtons" align="right">
 					<button class="dialogCancel" type="button" aria-label="Cancel" @click="processConfirm(false);">
 						{{ cancelbutton }}
@@ -914,107 +903,146 @@
 	</script>
 
 	<script type="text/x-template" id="editable-table">
-		<template>
-			<a v-if="rowLength === 0" @click="fetchData(0)">Load Table</a>
-			<div v-else>
-				<div 
-					class="table-container"
-					:class="{ 'fullscreen': fullscreen }"
-					@scroll.passive="onScroll"
-				>	
-					<dropdown-button 
-						id="tableMenuButton"
-						icon="icon-menu-hamburger" 
-						:links="menuLinks"
-						@dropdown-action="menuActions"
-						noarrow="true"
-					></dropdown-button>
-					<multi-input 
-						id="tableMultiInput"
-						inputclass="tableMultiInput" 
-						:value="selectedCellValue" 
-						:type="selectedCellType" 
-						:class="{ invalid: invalidInput }"
-						:style="{top: (selectedCell[0] * 40 + 50) + 'px', left: ((selectedCell[1] - 1) * 262 + 48) + 'px'}"
-					></multi-input>
-					<div 
-						v-show="inputError" 
-						:title="inputErrorDetails" 
-						class="multiInputErrorMessage"
-						:style="{top: (selectedCell[0] * 40 + 47) + 'px', left: ((selectedCell[1] - 1) * 262 + 52) + 'px'}"
-					>
-						{{ inputError }}
-					</div>
-					<table class="tableFixedHead">
-						<thead>
-							<tr>
-								<th class="first"></th>
-								<th
-									v-for="(colName, index) in db.headers" 
-									:key="'thead-' + colName + index"
-								>
-									<dropdown-button
-										:buttontext="colName"
-										:links="thLinks"
-										@dropdown-action="thAction($event, index)"
-									/>
-								</th>
-								<th>
-									<a @click="insertColumn(false)">
-										<span
-											class="icon icon-plus"
-											title="Add New Column"
-										></span>
-									</a>
-								</th>
-							</tr>
-						</thead>
-						<tbody class="fixedHeight">
-							<tr >
-								<td class="stripeFiller" 
-									:colspan="colLength + 1" 
-									:style="{height: (blankRowsBefore * 40) + 'px'}"
-								></td>
-							</tr>
-							<tr v-for="(row, index) in db.tabledata"
-								:key="'tr-'+ (index + blankRowsBefore)"
-							>
-								<template v-for="(value, i) in row">
-									<th v-if="i === 0"
-										:key="'th-' + (index + blankRowsBefore) + '-' + i"
-									>
-										{{ value }}
-									</th>
-									<td v-else 
-										:key="'td-' + (index + blankRowsBefore) + '-' + i"
-										@click="selectCell(index, i)"
-									>
-										<div>{{ value }}</div>
-									</td>
-								</template>
-							</tr>
-							<tr >
-								<td class="stripeFiller" 
-									:colspan="colLength + 1" 
-									:style="{height: rowLength - blankRowsBefore < 100 ? 0 + 'px' : ((rowLength - blankRowsBefore - 100) * 40) + 'px'}"
-								></td>
-							</tr>
-						</tbody>
-					</table>
-					<dialog-box 
-						:showif="showPropsDialogBox" 
-						okbutton="Apply" 
-						heading="Column Properties" 
-						@dialog-box-ok="setProperties" 
-						@dialog-box-cancel="showPropsDialogBox = false"
-					>
-						<div class="clear">Column Name: <multi-input class="right" type="string" value=""></multi-input></div>
-						<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
-						<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
-					</dialog-box>
-				</div>
+		<div 
+			class="table-container"
+			:class="{ 'fullscreen': fullscreen }"
+			@scroll.passive="onScroll"
+		>	
+			<dropdown-button 
+				id="tableMenuButton"
+				icon="icon-menu-hamburger" 
+				:links="menuLinks"
+				@dropdown-action="menuActions"
+				noarrow="true"
+			></dropdown-button>
+			<multi-input 
+				id="tableMultiInput"
+				inputclass="tableMultiInput" 
+				:value="selectedCellValue" 
+				:type="selectedCellType" 
+				:class="{ invalid: invalidInput }"
+				:style="{top: (selectedCell[0] * 40 + 50) + 'px', left: ((selectedCell[1] - 1) * 262 + 48) + 'px'}"
+			></multi-input>
+			<div 
+				v-show="inputError" 
+				:title="inputErrorDetails" 
+				class="multiInputErrorMessage"
+				:style="{top: (selectedCell[0] * 40 + 47) + 'px', left: ((selectedCell[1] - 1) * 262 + 52) + 'px'}"
+			>
+				{{ inputError }}
 			</div>
-		</template>
+			<table class="tableFixedHead">
+				<thead>
+					<tr>
+						<th class="first"></th>
+						<template v-if="nodata">
+							<th><dropdown-button
+									buttontext="Column A"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+							<th><dropdown-button
+									buttontext="Column B"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+							<th><dropdown-button
+									buttontext="Column C"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+							<th><dropdown-button
+									buttontext="Column D"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+							<th><dropdown-button
+									buttontext="Column E"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+							<th><dropdown-button
+									buttontext="Column F"
+									:links="thLinks"
+									@dropdown-action="thAction($event, index)"
+							/></th>
+						</template>
+						<th 
+							v-else
+							v-for="(colName, index) in db.headers" 
+							:key="'thead-' + colName + index"
+						>
+							<dropdown-button
+								:buttontext="colName"
+								:links="thLinks"
+								@dropdown-action="thAction($event, index)"
+							/>
+						</th>
+						<th>
+							<a @click="insertColumn(false)">
+								<span
+									class="icon icon-plus"
+									title="Add New Column"
+								></span>
+							</a>
+						</th>
+					</tr>
+				</thead>
+				<tbody class="fixedHeight">
+					<template v-if=nodata>
+						<div class="tableOverlay" align="center">
+							<h5>Nothing here :´(</h5><br>
+							No data loaded<br><br><br>
+							<a @click="fetchData(0)"><span class="icon icon-refresh"></span>&nbsp;&nbsp;Retry</a><br><br><br><br><br>
+							<small><span class="icon icon-arrow-left"></span>&nbsp;&nbsp;See Menu&nbsp;&nbsp;<span class="icon icon-menu-hamburger"></span>&nbsp;&nbsp;for more options</small>
+						</div>
+						<tr v-for="i in 10"><th>00{{ i - 1 }}</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+					</template>
+					<template v-else>
+						<tr>
+							<td class="stripeFiller" 
+								:colspan="colLength + 1" 
+								:style="{height: (blankRowsBefore * 40) + 'px'}"
+							></td>
+						</tr>
+						<tr v-for="(row, index) in db.tabledata"
+							:key="'tr-'+ (index + blankRowsBefore)"
+						>
+							<template v-for="(value, i) in row">
+								<th v-if="i === 0"
+									:key="'th-' + (index + blankRowsBefore) + '-' + i"
+								>
+									{{ value }}
+								</th>
+								<td v-else 
+									:key="'td-' + (index + blankRowsBefore) + '-' + i"
+									@click="selectCell(index, i)"
+								>
+									<div>{{ value }}</div>
+								</td>
+							</template>
+						</tr>
+						<tr>
+							<td class="stripeFiller" 
+								:colspan="colLength + 1" 
+								:style="{height: rowLength - blankRowsBefore < 100 ? 0 + 'px' : ((rowLength - blankRowsBefore - 100) * 40) + 'px'}"
+							></td>
+						</tr>
+					</template>
+				</tbody>
+			</table>
+			<dialog-box 
+				:showif="showPropsDialogBox" 
+				okbutton="Apply" 
+				heading="Column Properties" 
+				@dialog-box-ok="setProperties" 
+				@dialog-box-cancel="showPropsDialogBox = false"
+			>
+				<div class="clear">Column Name: <multi-input class="right" type="string" value=""></multi-input></div>
+				<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
+				<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
+			</dialog-box>
+		</div>
 	</script>
 
 	<script type="text/x-template" id="view1-page">

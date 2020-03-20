@@ -2,8 +2,8 @@
 //external dependencies
 // vue.min.js vue-router.min.js debugmode.min.js base64.min.js dropbox.min.js Lawnchair.js adapters/dom.js adapters/indexed-db.js
 // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
-/*global WinJS, Sto, NyckelDB, cordova, initiateDropbox, Vue */
-"use strict";
+/* global WinJS, Sto, NyckelDB, cordova, initiateDropbox, Vue */
+/* eslint-disable no-extra-parens */
 var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
 (function () {
     APP.setDebugMode(false); //TODO set to false
@@ -885,7 +885,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         function doneLoadingApp() {
             setTimeout(function () {
                 setNavLinkIndicatorPosition(app.currentView.path);
-                /* eslint-disable-next-line no-extra-parens */
                 document.getElementById("loading").className = "done"; //app is rendered so fade in from black
             }, 150);
             checkDBLoaded(function (nextInQueue) {
@@ -995,7 +994,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         var styleSheets = document.styleSheets;
         try {
             for (var a = 0, lenA = styleSheets.length, b, lenB, c, lenC, rules, rule, styles; a < lenA; a++) {
-                /* eslint-disable-next-line no-extra-parens */
                 rules = styleSheets[a].rules || styleSheets[a].cssRules;
                 for (b = 0, lenB = rules.length; b < lenB; b++) {
                     rule = rules[b].cssText;
@@ -1104,9 +1102,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         var DARK = '(prefers-color-scheme: dark)';
         var LIGHT = '(prefers-color-scheme: light)';
         if (isFontAvailable('Segoe UI Symbol')) {
-            /* eslint-disable-next-line no-extra-parens */
             document.getElementById("segoe-icons").rel = 'stylesheet';
-            /* eslint-disable-next-line no-extra-parens */
             document.getElementById("default-icons").rel = 'alternate stylesheet';
         }
         if (Windows) {
@@ -2935,9 +2931,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     this.insertColumn(index + 1);
                 }
                 else if (action === "deleteColumn") {
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.splice(index, 1);
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.types.splice(index, 1);
                     //	this.newTable.options.searchable.splice(index, 1);
                     this.optionsDropdown = -1;
@@ -2945,16 +2939,12 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             },
             insertColumn: function (index) {
                 if (index === false) {
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.push("");
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.types.push(this.typesDefault);
                     //	this.newTable.options.searchable.push(this.searchableDefault);
                 }
                 else {
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.headers.splice(index, 0, "");
-                    /* eslint-disable-next-line no-extra-parens */
                     this.newTable.types.splice(index, 0, this.typesDefault);
                     //	this.newTable.options.searchable.splice(index, 0, this.searchableDefault);
                 }
@@ -3388,14 +3378,15 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 showPropsDialogBox: false,
                 menuLinks: [
                     { action: "toggleFullscreen", text: "Full Screen", description: "Toggle full screen", icon: "icon-fullscreen" },
-                    { action: "importCSV", text: "Import CSV File", description: "Import a CSV file from your device", icon: "icon-import" },
-                    { action: "exportJSON", text: "Create Backup File", description: "Export a Nyckel JSON file to your device", icon: "icon-export" },
-                    { action: "importJSON", text: "Restore from Backup File", description: "Import a Nyckel JSON file from your device", icon: "icon-import" },
-                    { action: "addRow", text: "New Row", description: "Add a new row to the table", icon: "icon-plus" }
+                    { action: "addRow", text: "New Row", description: "Add a new row to the table", icon: "icon-plus" },
+                    { action: "importCSV", text: "Import CSV File", description: "Import a .csv (Comma Separated Values) spreadsheet file from your device", icon: "icon-open-file" },
+                    { action: "exportJSON", text: "Create Backup File", description: "Export a Nyckel JSON file to your device", icon: "icon-save-local" },
+                    { action: "importJSON", text: "Restore from Backup File", description: "Restore data from a Nyckel JSON file", icon: "icon-open-file" }
                 ],
                 invalidInput: false,
                 inputError: "",
-                inputErrorDetails: ""
+                inputErrorDetails: "",
+                nodata: true
             };
         },
         methods: {
@@ -3412,6 +3403,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         this.db.tabledata = table;
                         this.blankRowsBefore = fromRow;
                         this.fetchingData = false;
+                        this.nodata = tableLength === 0;
                         Vue.nextTick(function () {
                             this.selectCell(this.selectedCell[0] - this.blankRowsBefore, this.selectedCell[1]);
                         }.bind(this));
@@ -3465,8 +3457,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                         app.confirm("Are you sure you want to delete this column?", deleteCol.bind(this));
                 }
                 else if (action === "sortTable") {
+                    this.selectCell(-1, 0); //apply selected cell value before sorting
                     wwManager({ cmd: "sortByCol", title: this.tablename, args: [this.db.headers[index]] }, function () {
-                        this.fetchData(0);
+                        this.fetchData(0, true);
                     }.bind(this));
                 }
                 else if (action === "editProps")
@@ -4503,7 +4496,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         components: {
             "dropdown-button": dropdown_button,
             "icon-select": icon_select,
-            "color-select": color_select
+            "color-select": color_select,
+            "dialog-box": dialog_box
         },
         data: state,
         computed: {
@@ -5382,7 +5376,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             startApp(true);
         }
         function onBack() {
-            /* eslint-disable-next-line no-extra-parens */
             if (!app.goBack() && navigator && navigator.app && navigator.app.exitApp)
                 navigator.app.exitApp();
         }

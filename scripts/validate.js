@@ -113,7 +113,7 @@ var VAL = {
             "JavaArray", "javaClass", "JavaObject", "JavaPackage", "debug", "Promise"];
         if (str === null || str === undefined)
             return "_undefined";
-        str = String(str).replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
+        str = String(str).replace(/ /g, "_").replace(/[^a-z0-9_]/gi, "");
         if (/\d/.test(str.charAt(0)) || r.indexOf(str) > -1)
             str = "_" + str;
         return str;
@@ -121,7 +121,7 @@ var VAL = {
     toPropName: function (str) {
         if (str === null || str === undefined)
             return "_undefined";
-        str = String(str).replace(/ /g, "_").replace(/[^A-z0-9_]/g, "");
+        str = String(str).replace(/ /g, "_").replace(/[^a-z0-9_]/gi, "");
         if (str === "")
             return "_";
         if (/\d/.test(str.charAt(0)))
