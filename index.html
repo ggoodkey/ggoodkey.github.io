@@ -903,11 +903,7 @@
 	</script>
 
 	<script type="text/x-template" id="editable-table">
-		<div 
-			class="table-container"
-			:class="{ 'fullscreen': fullscreen }"
-			@scroll.passive="onScroll"
-		>	
+		<div>
 			<dropdown-button 
 				id="tableMenuButton"
 				icon="icon-menu-hamburger" 
@@ -915,6 +911,11 @@
 				@dropdown-action="menuActions"
 				noarrow="true"
 			></dropdown-button>
+		<div 
+			class="table-container"
+			:class="{ 'fullscreen': fullscreen }"
+			@scroll.passive="onScroll"
+		>	
 			<multi-input 
 				id="tableMultiInput"
 				inputclass="tableMultiInput" 
@@ -1042,6 +1043,7 @@
 				<div class="clear">Searchable: <multi-input class="right" type="boolean" value="true"></multi-input></div>
 				<div>Datatype: <multi-input class="right" align="right" type="string" :options="validTypes" value="any"></multi-input></div>
 			</dialog-box>
+		</div>
 		</div>
 	</script>
 
