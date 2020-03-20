@@ -903,9 +903,12 @@
 	</script>
 
 	<script type="text/x-template" id="editable-table">
-		<div>
+		<div 
+			class="editable-table"
+			:class="{ 'fullscreen': fullscreen }"
+		>
 			<dropdown-button 
-				id="tableMenuButton"
+				class="tableMenuButton"
 				icon="icon-menu-hamburger" 
 				:links="menuLinks"
 				@dropdown-action="menuActions"
@@ -913,7 +916,6 @@
 			></dropdown-button>
 		<div 
 			class="table-container"
-			:class="{ 'fullscreen': fullscreen }"
 			@scroll.passive="onScroll"
 		>	
 			<multi-input 
@@ -993,9 +995,18 @@
 					<template v-if=nodata>
 						<div class="tableOverlay" align="center">
 							<h5>Nothing here :´(</h5><br>
-							No data loaded<br><br><br>
-							<a @click="fetchData(0)"><span class="icon icon-refresh"></span>&nbsp;&nbsp;Retry</a><br><br><br><br><br>
-							<small><span class="icon icon-arrow-left"></span>&nbsp;&nbsp;See Menu&nbsp;&nbsp;<span class="icon icon-menu-hamburger"></span>&nbsp;&nbsp;for more options</small>
+							No data loaded<br><br><br><br>
+							<a @click="fetchData(0)"><span class="icon icon-refresh"></span>&nbsp;&nbsp;Retry</a><br><br><br>
+							<span>
+								See Menu for more options (
+								<span class="icon icon-arrow-left rotate45"></span>
+								<th class="seeMenuButtonTh">
+									<button>
+										<span class="icon icon-menu-hamburger"></span>
+									</button>
+								</th>
+								) 
+							</span>
 						</div>
 						<tr v-for="i in 10"><th>00{{ i - 1 }}</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
 					</template>

@@ -226,25 +226,25 @@ table {
 }
 
 th,
-#tableMenuButton {
+.editable-table .tableMenuButton {
 	background-color: #f2f2f2;
 	font-weight: normal;
 }
 
 .dark th,
-.dark #tableMenuButton {
+.dark .editable-table .tableMenuButton {
 	background-color: #161616;
 }
 
 th,
-#tableMenuButton button,
-.table-container {
+.editable-table .tableMenuButton button,
+.editable-table .table-container {
 	outline: 1px solid white;
 }
 
 .dark th,
-.dark #tableMenuButton button,
-.dark .table-container {
+.dark .editable-table .tableMenuButton button,
+.dark .editable-table .table-container {
 	outline: 1px solid #292929;
 }
 
@@ -259,16 +259,16 @@ th, td, table li {
 
 tbody tr th, 
 thead a,
-.tableFixedHead thead th.first {
+.editable-table .tableFixedHead thead th.first {
 	padding: 8px;
 	width: 47px;
 }
 
-table.tableFixedHead {
+.editable-table table.tableFixedHead {
 	min-width: 100%;
 }
 
-table a {
+td a {
 	display: block;
 	width: 100%;
 	padding-top: 4px;
@@ -348,8 +348,8 @@ tr:nth-child(even) input {
 	background-color: #252525;
 }
 
-.table-container,
-.stripeFiller {
+.editable-table .table-container,
+.editable-table .stripeFiller {
 	background: repeating-linear-gradient(
 		#fafafa, 
 		#fafafa 40px, 
@@ -359,8 +359,8 @@ tr:nth-child(even) input {
 	width: 100%;
 }
 
-.dark .table-container,
-.dark .stripeFiller {
+.dark .editable-table .table-container,
+.dark .editable-table .stripeFiller {
 	background: repeating-linear-gradient(
 		#252525,
 		#252525 40px,
@@ -369,7 +369,7 @@ tr:nth-child(even) input {
 	);
 }
 
-.table-container {
+.editable-table .table-container {
 	position: relative;
 	overflow: auto;
 	max-height: 600px;
@@ -377,11 +377,11 @@ tr:nth-child(even) input {
 	overscroll-behavior-x: none;
 }
 
-html.phon .table-container {
+html.phon .editable-table .table-container {
 	width: 100%;
 }
 
-.table-container.fullscreen {
+.editable-table.fullscreen {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -393,22 +393,22 @@ html.phon .table-container {
 	padding: 0;
 }
 
-html.desk .table-container.fullscreen {
+html.desk .editable-table.fullscreen {
 	bottom: 54px;
     right: 28px;
 }
 
-.dark .table-container.fullscreen {
+.dark .editable-table.fullscreen {
 	background-color: black;
 }
 
-.tableFixedHead thead th { 
+.editable-table .tableFixedHead thead th { 
 	position: sticky;
 	top: 0; 
 	z-index: 3;
 }
 
-.tableFixedHead tbody th {
+.editable-table .tableFixedHead tbody th {
 	position: sticky;
   	left: 0;
 	top: auto;
@@ -435,7 +435,7 @@ html.desk .table-container.fullscreen {
 	width: 100%;
 	top:0;
 	bottom:0;
-	padding-top: 150px;
+	padding-top: 130px;
 }
 
 tr.tableInputs{
@@ -455,18 +455,22 @@ tr.tableInputs{
 	width: 100%;
 }
 
-#tableMenuButton {
+.editable-table {
+	position: relative;
+}
+
+.editable-table .tableMenuButton {
 	position: absolute;
 	z-index: 4;
 }
 
-#tableMenuButton button{
+.editable-table .tableMenuButton button{
 	padding: 13px 15px;
 	border-radius: 0px;
 }
 
-input.tableMultiInput,
-textarea.tableMultiInput {
+.editable-table input.tableMultiInput,
+.editable-table textarea.tableMultiInput {
 	position: absolute;
 	top: 50px;
 	left: 48px;
@@ -479,24 +483,24 @@ textarea.tableMultiInput {
 	outline: 1px solid lightgrey;
 }
 
-.dark input.tableMultiInput,
-.dark textarea.tableMultiInput {
+.dark .editable-table input.tableMultiInput,
+.dark .editable-table textarea.tableMultiInput {
 	outline: 1px solid #333;
 }
 
-input.tableMultiInput:focus,
-input.tableMultiInput:active,
-textarea.tableMultiInput:focus,
-textarea.tableMultiInput:active {
+.editable-table input.tableMultiInput:focus,
+.editable-table input.tableMultiInput:active,
+.editable-table textarea.tableMultiInput:focus,
+.editable-table textarea.tableMultiInput:active {
 	outline: 1px solid #478cdb; /*accent blue*/
 }
 
-input.invalid.tableMultiInput,
-textarea.invalid.tableMultiInput {
+.editable-table input.invalid.tableMultiInput,
+.editable-table textarea.invalid.tableMultiInput {
 	outline: 1px solid red;
 }
 
-textarea.tableMultiInput {
+.editable-table textarea.tableMultiInput {
 	height: 200px;
 	width: 350px;
 	line-height: 24px;
@@ -504,12 +508,23 @@ textarea.tableMultiInput {
 	white-space: nowrap;
 }
 
-.multiInputErrorMessage{
+.editable-table .multiInputErrorMessage{
 	color: red;
 	font-size: 12px;
 	position: absolute;
 	z-index: 2;
 	white-space: nowrap;
+}
+
+.editable-table .tableFixedHead tbody th.seeMenuButtonTh{
+	position: relative;
+	top: 18px;
+}
+
+.editable-table .tableFixedHead tbody th.seeMenuButtonTh button,
+.editable-table .tableFixedHead tbody th.seeMenuButtonTh button,
+.editable-table .tableFixedHead tbody th.seeMenuButtonTh button {
+	pointer-events: none;
 }
 
 #loading {
@@ -704,17 +719,15 @@ html.desk #closeSidenav {
 	background-color: #5498e7; /*accent blue 10% lighter*/
 }
 
-:visited,
-.disabled {
-	color: #AAA; /*link visited link disabled*/
-}
-
-.dark :visited {
-	color: #555; /*dark link visited*/
-}
+/* declarative classes*/
 
 .disabled{
 	pointer-events: none;
+}
+
+:visited,
+.disabled {
+	color: #AAA; /*link visited link disabled*/
 }
 
 .left {
@@ -734,6 +747,14 @@ html.desk #closeSidenav {
 	content: "";
 	 display: table;
 	 clear: both;
+}
+
+.rotate45 {
+	-o-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+	transform: rotate(45deg);
 }
 
 html,
@@ -760,7 +781,7 @@ html.dark,
 .dark #stoKeyInputConfirm,
 .dark .textbox,
 .dark .cancelButton,
-.dark .tableMultiInput {
+.dark .editable-table .tableMultiInput {
 	color: lightgray; /*dark main text color*/
 }
 
@@ -1381,7 +1402,7 @@ table input:focus {
 }
 
 .invalid .textbox,
-.invalid.tableMultiInput {
+.editable-table .invalid.tableMultiInput {
     color: red;
 }
 
@@ -1890,11 +1911,11 @@ html.desk.dark .button-link:hover:active {
 	background-color: transparent;
 }
 .textbox:focus,
-.tableMultiInput {
+.editable-table .tableMultiInput {
 	background-color: white;
 }
 .dark .textbox:focus,
-.dark .tableMultiInput {
+.dark .editable-table .tableMultiInput {
 	background-color: black;
 }
 
@@ -2017,7 +2038,8 @@ button[disabled="disabled"]:focus{
 }
 
 .dark button[disabled="disabled"],
-.dark a.disabled {
+.dark .disabled,
+.dark :visited {
 	color: #555; /*dark link visited link disabled*/
 }
 
@@ -2154,7 +2176,7 @@ html.desk.dark .dialogOK:hover,
 	border-radius: 2px;
 }
 
-.table-container::-webkit-scrollbar {
+.editable-table .table-container::-webkit-scrollbar {
 	width: 16px;
 	height: 16px;
 }
