@@ -456,7 +456,7 @@ tr.tableInputs{
 }
 
 #tableMenuButton {
-	position: fixed;
+	position: absolute;
 	z-index: 4;
 }
 
