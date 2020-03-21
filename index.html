@@ -994,18 +994,16 @@
 				<tbody class="fixedHeight">
 					<template v-if=nodata>
 						<div class="tableOverlay" align="center">
-							<h5>Nothing here :´(</h5><br>
+							<h4>Nothing here :´-(</h4><br>
 							No data loaded<br><br><br><br>
 							<a @click="fetchData(0)"><span class="icon icon-refresh"></span>&nbsp;&nbsp;Retry</a><br><br><br>
 							<span>
-								See Menu for more options (
-								<span class="icon icon-arrow-left rotate45"></span>
+								See menu <span class="icon icon-arrow-left rotate45"></span>
 								<th class="seeMenuButtonTh">
 									<button>
 										<span class="icon icon-menu-hamburger"></span>
 									</button>
-								</th>
-								) 
+								</th> for more options
 							</span>
 						</div>
 						<tr v-for="i in 10"><th>00{{ i - 1 }}</th><td></td><td></td><td></td><td></td><td></td><td></td></tr>
