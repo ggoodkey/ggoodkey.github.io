@@ -1296,6 +1296,8 @@ var NyckelDB = (function () {
     }
     function VALIDATE(value, valueType, traceStr, callback) {
         function ret(valid, change, ErrMsg, details) {
+            if (change !== value && valueType !== "phoneNumber")
+                console.log("changed", valueType, ":", value, " ==to==>", change);
             var obj = { valid: valid, value: change, error: ErrMsg, details: change !== value ? "Changed '" + value + "' to '" + change + "'" : details };
             if (callback instanceof Function)
                 callback.call(this, change, ErrMsg, obj.details);
@@ -1305,7 +1307,7 @@ var NyckelDB = (function () {
             var orig = name, n;
             name = TRIM(String(name));
             if (/[^A-Za-z\xC0-\xFF '\-]/g.test(name)) {
-                var expl = "Lastnames may only contain latin characters A-Z and special characters -'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß";
+                var expl = "Lastnames may only contain alphabetic characters, space, dash or apostrophe";
                 return ret.call(this, false, orig, "Invalid characters found in lastname", expl);
             }
             //catch McNames and O'Names
@@ -1313,17 +1315,17 @@ var NyckelDB = (function () {
                 name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2).toUpperCase() + name.slice(3).toLowerCase();
             }
             //catch MacNames
-            else if (name.slice(0, 3).toLowerCase() === "mac" && name.toLowerCase() !== "mack") {
-                name = "Mac" + name.charAt(3) + name.slice(4).toLowerCase();
+            else if (/^mac|^des/.test(name) && name.toLowerCase() !== "mack" && name.charAt(3) !== " ") {
+                name = name.charAt(0).toUpperCase() + name.slice(1, 3).toLowerCase() + name.charAt(3) + name.slice(4).toLowerCase();
             }
             //catch LaNames and LeNames (but not La Names or Le Names)
-            else if ((name.slice(0, 2).toLowerCase() === "la" || name.slice(0, 2).toLowerCase() === "le") && name.charAt(2) !== " ") {
+            else if (/^la|^le|^de|^du/i.test(name) && name.charAt(2) !== " ") {
                 name = name.charAt(0).toUpperCase() + name.charAt(1).toLowerCase() + name.charAt(2) + name.slice(3).toLowerCase();
             }
             //capitalize Spaced Names
             else if (/ /.test(name)) {
                 n = name.split(" ");
-                if (n[0].length === 2 || n[0].toLowerCase() === "von" || n[0].toLowerCase() === "van") {
+                if (n[0].length === 2 || /^von$|^van$/i.test(n[0]) || /^la$/i.test(n[1])) {
                     for (var a = 0, lenA = n.length; a < lenA; a++) {
                         n[a] = n[a].charAt(0) + n[a].slice(1).toLowerCase();
                     }
@@ -1368,16 +1370,22 @@ var NyckelDB = (function () {
             return ret.call(this, true, name, false);
         }
         function validateOrganization1_Name(field) {
-            var orig = field, brak = "";
+            var brak = [], b = 0, openBrak = 0;
             field = String(field);
-            if (/\(/.test(field) && /\)/.test(field)) {
-                brak = field.slice(field.indexOf("(") + 1, field.indexOf(")"));
-                var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
-                field = field.replace(regexp, " /BRACKETS/ ");
-                brak = TRIM(brak);
+            openBrak = field.indexOf("(");
+            while (openBrak > -1 && /\)/.test(field.slice(openBrak))) {
+                brak[b] = field.slice(openBrak, field.slice(openBrak).indexOf(")") + openBrak + 1);
+                var regexp = new RegExp("\(" + brak[b].replace(/[.\\+*?[^\]$(){}=!<>|:-]/g, "\\$&") + "\)");
+                field = field.replace(regexp, " -BRACKETS- ");
+                brak[b] = TRIM(brak[b]);
+                b++;
+                openBrak = field.indexOf("(");
             }
             field = field.replace(/[^A-Z\xC0-\xFF\/ ]/gi, "");
-            field = field.replace(/\/BRACKETS\//g, "(" + brak + ")");
+            b = 0;
+            while (/-BRACKETS-/.test(field)) {
+                field = field.replace(/-BRACKETS-/, brak[b++]);
+            }
             field = TRIM(field);
             var split = field.split(" ");
             for (var a = 0, lenA = split.length; a < lenA; a++) {
@@ -1385,8 +1393,8 @@ var NyckelDB = (function () {
             }
             field = split.join(" ");
             split = field.split("/");
-            for (var b = 0, lenB = split.length; b < lenB; b++) {
-                split[b] = split[b].charAt(0).toUpperCase() + split[b].slice(1);
+            for (var c = 0, lenB = split.length; c < lenB; c++) {
+                split[c] = split[c].charAt(0).toUpperCase() + split[c].slice(1);
             }
             field = split.join("/");
             return ret.call(this, true, field, false);
@@ -1395,7 +1403,7 @@ var NyckelDB = (function () {
             function formatSeeOtherAddr(addr) {
                 addr = addr.replace(/addres:|Address:|adress:|Adress:|Addres:|address:/, "address: ");
                 addr = addr.replace(/Mail:|Mail to:|mail to:|mail:/, "mail: ");
-                if (!/mail:/.test(addr))
+                if (!(/mail:/.test(addr)))
                     addr = addr.replace(/c\/o /i, "mail: c/o ");
                 addr = addr.replace(/:see|:See|: See|: see/, ": see ");
                 addr = addr.replace(/Address see:|address see:|address see /, "address: see ");
@@ -1407,7 +1415,7 @@ var NyckelDB = (function () {
                 }
                 if (/mail: /.test(addr)) {
                     addr = addr.replace(/Po Box|Bx/g, " PO Box ");
-                    if (!/PO Box/g.test(addr))
+                    if (!(/PO Box/g.test(addr)))
                         addr = addr.replace(/Box/g, " PO Box ");
                     addr = addr.replace(/Site/g, " Site ");
                     addr = addr.replace(/Comp/g, " Comp ");
@@ -1417,16 +1425,22 @@ var NyckelDB = (function () {
                 }
                 return addr;
             }
+            function formatDirections(addr) {
+                if (/^\(int |^\(jct |^\(from/i.test(addr) && /\) /.test(addr)) {
+                    addr = addr.slice(1).replace(/\) /, " (") + ")";
+                }
+                return addr;
+            }
             function formatMailAddr(addr) {
                 addr = addr.replace(/Bx|Po Box/g, " PO Box ");
-                if (!/PO Box/.test(addr))
+                if (!(/PO Box/.test(addr)))
                     addr = addr.replace(/Box/g, " PO Box ");
                 addr = addr.replace(/Site/g, " Site ");
                 addr = addr.replace(/Comp/g, " Comp ");
                 return addr.replace(/(RR\s\s|RR)(\d)/gi, " RR $2");
             }
             function formatRuralAddr(addr) {
-                if (!/mile /gi.test(addr))
+                if (!(/mile /gi.test(addr)))
                     addr = addr.replace(/\./g, "");
                 addr = addr.replace(/Rge/g, " Range ");
                 addr = addr.replace(/Twp/g, " Township ");
@@ -1457,7 +1471,8 @@ var NyckelDB = (function () {
                 addr = addr.replace(/Av /g, " Ave ");
                 addr = addr.replace(/Av$/g, " Ave ");
                 addr = addr.replace(/Rm/g, "Apt ");
-                addr = addr.replace(/# /g, "");
+                if (/# /.test(addr) && !(/fire # \d/i.test(addr)))
+                    addr = addr.replace(/# /g, "");
                 addr = addr.replace(/Unit/g, " Unit ");
                 addr = addr.replace(/Block/g, " Block ");
                 if (/\d St|\d Ave/.test(addr)) {
@@ -1465,11 +1480,19 @@ var NyckelDB = (function () {
                 }
                 return addr;
             }
-            var orig = addr, brak = "", c = TRIM(String(addr)).split(" ");
+            var orig = addr, brak = [], b = 0, openBrak = 0, c = TRIM(String(addr)).split(" "), nonCap = ["a", "after", "along", "an", "and", "around", "at",
+                "but", "by", "for", "from", "nor", "of", "on", "or", "see",
+                "so", "the", "then", "to", "with", "without", "yet"];
             //capitalize
             for (var a = 0, lenA = c.length; a < lenA; a++) {
-                if (!/\d/.test(c[a]) && c[a] !== "of" && c[a] !== "see" && !/addres|adres|mail|^see:/.test(c[a])) {
-                    c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
+                if (!(/\d/.test(c[a])) //not digit
+                    && (nonCap.indexOf(c[a]) === -1 || a === 0 || a === lenA) //not lowercase heading word
+                    && !(/addres|adres|mail|^see:/.test(c[a])) //not formatted link to other address
+                ) {
+                    if (c[a].charAt(0) === "(")
+                        c[a] = "(" + c[a].charAt(1).toUpperCase() + c[a].slice(2);
+                    else
+                        c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
                 }
                 if (c[a] === "Nw" || c[a] === "Ne" || c[a] === "Sw" || c[a] === "Se" || c[a] === "Po" || c[a] === "Rr")
                     c[a] = c[a].toUpperCase();
@@ -1479,13 +1502,16 @@ var NyckelDB = (function () {
             addr = c.join(" ");
             if (/[^A-Za-z0-9\xC0-\xFF\s\-#&]/.test(addr)) {
                 addr = formatSeeOtherAddr(addr);
+                addr = formatDirections(addr);
                 //ignore whatever is inside brackets
-                if (/\(/.test(addr) && /\)/.test(addr)) {
-                    //APP.CacheMsg("Brackets in Address", "error");
-                    brak = addr.slice(addr.indexOf("(") + 1, addr.indexOf(")"));
-                    var regexp = new RegExp("\\(" + brak.replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&") + "\\)");
+                openBrak = addr.indexOf("(");
+                while (openBrak > -1 && /\)/.test(addr.slice(openBrak))) {
+                    brak[b] = addr.slice(openBrak, addr.slice(openBrak).indexOf(")") + openBrak + 1);
+                    var regexp = new RegExp("\(" + brak[b].replace(/[.\\+*?[^\]$(){}=!<>|:-]/g, "\\$&") + "\)");
                     addr = addr.replace(regexp, " -BRACKETS- ");
-                    brak = TRIM(brak);
+                    brak[b] = TRIM(brak[b]);
+                    b++;
+                    openBrak = addr.indexOf("(");
                 }
             }
             addr = formatRuralAddr(addr);
@@ -1495,39 +1521,33 @@ var NyckelDB = (function () {
             if (/[^A-Za-z0-9\xC0-\xFF\s\-&\(\)\/#',]/.test(addr)) {
                 return ret.call(this, false, orig, "Address contains invalid characters", "Addresses may only contain A-z, 0-9, and special characters -&()/#',ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÛÜÝÞß");
             }
-            addr = addr.replace(/-BRACKETS-/g, "(" + brak + ")");
+            b = 0;
+            while (/-BRACKETS-/.test(addr)) {
+                addr = addr.replace(/-BRACKETS-/, brak[b++]);
+            }
             addr = TRIM(addr);
             return ret.call(this, true, addr, false);
         }
         function validateCity(city) {
-            var orig = city;
             var c = TRIM(String(city)).split(" ");
             //capitalize names
             for (var a = 0, lenA = c.length; a < lenA; a++) {
-                if (!/\d/.test(c[a]) && c[a] !== "of") {
+                if (!(/\d/.test(c[a])) && c[a] !== "of") {
                     c[a] = c[a].charAt(0).toUpperCase() + c[a].slice(1);
                 }
             }
             city = c.join(" ");
             city = city.replace(/ Nc$| Ne$| Nw$| N$| Sw$| Se$| S$| E$| W$/g, "");
-            city = city.replace(/ Ab$/, ", AB");
-            city = city.replace(/ Ak$/, ", AK");
-            city = city.replace(/ Bc$/, ", BC");
-            city = city.replace(/ Mb$/, ", MB");
-            city = city.replace(/ Nt$/, ", NT");
-            city = city.replace(/ Sk$/, ", SK");
-            city = city.replace(/ Yt$/, ", YT");
+            city = city.replace(/ Ab$| Ak$| Bc$| Mb$| Nb$| Nl$| Ns$| Nt$| On$| Pe$| Qc$| Sk$| Yt$/, function (v) { return "," + v.toUpperCase(); });
             city = city.replace(/,,/, ",");
             city = city.replace(/^Ftt |^Fortt /gi, "Fort St. ");
             city = city.replace(/^Ft /gi, "Fort ");
             city = city.replace(/^St /i, "St. ");
             city = city.replace(/^MD of |Municipal District of /i, "M.D. of ");
             city = city.replace(/ No | \#/i, " No. ");
-            if (/\'/.test(city) && !/\'s/.test(city))
-                city = city.replace(/\'/g, "");
-            if (/\./.test(city) && !/\St. | No. \d|^M.D. of /.test(city))
+            if (/\./.test(city) && !(/\St. | No. \d|^M.D. of /.test(city)))
                 city = city.replace(/\./g, "");
-            city = city.replace(/[^A-Za-z0-9\xC0-\xFF\s\'\.]/g, ""); //special characters \xC0-\xFF (ÅÖÄöäå, etc) allowed
+            city = city.replace(/[^A-Za-z0-9\xC0-\xFF\s'\.\-,]/g, ""); //special characters \xC0-\xFF (ÅÖÄöäå, etc) allowed
             return ret.call(this, true, city, false);
         }
         function validateProvince(prov) {
@@ -1554,7 +1574,7 @@ var NyckelDB = (function () {
         function validatePostalCode(code) {
             var orig = code;
             //number only codes
-            if (IS_NUMERIC(code)) {
+            if (IS_NUMERIC(code.replace(/[\s\-]/, ""))) {
                 if (/[\s\-]/.test(String(orig))) {
                     code = TRIM(String(orig).replace(/[^0-9\s\-]/g, ""));
                     return ret.call(this, true, code, false);
@@ -1632,7 +1652,7 @@ var NyckelDB = (function () {
             }
             var orig = String(phon);
             phon = String(phon).replace(/[^0-9]/g, "");
-            if (orig.length > 0 && !/\d/.test(phon))
+            if (orig.length > 0 && !(/\d/.test(phon)))
                 return ret.call(this, false, orig, "Phone number must contain digits");
             //international numbers
             if (phon.charAt(0) !== "1" && (phon.length > 10 || phon.charAt(0) === "0" || String(orig).charAt(0) === "+")) {
@@ -1660,7 +1680,7 @@ var NyckelDB = (function () {
             var orig = email, e = TRIM(String(email)).split("@");
             if (e.length === 2) {
                 //username
-                e[0] = e[0].replace(/[^A-Za-z0-9\&\'\+\-_\.]/g, ""); //too restrictive?
+                e[0] = e[0].replace(/[^A-Za-z0-9\&'\+\-_\.]/g, ""); //too restrictive?
                 e[0] = e[0].replace(/^\.|\.$|^\-|\-$/g, "");
                 e[0] = e[0].replace(/[\s\t\r\n]/g, "");
                 e[0] = e[0].replace(/\.\./g, ".");
@@ -1685,7 +1705,7 @@ var NyckelDB = (function () {
         function validateGPSCoordinates(str) {
             var orig = str;
             str = TRIM(String(str)).replace(/[^\+\-0-9\s\.,]/, "");
-            if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
+            if (!(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str))) {
                 return ret.call(this, false, orig, "Invalid GPS Co-ordinates");
             }
             var coord = str.split(", ");
@@ -1702,7 +1722,7 @@ var NyckelDB = (function () {
         function validateLatitude(str) {
             var orig = str;
             str = String(str).replace(/[^\+\-0-9\.]/, "");
-            if (!/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/.test(str)) {
+            if (!(/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/.test(str))) {
                 return ret.call(this, false, orig, "Invalid GPS Latitude", "Requires a decimal between -90 and +90");
             }
             if (/\./.test(str)) {
@@ -1713,7 +1733,7 @@ var NyckelDB = (function () {
         function validateLongitude(str) {
             var orig = str;
             str = String(str).replace(/[^\+\-0-9\.]/, "");
-            if (!/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str)) {
+            if (!(/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/.test(str))) {
                 return ret.call(this, false, orig, "Invalid GPS Longitude", "Requires a decimal between -180 and +180");
             }
             if (/\./.test(str)) {
@@ -1778,7 +1798,7 @@ var NyckelDB = (function () {
         return forbidden.split(" ");
     }
     function SET_VAL(rowId, colName, newValue, storeBool, editTime, callback) {
-        function applyVal(toTable, toIds, rowIndex) {
+        function applyVal(toTable, toIds, rowIndex, newValue) {
             var thisModified;
             editTime = VALIDATE_EDIT_TIME.call(this, editTime, "cell", "setVal", toTable[rowIndex][0]);
             toTable[rowIndex][colIndex] = newValue;
@@ -1819,9 +1839,9 @@ var NyckelDB = (function () {
         var validationObj = VALIDATE.call(this, newValue, db.columns.meta[db.columns.headers[colIndex]].type[0], "SET_VAL: " + rowId + ":" + colName);
         if (validationObj.valid) {
             if (rowIsHidden)
-                return applyVal.call(this, HIDDEN_TABLE_DATA[this.id], HIDDEN_IDS[this.id], rowIndex);
+                return applyVal.call(this, HIDDEN_TABLE_DATA[this.id], HIDDEN_IDS[this.id], rowIndex, validationObj.value);
             else
-                return applyVal.call(this, db.table, db.ids, rowIndex);
+                return applyVal.call(this, db.table, db.ids, rowIndex, validationObj.value);
         }
         else
             return callback instanceof Function ? (callback.call(this, undefined, ERRORS[this.id], DB[this.id].title, this.syncPending), undefined) : undefined;

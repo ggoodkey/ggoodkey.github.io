@@ -1022,7 +1022,7 @@
 								<th v-if="i === 0"
 									:key="'th-' + (index + blankRowsBefore) + '-' + i"
 								>
-									{{ value }}
+									<a @click="selectRow(value)">{{ value }}</a>
 								</th>
 								<td v-else 
 									:key="'td-' + (index + blankRowsBefore) + '-' + i"
@@ -1057,15 +1057,34 @@
 	</script>
 
 	<script type="text/x-template" id="view1-page">
-		<div class="view">
-			<div class="view-container">
-				<h3>Contacts</h3>
-				<a class="button" @click="createNewItem('Contacts')">
-					Create a new Contact
-				</a>
-				<br>
-				<br>
-				<editable-table tablename="Contacts"></editable-table>
+		<div class="views">
+			<div class="view"
+				:class="{splitViewLeft: selectedRowDetails.data.length > 0}">
+				<div class="view-container">
+					<h3>Contacts</h3>
+					<a class="button" @click="createNewItem('Contacts')">
+						Create a new Contact
+					</a>
+					<br>
+					<br>
+					<editable-table 
+						tablename="Contacts"
+						@row-selected="onDetailsUpdate"
+					></editable-table>
+				</div>
+			</div>
+			<div class="scroll-outer-container">
+				<div class="view splitViewRight">
+					<transition
+						name="forward"
+						mode="out-in"
+					>
+						<component
+							:is="editDetailsView"
+							:details="selectedRowDetails"
+						/>
+					</transition>
+				</div>
 			</div>
 		</div>
 	</script>
@@ -1273,6 +1292,10 @@
 		<details-card class="view-container" :details="details"/>
 	</script>
 
+	<script type="text/x-template" id="edit-details-view-container">
+		<edit-details-card class="view-container" :details="details"/>
+	</script>
+
 	<script type="text/x-template" id="search-results-page">
 		<div class="views">
 			<div
@@ -1343,7 +1366,7 @@
 					/>
 				</template>
 			</div>
-			<div>
+			<div class="actionsBottom">
 				<button @click="saveChanges">
 					<span class="icon icon-ok"></span>&nbsp;&nbsp;Save
 				</button>

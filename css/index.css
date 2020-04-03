@@ -681,7 +681,7 @@ html.desk .desk.phon {
 html,
 #app,
 html.phon .searchSuggestions-container,
-.views{
+.views {
 	background-color: #eee; /*page color*/
 }
 
@@ -691,7 +691,7 @@ html.dark,
 html.phon.dark .searchSuggestions-container,
 .dark #stoKeyInput,
 .dark #stoKeyInputConfirm,
-.dark .views{
+.dark .views {
 	background-color: #111; /*dark page color*/
 }
 
@@ -1857,6 +1857,17 @@ li.link {
 	li.link.icon-check:before {
 		padding-right: 16px;
 	}
+
+.actionsBottom {
+	position: sticky;
+	bottom: 54px;
+	padding-top: 20px;
+	background-image: linear-gradient(rgba(0,0,0,0), #eee, #eee); /*transparent to page color*/
+}
+
+.dark .actionsBottom {
+	background-image: linear-gradient(rgba(0,0,0,0), #111, #111); /*transparent to dark page color*/
+}
 
 :link,
 html.desk .navlink:hover,

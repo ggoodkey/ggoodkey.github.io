@@ -710,12 +710,6 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
     //web worker manager (wwManager) handles access to NyckelDB and Base64 web worker queue
     //and offline senarios where web workers are not available
     var webWorker, wwCallbackQueue = [], wwCallbackIndex = 0;
-    /*obj{
-     * "cmd": "read" "parseCSV" "merge" etc,
-     * "args": [Array of arguments accepted by the cmd]
-     * "title": if accessing a NyckelDB database
-     * }
-     */
     function wwManager(inputObj, callback, finalCallback) {
         function str2ab(str) {
             var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
@@ -3458,7 +3452,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
                 else if (action === "sortTable") {
                     this.selectCell(-1, 0); //apply selected cell value before sorting
-                    wwManager({ cmd: "sortByCol", title: this.tablename, args: [this.db.headers[index]] }, function () {
+                    wwManager({ cmd: "sortByCol", title: this.tablename, args: [this.db.headers[index], null] }, function () {
                         this.fetchData(0, true);
                     }.bind(this));
                 }
@@ -3524,7 +3518,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     this.fullscreen = !this.fullscreen;
                 }
                 else if (action === "importCSV") {
-                    importFile(this.tablename, { fileExtension: "csv", overwrite: true }, function () { this.fetchData(0, true); }.bind(this));
+                    importFile(this.tablename, { fileExtension: "csv", overwrite: true }, function () {
+                        this.fetchData(0, true);
+                        app.syncAll();
+                    }.bind(this));
                 }
                 else if (action === "addRow") {
                     debug("not done");
@@ -3560,47 +3557,21 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                             callback(true, updatedValue);
                     }
                 }.bind(this));
+            },
+            selectRow: function (rowId) {
+                var obj = { table: this.tablename, id: rowId };
+                getDetails(obj, function (detailsObj) {
+                    if (/desk/.test(document.getElementsByTagName("html")[0].className)) {
+                        this.$emit("row-selected", detailsObj);
+                    }
+                    else {
+                        app.details = detailsObj;
+                        app.navigate("edit");
+                    }
+                }.bind(this));
             }
         },
         template: "#editable-table"
-    });
-    var view1_page = Vue.extend({
-        name: "View1Page",
-        components: {
-            "editable-table": editable_table
-        },
-        data: function () {
-            return {
-                sharedFileLink: ""
-            };
-        },
-        methods: {
-            externalLink: externalLink,
-            generateListView: generateListView,
-            createNewItem: createNewItem,
-            shareFile: function (fileName, fileContents, password, expires) {
-                Dbx.share(fileName, fileContents, password, expires, this.dbxShareCB);
-            },
-            dbxShareCB: function (response, response2, response3) {
-                console.log("shared file", response, response2, response3);
-                this.sharedFileLink = response.url;
-            },
-            receiveFile: function (fileName, password) {
-                Dbx.receive(this.sharedFileLink, password, function (response, response2, response3) {
-                    console.log("got file", response, response2, response3);
-                });
-            }
-        },
-        template: "#view1-page"
-    });
-    var view3_page = Vue.extend({
-        name: "View3Page",
-        methods: {
-            generateListView: generateListView,
-            importFile: importFile,
-            createNewItem: createNewItem
-        },
-        template: "#view3-page"
     });
     var details_card_lineitem = Vue.extend({
         props: {
@@ -4379,6 +4350,85 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             };
         },
         template: "#edit-details-page"
+    });
+    var edit_details_view_container = Vue.extend({
+        components: {
+            "edit-details-card": edit_details_card
+        },
+        props: {
+            details: {
+                type: Object,
+                default: function () {
+                    return {
+                        id: "",
+                        table: "",
+                        data: [{
+                                column: "",
+                                orig: "",
+                                text: [],
+                                type: "any"
+                            }],
+                        image: "",
+                        title: "",
+                        subtitle: "null"
+                    };
+                }
+            }
+        },
+        template: "#edit-details-view-container"
+    });
+    var view1_page = Vue.extend({
+        name: "View1Page",
+        components: {
+            "editable-table": editable_table,
+            "v-a": edit_details_view_container,
+            "v-b": edit_details_view_container
+        },
+        data: function () {
+            return {
+                sharedFileLink: "",
+                editDetailsView: "v-a",
+                selectedRowDetails: {
+                    id: null,
+                    table: null,
+                    data: [],
+                    image: null,
+                    title: null,
+                    subtitle: null
+                }
+            };
+        },
+        methods: {
+            externalLink: externalLink,
+            generateListView: generateListView,
+            createNewItem: createNewItem,
+            onDetailsUpdate: function (newDetailsObj) {
+                this.editDetailsView = this.editDetailsView === "v-a" ? "v-b" : "v-a";
+                this.selectedRowDetails = newDetailsObj;
+            },
+            shareFile: function (fileName, fileContents, password, expires) {
+                Dbx.share(fileName, fileContents, password, expires, this.dbxShareCB);
+            },
+            dbxShareCB: function (response, response2, response3) {
+                console.log("shared file", response, response2, response3);
+                this.sharedFileLink = response.url;
+            },
+            receiveFile: function (fileName, password) {
+                Dbx.receive(this.sharedFileLink, password, function (response, response2, response3) {
+                    console.log("got file", response, response2, response3);
+                });
+            }
+        },
+        template: "#view1-page"
+    });
+    var view3_page = Vue.extend({
+        name: "View3Page",
+        methods: {
+            generateListView: generateListView,
+            importFile: importFile,
+            createNewItem: createNewItem
+        },
+        template: "#view3-page"
     });
     var page_not_found = {
         name: "PageNotFound",
