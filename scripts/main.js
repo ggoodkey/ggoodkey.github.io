@@ -4,13 +4,13 @@
 // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
 /* global WinJS, Sto, NyckelDB, cordova, initiateDropbox, Vue */
 /* eslint-disable no-extra-parens */
-var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
+var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
 (function () {
     APP.setDebugMode(false); //TODO set to false
     APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
     var appData = {};
-    var debug = APP.debug, DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
-    APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+    var debug = APP.debug, APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+    DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
     views = {
         new: {
             name: "Tables",
@@ -879,7 +879,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
         function doneLoadingApp() {
             setTimeout(function () {
                 setNavLinkIndicatorPosition(app.currentView.path);
-                document.getElementById("loading").className = "done"; //app is rendered so fade in from black
+                var loadingDiv = document.getElementById("loading");
+                if (loadingDiv)
+                    loadingDiv.className = "done"; //app is rendered so fade in from black
             }, 150);
             checkDBLoaded(function (nextInQueue) {
                 app.syncAll(); //adds this to the queue to run after DB is loaded, or run immediately if it is loaded
@@ -1085,12 +1087,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             if (!matches) { // Not matching anymore = not interesting
                 return;
             }
-            if (media === DARK) {
+            if (media === DARK)
                 app.systemDarkTheme = true;
-            }
-            else if (media === LIGHT) {
+            else if (media === LIGHT)
                 app.systemDarkTheme = false;
-            }
             refreshResponsiveLayout();
         }
         var DARK = '(prefers-color-scheme: dark)';
@@ -1126,9 +1126,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 app.useSystemTheme = false;
                 return;
             }
-            else if (window.matchMedia(DARK).matches) {
+            else if (window.matchMedia(DARK).matches)
                 app.systemDarkTheme = true;
-            }
             else
                 app.systemDarkTheme = false;
             var mqDark = window.matchMedia(DARK);
@@ -1136,6 +1135,8 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             var mqLight = window.matchMedia(LIGHT);
             mqLight.addListener(listener);
         }
+        else
+            app.systemDarkTheme = false;
     };
     //load NyckelDB databases
     var loadDB = true, loadDBQueue = [], loadingDB = false;
@@ -1850,7 +1851,7 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             return cb();
         }
         function saveFile(source, details) {
-            var contents = Base64.write_and_verify(source, Base64.hash(app.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = app.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(app.stoKey));
+            var contents = Base64.write(source, Base64.hash(app.stoKey)), displayName = details.name, ext = /(?:\.([^.]+))?$/.exec(details.name), extension = ext ? ext[1] : "No file extension", name = details.name.split("."), type = details.type || extension, origSize = details.size || source.length, compSize = contents.length, compression = Math.round((1 - compSize / origSize) * 100) + "%", modified = details.lastModified || new Date().getTime(), owner = app.dropboxEmail || "unknown", hash = Base64.hash(Base64.hash(app.stoKey));
             name.pop();
             name = name.join(".");
             modified = typeof modified === "number" ? modified : new Date(modified).getTime();
@@ -2093,14 +2094,10 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
             color: {
                 type: String,
                 default: "#478cdb"
-            }
-        },
-        data: function () {
-            return {
-                open: false,
-                clickOutsideInit: false,
-                clickOutsideFunct: function (e) { return e; },
-                options: [
+            },
+            colors: {
+                type: Array,
+                default: function () { return [
                     //hex color themes
                     "#478cdb",
                     "#ffb900",
@@ -2136,7 +2133,18 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                     "#107c10",
                     "#498205",
                     "#486860"
-                ]
+                ]; }
+            },
+            showcolorname: {
+                type: Boolean,
+                default: false
+            }
+        },
+        data: function () {
+            return {
+                open: false,
+                clickOutsideInit: false,
+                clickOutsideFunct: function (e) { return e; }
             };
         },
         methods: {
@@ -4713,8 +4721,9 @@ var Windows, Dbx, APP = APP || {}, COM, VueRouter, VAL, Base64; //dependancies
                 }
             },
             setTheme: function (event) {
+                this.darkTheme = event.target.checked;
                 var theme = event.target.checked ? "dark " : "", htmlTag = document.getElementsByTagName("html")[0];
-                htmlTag.className = trim(theme + htmlTag.className.replace(/dark\-theme/g, ""));
+                htmlTag.className = trim(theme + htmlTag.className.replace(/dark/g, ""));
             },
             search: function (event, optionalQuery) {
                 var searchBoxInputElement = document.getElementById("searchBox");

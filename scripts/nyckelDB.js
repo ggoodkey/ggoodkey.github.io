@@ -707,12 +707,12 @@ var NyckelDB = (function () {
                         arr[a] = jsonRow[headerName];
                         //add empty values to table for boolean (false), number (0) or string ("") values
                         if (arr[a] === undefined) {
-                            if (DB[this.id].columns.meta[headerName].type[0] === "boolean")
-                                arr[a] = false;
-                            else if (/^number|nteger$|itude$/.test(DB[this.id].columns.meta[headerName].type[0]))
+                            if (VALID_STRING_TYPES.test(DB[this.id].columns.meta[headerName].type[0]))
+                                arr[a] = "";
+                            else if (VALID_NUMBER_TYPES.test(DB[this.id].columns.meta[headerName].type[0]))
                                 arr[a] = 0;
                             else
-                                arr[a] = "";
+                                arr[a] = false;
                         }
                     }
                     return arr;
@@ -1270,12 +1270,12 @@ var NyckelDB = (function () {
         }
         for (var a = 1, len = DB[this.id].columns.headers.length, type = void 0; a < len; a++) {
             type = DB[this.id].columns.meta[DB[this.id].columns.headers[a]].type[0];
-            if (type === "boolean")
-                row[a] = false;
+            if (VALID_STRING_TYPES.test(type))
+                row[a] = "";
             else if (VALID_NUMBER_TYPES.test(type))
                 row[a] = 0;
             else
-                row[a] = "";
+                row[a] = false;
         }
         DB[this.id].table.push(row);
         ROW_INDEX_CACHE[this.id] = {}; //clear the cache
@@ -1574,7 +1574,7 @@ var NyckelDB = (function () {
         function validatePostalCode(code) {
             var orig = code;
             //number only codes
-            if (IS_NUMERIC(code.replace(/[\s\-]/, ""))) {
+            if (IS_NUMERIC(code)) {
                 if (/[\s\-]/.test(String(orig))) {
                     code = TRIM(String(orig).replace(/[^0-9\s\-]/g, ""));
                     return ret.call(this, true, code, false);
@@ -2147,7 +2147,7 @@ var NyckelDB = (function () {
         if (obj.valid && !obj.error)
             return obj.value;
         else
-            return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
+            return VALID_STRING_TYPES.test(columnType) ? "" : VALID_NUMBER_TYPES.test(columnType) ? 0 : false;
     }
     function VALIDATE_COLUMN_PROPS(props, editTime) {
         var ret;
@@ -2303,16 +2303,12 @@ var NyckelDB = (function () {
         function updateTable(db) {
             var initialValue = cols[colName].initialValue !== undefined ? TIMESTAMP_COLUMN_PROP(cols[colName].initialValue, validatedEditTime)[0] : undefined;
             if (initialValue === undefined || initialValue !== undefined && !VALUE_IS_VALID.call(this, initialValue, cols[colName].type[0], true, "updateTable")) {
-                if (cols[colName].type[0] === "boolean")
-                    initialValue = false;
-                else if (/number|integer|date|postalZipCode|longitude|latitude/i.test(cols[colName].type[0]))
+                if (VALID_STRING_TYPES.test(cols[colName].type[0]))
+                    initialValue = "";
+                else if (VALID_NUMBER_TYPES.test(cols[colName].type[0]))
                     initialValue = 0;
-                else if (/any|string|email|password|address|cityCounty|provinceStateRegion|country|name|geoLocation/i.test(cols[colName].type[0]))
-                    initialValue = "";
-                else {
-                    CACHE_ERROR.call(this, cols[colName].type.toString(), "initial value not found for data type");
-                    initialValue = "";
-                }
+                else
+                    initialValue = false;
             }
             //insert empty cell to every row in table
             for (var a = 0, len = db.table.length; a < len; a++) {
@@ -2541,7 +2537,7 @@ var NyckelDB = (function () {
         /**
          * Add a new row to the table.
          * @function addRow
-         * @param {array} array a complete array, or a JSON object in form {[colName]: {value: [value]},..}
+         * @param {array} array a complete array, or a JSON object in form {[colName]: value}
          * @param {string} [id] id is optional and will only be used if it doesn't already exist
          * @param {setRowCallback} [callback] if row is a JSON object, the new row id is passed back only through a callback function
          * @returns {string} new row id
@@ -2551,8 +2547,27 @@ var NyckelDB = (function () {
                 //convert object to array
                 var _array = [], a = 0;
                 this.forEachCol.call(this, function (col) {
-                    if (array[col] && array[col].value)
-                        _array[a] = array[col].value;
+                    if (array[col] !== undefined)
+                        _array[a] = array[col];
+                    else { //try find column
+                        var found = false;
+                        for (var b in array) {
+                            if (TO_PROP_NAME(b) === col) {
+                                _array[a] = array[b];
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            var type = this.getType(col);
+                            if (VALID_STRING_TYPES.test(type))
+                                _array[a] = "";
+                            else if (VALID_NUMBER_TYPES.test(type))
+                                _array[a] = 0;
+                            else
+                                _array[a] = false;
+                        }
+                    }
                     a++;
                 }, function () {
                     id = ADD_ROW.call(this, _array, id, true, undefined, callback);

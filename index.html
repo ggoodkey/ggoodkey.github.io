@@ -390,11 +390,23 @@
 	<script type="text/x-template" id="color-select">
 		<div class="dropdownButton dropdown-container">
 			<button
+				v-if="showcolorname"
 				class="dropdownButton"
 				:class="{ selected: open }"
-				:style="{ backgroundColor: color }"
 				@click="toggle"
-			></button>
+			>
+				<div class="button-link dropdownButton" :style="{ backgroundColor: color === 'none' ? 'transparent' : color }"
+				:class="{ stripe: color === 'none' }"></div>
+				{{ color }}
+			</button>
+			<button
+				v-else
+				class="dropdownButton button-link"
+				:class="{ selected: open, stripe: color === 'none' }"
+				:style="{ backgroundColor: color === 'none' ? 'transparent' : color }"
+				@click="toggle"
+			>
+			</button>
 			<div
 				v-show="open"
 				class="dropdownButton dropdown grid"
@@ -402,10 +414,11 @@
 			>
 				<div
 					class="left button-link dropdownButton"
-					v-for="option in options"
-					:style="{ backgroundColor:option }"
-					:key="'color-select-' + option"
-					@click="select(option)"
+					v-for="c in colors"
+					:class="{ stripe: c === 'none' }"
+					:style="{ backgroundColor: c === 'none' ? 'transparent' : c }"
+					:key="'color-select-' + c"
+					@click="select(c)"
 				>
 				</div>
 			</div>
