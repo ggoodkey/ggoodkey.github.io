@@ -383,7 +383,7 @@ var NyckelDB = (function () {
         function save() {
             if (typeof changes === "undefined" || changes === true) {
                 //check for and surface hidden values before save
-                Sto.setItem(DB[this.id].title, EXPORT_DB.call(this));
+                Sto.setItem(APPID + "_" + DB[this.id].title, EXPORT_DB.call(this));
             }
             ERRORS[this.id] = "";
         }
@@ -437,7 +437,7 @@ var NyckelDB = (function () {
                     return callback();
                 //added in verions 0.4+
                 for (var colName in columns.meta) {
-                    //go through all metadata and delete deleted columns 
+                    //go through all metadata and delete deleted columns
                     if (columns.meta[colName].deleted && DB[this.id].columns.meta[colName] && !DB[this.id].columns.meta[colName].deleted) {
                         DELETE_COLUMN.call(this, colName, false, columns.meta[colName].deleted[1]);
                     }
@@ -707,12 +707,12 @@ var NyckelDB = (function () {
                         arr[a] = jsonRow[headerName];
                         //add empty values to table for boolean (false), number (0) or string ("") values
                         if (arr[a] === undefined) {
-                            if (VALID_STRING_TYPES.test(DB[this.id].columns.meta[headerName].type[0]))
-                                arr[a] = "";
+                            if (DB[this.id].columns.meta[headerName].type[0] === "boolean")
+                                arr[a] = false;
                             else if (VALID_NUMBER_TYPES.test(DB[this.id].columns.meta[headerName].type[0]))
                                 arr[a] = 0;
                             else
-                                arr[a] = false;
+                                arr[a] = "";
                         }
                     }
                     return arr;
@@ -982,7 +982,7 @@ var NyckelDB = (function () {
         function sortSearchWords(a, b) {
             var _a = a[0];
             var _b = b[0];
-            //try to compare items as numbers	
+            //try to compare items as numbers
             if (!isNaN(Number(_a)) && !isNaN(Number(_a))) {
                 _a = Number(_a);
                 _b = Number(_b);
@@ -1082,7 +1082,7 @@ var NyckelDB = (function () {
         BUILDING_SEARCH_INDEX_QUEUE[this.id] = [];
         BUILDING_SEARCH_INDEX[this.id] = true;
         COL_NAMES_INDEXED[this.id] = getIndexableColumns(db, colNamesToIndex);
-        Sto.getItem("searchIndex_" + DB[this.id].title, null, function (obj) {
+        Sto.getItem(APPID + "_searchIndex_" + DB[this.id].title, null, function (obj) {
             if (typeof obj === "string")
                 obj = JSON.parse(obj);
             if (!(obj &&
@@ -1101,7 +1101,7 @@ var NyckelDB = (function () {
         }.bind(this), start.bind(this));
     }
     function STO_SEARCH_INDEX() {
-        Sto.setItem("searchIndex_" + DB[this.id].title, {
+        Sto.setItem(APPID + "_searchIndex_" + DB[this.id].title, {
             "lastModified": DB[this.id].lastModified,
             "colNamesIndexed": COL_NAMES_INDEXED[this.id],
             "searchIndex": SEARCH_INDEX[this.id],
@@ -1270,12 +1270,12 @@ var NyckelDB = (function () {
         }
         for (var a = 1, len = DB[this.id].columns.headers.length, type = void 0; a < len; a++) {
             type = DB[this.id].columns.meta[DB[this.id].columns.headers[a]].type[0];
-            if (VALID_STRING_TYPES.test(type))
-                row[a] = "";
+            if (type === "boolean")
+                row[a] = false;
             else if (VALID_NUMBER_TYPES.test(type))
                 row[a] = 0;
             else
-                row[a] = false;
+                row[a] = "";
         }
         DB[this.id].table.push(row);
         ROW_INDEX_CACHE[this.id] = {}; //clear the cache
@@ -1959,9 +1959,42 @@ var NyckelDB = (function () {
     function INITIATE_DBS(title, callback) {
         function newDBS() {
             DBS[NUM++] = title;
-            Sto.setItem("tables", JSON.stringify(DBS));
+            Sto.setItem(APPID + "_tables", JSON.stringify(DBS));
             if (callback instanceof Function)
                 return callback(title);
+        }
+        function initDBS(tables) {
+            if (tables) {
+                DBS = JSON.parse(tables);
+                if (DBS.indexOf(title) === -1)
+                    newDBS.call(this);
+                else {
+                    NUM++;
+                    if (callback instanceof Function)
+                        return callback(title);
+                }
+            }
+            else
+                newDBS.call(this);
+        }
+        function tryOldDBSVersion() {
+            Sto.getItem("tables", null, function (tables) {
+                if (tables) {
+                    initDBS.call(this, tables);
+                    var _loop_1 = function (a, len) {
+                        Sto.getItem(DBS[a], null, function (json) {
+                            //migrate v0.6.0 data to v0.7.0
+                            Sto.setItem(APPID + "_" + DBS[a], json);
+                            Sto.deleteItem(DBS[a]);
+                            Sto.deleteItem("searchIndex_" + DBS[a]);
+                        }, null);
+                    };
+                    for (var a = 0, len = DBS.length; a < len; a++) {
+                        _loop_1(a, len);
+                    }
+                }
+                Sto.deleteItem("tables");
+            }.bind(this), newDBS.bind(this));
         }
         title = TO_PROP_NAME(title);
         if (DBS && DBS[NUM + 1] === title) {
@@ -1970,20 +2003,7 @@ var NyckelDB = (function () {
                 return callback(title);
         }
         else
-            Sto && Sto.getItem("tables", null, function (tables) {
-                if (tables) {
-                    DBS = JSON.parse(tables);
-                    if (DBS.indexOf(title) === -1)
-                        newDBS.call(this);
-                    else {
-                        NUM++;
-                        if (callback instanceof Function)
-                            return callback(title);
-                    }
-                }
-                else
-                    newDBS.call(this);
-            }.bind(this), newDBS.bind(this));
+            Sto && Sto.getItem(APPID + "_tables", null, initDBS.bind(this), tryOldDBSVersion.bind(this));
     }
     function CHECK_HEADER_VALUE(headerValue, existingHeaders) {
         headerValue = TO_PROP_NAME(headerValue);
@@ -2147,7 +2167,7 @@ var NyckelDB = (function () {
         if (obj.valid && !obj.error)
             return obj.value;
         else
-            return VALID_STRING_TYPES.test(columnType) ? "" : VALID_NUMBER_TYPES.test(columnType) ? 0 : false;
+            return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
     }
     function VALIDATE_COLUMN_PROPS(props, editTime) {
         var ret;
@@ -2303,12 +2323,12 @@ var NyckelDB = (function () {
         function updateTable(db) {
             var initialValue = cols[colName].initialValue !== undefined ? TIMESTAMP_COLUMN_PROP(cols[colName].initialValue, validatedEditTime)[0] : undefined;
             if (initialValue === undefined || initialValue !== undefined && !VALUE_IS_VALID.call(this, initialValue, cols[colName].type[0], true, "updateTable")) {
-                if (VALID_STRING_TYPES.test(cols[colName].type[0]))
-                    initialValue = "";
+                if (cols[colName].type[0] === "boolean")
+                    initialValue = false;
                 else if (VALID_NUMBER_TYPES.test(cols[colName].type[0]))
                     initialValue = 0;
                 else
-                    initialValue = false;
+                    initialValue = "";
             }
             //insert empty cell to every row in table
             for (var a = 0, len = db.table.length; a < len; a++) {
@@ -2474,10 +2494,12 @@ var NyckelDB = (function () {
     /**
      * Initialise a new instance of NyckelDB
      * @constructs NyckelDB
+     * @param {string} appID the name of, or unique identifier of the app
      * @param {string} tableTitle the name of the new database
      */
     var NyckelDBObj = /** @class */ (function () {
-        function NyckelDBObj(tableTitle) {
+        function NyckelDBObj(appID, tableTitle) {
+            APPID = String(appID);
             tableTitle = tableTitle || "";
             NUM = NUM || 0;
             DB = DB || new Array(Math.pow(2, 32) - 1);
@@ -2560,12 +2582,12 @@ var NyckelDB = (function () {
                         }
                         if (!found) {
                             var type = this.getType(col);
-                            if (VALID_STRING_TYPES.test(type))
-                                _array[a] = "";
+                            if (type === "boolean")
+                                _array[a] = false;
                             else if (VALID_NUMBER_TYPES.test(type))
                                 _array[a] = 0;
                             else
-                                _array[a] = false;
+                                _array[a] = "";
                         }
                     }
                     a++;
@@ -2593,7 +2615,7 @@ var NyckelDB = (function () {
                 if (filterOutQueries.length === 0) {
                     return callback instanceof Function ? callback.call(this, ids, ERRORS[this.id]) : undefined;
                 }
-                var _loop_2 = function (b_2, lenB) {
+                var _loop_3 = function (b_2, lenB) {
                     (function (self, b) {
                         self.search.call(self, filterOutQueries[b], options, function (result, err) {
                             if (!err)
@@ -2621,7 +2643,7 @@ var NyckelDB = (function () {
                 };
                 var this_2 = this;
                 for (var b_2 = 0, lenB = filterOutQueries.length; b_2 < lenB; b_2++) {
-                    _loop_2(b_2, lenB);
+                    _loop_3(b_2, lenB);
                 }
             }
             if (!searchQuery)
@@ -2640,7 +2662,7 @@ var NyckelDB = (function () {
             else
                 searchQueryArr = [searchQuery];
             var b = 0;
-            var _loop_1 = function (a, len) {
+            var _loop_2 = function (a, len) {
                 (function (self, a) {
                     self.search.call(self, searchQueryArr[a], options, function (result, errors) {
                         b++;
@@ -2657,7 +2679,7 @@ var NyckelDB = (function () {
             };
             var this_1 = this;
             for (var a = 0, len = searchQueryArr.length; a < len; a++) {
-                _loop_1(a, len);
+                _loop_2(a, len);
             }
         };
         ;
@@ -3242,7 +3264,7 @@ var NyckelDB = (function () {
                     properties = applyCustomProperties.call(this, options.customProperties);
                 //try to get cached table
                 if (Sto)
-                    Sto.getItem(DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
+                    Sto.getItem(APPID + "_" + DB[this.id].title, null, gotCachedTable.bind(this), didntGetCachedTable.bind(this));
                 else
                     return callback instanceof Function ? callback.call(this, false, "localStorage not found", false) : "localStorage not found";
             }
@@ -3310,7 +3332,7 @@ var NyckelDB = (function () {
                     INITIATE_DBS.call(this, DB[this.id].title);
                 }
                 else
-                    return callback instanceof Function ? callback.call(this, false, "imported databse corrupted", null, false) : CACHE_ERROR.call(this, "imported database corrupted");
+                    return callback instanceof Function ? callback.call(this, false, "imported database corrupted", null, false) : CACHE_ERROR.call(this, "imported database corrupted");
             }
             else {
                 initiateTable.call(this, opt);
@@ -3362,10 +3384,10 @@ var NyckelDB = (function () {
             function nuke() {
                 if (Sto) {
                     for (var a = 0, len = DBS.length; a < len; a++) {
-                        Sto.deleteItem(DBS[a]);
-                        Sto.deleteItem("searchIndex_" + DBS[a]);
+                        Sto.deleteItem(APPID + "_" + DBS[a]);
+                        Sto.deleteItem(APPID + "_searchIndex_" + DBS[a]);
                     }
-                    Sto.deleteItem("tables");
+                    Sto.deleteItem(APPID + "_tables");
                 }
                 DB = new Array(Math.pow(2, 32) - 1);
                 NUM = 0;
@@ -3951,6 +3973,7 @@ var NyckelDB = (function () {
         return NyckelDBObj;
     }());
     //ALL CAPS "PRIVATE" VARIABLES
+    var APPID;
     var DB; //all databases
     var NUM; //incrementing database number
     var DBS; //array of database titles
@@ -3974,8 +3997,8 @@ var NyckelDB = (function () {
     var VALID_STRING_TYPES = new RegExp("^(" + STRING_TYPES.split(" ").join("|") + ")$");
     var VALID_NUMBER_TYPES = new RegExp("^(" + NUMBER_TYPES.split(" ").join("|") + ")$");
     var FORBIDDEN = GET_FORBIDDEN(); //property names that shouldn't be used (?)
-    var THIS_VERSION = "0.6.0"; //update COMPATIBLE_VERSIONS when this changes
-    var COMPATIBLE_VERSIONS = ["0.5"]; // capable of migrating these versions forward to the current version
+    var THIS_VERSION = "0.7.0"; //update COMPATIBLE_VERSIONS when this changes
+    var COMPATIBLE_VERSIONS = ["0.5", "0.6.0"]; // capable of migrating these versions forward to the current version
     //TODO share function
     return NyckelDBObj;
 }());

@@ -421,7 +421,7 @@ searchable: Boolean whether to index column for searches
 
             
 
-            <td class="description last"><p>a complete array, or a JSON object in form {[colName]: {value: [value]},..}</p></td>
+            <td class="description last"><p>a complete array, or a JSON object in form {[colName]: value}</p></td>
         </tr>
 
     
@@ -467,7 +467,7 @@ searchable: Boolean whether to index column for searches
             <td class="type">
             
                 
-<span class="param-type">addRowCallback</span>
+<span class="param-type">setRowCallback</span>
 
 
             
@@ -2672,7 +2672,14 @@ Possible future deprication and merge functionality into search</p>
 
 
 <div class="description">
-    <p>Get an entire row from the table as JSON arranged by column name. Returns column name, column type and value</p>
+    <p>Get an entire row from the table as JSON arranged by column name. Returns column name, column type and value
+{
+[colName: string]: {
+column: string, //display name of the column
+type: typeString, //data type
+value: tableValue //data
+}
+}</p>
 </div>
 
 
@@ -2875,7 +2882,15 @@ Possible future deprication and merge functionality into search</p>
 
 
 <div class="description">
-    <p>Get an blank row from the table as JSON arranged by column name</p>
+    <p>Get an blank row from the table. A row template is a JSON object in the form of:
+{
+[columnName: string]: {
+column: string, //column name
+type: typeString, //data type (for data validation)
+exportAs?: string //original/display name of the column
+}
+}
+Same as getRow, except without the values</p>
 </div>
 
 
@@ -3493,6 +3508,114 @@ Possible future deprication and merge functionality into search</p>
     
 
     
+    <h4 class="name" id="getTypes"><span class="type-signature"></span>getTypes<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Get an Array of all the column 'types'</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+    <dt class="tag-since">Since:</dt>
+    <dd class="tag-since"><ul class="dummy"><li>v0.6.0</li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>an Array of column types</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;string></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="getVal"><span class="type-signature"></span>getVal<span class="signature">(rowId, colName)</span><span class="type-signature"> &rarr; {string|number|boolean|undefined}</span></h4>
     
 
@@ -3690,7 +3813,9 @@ Possible future deprication and merge functionality into search</p>
 
 
 <div class="description">
-    <p>Get a number of cell values from the table at once</p>
+    <p>Get a number of cell values from the table at once. The returned array includes the rowID as the
+first item in the array (at index 0), therefore the returned array will be one item longer than
+the supplied colNames array</p>
 </div>
 
 
@@ -3755,7 +3880,8 @@ Possible future deprication and merge functionality into search</p>
 
             
 
-            <td class="description last"><p>can be an Array of the index of the row, or it's 3 digit identifier</p></td>
+            <td class="description last"><p>an array of 3 digit identifiers, or numbers to return a value
+by it's current position in the table</p></td>
         </tr>
 
     
@@ -3786,7 +3912,7 @@ Possible future deprication and merge functionality into search</p>
 
             
 
-            <td class="description last"><p>is an Array the column names from the table header</p></td>
+            <td class="description last"><p>is an Array of the names of the desired columns</p></td>
         </tr>
 
     
@@ -3884,7 +4010,8 @@ Possible future deprication and merge functionality into search</p>
 
         
 <div class="param-desc">
-    <p>2d array of table values, or false if nothing found</p>
+    <p>2d array of table values, with the rowId as the first item in the array,
+or false if nothing was found</p>
 </div>
 
 
@@ -3924,7 +4051,8 @@ Possible future deprication and merge functionality into search</p>
 
 
 <div class="description">
-    <p>Hide a row. The row will not be accessible at all until you call unHideRows.</p>
+    <p>Hide a row. The row will not be accessible at all until you call unhideRows (or unfilter). Certain
+other calls will also automatically unhide all rows including sync, importJSON, and setType</p>
 </div>
 
 
@@ -4764,8 +4892,7 @@ Possible future deprication and merge functionality into search</p>
 
 
 <div class="description">
-    <p>Change the name of a column
-Function not complete</p>
+    <p>Change the name of a column</p>
 </div>
 
 
@@ -4827,7 +4954,7 @@ Function not complete</p>
 
             
 
-            <td class="description last"><p>is the current column name from the table header</p></td>
+            <td class="description last"><p>is the current name of the column</p></td>
         </tr>
 
     
@@ -4909,7 +5036,7 @@ Function not complete</p>
 
     
     <dt class="tag-since">Since:</dt>
-    <dd class="tag-since"><ul class="dummy"><li>0.4</li></ul></dd>
+    <dd class="tag-since"><ul class="dummy"><li>0.6.0</li></ul></dd>
     
 
     
@@ -6806,7 +6933,7 @@ Not complete</p>
     
 
     
-    <h4 class="name" id="sortByCol"><span class="type-signature"></span>sortByCol<span class="signature">(colName, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object}</span></h4>
+    <h4 class="name" id="sortByCol"><span class="type-signature"></span>sortByCol<span class="signature">(colName, options<span class="signature-attributes">opt</span>, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {object}</span></h4>
     
 
     
@@ -6912,6 +7039,39 @@ Not complete</p>
             <td class="description last"><p>{
 &quot;reverse&quot;: sort Z-A, (true or false)
 &quot;fromEndOfStr&quot;: sort xA-xZ, (true or false) }</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">successCallback</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>sort callback function</p></td>
         </tr>
 
     
@@ -7564,7 +7724,7 @@ token: string
 
 
 <div class="description">
-    <p>Make all hidden rows accessible again (another way to call unHideRows)</p>
+    <p>Make all hidden rows accessible again (another way to call unhideRows)</p>
 </div>
 
 
@@ -8013,7 +8173,7 @@ token: string
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getTypes">getTypes</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
 </nav>
 
 <br class="clear">

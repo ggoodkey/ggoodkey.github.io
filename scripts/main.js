@@ -9,7 +9,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
     APP.setDebugMode(false); //TODO set to false
     APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
     var appData = {};
-    var debug = APP.debug, APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+    var debug = APP.debug, APP_NAME = "Nyckel", APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
     DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
     views = {
         new: {
@@ -581,6 +581,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
         "Address1_Region", "Address2_Region", "Organization1_Name", "Organization1_Title", "Organization1_Department", "groupName"], freshStateObj = function () {
         return {
             cookieAgree: false,
+            name: APP_NAME,
             version: APP_VERSION,
             //platform
             windows: false,
@@ -756,8 +757,8 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 var title = VAL.toPropName(obj.title);
                 if (obj.cmd === "initNewNyckelDB") {
                     if (obj.args && obj.args.length >= 2) {
-                        appData[title] = new NyckelDB(obj.args[0]);
-                        appData[title].init(obj.args[1], obj.args[2], obj.args[3], callback);
+                        appData[title] = new NyckelDB(obj.args[0], obj.args[1]);
+                        appData[title].init(obj.args[2], obj.args[3], obj.args[4], callback);
                     }
                     else
                         debug("NyckelDB not initialised with correct arguments");
@@ -914,7 +915,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
             Dbx = initiateDropbox(DROPBOX_CLIENT_ID, cachedStoKey, applyUser);
         }
         function getLocalState() {
-            Sto.getItem("state", null, function (appStateObj, error) {
+            Sto.getItem(APP_NAME + "_state", null, function (appStateObj, error) {
                 if (appStateObj) {
                     if (typeof appStateObj === "string" && JSON.parse)
                         appStateObj = JSON.parse(appStateObj);
@@ -943,7 +944,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                                 app[migrate[x]] = appStateObj[migrate[x]];
                             }
                         }
-                        Sto.deleteItem("state");
+                        Sto.deleteItem(APP_NAME + "_state");
                         setupUI(doneLoadingApp);
                     }
                 }
@@ -952,7 +953,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     setupUI(doneLoadingApp);
                 }
                 else {
-                    Sto.deleteItem("state");
+                    Sto.deleteItem(APP_NAME + "_state");
                     setupUI(doneLoadingApp);
                 }
             }, function () { setupUI(doneLoadingApp); });
@@ -1163,7 +1164,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                         nextInQueue(cb);
                 };
             }
-            wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [title, template.headers, template.types, options] }, cb);
+            wwManager({ "cmd": "initNewNyckelDB", "title": title, "args": [app.name, title, template.headers, template.types, options] }, cb);
         }
         function getTables() {
             var numOfTables = 0, b = 0;
@@ -2854,7 +2855,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     wwManager({
                         cmd: "initNewNyckelDB",
                         title: "temp",
-                        args: ["temp", template.headers, template.types, template.options]
+                        args: [app.name, "temp", template.headers, template.types, template.options]
                     }, function (success, errors) {
                         //final callback function for last NyckelDB to initialise
                         if (errors)
@@ -3997,7 +3998,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
             fetchData: function () {
                 if (this.recentlyViewed.length === 0) {
                     this.loading = true;
-                    Sto.getItem("state", null, this.applyState, this.error);
+                    Sto.getItem(APP_NAME + "_state", null, this.applyState, this.error);
                 }
             },
             error: function (err) {
@@ -4704,7 +4705,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
             storeState: function () {
                 if (cordova || this.cookieAgree) {
                     setTimeout(function () {
-                        Sto.setItem("state", {
+                        Sto.setItem(APP_NAME + "_state", {
                             version: this.version,
                             darkTheme: this.darkTheme,
                             useSystemTheme: this.useSystemTheme,
@@ -5254,7 +5255,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     function success() {
-                        Sto.setItem("lastSyncAll", new Date().getTime());
+                        Sto.setItem(APP_NAME + "_lastSyncAll", new Date().getTime());
                         this.spin(false, "Synchronising with Dropbox");
                     }
                     if (syncfileNeedsUpdated) {
@@ -5288,7 +5289,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     options = options || {};
                     options.initialKey = dbid ? Base64.hash(dbid) : /*this.dropboxEmail ? Base64.hash(this.dropboxEmail) :*/ null;
                     options.key = options.key ? options.key : this.stoKey === "unknown" ? options.initialKey : this.stoKey;
-                    Sto.getItem("lastSyncAll", null, function (time) {
+                    Sto.getItem(APP_NAME + "_lastSyncAll", null, function (time) {
                         //debug(time);
                         if (new Date().getTime() - Number(time) > 3e5 || options.forceSync) { //5 minutes between sync attempts
                             this.spin(true, "Synchronising with Dropbox");

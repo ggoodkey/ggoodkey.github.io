@@ -26,7 +26,7 @@
     
 
 
-    <h3>nyckeldb 0.6.0</h3>
+    <h3>nyckeldb 0.7.0</h3>
 
 
 
@@ -44,8 +44,8 @@
 
     <section>
         <article><h1><img src="./images/firefox/firefox-general-32-32.png" alt="N">yckelDB Documentation</h1>
-<h4>NyckelDB Version 0.5 beta</h4>
-<h5>October 22, 2019</h5>
+<h4>NyckelDB Version 0.7.0</h4>
+<h5>July 15, 2020</h5>
 <p>NyckelDB is a highly structured JavaScript data store. Any data that
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data
 is sortable, searchable, filterable, syncable and shareable. All data inputs are validated
@@ -257,7 +257,8 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
 <blockquote>
 <p><a href="#full-api-documentation">See more details about the NyckelDB API below</a></p>
 </blockquote>
-<pre class="prettyprint source lang-javascript"><code>var title = &quot;Accounting Spreadsheet&quot;,
+<pre class="prettyprint source lang-javascript"><code>var appId = &quot;My New App&quot;,
+	title = &quot;Accounting Spreadsheet&quot;,
     headers = [&quot;Month&quot;, &quot;Monthly Income&quot;, &quot;Monthly Expenses&quot;, &quot;Balance&quot;],
     types = [&quot;date&quot;, &quot;posInteger&quot;, &quot;negInteger&quot;, &quot;integer&quot;],
     options = {
@@ -266,7 +267,7 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
     callback = function(){ 
         //update UI to show newly created NyckelDB here
 };
-var myTable = new APP.NyckelDB(title);
+var myTable = new APP.NyckelDB(appId, title);
 myTable.init(headers, types, options, callback);
 myTable.getLength(); //returns 0
 </code></pre>
@@ -375,7 +376,7 @@ Custom properties can be given a type as well, but only &quot;string&quot;, &quo
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getTypes">getTypes</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
 </nav>
 
 <br class="clear">

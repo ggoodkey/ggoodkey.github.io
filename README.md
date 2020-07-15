@@ -1,8 +1,8 @@
 # ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
-#### NyckelDB Version 0.5 beta
+#### NyckelDB Version 0.7.0
 
-##### October 22, 2019
+##### July 15, 2020
 
 NyckelDB is a highly structured JavaScript data store. Any data that 
 you can visualize as a table or spreadsheet can be stored in a NyckelDB object. NyckelDB data 
@@ -201,7 +201,8 @@ Setting up a new NyckelDB object is as simple as calling the constructor using t
 > [See more details about the NyckelDB API below](#full-api-documentation)
 
 ```javascript
-var title = "Accounting Spreadsheet",
+var appId = "My New App",
+	title = "Accounting Spreadsheet",
     headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
     types = ["date", "posInteger", "negInteger", "integer"],
     options = {
@@ -210,7 +211,7 @@ var title = "Accounting Spreadsheet",
     callback = function(){ 
         //update UI to show newly created NyckelDB here
 };
-var myTable = new APP.NyckelDB(title);
+var myTable = new APP.NyckelDB(appId, title);
 myTable.init(headers, types, options, callback);
 myTable.getLength(); //returns 0
 ```
