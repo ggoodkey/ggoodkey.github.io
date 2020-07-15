@@ -9,7 +9,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
     APP.setDebugMode(false); //TODO set to false
     APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
     var appData = {};
-    var debug = APP.debug, APP_NAME = "Nyckel", APP_VERSION = "0.6.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
+    var debug = APP.debug, APP_NAME = "Nyckel", APP_VERSION = "0.7.0 beta", //increment on major (esp breaking) changes, to force localStorage app state to refresh on load
     DROPBOX_CLIENT_ID = "jk6tb5tp76hs2tx", //get new client id from https://www.dropbox.com/developers
     views = {
         new: {
