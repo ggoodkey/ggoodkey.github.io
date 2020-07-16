@@ -2084,9 +2084,9 @@ var NyckelDB = (function () {
             return callback.call(this, true, ERRORS[this.id], obj);
     }
     function VALIDATE_BASIC_TYPE(type) {
-        return VALIDATE_TYPE.call(this, type, true);
+        return VALIDATE_TYPE.call(this, type, true, "VALIDATE_BASIC_TYPE");
     }
-    function VALIDATE_TYPE(type, basicTypeBool) {
+    function VALIDATE_TYPE(type, basicTypeBool, traceStr) {
         type = type ? String(type).toLowerCase().replace(/[^a-z]/g, "") : "null";
         if (!basicTypeBool) {
             type = type.replace(/^(posinteger|posintegers|positiveint|positiveinteger|pos)$/, "posInteger");
@@ -2117,9 +2117,9 @@ var NyckelDB = (function () {
             return type;
         else {
             if (basicTypeBool)
-                CACHE_ERROR.call(this, type, "customProperties can only be set to string, number, boolean, or any, not");
+                CACHE_ERROR.call(this, type, "customProperties @ " + traceStr + " can only be set to string, number, boolean, or any, not");
             else
-                CACHE_ERROR.call(this, type, "invalid data type");
+                CACHE_ERROR.call(this, type, "invalid data type @ " + traceStr);
             return "any";
         }
     }
@@ -2173,12 +2173,12 @@ var NyckelDB = (function () {
         var ret;
         if (IS_STRING(props))
             ret = {
-                type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props), editTime),
+                type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props, false, "VALIDATE_COLUMN_PROPS-string"), editTime),
                 timestamp: [editTime, editTime]
             };
         else if (props && typeof props === "object") {
             ret = {
-                type: props.type ? TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props.type), editTime) : ["any", editTime],
+                type: props.type ? TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props.type, false, "VALIDATE_COLUMN_PROPS-object"), editTime) : ["any", editTime],
                 timestamp: [editTime, editTime]
             };
             if ("timestamp" in props && IS_ARRAY(props.timestamp)) {
@@ -2261,7 +2261,7 @@ var NyckelDB = (function () {
             else if (IS_ARRAY(props)) {
                 for (var a = 0, lenA = props.length; a < lenA; a++) {
                     ret[obj.headers[a + 1]] = {
-                        type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props[a]), time),
+                        type: TIMESTAMP_COLUMN_PROP(VALIDATE_TYPE.call(this, props[a], false, "APPLY_PROPERTIES"), time),
                         timestamp: [time, time]
                     };
                 }
@@ -2416,7 +2416,7 @@ var NyckelDB = (function () {
         }
         function setType() {
             if (can_do)
-                DB[this.id].columns.meta[colName].type = [VALIDATE_TYPE.call(this, type), editTime];
+                DB[this.id].columns.meta[colName].type = [type, editTime];
         }
         function applyData(rowId, i, total) {
             if (data && can_do && data[colName][rowId]) {
@@ -2442,7 +2442,7 @@ var NyckelDB = (function () {
         if (colIndex === -1)
             return retError.call(this, "column does not exist in the table");
         this.unhideRows(); //TODO iterate through hidden rows without unhiding them(?)
-        type = VALIDATE_TYPE.call(this, type);
+        type = VALIDATE_TYPE.call(this, type, false, "SET_TYPE");
         colName = TO_PROP_NAME(colName);
         editTime = editTime ? VALIDATE_EDIT_TIME.call(this, editTime, "column", "set type") : TIMESTAMP(DB[this.id].created);
         var can_do = true, returnData = {};
@@ -3584,7 +3584,7 @@ var NyckelDB = (function () {
          */
         NyckelDBObj.prototype.setColumnProp = function (colName, propName, propValue) {
             if (propName === "type") {
-                var type = VALIDATE_TYPE.call(this, propValue);
+                var type = VALIDATE_TYPE.call(this, propValue, false, "setColumnProp");
                 return this.setType(colName, type);
             }
             else
