@@ -282,11 +282,11 @@ var NyckelDB = (function () {
         else {
             if (!ignoreErrors) {
                 if (typeof type !== "string")
-                    CACHE_ERROR.call(this, type, "Type must be supplied as a string");
+                    CACHE_ERROR.call(this, type, "Type must be supplied as a string @ " + traceStr);
                 else if (!type.match(VALID_TYPES))
-                    CACHE_ERROR.call(this, type, "Invalid data type");
+                    CACHE_ERROR.call(this, type, "Invalid data type @ " + traceStr);
                 else
-                    CACHE_ERROR.call(this, value + " is a " + typeof value + ", not a " + type, "invalid value");
+                    CACHE_ERROR.call(this, value + " is a " + typeof value + ", not a " + type, "invalid value @ " + traceStr);
             }
             return false;
         }
