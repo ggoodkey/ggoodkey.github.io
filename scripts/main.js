@@ -817,7 +817,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     debug(data.message, "no forEach callback found");
                 break;
             case "result":
-                console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.cmd, data.len);
+                //	console.log((new Date().getTime() - Number(data.time)) / 1000 + "s", "to get result", data.cmd, data.len);
                 if (data.callbackIndex) {
                     if (data.args)
                         wwCallbackQueue[data.callbackIndex].apply(null, JSON.parse(data.args));

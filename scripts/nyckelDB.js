@@ -2167,7 +2167,7 @@ var NyckelDB = (function () {
         if (obj.valid && !obj.error)
             return obj.value;
         else
-            return VALID_NUMBER_TYPES.test(columnType) ? 0 : VALID_STRING_TYPES.test(columnType) ? "" : false;
+            return VALID_STRING_TYPES.test(columnType) ? "" : VALID_NUMBER_TYPES.test(columnType) ? 0 : false;
     }
     function VALIDATE_COLUMN_PROPS(props, editTime) {
         var ret;
