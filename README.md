@@ -196,20 +196,23 @@ To start using NyckelDB, download a copy of `nyckelDB.min.js`, `base64.min.js`, 
 
 ### Setting up a new NyckelDB Object
 
-Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup.
+Setting up a new NyckelDB object is as simple as calling the constructor using the "new" keyword and giving it a unique app ID, and a title. The app ID can be the name of the app or any other identifier to distinguish between other web apps that could be distributed from the same web domain. The title identifies this particular NyckelDB data store. After the NyckelDB data store is created, initialize it by calling the "init" function and passing it the required table parameters: "headers", and "types". Optional "customProperties" and "importData" can also be passed to the table on setup. A callback function can return a boolean value indicating whether or not the NyckelDB data store was successfully created and initiated, and any error messages. Inside the callback function, 'this' refers to the NyckelDB instance.
 
 > [See more details about the NyckelDB API below](#full-api-documentation)
 
 ```javascript
-var appId = "My New App",
-	title = "Accounting Spreadsheet",
+var appId = "Company App", //new in version 0.7.0
+    title = "Accounting Spreadsheet",
     headers = ["Month", "Monthly Income", "Monthly Expenses", "Balance"],
     types = ["date", "posInteger", "negInteger", "integer"],
     options = {
         //see 'The Options Parameter' below
     },
-    callback = function(){ 
-        //update UI to show newly created NyckelDB here
+    callback = function (success, errors) { 
+        if (success) {
+            console.log(this.getTitle()); //returns "Accounting Spreadsheet"
+            //update UI to show newly created NyckelDB here
+        } else console.log(errors);
 };
 var myTable = new APP.NyckelDB(appId, title);
 myTable.init(headers, types, options, callback);
@@ -277,7 +280,7 @@ var options = {
     "importCSV": string,
     "customProperties":{
         "FinalBalance": {
-            "type": "integer",
+            "type": "number",
             "initialValue": 10000
         },
         "ICanBuyMyGroceriesThisMonth": {
@@ -313,7 +316,7 @@ Custom properties can be given a type as well, but only "string", "number" or "b
 customProperties:{
     //name the custom property what ever you want
     "FinalBalance": {
-        "type": "integer",
+        "type": "number",
         "initialValue": 10000
     },
     "ICanBuyMyGroceriesThisMonth": {

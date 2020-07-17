@@ -253,19 +253,22 @@ Some subtypes fall into more than one category such as <em>postalZipCode</em> wh
     &lt;script type=&quot;text/javascript&quot; src=&quot;scripts/nyckelDB.min.js&quot;>&lt;/script>
 </code></pre>
 <h3>Setting up a new NyckelDB Object</h3>
-<p>Setting up a new NyckelDB object is as simple as calling the constructor using the &quot;new&quot; keyword and passing it the required table parameters: &quot;headers&quot;, and &quot;types&quot;. Optional &quot;customProperties&quot; and &quot;importData&quot; can also be passed to the table on setup.</p>
+<p>Setting up a new NyckelDB object is as simple as calling the constructor using the &quot;new&quot; keyword and giving it a unique app ID, and a title. The app ID can be the name of the app or any other identifier to distinguish between other web apps that could be distributed from the same web domain. The title identifies this particular NyckelDB data store. After the NyckelDB data store is created, initialize it by calling the &quot;init&quot; function and passing it the required table parameters: &quot;headers&quot;, and &quot;types&quot;. Optional &quot;customProperties&quot; and &quot;importData&quot; can also be passed to the table on setup. A callback function can return a boolean value indicating whether or not the NyckelDB data store was successfully created and initiated, and any error messages. Inside the callback function, 'this' refers to the NyckelDB instance.</p>
 <blockquote>
 <p><a href="#full-api-documentation">See more details about the NyckelDB API below</a></p>
 </blockquote>
-<pre class="prettyprint source lang-javascript"><code>var appId = &quot;My New App&quot;,
-	title = &quot;Accounting Spreadsheet&quot;,
+<pre class="prettyprint source lang-javascript"><code>var appId = &quot;Company App&quot;, //new in version 0.7.0
+    title = &quot;Accounting Spreadsheet&quot;,
     headers = [&quot;Month&quot;, &quot;Monthly Income&quot;, &quot;Monthly Expenses&quot;, &quot;Balance&quot;],
     types = [&quot;date&quot;, &quot;posInteger&quot;, &quot;negInteger&quot;, &quot;integer&quot;],
     options = {
         //see 'The Options Parameter' below
     },
-    callback = function(){ 
-        //update UI to show newly created NyckelDB here
+    callback = function (success, errors) { 
+        if (success) {
+            console.log(this.getTitle()); //returns &quot;Accounting Spreadsheet&quot;
+            //update UI to show newly created NyckelDB here
+        } else console.log(errors);
 };
 var myTable = new APP.NyckelDB(appId, title);
 myTable.init(headers, types, options, callback);
@@ -321,7 +324,7 @@ created in the form of a CSV file (string), or JSON object, and custom propertie
     &quot;importCSV&quot;: string,
     &quot;customProperties&quot;:{
         &quot;FinalBalance&quot;: {
-            &quot;type&quot;: &quot;integer&quot;,
+            &quot;type&quot;: &quot;number&quot;,
             &quot;initialValue&quot;: 10000
         },
         &quot;ICanBuyMyGroceriesThisMonth&quot;: {
@@ -349,7 +352,7 @@ Custom properties can be given a type as well, but only &quot;string&quot;, &quo
 <pre class="prettyprint source lang-javascript"><code>customProperties:{
     //name the custom property what ever you want
     &quot;FinalBalance&quot;: {
-        &quot;type&quot;: &quot;integer&quot;,
+        &quot;type&quot;: &quot;number&quot;,
         &quot;initialValue&quot;: 10000
     },
     &quot;ICanBuyMyGroceriesThisMonth&quot;: {
@@ -376,7 +379,7 @@ Custom properties can be given a type as well, but only &quot;string&quot;, &quo
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getTypes">getTypes</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="NyckelDB.html">NyckelDB</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addColumn">addColumn</a></li><li><a href="global.html#addRow">addRow</a></li><li><a href="global.html#advancedSearch">advancedSearch</a></li><li><a href="global.html#deleteColumn">deleteColumn</a></li><li><a href="global.html#deleteRow">deleteRow</a></li><li><a href="global.html#deleteTable">deleteTable</a></li><li><a href="global.html#filter">filter</a></li><li><a href="global.html#forEachCol">forEachCol</a></li><li><a href="global.html#forEachRow">forEachRow</a></li><li><a href="global.html#getHeaders">getHeaders</a></li><li><a href="global.html#getIndexOf">getIndexOf</a></li><li><a href="global.html#getLastModified">getLastModified</a></li><li><a href="global.html#getLength">getLength</a></li><li><a href="global.html#getProp">getProp</a></li><li><a href="global.html#getRow">getRow</a></li><li><a href="global.html#getRowTemplate">getRowTemplate</a></li><li><a href="global.html#getSearchSuggestions">getSearchSuggestions</a></li><li><a href="global.html#getTitle">getTitle</a></li><li><a href="global.html#getType">getType</a></li><li><a href="global.html#getTypes">getTypes</a></li><li><a href="global.html#getVal">getVal</a></li><li><a href="global.html#getVals">getVals</a></li><li><a href="global.html#hideRow">hideRow</a></li><li><a href="global.html#importJSON">importJSON</a></li><li><a href="global.html#init">init</a></li><li><a href="global.html#isDeleted">isDeleted</a></li><li><a href="global.html#isSyncPending">isSyncPending</a></li><li><a href="global.html#NUKEALL">NUKEALL</a></li><li><a href="global.html#renameColumn">renameColumn</a></li><li><a href="global.html#search">search</a></li><li><a href="global.html#setColumnProp">setColumnProp</a></li><li><a href="global.html#setProp">setProp</a></li><li><a href="global.html#setSyncCompleted">setSyncCompleted</a></li><li><a href="global.html#setTitle">setTitle</a></li><li><a href="global.html#setType">setType</a></li><li><a href="global.html#setVal">setVal</a></li><li><a href="global.html#setVals">setVals</a></li><li><a href="global.html#shuffle">shuffle</a></li><li><a href="global.html#sortByCol">sortByCol</a></li><li><a href="global.html#sync">sync</a></li><li><a href="global.html#toCSV">toCSV</a></li><li><a href="global.html#toJSON_Array">toJSON_Array</a></li><li><a href="global.html#toJSON_KeyValuePairs">toJSON_KeyValuePairs</a></li><li><a href="global.html#unfilter">unfilter</a></li><li><a href="global.html#unhideRows">unhideRows</a></li><li><a href="global.html#validate">validate</a></li></ul>
 </nav>
 
 <br class="clear">

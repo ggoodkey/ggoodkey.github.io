@@ -3116,6 +3116,7 @@ var NyckelDB = (function () {
         //an Object like this {Column_1:{type: ["string", 9646483]...}, Column_2:{type: ["number", 9683627]...}...}
         /**
          * Initiate the database. Required to call this right after creating a new NyckelDB obj. Sets initial values, checks for cached data and builds the search index
+         * @function init
          * @param {string[] | object} tableHeaders an array of the names of all of the columns, or an object containing column header names and properties
          * @param {string[] | object} [columnProperties] optional, if not specified in with tableHeaders, as an array if just types, or an object if also other column properties
          * @param {object} [options] {
