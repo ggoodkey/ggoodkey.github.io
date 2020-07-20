@@ -5265,7 +5265,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                         return success.call(this);
                 }
                 function readSyncfile(syncfile, error) {
-                    if (error === undefined || error === "data not found" || error.match(/^path\/not_found/)) {
+                    if (error === undefined || error === "data not found" || error.match(/^path\/not_found/) || error === "Conflict") {
                         if (syncfile) {
                             syncfile = JSON.parse(syncfile);
                         }
