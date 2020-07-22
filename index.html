@@ -163,10 +163,17 @@
 								@color-select="setAccentColor" />
 						</div>
 
-						<h6>Dropbox</h6>
+						<h6>User</h6>
 						<div v-if="loggedIn === false" class="clear">
+							Sign In
+							<button @click="showSignUp = true" class="right">Create an account</button>
+							<button @click="showSignIn = true" class="right">I have an account</button>
+						</div>
+
+						<h6>Dropbox</h6>
+						<div v-if="dropboxLoggedIn === false" class="clear">
 							Connect App
-							<button class="right" tabindex="22" @click="login">
+							<button class="right" tabindex="22" @click="dbxLogin">
 								Sign in
 							</button>
 						</div>
@@ -176,7 +183,7 @@
 								{{ dropboxUsername }}
 							</div>
 							<br>
-							<button class="right clear" tabindex="23" @click="logout">
+							<button class="right clear" tabindex="23" @click="dbxLogout">
 								Sign Out
 							</button>
 
@@ -230,7 +237,7 @@
 								Reset Settings
 							</button>
 
-							<button v-if="loggedIn === true" class="alert right" @click="wipeDropbox">
+							<button v-if="dropboxLoggedIn === true" class="alert right" @click="wipeDropbox">
 								Delete Cloud Data
 							</button>
 
@@ -280,6 +287,36 @@
 			<img width="20" height="20" src="images/spinner.gif">
 			{{ spinnerMsg[spinIndex] }}
 		</div>
+
+		<dialog-box 
+			:showif="showSignUp" 
+			okButton="Sign Up"
+			heading="Create a new account"
+			@dialog-box-ok="firebaseCreateNewUser"
+			@dialog-box-cancel="showSignUp = false">
+			<form>
+				<label class="itemLabel" for="name">First Name</label><input id="name" type="text" class="textbox right" /><br>
+				<label class="itemLabel" for="newEmail">Email Address</label><input id="newEmail" type="email" class="textbox right" /><br>
+				<label class="itemLabel" for="newPassword">New Password</label><input id="newPassword" type="password"
+					class="textbox right" /><br>
+				<label class="itemLabel" for="newConfirmPassword">Confirm Password</label><input id="newConfirmPassword"
+					type="password"
+					class="textbox right" /><br>
+			</form>
+		</dialog-box>
+
+		<dialog-box 
+			:showif="showSignIn"
+			okButton="Sign In" 
+			heading="Sign in to your account"
+			@dialog-box-ok="firebaseSignIn"
+			@dialog-box-cancel="showSignIn = false">
+			<form>
+				<label class="itemLabel" for="email">Email</label><input id="email" type="email" class="textbox right" /><br>
+				<label class="itemLabel" for="password">Password</label><input id="password" type="password"
+					class="textbox right" /><br>
+			</form>
+		</dialog-box>
 
 		<dialog-box
 			:showif="showConfirm"
@@ -774,18 +811,18 @@
 					</h3>
 					<h5>Store, search, view, share and sync data across devices using the cloud.</h5>
 					<p>
-						Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web applications.
+						Nyckel is an experimental application which uses NyckelDB, a database written in Javascript for mobile and web
+						applications.
 						You can read the full NyckelDB API documentation
-						<a
-							href="dev/index.html"
-							target="_blank"
-						>here</a>
+						<a href="dev/index.html" target="_blank">here</a>
 					</p>
 					<br>
 					<p>
 						<span class="icon icon-alert alert"></span>
-					<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes in the future that WILL DELETE YOUR DATA.</b>
-						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it in the Settings menu.
+						<b class="alert">WARNING: This application is currently under development, so you can expect breaking changes
+							in the future that WILL DELETE YOUR DATA.</b>
+						Features will be added and removed as development progresses. If the app becomes unstable, you can reset it in
+						the Settings menu.
 					</p>
 				</div>
 			</div>
@@ -1522,7 +1559,7 @@
 				:value="item.label.text"
 				class="textbox"
 				autocomplete="off"
-			>
+			/>
 		</template>
 		<label
 			v-else-if="item.column"
@@ -1546,7 +1583,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="onBlur(value, item.type)"
-			>
+			/>
 			<input
 				v-else-if="item.type === 'integer'"
 				:key="'int-input-' + i"
@@ -1557,7 +1594,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="onBlur(value, item.type)"
-			>
+			/>
 			<input
 				v-else-if="item.type === 'posInteger'"
 				:key="'posInt-input-' + i"
@@ -1569,7 +1606,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="onBlur(value, item.type)"
-			>
+			/>
 			<input
 				v-else-if="item.type === 'negInteger'"
 				:key="'negInt-input-' + i"
@@ -1581,7 +1618,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="onBlur(value, item.type)"
-			>
+			/>
 			<div
 				v-else-if="item.type === 'boolean'"
 				:key="'bool-input-' + i"
@@ -1604,7 +1641,7 @@
 				v-model="item.text[i]"
 				class="textbox"
 				@blur="validateData(value, item.type)"
-			>
+			/>
 			<input
 				v-else-if="item.type === 'email'"
 				:key="'email-input-' + i"
@@ -1614,7 +1651,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="onBlur(value, item.type)"
-			>
+			/>
 			<input
 				v-else-if="item.type === 'phoneNumber'"
 				:key="'phone-input-' + i"
@@ -1624,7 +1661,7 @@
 				autocomplete="off"
 				@focus="item.focused = true"
 				@blur="setValue(value, item.type)"
-			>
+			/>
 			<dropdown-button
 				v-else-if="item.options"
 				:key="'input-options-' + i"
@@ -1647,7 +1684,7 @@
 				autocomplete="off"
 				@focus="focused = true"
 				@blur="setValue(value, item.type)"
-			>
+			/>
 			<a
 				:key="'clear-a-' + i"
 				class="cancelButton"
@@ -1747,6 +1784,9 @@
 	<script type="text/javascript" src="scripts/vue.min.js"></script>
 	<script type="text/javascript" src="scripts/vue-router.min.js"></script>
 	<script type="text/javascript" src="scripts/nyckelDB.js"></script>
+ 	<script type="text/javascript" src="/__/firebase/7.16.1/firebase-app.js"></script>
+	<script type="text/javascript" src="/__/firebase/7.16.1/firebase-auth.js"></script>
+	<script type="text/javascript" src="/__/firebase/init.js"></script>
 	<script type="text/javascript" src="scripts/main.js"></script>
 	<script type="text/javascript" src="sw.js"></script>
 

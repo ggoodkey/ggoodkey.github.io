@@ -1,4 +1,4 @@
-# ![N](./images/firefox/firefox-general-32-32.png)yckelDB Documentation
+# ![N](https://ggoodkey.github.io/images/firefox/firefox-general-32-32.png)yckelDB Documentation
 
 #### NyckelDB Version 0.7.0
 

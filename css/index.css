@@ -533,7 +533,7 @@ tr.tableInputs{
 	pointer-events: none;
 }
 
-#loading {
+#loading, #init {
 	color: #333;
 	position: absolute;
 	top: 0;
@@ -550,7 +550,8 @@ tr.tableInputs{
 	will-change: opacity, height;
 }
 
-#loading.done {
+#loading.done, 
+#init.hide {
 	height: 0;
 	opacity: 0;
 }
@@ -1595,9 +1596,13 @@ html.phon.dark .card,
 	font-size: 14px;
 }
 
-html.phon .itemLabel {
+html.phon .itemLabel,
+html.tabl .dialogMessage .itemLabel,
+html.desk .dialogMessage .itemLabel {
 	height: 24px;
 	width: 100%;
+	text-align: left;
+	padding-left: 4px;
 }
 
 html.phon .dropdown-container.itemLabel {
@@ -1693,7 +1698,9 @@ html.desk .textbox {
 }
 
 html.tabl .dropdown-container .textbox,
-html.desk .dropdown-container .textbox {
+html.desk .dropdown-container .textbox,
+html.tabl .dialogMessage .textbox,
+html.desk .dialogMessage .textbox {
 	width: 100%;
 	margin: 0 0 3px 0;
 }

@@ -4,7 +4,7 @@
 // storage.js validate.min.js nyckelDB.min.js ./cordova.js common.min.js winjs/base.min.js lists.min.js
 /* global WinJS, Sto, NyckelDB, cordova, initiateDropbox, Vue */
 /* eslint-disable no-extra-parens */
-var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
+var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64, firebase; //dependancies
 (function () {
     APP.setDebugMode(false); //TODO set to false
     APP.setDebugToConsole(true); //set to true to use the debugger during development, or type "debugmode" into the searchbar to activate debugmode
@@ -618,11 +618,14 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
             //settings
             dropboxUsername: "",
             dropboxEmail: "",
-            loggedIn: false,
+            dropboxLoggedIn: false,
             stoKey: "unknown",
             showStoKeyInput: false,
             stoKeyWarning: "",
             showUpdateKey: false,
+            loggedIn: false,
+            showSignUp: false,
+            showSignIn: false,
             //theme
             darkTheme: false,
             useSystemTheme: true,
@@ -907,7 +910,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 if (user) {
                     app.dropboxUsername = user.alias;
                     app.dropboxEmail = user.email;
-                    app.loggedIn = true;
+                    app.dropboxLoggedIn = true;
                     dbid = user.dbid;
                 }
                 setupUI(doneLoadingApp);
@@ -4613,7 +4616,7 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     backstack[backIndex - 1] = location;
                 }
                 if (window.location.hash.match(/^#\/access_token=/))
-                    this.login();
+                    this.dbxLogin();
                 to = to || { name: this.$route.name, query: this.$route.query };
                 var location = to.name;
                 if (location === "home")
@@ -5029,14 +5032,14 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 refreshResponsiveLayout();
                 this.storeState();
             },
-            login: function (callback) {
+            dbxLogin: function (callback) {
                 function login() {
                     function welcome(user) {
                         this.notify("Successfully linked to " + user.alias + "'s Dropbox account", true);
                         this.dropboxUsername = user.alias;
                         this.dropboxEmail = user.email;
                         dbid = user.dbid;
-                        this.loggedIn = true;
+                        this.dropboxLoggedIn = true;
                         this.syncAll(null, { key: this.stoKey === "unknown" ? user.dbid ? Base64.hash(user.dbid) : Base64.hash(user.email) : this.stoKey });
                         if (callback instanceof Function)
                             callback(true);
@@ -5054,10 +5057,10 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 }
                 this.notify("Connecting to Dropbox, please wait...", false, login.bind(this));
             },
-            logout: function (callback) {
+            dbxLogout: function (callback) {
                 function logout() {
                     Dbx.logout(function () {
-                        this.loggedIn = false;
+                        this.dropboxLoggedIn = false;
                         this.dropboxUsername = "";
                         this.dropboxEmail = "";
                         this.notify("", true);
@@ -5070,18 +5073,25 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 else if (callback instanceof Function)
                     return callback();
             },
+            validateKey: function (key) {
+                if (key === "") {
+                    return "Required";
+                }
+                else if (key.length < 8) {
+                    return "8 characters minimum";
+                }
+                else if (!(/[A-Z]/.test(key) && /\d/.test(key) && /[a-z]/.test(key) && /[^A-z0-9]/.test(key))) {
+                    return "Uppercase, lowercase, digit and special character required";
+                }
+                else
+                    return false;
+            },
             newStoKey: function () {
                 var key = document.getElementById("stoKeyInput"), confirmKey = document.getElementById("stoKeyInputConfirm");
                 checkDBLoaded(function (nextInQueue) {
-                    if (key.value === "") {
-                        this.stoKeyWarning = "Required";
-                    }
-                    else if (key.value.length < 8) {
-                        this.stoKeyWarning = "8 characters minimum";
-                    }
-                    else if (!(/[A-Z]/.test(key.value) && /\d/.test(key.value) && /[a-z]/.test(key.value) && /[^A-z0-9]/.test(key.value))) {
-                        this.stoKeyWarning = "Uppercase, lowercase, digit and special character required";
-                    }
+                    var keyError = this.validateKey(key.value);
+                    if (keyError)
+                        this.stoKeyWarning = keyError;
                     else if (key.value === confirmKey.value) {
                         this.stoKeyWarning = "";
                         var oldKey = this.stoKey;
@@ -5344,11 +5354,11 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                 }
             },
             wipeApp: function () {
-                var msg = this.loggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
+                var msg = this.dropboxLoggedIn ? "sign the app out of Dropbox, clear all locally saved app data (not including what is saved in Dropbox) " : "clear all app data ";
                 msg = "This will " + msg + "and restore default settings";
                 this.confirm("Are you sure you want to reset the app?", function reset() {
                     Sto.nuke();
-                    this.logout(this.resetSettings);
+                    this.dbxLogout(this.resetSettings);
                 }.bind(this), { ok: "Reset App", details: msg });
             },
             wipeDropbox: function () {
@@ -5361,6 +5371,24 @@ var Windows, Dbx, APP = APP || {}, COM, VAL, VueRouter, Base64; //dependancies
                     Dbx.delete("/sync", onComplete);
                     Dbx.delete("/data", onComplete);
                 }, { ok: "Reset App Cloud Data", details: msg });
+            },
+            firebaseCreateNewUser: function (email, password) {
+                var e = trim(String(email)).split("@");
+                if (e[0].length > 0 && e[1].length > 2 && /^[\w!#$%&'*+\-\/=?^`{|}~.]+$/.test(e[0]) && new RegExp("^([a-z0-9][a-z0-9\\-]*\\.)+([a-z]+|xn--[a-z0-9\\-]+)$", "i").test(e[1])) {
+                    var keyError = this.validateKey(password);
+                    if (keyError) {
+                        //display password error
+                    }
+                    else
+                        firebase.auth().createUserWithEmailAndPassword(email, Base64.hash(password)).catch(function (error) {
+                            debug(error.code, error.message);
+                        });
+                }
+                else {
+                    //display email error
+                }
+            },
+            firebaseSignIn: function () {
             }
         }
     });
